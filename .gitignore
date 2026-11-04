@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Modello vocale scaricato durante la compilazione (vedi scripts/fetch_models.sh)
+assets/models/*.bin

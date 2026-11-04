@@ -31,14 +31,14 @@ Al centro c'è **un unico grande pulsante 3D**.
 
 | Funzione | Tecnologia (tutto sul dispositivo) |
 |---|---|
-| Voce → testo, qualsiasi lingua | **Whisper** (whisper.cpp, modello multilingue *base*, ~150 MB) in modalità automatica |
+| Voce → testo, qualsiasi lingua | **Whisper** (whisper.cpp, modello multilingue *base* compresso, ~57 MB, **incluso nell'app**) in modalità automatica |
 | Riconoscimento della lingua | Google ML Kit Language ID + controllo dell'alfabeto (cirillico / ideogrammi) |
 | Traduzione | Google ML Kit On-Device Translation (~30 MB per lingua) |
 | Testo da foto IT/EN/DE/FR/ZH | Google ML Kit Text Recognition v2, anche dal vivo |
 | Testo da foto RU (cirillico) | Android: Tesseract (dati inclusi) · iOS: Apple Vision (iOS 16+). Solo sulla foto, non dal vivo |
 | Testo → voce | Sintesi vocale del sistema |
 
-> **Primo avvio:** l'app chiede di scaricare **una volta** voce + 6 lingue (circa 330 MB, meglio col Wi-Fi). Basta toccare **SCARICA TUTTO**. Dopo funziona anche in aereo.
+> **Primo avvio:** l'app chiede di scaricare **una volta** le 6 lingue (circa 180 MB, col Wi-Fi; la voce è già inclusa). Basta toccare **SCARICA TUTTO**. Dopo funziona anche in aereo.
 > Per la lettura ad alta voce senza rete conviene avere le voci del sistema installate (iPhone: Impostazioni › Accessibilità › Contenuto letto › Voci).
 
 ## Struttura del progetto
@@ -114,3 +114,5 @@ La fotocamera e il microfono vanno provati su un **telefono vero**: l'emulatore 
 - Dati OCR russi: `tessdata_fast` di Tesseract (Apache 2.0).
 - Modelli di traduzione e OCR: Google ML Kit (termini di servizio ML Kit).
 - Riconoscimento vocale: whisper.cpp e modelli Whisper (MIT).
+
+> **Nota per chi compila:** il modello vocale (`assets/models/ggml-base-q5_1.bin`) non è nel repository: lo scarica `./scripts/fetch_models.sh`, eseguito in automatico da Codemagic e GitHub Actions. In locale lancialo una volta prima di `flutter run`; se manca, l'app lo scarica al primo avvio.

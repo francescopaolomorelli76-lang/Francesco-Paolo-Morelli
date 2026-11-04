@@ -12,6 +12,8 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Modello vocale da includere nell'app
+        script: ./scripts/fetch_models.sh
       - name: Pacchetti Flutter
         script: flutter pub get
       - name: CocoaPods
@@ -53,6 +55,8 @@ workflows:
     scripts:
       - name: Firma del progetto Xcode
         script: xcode-project use-profiles
+      - name: Modello vocale da includere nell'app
+        script: ./scripts/fetch_models.sh
       - name: Pacchetti Flutter
         script: flutter pub get
       - name: CocoaPods

@@ -36,7 +36,7 @@ class _SetupScreenState extends State<SetupScreen> {
       _error = null;
     });
     try {
-      await SetupService.downloadAll((step, p) {
+      final failed = await SetupService.downloadAll((step, p) {
         if (mounted) {
           setState(() {
             _step = step;
@@ -45,9 +45,21 @@ class _SetupScreenState extends State<SetupScreen> {
         }
       });
       await _refresh();
-      if (mounted) Navigator.pop(context, true);
+      if (!mounted) return;
+      if (failed.isEmpty) {
+        Navigator.pop(context, true);
+      } else {
+        setState(
+          () => _error =
+              'Non sono riuscito a scaricare: ${failed.map((l) => '${l.flag} ${l.label}').join(', ')}. '
+              'Premi di nuovo SCARICA TUTTO (riprende da dove si era fermato), oppure CONTINUA: '
+              'queste lingue verranno scaricate da sole la prima volta che servono, se c\'è internet.',
+        );
+      }
     } catch (e) {
-      if (mounted) setState(() => _error = 'Download interrotto. Controlla la connessione e riprova.');
+      if (mounted) {
+        setState(() => _error = 'Download interrotto. Controlla la connessione e premi di nuovo SCARICA TUTTO.');
+      }
     } finally {
       if (mounted) setState(() => _running = false);
     }
@@ -80,8 +92,8 @@ class _SetupScreenState extends State<SetupScreen> {
               const ComicPanel(
                 color: MC.yellow,
                 child: Text(
-                  'Scarico UNA VOLTA la voce offline e le 6 lingue (circa 330 MB, meglio col Wi-Fi). '
-                  'Dopo, Manga Vox funziona anche senza internet.',
+                  'La voce offline è già inclusa nell\'app. Scarico UNA VOLTA le 6 lingue (circa 180 MB, col Wi-Fi). '
+                  'Tieni l\'app aperta: lo schermo resta acceso da solo. Dopo, Manga Vox funziona anche senza internet.',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -136,6 +148,15 @@ class _SetupScreenState extends State<SetupScreen> {
                   child: Text(
                     _error!,
                     style: const TextStyle(color: MC.white, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: ComicButton(
+                    label: 'CONTINUA',
+                    icon: Icons.arrow_forward,
+                    color: MC.white,
+                    onTap: () => Navigator.pop(context, true),
                   ),
                 ),
               ],

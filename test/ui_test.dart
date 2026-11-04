@@ -119,7 +119,7 @@ void main() {
 
   testWidgets('home: un solo pulsante 3D, pronto all\'uso', (tester) async {
     _phone(tester);
-    File('${tmp.path}/ggml-base.bin').writeAsStringSync('x');
+    File('${tmp.path}/ggml-base-q5_1.bin').writeAsBytesSync(List.filled(1100000, 0));
     await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen()));
     await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
     await tester.pump();
@@ -169,7 +169,7 @@ void main() {
   testWidgets('preparazione offline: un pulsante scarica tutto', (tester) async {
     _phone(tester);
     modelsDownloaded = false;
-    File('${tmp.path}/ggml-base.bin').deleteSync();
+    File('${tmp.path}/ggml-base-q5_1.bin').deleteSync();
     await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: SetupScreen()));
     await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
     await tester.pump();

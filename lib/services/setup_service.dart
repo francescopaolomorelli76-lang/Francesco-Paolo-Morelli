@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:wakelock_plus/wakelock_plus.dart';
+
 import '../languages.dart';
 import 'speech_service.dart';
 import 'translator_service.dart';
@@ -10,31 +14,66 @@ class SetupStatus {
   bool get complete => missingLangs.isEmpty && voiceReady;
 }
 
-/// Prepara tutto in un colpo: modelli di traduzione delle 6 lingue
-/// (servono tutti, perché la lingua dell'interlocutore è riconosciuta
-/// automaticamente) e il modello vocale.
+/// Prepara tutto: modello vocale (incluso nell'app, viene solo copiato) e
+/// modelli di traduzione delle 6 lingue (scaricati da Google, una volta sola).
 class SetupService {
   static Future<SetupStatus> status() async {
+    final voice = await SpeechService.instance.installBundledModel() || await SpeechService.instance.modelReady();
     final missing = await TranslatorService.instance.missing(Lang.values);
-    final voice = await SpeechService.instance.modelReady();
     return SetupStatus(missing, voice);
   }
 
-  /// [onStep] riceve testo descrittivo e avanzamento complessivo 0..1.
-  static Future<void> downloadAll(void Function(String step, double progress) onStep) async {
-    final s = await status();
-    final steps = s.missingLangs.length + (s.voiceReady ? 0 : 1);
-    var done = 0;
-    if (!s.voiceReady) {
-      await SpeechService.instance.downloadModel((p) => onStep('Voce offline', (done + p) / steps));
-      done++;
+  /// Scarica ciò che manca. Le lingue vengono scaricate in parallelo, ognuna
+  /// con tempo massimo e nuovi tentativi; lo schermo resta acceso.
+  /// Restituisce le lingue che non è stato possibile scaricare.
+  static Future<List<Lang>> downloadAll(void Function(String step, double progress) onStep) async {
+    await WakelockPlus.enable().catchError((_) {});
+    try {
+      final s = await status();
+      final total = s.missingLangs.length + (s.voiceReady ? 0 : 1);
+      if (total == 0) {
+        onStep('Pronto!', 1);
+        return [];
+      }
+      var done = 0.0;
+      void report(String step) => onStep(step, (done / total).clamp(0.0, 1.0));
+
+      if (!s.voiceReady) {
+        await SpeechService.instance.downloadModel((p) => onStep('🎤 Voce offline ${(p * 100).round()}%', p / total));
+        done += 1;
+      }
+
+      final failed = <Lang>[];
+      final pending = s.missingLangs.toSet();
+      String names() => pending.map((l) => l.flag).join(' ');
+      report('Lingue: ${names()}');
+      await Future.wait(
+        s.missingLangs.map((l) async {
+          final ok = await _downloadLang(l);
+          pending.remove(l);
+          if (!ok) failed.add(l);
+          done += 1;
+          report(pending.isEmpty ? 'Quasi fatto…' : 'Lingue: ${names()}');
+        }),
+      );
+      onStep(failed.isEmpty ? 'Pronto!' : 'Alcune lingue non scaricate', 1);
+      return failed;
+    } finally {
+      await WakelockPlus.disable().catchError((_) {});
     }
-    for (final l in s.missingLangs) {
-      onStep('${l.flag} ${l.label}', done / steps);
-      final ok = await TranslatorService.instance.download(l);
-      if (!ok) throw Exception('Download di ${l.label} non riuscito');
-      done++;
+  }
+
+  static Future<bool> _downloadLang(Lang l) async {
+    final tr = TranslatorService.instance;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      try {
+        final ok = await tr.download(l).timeout(const Duration(minutes: 4));
+        if (ok || await tr.isDownloaded(l)) return true;
+      } catch (_) {
+        if (await tr.isDownloaded(l).catchError((_) => false)) return true;
+      }
+      await Future.delayed(Duration(seconds: 3 * attempt));
     }
-    onStep('Pronto!', 1);
+    return false;
   }
 }

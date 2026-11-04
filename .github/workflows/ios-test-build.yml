@@ -6,7 +6,13 @@ name: iOS test build (IPA non firmata)
 on:
   push:
     branches: [claude/offline-translation-app-32rsjv]
+    paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
+
+# Una sola build alla volta: una nuova sostituisce quella in coda.
+concurrency:
+  group: ios-test-build
+  cancel-in-progress: true
 
 jobs:
   ios:

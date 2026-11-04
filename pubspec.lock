@@ -896,10 +896,9 @@ packages:
   whisper_ggml:
     dependency: "direct main"
     description:
-      name: whisper_ggml
-      sha256: "89fd353f85a2729dbd200de02384ed5260c8650876340956264f284195734ef2"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/whisper_ggml"
+      relative: true
+    source: path
     version: "2.8.1"
   win32:
     dependency: transitive

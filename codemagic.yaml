@@ -1,6 +1,31 @@
 # Compilazione iOS nel cloud (Mac di Codemagic) e invio a TestFlight.
 # Guida passo passo: docs/TESTFLIGHT.md
 workflows:
+  # Prova gratuita: app NON firmata da installare con Sideloadly (docs/PROVA_IPHONE.md).
+  # Non serve l'account Apple Developer.
+  ios-unsigned:
+    name: iOS prova (IPA per Sideloadly)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.47.9
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Pacchetti Flutter
+        script: flutter pub get
+      - name: CocoaPods
+        script: cd ios && pod install --repo-update
+      - name: Compila senza firma
+        script: flutter build ios --release --no-codesign
+      - name: Crea IPA
+        script: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry MangaVox.ipa Payload
+    artifacts:
+      - MangaVox.ipa
+
   ios-testflight:
     name: iOS → TestFlight
     max_build_duration: 60

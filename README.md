@@ -32,9 +32,9 @@ Al centro c'è **un unico grande pulsante 3D**.
 
 | Funzione | Tecnologia (tutto sul dispositivo) |
 |---|---|
-| Voce → testo, qualsiasi lingua | **Whisper** (whisper.cpp, modello multilingue *base* compresso, ~57 MB, **incluso nell'app**) in modalità automatica |
+| Voce → testo, qualsiasi lingua | **Whisper** (whisper.cpp, modello multilingue *small* compresso, ~181 MB, **incluso nell'app**) in modalità automatica |
 | Riconoscimento della lingua | Google ML Kit Language ID + controllo dell'alfabeto (cirillico / ideogrammi) |
-| Traduzione | Google ML Kit On-Device Translation (~30 MB per lingua) |
+| Traduzione | iPhone con iOS 26+: **traduttore Apple** (lo stesso dell'app Traduci, offline, qualità alta). Altrimenti e come riserva: Google ML Kit On-Device Translation (~30 MB per lingua) |
 | Testo da foto IT/EN/DE/FR/ZH | Google ML Kit Text Recognition v2, anche dal vivo |
 | Testo da foto RU (cirillico) | Android: Tesseract (dati inclusi) · iOS: Apple Vision (iOS 16+). Solo sulla foto, non dal vivo |
 | Testo → voce | Sintesi vocale del sistema |

@@ -35,10 +35,12 @@ class SpeechService {
   SpeechService._();
   static final SpeechService instance = SpeechService._();
 
-  /// Modello multilingue "base" compresso (q5_1, ~57 MB): incluso nell'app
-  /// (assets/models), copiato al primo avvio; scaricato solo se manca.
-  static const model = WhisperModel.base;
-  static const _modelFile = 'ggml-base-q5_1.bin';
+  /// Modello multilingue "small" compresso (q5_1, ~181 MB): molto più preciso
+  /// del "base" su italiano e francese, ancora veloce sul telefono.
+  /// Incluso nell'app (assets/models): su iOS viene letto direttamente
+  /// dall'app, su Android copiato al primo avvio; scaricato solo se manca.
+  static const model = WhisperModel.small;
+  static const _modelFile = 'ggml-small-q5_1.bin';
   static const _modelAsset = 'assets/models/$_modelFile';
   static final _modelUrl = Uri.parse('https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$_modelFile');
 
@@ -55,7 +57,24 @@ class SpeechService {
   final ValueNotifier<double> level = ValueNotifier(0);
 
   String? _modelPathCache;
-  Future<String> modelPath() async => _modelPathCache ??= '${await WhisperController.getModelDir()}/$_modelFile';
+  static const _native = MethodChannel('manga_vox/native');
+
+  /// Su iOS il modello incluso si legge direttamente dal pacchetto dell'app
+  /// (niente copia da 181 MB); altrimenti dalla cartella dei modelli.
+  Future<String> modelPath() async {
+    if (_modelPathCache != null) return _modelPathCache!;
+    final dir = await WhisperController.getModelDir();
+    // Libera spazio: il vecchio modello "base" delle prime versioni non serve più.
+    final old = File('$dir/ggml-base-q5_1.bin');
+    if (await old.exists()) await old.delete().catchError((_) => old);
+    if (Platform.isIOS) {
+      try {
+        final p = await _native.invokeMethod<String>('assetPath', {'asset': _modelAsset});
+        if (p != null && await File(p).exists()) return _modelPathCache = p;
+      } catch (_) {}
+    }
+    return _modelPathCache = '$dir/$_modelFile';
+  }
 
   Future<bool> modelReady() async {
     final f = File(await modelPath());

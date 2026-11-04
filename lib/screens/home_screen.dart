@@ -117,7 +117,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final s = await SetupService.status();
     if (!mounted) return;
     setState(() => _ready = s.voiceReady);
-    if (!s.complete && openIfMissing) await _openSetup();
+    if (!openIfMissing) return;
+    if (!s.complete) {
+      await _openSetup();
+    } else if (!s.appleComplete && !Prefs.flag('apple_offered')) {
+      // Una volta: proponi il traduttore Apple (qualità migliore) se disponibile.
+      await Prefs.setFlag('apple_offered', true);
+      await _openSetup();
+    }
   }
 
   Future<void> _openSetup() async {

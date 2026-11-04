@@ -92,7 +92,7 @@ class _SetupScreenState extends State<SetupScreen> {
               const ComicPanel(
                 color: MC.yellow,
                 child: Text(
-                  'La voce offline è già inclusa nell\'app. Scarico UNA VOLTA le 6 lingue (circa 180 MB, col Wi-Fi). '
+                  'La voce offline è già inclusa nell\'app. Scarico UNA VOLTA le lingue (col Wi-Fi). '
                   'Tieni l\'app aperta: lo schermo resta acceso da solo. Dopo, Manga Vox funziona anche senza internet.',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                 ),
@@ -103,9 +103,32 @@ class _SetupScreenState extends State<SetupScreen> {
                   children: [
                     _item('🎤', 'Voce offline (riconosce la lingua)', s?.voiceReady),
                     for (final l in Lang.values) _item(l.flag, l.label, s == null ? null : !s.missingLangs.contains(l)),
+                    if (s != null && s.appleAvailable)
+                      _item('🍎', 'Traduttore Apple, qualità migliore (consigliato)', s.appleComplete),
                   ],
                 ),
               ),
+              if (s != null && s.appleAvailable && !s.appleComplete && !_running) ...[
+                const SizedBox(height: 14),
+                Center(
+                  child: ComicButton(
+                    label: 'ATTIVA TRADUTTORE APPLE',
+                    icon: Icons.auto_awesome,
+                    color: MC.cyan,
+                    size: 20,
+                    onTap: () async {
+                      await SetupService.prepareApple();
+                      await _refresh();
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'iOS chiederà di confermare il download di ogni lingua.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ],
               const SizedBox(height: 22),
               if (_running) ...[
                 Text(_step, textAlign: TextAlign.center, style: comic(26)),

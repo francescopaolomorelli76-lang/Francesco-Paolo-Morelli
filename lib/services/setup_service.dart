@@ -3,14 +3,21 @@ import 'dart:async';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../languages.dart';
+import 'prefs.dart';
 import 'speech_service.dart';
 import 'translator_service.dart';
 
 /// Cosa manca per funzionare completamente offline.
 class SetupStatus {
-  SetupStatus(this.missingLangs, this.voiceReady);
+  SetupStatus(this.missingLangs, this.voiceReady, {this.appleAvailable = false, this.appleMissing = const []});
   final List<Lang> missingLangs;
   final bool voiceReady;
+
+  /// Traduttore Apple (iPhone con iOS 26+): qualità migliore, consigliato.
+  final bool appleAvailable;
+  final List<Lang> appleMissing;
+  bool get appleComplete => !appleAvailable || appleMissing.isEmpty;
+
   bool get complete => missingLangs.isEmpty && voiceReady;
 }
 
@@ -19,8 +26,18 @@ class SetupStatus {
 class SetupService {
   static Future<SetupStatus> status() async {
     final voice = await SpeechService.instance.installBundledModel() || await SpeechService.instance.modelReady();
-    final missing = await TranslatorService.instance.missing(Lang.values);
-    return SetupStatus(missing, voice);
+    final tr = TranslatorService.instance;
+    final missing = await tr.missing(Lang.values);
+    final apple = await tr.appleAvailable();
+    final appleMissing = apple ? await tr.appleMissing(Prefs.get('mine', Lang.deviceDefault())) : <Lang>[];
+    return SetupStatus(missing, voice, appleAvailable: apple, appleMissing: appleMissing);
+  }
+
+  /// Scarica le lingue del traduttore Apple per la mia lingua.
+  static Future<void> prepareApple() async {
+    final tr = TranslatorService.instance;
+    final mine = Prefs.get('mine', Lang.deviceDefault());
+    await tr.prepareApple(mine, await tr.appleMissing(mine));
   }
 
   /// Scarica ciò che manca. Le lingue vengono scaricate in parallelo, ognuna
@@ -32,6 +49,7 @@ class SetupService {
       final s = await status();
       final total = s.missingLangs.length + (s.voiceReady ? 0 : 1);
       if (total == 0) {
+        if (s.appleAvailable && s.appleMissing.isNotEmpty) await prepareApple();
         onStep('Pronto!', 1);
         return [];
       }
@@ -56,6 +74,10 @@ class SetupService {
           report(pending.isEmpty ? 'Quasi fatto…' : 'Lingue: ${names()}');
         }),
       );
+      if (s.appleAvailable && s.appleMissing.isNotEmpty) {
+        onStep('🍎 Traduttore Apple: conferma i download', 1);
+        await prepareApple();
+      }
       onStep(failed.isEmpty ? 'Pronto!' : 'Alcune lingue non scaricate', 1);
       return failed;
     } finally {

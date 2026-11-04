@@ -1,8 +1,9 @@
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'dart:ui' as ui;
+
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
-/// Le lingue supportate dall'app. L'italiano è la lingua "di casa",
-/// le altre cinque sono quelle richieste per il dialogo e lo scanner.
+/// Le lingue supportate. La "mia lingua" si prende dalle impostazioni del
+/// telefono; quella dell'interlocutore viene riconosciuta automaticamente.
 enum Lang {
   it('Italiano', '🇮🇹', 'IT', TranslateLanguage.italian, 'it-IT'),
   en('English', '🇬🇧', 'EN', TranslateLanguage.english, 'en-US'),
@@ -13,22 +14,36 @@ enum Lang {
 
   const Lang(this.label, this.flag, this.short, this.mlkit, this.locale);
 
-  /// Nome nella lingua stessa.
   final String label;
   final String flag;
   final String short;
   final TranslateLanguage mlkit;
 
-  /// Locale BCP-47 usato per voce (riconoscimento e sintesi).
+  /// Locale BCP-47 per la sintesi vocale.
   final String locale;
 
-  /// Script da usare con ML Kit Text Recognition. Il russo (cirillico)
-  /// non è supportato da ML Kit: usa l'OCR nativo (vedi OcrService).
-  TextRecognitionScript get ocrScript =>
-      this == Lang.zh ? TextRecognitionScript.chinese : TextRecognitionScript.latin;
-
+  /// Il cirillico non è letto da ML Kit: usa l'OCR nativo (vedi OcrService).
   bool get usesNativeOcr => this == Lang.ru;
 
   static Lang fromName(String? name, Lang fallback) =>
       Lang.values.firstWhere((l) => l.name == name, orElse: () => fallback);
+
+  /// Da un codice lingua qualsiasi ("zh-Hans", "en_US", "ru") a [Lang], se supportata.
+  static Lang? fromCode(String? code) {
+    if (code == null || code.isEmpty) return null;
+    final base = code.toLowerCase().split(RegExp('[-_]')).first;
+    for (final l in Lang.values) {
+      if (l.name == base) return l;
+    }
+    return null;
+  }
+
+  /// La lingua del telefono, se è tra quelle supportate (altrimenti inglese).
+  static Lang deviceDefault() {
+    for (final loc in ui.PlatformDispatcher.instance.locales) {
+      final l = fromCode(loc.languageCode);
+      if (l != null) return l;
+    }
+    return Lang.en;
+  }
 }

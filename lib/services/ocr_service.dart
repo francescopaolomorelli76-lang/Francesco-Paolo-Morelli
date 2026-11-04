@@ -5,19 +5,28 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:path_provider/path_provider.dart';
 
 import '../languages.dart';
+import 'lang_detect.dart';
 
-/// Riconoscimento testo da immagini, tutto offline.
-/// - Latino (IT/EN/DE/FR) e cinese: ML Kit, veloce, anche dal vivo.
-/// - Russo (cirillico): canale nativo (solo foto) — Tesseract su Android
-///   con dati inclusi nell'app, Apple Vision su iOS (iOS 16+).
+/// Testo letto da un'immagine, con la lingua riconosciuta.
+class OcrResult {
+  OcrResult(this.lang, this.blocks);
+  final Lang? lang;
+  final List<String> blocks;
+}
+
+/// Riconoscimento testo da immagini, tutto offline, con lingua automatica.
+/// - ML Kit (script cinese, che legge anche l'alfabeto latino): IT/EN/DE/FR/ZH,
+///   anche dal vivo.
+/// - Cirillico (russo): canale nativo, solo foto. Tesseract su Android con
+///   dati inclusi nell'app, Apple Vision su iOS (iOS 16+).
 class OcrService {
   OcrService._();
   static final OcrService instance = OcrService._();
 
-  final Map<TextRecognitionScript, TextRecognizer> _recognizers = {};
+  /// Il riconoscitore "cinese" legge sia ideogrammi sia alfabeto latino.
+  final TextRecognizer recognizer = TextRecognizer(script: TextRecognitionScript.chinese);
   static const _cyrillic = MethodChannel('manga_vox/cyrillic_ocr');
 
-  /// Copia rus.traineddata dagli asset in una cartella leggibile da Tesseract.
   Future<String> _tessDataPath() async {
     final base = await getApplicationSupportDirectory();
     final file = File('${base.path}/tessdata/rus.traineddata');
@@ -29,20 +38,32 @@ class OcrService {
     return base.path;
   }
 
-  TextRecognizer recognizerFor(Lang lang) =>
-      _recognizers[lang.ocrScript] ??= TextRecognizer(script: lang.ocrScript);
-
-  /// Restituisce i blocchi di testo trovati nella foto.
-  Future<List<String>> readFile(String path, Lang lang) async {
-    if (lang.usesNativeOcr) {
-      final text = await _cyrillic.invokeMethod<String>('recognize', {
-        'path': path,
-        'dataPath': Platform.isAndroid ? await _tessDataPath() : '',
-      });
-      return splitParagraphs(text ?? '');
+  Future<String> _readCyrillic(String path) async {
+    try {
+      return await _cyrillic.invokeMethod<String>('recognize', {
+            'path': path,
+            'dataPath': Platform.isAndroid ? await _tessDataPath() : '',
+          }) ??
+          '';
+    } catch (_) {
+      return '';
     }
-    final result = await recognizerFor(lang).processImage(InputImage.fromFilePath(path));
-    return blocksOf(result);
+  }
+
+  /// Foto completa: prova ML Kit e il lettore cirillico, tiene il migliore.
+  Future<OcrResult> readFile(String path) async {
+    final results = await Future.wait([
+      recognizer.processImage(InputImage.fromFilePath(path)).then(blocksOf),
+      _readCyrillic(path).then(splitParagraphs),
+    ]);
+    final latin = results[0], cyr = results[1];
+    final latinText = latin.join(' '), cyrText = cyr.join(' ');
+    final cyrLetters = LangDetect.cyrillicLetters(cyrText);
+    final isRussian = cyrLetters >= 6 &&
+        cyrLetters >= 0.6 * LangDetect.allLetters(cyrText) &&
+        cyrLetters > 0.8 * LangDetect.allLetters(latinText);
+    if (isRussian) return OcrResult(Lang.ru, cyr);
+    return OcrResult(await LangDetect.instance.detect(latinText), latin);
   }
 
   static List<String> blocksOf(RecognizedText result) => result.blocks
@@ -55,11 +76,4 @@ class OcrService {
       .map((p) => p.replaceAll(RegExp(r'\s+'), ' ').trim())
       .where((p) => p.isNotEmpty)
       .toList();
-
-  Future<void> dispose() async {
-    for (final r in _recognizers.values) {
-      await r.close();
-    }
-    _recognizers.clear();
-  }
 }

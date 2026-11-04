@@ -2,7 +2,7 @@
     <!-- Microfono per il riconoscimento vocale, fotocamera per lo scanner -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
-    <!-- Solo per scaricare una volta i pacchetti lingua; poi tutto funziona offline -->
+    <!-- Solo per scaricare una volta i pacchetti lingua e voce; poi tutto funziona offline -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.microphone" android:required="false"/>
@@ -45,9 +45,6 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
-        <intent>
-            <action android:name="android.speech.RecognitionService"/>
-        </intent>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>

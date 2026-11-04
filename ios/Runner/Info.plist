@@ -3,9 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Manga Vox usa il microfono per ascoltare la tua voce e tradurla.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Manga Vox trasforma la voce in testo sul dispositivo per tradurla.</string>
+	<string>Manga Vox registra la voce solo mentre tieni premuto il pulsante, per tradurla sul telefono.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Manga Vox usa la fotocamera per leggere e tradurre testi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

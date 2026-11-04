@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manga_vox/languages.dart';
 import 'package:manga_vox/screens/home_screen.dart';
+import 'package:manga_vox/screens/language_screen.dart';
 import 'package:manga_vox/screens/setup_screen.dart';
 import 'package:manga_vox/services/direction.dart';
 import 'package:manga_vox/services/lang_detect.dart';
@@ -53,7 +54,7 @@ void main() {
   late bool modelsDownloaded;
 
   setUpAll(() async {
-    SharedPreferences.setMockInitialValues({'mine': 'it', 'partner': 'en'});
+    SharedPreferences.setMockInitialValues({'mine': 'it', 'partner': 'en', 'mine_set': true});
     await Prefs.init();
     tmp = Directory.systemTemp.createTempSync('mv');
     PathProviderPlatform.instance = _FakePaths(tmp.path);
@@ -125,45 +126,67 @@ void main() {
     await tester.pump();
     expect(find.byType(PushButton3D), findsOneWidget);
     expect(find.text('TIENI\nPREMUTO'), findsOneWidget);
-    expect(find.text('AUTO'), findsOneWidget);
+    expect(find.text('LA MIA LINGUA  '), findsOneWidget);
+    expect(find.text('AUTO'), findsNothing);
     await _shot(tester, find.byType(HomeScreen), 'home');
   });
 
   testWidgets('pulsante 3D: registrazione e conversazione', (tester) async {
     _phone(tester);
-    await tester.pumpWidget(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: HalftoneBackground(
-          speedLines: true,
-          focus: const Alignment(0, 0.55),
-          child: SafeArea(
-            child: Column(children: [
-              const SizedBox(height: 20),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: SpeechBubble(
-                    color: MC.yellow,
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Dov\'è la stazione?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-                      Text('Where is the station?', style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                    ]),
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: HalftoneBackground(
+            speedLines: true,
+            focus: const Alignment(0, 0.55),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 14),
+                      child: SpeechBubble(
+                        color: MC.yellow,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Dov\'è la stazione?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+                            Text('Where is the station?', style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  PushButton3D(state: PushState.recording, onPress: () {}, onRelease: () {}),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const Spacer(),
-              PushButton3D(state: PushState.recording, onPress: () {}, onRelease: () {}),
-              const SizedBox(height: 40),
-            ]),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('TI\nASCOLTO!'), findsOneWidget);
     await _shot(tester, find.byType(Scaffold), 'recording');
+  });
+
+  testWidgets('primo avvio: scelta della mia lingua, italiano preselezionato', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(
+      const MaterialApp(debugShowCheckedModeBanner: false, home: LanguageScreen(initial: Lang.it)),
+    );
+    expect(find.text('CHE LINGUA PARLI?'), findsOneWidget);
+    await tester.tap(find.text('Deutsch'));
+    await tester.pump();
+    expect(find.text('WELCHE SPRACHE SPRICHST DU?'), findsOneWidget);
+    await tester.tap(find.text('Italiano'));
+    await tester.pump();
+    await _shot(tester, find.byType(LanguageScreen), 'language');
   });
 
   testWidgets('preparazione offline: un pulsante scarica tutto', (tester) async {

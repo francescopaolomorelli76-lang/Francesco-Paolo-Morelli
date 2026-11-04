@@ -15,17 +15,18 @@ App per **iPhone e Android** di traduzione simultanea **offline**, pensata per d
 
 Al centro c'è **un unico grande pulsante 3D**.
 
+**La mia lingua.** Al primo avvio l'app chiede "Che lingua parli?" (preselezionata quella del telefono, per esempio l'italiano). Si cambia quando vuoi dal pulsante giallo in basso **LA MIA LINGUA**. È l'unica lingua da scegliere: quella degli altri l'app la riconosce da sola.
+
 ### 🎤 Voce
-- **Tieni premuto** e parla, **lascia**: l'app traduce e legge ad alta voce la traduzione.
-- **Non devi scegliere le lingue.** La tua lingua è quella del telefono (chip giallo **IO**). La lingua dell'interlocutore viene riconosciuta da sola (chip azzurro **AUTO**).
-  - Se parli nella tua lingua, traduce nella lingua dell'interlocutore.
-  - Se parla l'interlocutore (inglese, tedesco, russo…), la riconosce e traduce nella tua lingua.
+- **Tieni premuto** e parla, **lascia**: l'app traduce e legge ad alta voce la traduzione. Mentre parli, dentro il pulsante si muovono le barre del volume.
+- Se parli nella **tua lingua**, traduce nella lingua dell'ultimo interlocutore (all'inizio l'inglese).
+- Se parla un'altra persona (inglese, tedesco, russo…), la lingua viene riconosciuta e la traduzione è nella **tua lingua**.
 - Tocca una nuvoletta per riascoltarla.
 
 ### 📷 Scanner (interruttore in alto)
-- **Tieni premuto** inquadrando un testo: traduzione **dal vivo**.
-- **Lascia**: scatta la foto e traduce tutto il testo, blocco per blocco.
-- Anche qui la lingua del testo è riconosciuta da sola: un testo straniero viene tradotto nella tua lingua, un testo nella tua lingua nella lingua dell'interlocutore.
+- **Inquadra e basta**: l'app riconosce la lingua del testo e scrive la traduzione nella **tua lingua** sopra il testo, in tempo reale.
+- Il pulsante **SCATTA!** fotografa e traduce tutto il testo, blocco per blocco (tocca un blocco per ascoltarlo).
+- Il russo (cirillico) si legge con SCATTA!, non dal vivo.
 
 ## Come funziona offline
 

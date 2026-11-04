@@ -1,0 +1,315 @@
+<title>Manga Vox Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: one-screen app, split dialog (top half rotated for the person opposite) + scanner tab; comic ink on paper, single deliberate light look */
+:root{
+  --ink:#111111; --paper:#FFF8E7; --sky:#E8F7FB; --yellow:#FFD60A; --red:#E63946; --cyan:#00B4D8; --white:#ffffff; --muted:#11111199;
+  --display:'Bangers','Impact','Arial Black',sans-serif;
+  --body:'Nunito',system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,select:focus-visible,textarea:focus-visible,label:focus-within{outline:3px solid var(--cyan);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column}
+.view{flex:1;min-height:0;display:flex;flex-direction:column}
+.half{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;gap:8px;
+  padding-block:10px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));
+  background-color:var(--paper);
+  background-image:radial-gradient(circle,#00000018 1.3px,transparent 1.6px);background-size:12px 12px}
+.half.you{background-color:var(--sky);transform:rotate(180deg)}
+.app.side .half.you{transform:none}
+.half.live::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 70%,#0000 0 3deg,#0000001c 3deg 4deg)}
+.row{display:flex;align-items:center;gap:8px;position:relative}
+.panel{background:var(--white);border:3.5px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink)}
+select.lang{appearance:none;-webkit-appearance:none;font-family:var(--display);font-size:22px;letter-spacing:1px;
+  padding:4px 30px 4px 10px;border:3.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink);color:var(--ink);
+  background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0h12L6 8z' fill='%23111'/%3E%3C/svg%3E") no-repeat right 10px center}
+.you select.lang{background-color:var(--cyan)}
+.spacer{flex:1}
+.icon-btn{font-size:24px;width:44px;height:44px;display:grid;place-items:center}
+.stage{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;position:relative}
+.hint{font-weight:900;font-size:19px;color:var(--muted);text-align:center;text-wrap:balance}
+.bubble{position:relative;max-width:100%;background:var(--white);border:3.5px solid var(--ink);border-radius:26px;
+  padding:12px 18px;margin-bottom:18px;filter:drop-shadow(4px 4px 0 var(--ink))}
+.bubble.tr{background:var(--yellow)}
+.bubble::after{content:"";position:absolute;bottom:-17px;left:22%;width:22px;height:18px;background:inherit;
+  border-left:3.5px solid var(--ink);border-bottom:3.5px solid var(--ink);transform:skewX(-35deg);border-bottom-left-radius:2px}
+.bubble .big{font-weight:900;font-size:22px;line-height:1.2;overflow-wrap:anywhere}
+.bubble .small{font-style:italic;font-size:14px;color:var(--muted);margin-top:6px;overflow-wrap:anywhere}
+.input{display:flex;gap:8px;align-items:flex-end;position:relative}
+.input textarea{flex:1;min-width:0;resize:none;height:54px;font:800 17px/1.25 var(--body);color:var(--ink);
+  border:3.5px solid var(--ink);border-radius:10px;padding:8px 10px;background:var(--white);box-shadow:4px 4px 0 var(--ink)}
+.burst{width:104px;height:104px;flex:none;position:relative;display:grid;place-items:center;
+  font-family:var(--display);font-size:19px;letter-spacing:1px;line-height:1}
+.burst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.burst span{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.burst .ico{font-size:26px;line-height:1}
+.burst.busy{animation:shake .5s infinite alternate}
+.burst:disabled{opacity:.55}
+@keyframes shake{from{transform:scale(1) rotate(-3deg)}to{transform:scale(1.07) rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.burst.busy{animation:none}}
+.bar{display:flex;align-items:center;gap:4px;background:var(--ink);
+  padding-block:6px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.title{font-family:var(--display);font-size:26px;letter-spacing:2px;color:var(--yellow);-webkit-text-stroke:1px var(--ink);text-shadow:2px 2px 0 var(--red)}
+.bar .icon-btn{color:var(--yellow)}
+.tabs{display:flex;gap:10px;background:var(--ink);
+  padding-block:8px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.tab{flex:1;font-family:var(--display);font-size:22px;letter-spacing:1px;padding:8px 4px;border-radius:6px;
+  border:3px solid #444;background:#2A2A2A;color:var(--white)}
+.tab[aria-selected="true"]{background:var(--yellow);color:var(--ink);border-color:var(--white)}
+.notice{font-size:12.5px;font-weight:800;color:var(--ink);background:var(--yellow);text-align:center;
+  padding-block:5px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.notice.err{background:var(--red);color:var(--white)}
+/* scanner */
+.scan{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:14px;
+  padding-block:14px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));
+  background-color:#222;background-image:radial-gradient(circle,#ffffff22 1.3px,transparent 1.6px);background-size:12px 12px}
+.scan .row{flex-wrap:wrap}
+.arrow{font-family:var(--display);font-size:30px;color:var(--yellow);text-shadow:2px 2px 0 var(--ink)}
+.photo{max-height:34vh;width:100%;object-fit:cover;display:block;border-radius:3px}
+.shoot{display:flex;justify-content:center;align-items:center;gap:18px}
+.pill{font-family:var(--display);font-size:19px;letter-spacing:1px;padding:7px 14px;border:3.5px solid var(--ink);border-radius:6px;
+  box-shadow:4px 4px 0 var(--ink);background:var(--white);color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.results{display:flex;flex-direction:column;gap:6px}
+.results .bubble:nth-child(even){background:var(--yellow)}
+.results .bubble:nth-child(even)::after{left:auto;right:22%;transform:skewX(35deg);border-left:0;border-right:3.5px solid var(--ink)}
+.res-row{display:flex;gap:6px;align-items:flex-start}
+.res-row>div{flex:1;min-width:0}
+.empty{color:var(--white);font-weight:800;text-align:center;font-size:15px;text-wrap:balance}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+
+<div class="app" id="app">
+  <div class="notice" id="notice">Anteprima online: nell'app vera voce, traduzione e scanner funzionano offline sul telefono.</div>
+
+  <section class="view" id="v-dialog">
+    <div class="half you" id="half-you"></div>
+    <div class="bar">
+      <span class="title">MANGA VOX</span>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="btn-face" aria-label="Faccia a faccia o fianco a fianco" title="Faccia a faccia / fianco a fianco">🔄</button>
+      <button class="icon-btn" id="btn-swap" aria-label="Scambia le lingue" title="Scambia lingue">⇅</button>
+    </div>
+    <div class="half me" id="half-me"></div>
+  </section>
+
+  <section class="view" id="v-scan" hidden>
+    <div class="scan">
+      <div class="row">
+        <label class="vh" for="scan-from">Lingua del testo</label>
+        <select class="lang" id="scan-from"></select>
+        <button class="arrow" id="scan-swap" aria-label="Inverti lingue">»</button>
+        <label class="vh" for="scan-to">Traduci in</label>
+        <select class="lang" id="scan-to"></select>
+      </div>
+      <div class="panel" id="photo-wrap" hidden><img class="photo" id="photo" alt="Foto da tradurre"></div>
+      <div class="shoot">
+        <label class="pill" for="pick-gallery">🖼 FOTO</label>
+        <input type="file" id="pick-gallery" accept="image/*" class="vh">
+        <label class="burst" for="pick-camera" id="shoot-btn" role="button" tabindex="0" aria-label="Scatta una foto">
+          <svg viewBox="0 0 100 100" aria-hidden="true"></svg>
+          <span><span class="ico">📷</span>SCATTA!</span>
+        </label>
+        <input type="file" id="pick-camera" accept="image/*" capture="environment" class="vh">
+      </div>
+      <div class="results" id="results"><p class="empty">Fotografa un cartello, un menù o un documento: la traduzione compare qui.</p></div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-dialog" aria-selected="true">🗣 DIALOGO</button>
+    <button class="tab" role="tab" id="tab-scan" aria-selected="false">📷 SCANNER</button>
+  </nav>
+</div>
+
+<script>
+const LANGS = {
+  it:{label:'Italiano',flag:'🇮🇹',short:'IT',locale:'it-IT',name:'Italian',hint:'Scrivi o detta col 🎤 della tastiera',tap:'Tocca e parla!'},
+  en:{label:'English',flag:'🇬🇧',short:'EN',locale:'en-US',name:'English',hint:'Type or dictate with the keyboard 🎤',tap:'Tap and speak!'},
+  de:{label:'Deutsch',flag:'🇩🇪',short:'DE',locale:'de-DE',name:'German',hint:'Tippen oder mit 🎤 diktieren',tap:'Tippen und sprechen!'},
+  fr:{label:'Français',flag:'🇫🇷',short:'FR',locale:'fr-FR',name:'French',hint:'Écrivez ou dictez avec le 🎤',tap:'Touchez et parlez !'},
+  ru:{label:'Русский',flag:'🇷🇺',short:'RU',locale:'ru-RU',name:'Russian',hint:'Пишите или диктуйте 🎤',tap:'Нажмите и говорите!'},
+  zh:{label:'中文',flag:'🇨🇳',short:'ZH',locale:'zh-CN',name:'Simplified Chinese',hint:'输入或用键盘 🎤 听写',tap:'点击并说话！'},
+};
+const store = {
+  get(k,d){try{return localStorage.getItem(k)??d}catch{return d}},
+  set(k,v){try{localStorage.setItem(k,v)}catch{}}
+};
+const state = {
+  me: store.get('mv_me','it'), you: store.get('mv_you','en'),
+  from: store.get('mv_from','en'), to: store.get('mv_to','it'),
+  last:null, busy:null,
+};
+let sample = null;
+
+/* starburst shape, same geometry as the app */
+function burstPoints(n=14,inner=.72,seed=3){
+  let s=seed; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280};
+  const pts=[];
+  for(let i=0;i<n*2;i++){const a=-Math.PI/2+i*Math.PI/n;const k=i%2===0?1-rnd()*.1:inner+rnd()*.06;
+    pts.push((50+Math.cos(a)*46*k).toFixed(1)+','+(50+Math.sin(a)*46*k).toFixed(1));}
+  return pts.join(' ');
+}
+const BURST = burstPoints();
+function burstSvg(color){return `<polygon points="${BURST}" fill="#111" transform="translate(5 5)"/><polygon points="${BURST}" fill="${color}" stroke="#111" stroke-width="3.5" stroke-linejoin="miter"/>`}
+
+function langOptions(sel){return Object.entries(LANGS).map(([k,l])=>`<option value="${k}" ${k===sel?'selected':''}>${l.flag} ${l.short}</option>`).join('')}
+
+function renderHalf(side){
+  const el=document.getElementById('half-'+side);
+  const code=state[side], L=LANGS[code], isMe=side==='me';
+  el.innerHTML=`
+    <div class="row">
+      <label class="vh" for="sel-${side}">Lingua</label>
+      <select class="lang" id="sel-${side}">${langOptions(code)}</select>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="rep-${side}" aria-label="Ripeti ad alta voce" hidden>🔊</button>
+    </div>
+    <div class="stage" id="stage-${side}"></div>
+    <div class="input">
+      <label class="vh" for="txt-${side}">Frase da tradurre</label>
+      <textarea id="txt-${side}" placeholder="${L.hint}" lang="${L.locale}"></textarea>
+      <button class="burst" id="go-${side}" aria-label="Traduci">
+        <svg viewBox="0 0 100 100" aria-hidden="true">${burstSvg(isMe?'#FFD60A':'#00B4D8')}</svg>
+        <span><span class="ico">🎤</span>PARLA!</span>
+      </button>
+    </div>`;
+  el.querySelector('select').onchange=e=>{state[side]=e.target.value;store.set('mv_'+side,state[side]);state.last=null;renderHalf(side);renderStages()};
+  el.querySelector('#go-'+side).onclick=()=>go(side);
+  el.querySelector('#rep-'+side).onclick=()=>{const t=el.dataset.say;if(t)speak(t,state[side])};
+  const ta=el.querySelector('textarea');
+  ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();go(side)}});
+}
+
+function renderStages(){
+  for(const side of ['me','you']){
+    const stage=document.getElementById('stage-'+side), half=document.getElementById('half-'+side);
+    const rep=document.getElementById('rep-'+side);
+    const L=LANGS[state[side]];
+    half.classList.toggle('live',state.busy===side);
+    rep.hidden=true; half.dataset.say='';
+    const m=state.last;
+    if(state.busy===side){stage.innerHTML=`<div class="bubble"><div class="big">…</div></div>`;continue}
+    if(!m){stage.innerHTML=`<p class="hint">${L.tap}</p>`;continue}
+    const mine=m.from===side;
+    const big=mine?m.original:m.translated, small=mine?'':m.original;
+    stage.innerHTML=`<div class="bubble ${mine?'':'tr'}"><div class="big"></div>${small?'<div class="small"></div>':''}</div>`;
+    stage.querySelector('.big').textContent=big;
+    if(small) stage.querySelector('.small').textContent=small;
+    if(!mine){rep.hidden=false;half.dataset.say=big}
+  }
+}
+
+/* iOS only lets speech start from a tap: prime it synchronously, speak later */
+function primeSpeech(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch{}}
+function speak(text,code){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=LANGS[code].locale; u.rate=.95;
+    const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').startsWith(LANGS[code].locale.slice(0,2)));
+    if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch{}
+}
+
+function setNotice(msg,err){const n=document.getElementById('notice');n.textContent=msg;n.classList.toggle('err',!!err)}
+const ERR={not_granted:'Serve il permesso per usare Claude: senza, l\'anteprima non può tradurre.',
+  rate_limited:'Troppe richieste ravvicinate: riprova tra poco.',session_expired:'Sessione scaduta: accedi di nuovo a Claude.',
+  image_rejected:'Foto non valida o troppo grande: prova con un\'altra.',images_unavailable:'In questa vista non si possono inviare foto.'};
+
+async function go(side){
+  if(state.busy) return;
+  const ta=document.getElementById('txt-'+side);
+  const text=ta.value.trim();
+  if(!text){ta.focus();return}
+  if(!sample){setNotice('La traduzione non è disponibile in questa vista. Apri la pagina dentro Claude.',true);return}
+  primeSpeech();
+  const from=state[side], to=state[side==='me'?'you':'me'];
+  state.busy=side; renderStages();
+  const btn=document.getElementById('go-'+side); btn.classList.add('busy'); btn.disabled=true;
+  try{
+    const r=await sample.json(
+      `Translate the following ${LANGS[from].name} text into ${LANGS[to].name}. It is spoken dialogue between two travellers: keep it natural and short. `+
+      `Reply with only JSON like {"t":"translation"}.\n\nText:\n${text}`,
+      {modelTier:'quick'});
+    const out=String(r?.t??'').trim();
+    if(!out) throw {code:'empty_completion'};
+    state.last={from:side,original:text,translated:out};
+    ta.value='';
+    speak(out,to);
+  }catch(e){
+    if(e?.code!=='cancelled') setNotice(ERR[e?.code]||'Traduzione non riuscita. Riprova.',true);
+  }finally{
+    state.busy=null; btn.classList.remove('busy'); btn.disabled=false; renderStages();
+  }
+}
+
+/* scanner */
+async function scanFile(file){
+  if(!file) return;
+  const img=document.getElementById('photo');
+  img.src=URL.createObjectURL(file); document.getElementById('photo-wrap').hidden=false;
+  const res=document.getElementById('results');
+  if(!sample){res.innerHTML='<p class="empty">Lo scanner non è disponibile in questa vista. Apri la pagina dentro Claude.</p>';return}
+  const shoot=document.getElementById('shoot-btn'); shoot.classList.add('busy');
+  res.innerHTML='<p class="empty">Leggo e traduco… ⚡</p>';
+  const from=state.from,to=state.to;
+  try{
+    const r=await sample.json(
+      `The image is a photo of text (sign, menu, document) mostly in ${LANGS[from].name}. Read every block of text in reading order and translate each into ${LANGS[to].name}. `+
+      `Reply with only a JSON array like [{"o":"original text","t":"translation"}]. If there is no readable text reply [].`,
+      {images:[file]});
+    const items=Array.isArray(r)?r.filter(x=>x&&x.t):[];
+    if(!items.length){res.innerHTML='<p class="empty">Nessun testo trovato. Avvicinati e tieni fermo il telefono!</p>';return}
+    res.innerHTML='';
+    for(const it of items){
+      const b=document.createElement('div'); b.className='bubble';
+      b.innerHTML='<div class="res-row"><div><div class="big"></div><div class="small"></div></div><button class="icon-btn" aria-label="Leggi ad alta voce">🔊</button></div>';
+      b.querySelector('.big').textContent=String(it.t); b.querySelector('.small').textContent=String(it.o??'');
+      b.querySelector('button').onclick=()=>speak(String(it.t),to);
+      res.append(b);
+    }
+  }catch(e){
+    res.innerHTML='<p class="empty"></p>'; res.firstChild.textContent=ERR[e?.code]||'Lettura non riuscita. Riprova.';
+  }finally{shoot.classList.remove('busy')}
+}
+
+function renderScanLangs(){
+  document.getElementById('scan-from').innerHTML=langOptions(state.from);
+  document.getElementById('scan-to').innerHTML=langOptions(state.to);
+}
+
+/* wiring */
+document.querySelector('#shoot-btn svg').innerHTML=burstSvg('#FFD60A');
+document.getElementById('shoot-btn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();document.getElementById('pick-camera').click()}});
+document.getElementById('pick-camera').onchange=e=>{scanFile(e.target.files[0]);e.target.value=''};
+document.getElementById('pick-gallery').onchange=e=>{scanFile(e.target.files[0]);e.target.value=''};
+document.getElementById('scan-from').onchange=e=>{state.from=e.target.value;store.set('mv_from',state.from)};
+document.getElementById('scan-to').onchange=e=>{state.to=e.target.value;store.set('mv_to',state.to)};
+document.getElementById('scan-swap').onclick=()=>{[state.from,state.to]=[state.to,state.from];store.set('mv_from',state.from);store.set('mv_to',state.to);renderScanLangs()};
+document.getElementById('btn-swap').onclick=()=>{[state.me,state.you]=[state.you,state.me];store.set('mv_me',state.me);store.set('mv_you',state.you);state.last=null;renderHalf('me');renderHalf('you');renderStages()};
+document.getElementById('btn-face').onclick=()=>{const a=document.getElementById('app');a.classList.toggle('side');store.set('mv_side',a.classList.contains('side')?'1':'0')};
+if(store.get('mv_side','0')==='1') document.getElementById('app').classList.add('side');
+function showTab(t){
+  document.getElementById('v-dialog').hidden=t!=='dialog';
+  document.getElementById('v-scan').hidden=t!=='scan';
+  document.getElementById('tab-dialog').setAttribute('aria-selected',t==='dialog');
+  document.getElementById('tab-scan').setAttribute('aria-selected',t==='scan');
+}
+document.getElementById('tab-dialog').onclick=()=>showTab('dialog');
+document.getElementById('tab-scan').onclick=()=>showTab('scan');
+
+renderHalf('you'); renderHalf('me'); renderStages(); renderScanLangs();
+try{speechSynthesis.getVoices()}catch{}
+
+(async()=>{
+  try{sample=await window.claude?.use?.('sample')}catch{sample=null}
+  if(!sample) setNotice('Apri questa pagina dentro Claude per provare la traduzione.',true);
+})();
+</script>

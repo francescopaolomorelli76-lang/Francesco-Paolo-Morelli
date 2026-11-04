@@ -1,72 +1,59 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 import 'package:whisper_ggml/whisper_ggml.dart';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-
 import '../languages.dart';
+import 'lang_detect.dart';
+import 'prefs.dart';
 
-/// Esito di una registrazione: testo, oppure il motivo per cui manca.
-class Heard {
-  Heard({this.text = '', this.error, this.tooShort = false, required this.peakDb, required this.held});
+/// Lingua riconosciuta da un audio, con il testo trascritto da Whisper.
+class Detected {
+  Detected(this.lang, this.text);
+  final Lang? lang;
   final String text;
-  final String? error;
-  final bool tooShort;
-
-  /// Volume massimo registrato (dBFS: 0 = fortissimo, -160 = silenzio).
-  final double peakDb;
-  final Duration held;
-
-  bool get silent => peakDb < -45;
-  String get debug =>
-      'audio ${(held.inMilliseconds / 1000).toStringAsFixed(1)} s, picco ${peakDb.toStringAsFixed(0)} dB';
 }
 
-/// Voce sul dispositivo, senza rete:
-/// - registrazione mentre il pulsante è premuto;
-/// - trascrizione con Whisper in modalità "auto" (riconosce qualsiasi lingua);
-/// - lettura ad alta voce della traduzione con la sintesi vocale del sistema.
+/// - Riconoscimento della LINGUA di un audio (solo quando non è ancora nota):
+///   Whisper "tiny" sul telefono, circa un secondo.
+/// - Lettura ad alta voce della traduzione (sintesi vocale del sistema),
+///   con volume e velocità regolabili dall'app.
 class SpeechService {
   SpeechService._();
   static final SpeechService instance = SpeechService._();
 
-  /// Modello multilingue "small" compresso (q5_1, ~181 MB): molto più preciso
-  /// del "base" su italiano e francese, ancora veloce sul telefono.
-  /// Incluso nell'app (assets/models): su iOS viene letto direttamente
-  /// dall'app, su Android copiato al primo avvio; scaricato solo se manca.
-  static const model = WhisperModel.small;
-  static const _modelFile = 'ggml-small-q5_1.bin';
+  /// Modello multilingue "tiny" compresso (q5_1, ~31 MB), incluso nell'app.
+  static const model = WhisperModel.tiny;
+  static const _modelFile = 'ggml-tiny-q5_1.bin';
   static const _modelAsset = 'assets/models/$_modelFile';
   static final _modelUrl = Uri.parse('https://huggingface.co/ggerganov/whisper.cpp/resolve/main/$_modelFile');
-
-  AudioRecorder? _rec;
-  AudioRecorder get _recorder => _rec ??= AudioRecorder();
-  final _tts = FlutterTts();
-  bool _ttsReady = false;
-  DateTime? _startedAt;
-  String? _path;
-  Timer? _meter;
-  double _peakDb = -160;
-
-  /// Livello del microfono 0..1, aggiornato mentre si registra (per la UI).
-  final ValueNotifier<double> level = ValueNotifier(0);
-
-  String? _modelPathCache;
   static const _native = MethodChannel('manga_vox/native');
 
-  /// Su iOS il modello incluso si legge direttamente dal pacchetto dell'app
-  /// (niente copia da 181 MB); altrimenti dalla cartella dei modelli.
+  final _tts = FlutterTts();
+  bool _ttsReady = false;
+  String? _modelPathCache;
+
+  // ───────────── impostazioni voce ─────────────
+
+  double get volume => Prefs.number('tts_volume', 1.0);
+  double get rate => Prefs.number('tts_rate', 0.5);
+  bool get speakAloud => Prefs.flag('tts_on', fallback: true);
+  Future<void> setVolume(double v) => Prefs.setNumber('tts_volume', v);
+  Future<void> setRate(double v) => Prefs.setNumber('tts_rate', v);
+  Future<void> setSpeakAloud(bool v) => Prefs.setFlag('tts_on', v);
+
+  // ───────────── modello Whisper ─────────────
+
   Future<String> modelPath() async {
     if (_modelPathCache != null) return _modelPathCache!;
     final dir = await WhisperController.getModelDir();
-    // Libera spazio: il vecchio modello "base" delle prime versioni non serve più.
-    final old = File('$dir/ggml-base-q5_1.bin');
-    if (await old.exists()) await old.delete().catchError((_) => old);
+    // Libera spazio: i modelli più grandi delle versioni precedenti non servono più.
+    for (final old in ['ggml-base-q5_1.bin', 'ggml-small-q5_1.bin']) {
+      final f = File('$dir/$old');
+      if (await f.exists()) await f.delete().catchError((_) => f);
+    }
     if (Platform.isIOS) {
       try {
         final p = await _native.invokeMethod<String>('assetPath', {'asset': _modelAsset});
@@ -81,8 +68,7 @@ class SpeechService {
     return await f.exists() && await f.length() > 1000000;
   }
 
-  /// Copia il modello incluso nell'app nella cartella dei modelli.
-  /// Restituisce false se l'app è stata compilata senza modello incluso.
+  /// Copia il modello incluso nell'app (solo Android; su iOS si legge sul posto).
   Future<bool> installBundledModel() async {
     if (await modelReady()) return true;
     final ByteData data;
@@ -99,8 +85,7 @@ class SpeechService {
     return true;
   }
 
-  /// Scarica il modello vocale (solo se non incluso), con ripresa del
-  /// download interrotto e timeout se la rete si blocca. Avanzamento 0..1.
+  /// Scarica il modello solo se non è incluso nell'app (ripresa e nuovi tentativi).
   Future<void> downloadModel(void Function(double) onProgress) async {
     if (await installBundledModel()) return;
     final dest = File(await modelPath());
@@ -120,7 +105,6 @@ class SpeechService {
         var got = start;
         final sink = part.openWrite(mode: resumed ? FileMode.append : FileMode.write);
         try {
-          // Se per 30 secondi non arriva nulla, la connessione è bloccata: riprova.
           await for (final chunk in res.timeout(const Duration(seconds: 30))) {
             sink.add(chunk);
             got += chunk.length;
@@ -140,94 +124,34 @@ class SpeechService {
     }
   }
 
-  Future<bool> hasMicPermission() => _recorder.hasPermission();
-
-  /// Inizia a registrare (pulsante premuto).
-  Future<bool> startRecording() async {
-    if (!await _recorder.hasPermission()) return false;
-    await _tts.stop();
-    final dir = await getTemporaryDirectory();
-    _path = '${dir.path}/mv_${DateTime.now().millisecondsSinceEpoch}.wav';
-    _peakDb = -160;
-    await _recorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        sampleRate: 16000,
-        numChannels: 1,
-        iosConfig: IosRecordConfig(
-          categoryOptions: [IosAudioCategoryOption.defaultToSpeaker, IosAudioCategoryOption.allowBluetooth],
-        ),
+  /// Riconosce la lingua parlata in un file audio (circa un secondo).
+  Future<Detected> detect(String audioPath) async {
+    final res = await Whisper(model: model).transcribe(
+      transcribeRequest: TranscribeRequest(
+        audio: audioPath,
+        language: 'auto',
+        isNoTimestamps: true,
+        noContext: true,
+        keepModelLoaded: true,
+        suppressNonSpeechTokens: true,
+        threads: 4,
       ),
-      path: _path!,
+      modelPath: await modelPath(),
     );
-    _startedAt = DateTime.now();
-    _meter?.cancel();
-    _meter = Timer.periodic(const Duration(milliseconds: 80), (_) async {
-      try {
-        final a = await _recorder.getAmplitude();
-        if (a.current.isFinite) {
-          if (a.current > _peakDb) _peakDb = a.current;
-          level.value = ((a.current + 50) / 50).clamp(0.0, 1.0);
-        }
-      } catch (_) {}
-    });
-    return true;
-  }
-
-  void _stopMeter() {
-    _meter?.cancel();
-    _meter = null;
-    level.value = 0;
-  }
-
-  Future<void> cancelRecording() async {
-    _stopMeter();
-    try {
-      await _recorder.cancel();
-    } catch (_) {}
-  }
-
-  /// Ferma la registrazione (pulsante rilasciato) e trascrive con Whisper,
-  /// riconoscendo la lingua da solo.
-  Future<Heard> stopAndTranscribe() async {
-    _stopMeter();
-    final path = await _recorder.stop() ?? _path;
-    final held = DateTime.now().difference(_startedAt ?? DateTime.now());
-    final peak = _peakDb;
-    if (path == null) return Heard(error: 'registrazione non salvata', peakDb: peak, held: held);
-    final file = File(path);
-    try {
-      if (held < const Duration(milliseconds: 500)) return Heard(tooShort: true, peakDb: peak, held: held);
-      final res = await Whisper(model: model).transcribe(
-        transcribeRequest: TranscribeRequest(
-          audio: path,
-          language: 'auto',
-          isNoTimestamps: true,
-          noContext: true,
-          keepModelLoaded: true,
-          suppressNonSpeechTokens: true,
-        ),
-        modelPath: await modelPath(),
-      );
-      return Heard(text: cleanTranscript(res.text), peakDb: peak, held: held);
-    } catch (e) {
-      return Heard(error: '$e', peakDb: peak, held: held);
-    } finally {
-      for (final f in [file, File('$path.wav')]) {
-        if (await f.exists()) await f.delete();
-      }
-    }
+    final text = cleanTranscript(res.text);
+    return Detected(await LangDetect.instance.detect(text), text);
   }
 
   /// Rimuove annotazioni tipo "[musica]" o "(ride)" prodotte da Whisper.
   static String cleanTranscript(String s) =>
       s.replaceAll(RegExp(r'\[[^\]]*\]|\([^)]*\)|\*[^*]*\*'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  Future<void> speak(String text, Lang lang) async {
-    if (text.trim().isEmpty) return;
+  // ───────────── sintesi vocale ─────────────
+
+  Future<void> speak(String text, Lang lang, {bool force = false}) async {
+    if (text.trim().isEmpty || (!speakAloud && !force)) return;
     if (!_ttsReady) {
       _ttsReady = true;
-      await _tts.awaitSpeakCompletion(true);
       await _tts.setSharedInstance(true);
       await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playAndRecord, [
         IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
@@ -237,7 +161,8 @@ class SpeechService {
     }
     await _tts.stop();
     await _tts.setLanguage(lang.locale);
-    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(volume);
+    await _tts.setSpeechRate(rate);
     await _tts.speak(text);
   }
 

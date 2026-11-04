@@ -17,11 +17,14 @@ Al centro c'è **un unico grande pulsante 3D**.
 
 **La mia lingua.** Al primo avvio l'app chiede "Che lingua parli?" (preselezionata quella del telefono, per esempio l'italiano). Si cambia quando vuoi dal pulsante giallo in basso **LA MIA LINGUA**. È l'unica lingua da scegliere: quella degli altri l'app la riconosce da sola.
 
-### 🎤 Voce
-- **Tieni premuto** e parla, **lascia**: l'app traduce e legge ad alta voce la traduzione. Mentre parli, dentro il pulsante si muovono le barre del volume.
-- Se parli nella **tua lingua**, traduce nella lingua dell'ultimo interlocutore (all'inizio l'inglese).
-- Se parla un'altra persona (inglese, tedesco, russo…), la lingua viene riconosciuta e la traduzione è nella **tua lingua**.
+### 🎤 Voce: due pulsanti, traduzione in tempo reale
+- 🔵 **LUI/LEI** (sinistra): tieni premuto mentre parla l'altra persona. La prima volta la sua lingua viene **riconosciuta da sola** (✨ AUTO) e da lì resta impostata; si può cambiare o rimettere AUTO dal riquadro sotto il pulsante.
+- 🟡 **IO** (destra): tieni premuto e parla nella **tua lingua**.
+- Mentre si parla, le parole e la **traduzione compaiono in diretta**; al rilascio la traduzione definitiva arriva subito e viene letta ad alta voce.
 - Tocca una nuvoletta per riascoltarla.
+
+### 🎛 Audio (icona in alto)
+Stato e attivazione di microfono e riconoscimento vocale, **prova microfono** con indicatore, volume del telefono, volume e velocità della voce, lettura ad alta voce sì/no, **prova voce**.
 
 ### 📷 Scanner (interruttore in alto)
 - **Inquadra e basta**: l'app riconosce la lingua del testo e scrive la traduzione nella **tua lingua** sopra il testo, in tempo reale.
@@ -32,7 +35,8 @@ Al centro c'è **un unico grande pulsante 3D**.
 
 | Funzione | Tecnologia (tutto sul dispositivo) |
 |---|---|
-| Voce → testo, qualsiasi lingua | **Whisper** (whisper.cpp, modello multilingue *small* compresso, ~181 MB, **incluso nell'app**) in modalità automatica |
+| Voce → testo, in tempo reale | iPhone: **riconoscimento vocale Apple sul dispositivo** (parole mentre parli). Android: riconoscitore di sistema |
+| Riconoscimento della lingua dell'interlocutore | **Whisper tiny** (whisper.cpp, ~31 MB, incluso nell'app), solo la prima volta, circa 1 secondo |
 | Riconoscimento della lingua | Google ML Kit Language ID + controllo dell'alfabeto (cirillico / ideogrammi) |
 | Traduzione | iPhone con iOS 26+: **traduttore Apple** (lo stesso dell'app Traduci, offline, qualità alta). Altrimenti e come riserva: Google ML Kit On-Device Translation (~30 MB per lingua) |
 | Testo da foto IT/EN/DE/FR/ZH | Google ML Kit Text Recognition v2, anche dal vivo |

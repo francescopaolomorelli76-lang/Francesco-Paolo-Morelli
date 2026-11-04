@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import '../languages.dart';
-import '../services/direction.dart';
 import '../services/lang_detect.dart';
+import '../services/live_speech.dart';
 import '../services/ocr_service.dart';
 import '../services/prefs.dart';
 import '../services/setup_service.dart';
@@ -15,13 +15,18 @@ import '../services/speech_service.dart';
 import '../services/translator_service.dart';
 import '../ui/manga.dart';
 import '../ui/push_button.dart';
+import 'audio_screen.dart';
 import 'language_screen.dart';
 import 'setup_screen.dart';
 
 enum Mode { talk, scan }
 
+/// Chi sta parlando: l'interlocutore (pulsante 1) o io (pulsante 2).
+enum Side { them, me }
+
 class _Msg {
-  _Msg({required this.from, required this.to, required this.original, required this.translated});
+  _Msg({required this.side, required this.from, required this.to, required this.original, required this.translated});
+  final Side side;
   final Lang from, to;
   final String original, translated;
 }
@@ -34,12 +39,15 @@ class _LiveBlock {
   final String original, translated;
 }
 
-/// Un'unica schermata, un unico grande pulsante 3D.
-/// - VOCE: tieni premuto e parla in qualsiasi lingua, lascia → traduce e legge.
-///   Se parli nella TUA lingua traduce per l'interlocutore, altrimenti per te.
-/// - SCANNER: inquadra e basta. La lingua del testo è riconosciuta e la
-///   traduzione nella TUA lingua compare sopra il testo, in tempo reale.
-///   Il pulsante scatta una foto e traduce tutto il testo.
+/// Schermata principale.
+/// VOCE, due pulsanti 3D da tenere premuti:
+///  1. LUI/LEI (azzurro): la prima volta riconosce da solo la lingua
+///     dell'interlocutore, poi resta su quella (si può cambiare o rimettere AUTO).
+///  2. IO (giallo): parlo nella mia lingua, scelta al primo avvio.
+///  Mentre si parla le parole e la traduzione compaiono in tempo reale;
+///  al rilascio la traduzione definitiva viene letta ad alta voce.
+/// SCANNER: inquadra e la traduzione nella mia lingua compare sopra il testo;
+///  il pulsante scatta e traduce tutta la foto.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -49,27 +57,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _speech = SpeechService.instance;
+  final _live = LiveSpeech.instance;
   final _tr = TranslatorService.instance;
   final _ocr = OcrService.instance;
 
-  late final Direction _dir = Direction(
-    mine: Prefs.get('mine', Lang.deviceDefault()),
-    partner: Prefs.get('partner', Lang.deviceDefault() == Lang.en ? Lang.it : Lang.en),
-  );
+  Lang _mine = Prefs.get('mine', Lang.deviceDefault());
+  Lang? _partner = Prefs.maybe('partner2');
 
   Mode _mode = Mode.talk;
-  PushState _btn = PushState.idle;
   bool _ready = true;
-  bool _ignoreRelease = false;
   final List<_Msg> _talk = [];
+
+  // Voce: stato del pulsante attivo.
+  Side? _active;
+  PushState _state = PushState.idle;
+  bool _ignoreRelease = false;
+  String _liveTranslation = '';
+  Timer? _partialTimer;
+  int _partialSeq = 0;
 
   // Scanner
   CameraController? _cam;
   String? _camError;
   bool _frameBusy = false;
+  bool _shooting = false;
   DateTime _lastFrame = DateTime.fromMillisecondsSinceEpoch(0);
   final Map<String, String> _memo = {};
-  List<_LiveBlock> _live = [];
+  List<_LiveBlock> _liveBlocks = [];
   Size? _liveImage;
   String? _liveStatus;
   List<(String, String)>? _scanResult;
@@ -79,27 +93,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _live.partial.addListener(_onPartial);
     WidgetsBinding.instance.addPostFrameCallback((_) => _firstRun());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _live.partial.removeListener(_onPartial);
+    _partialTimer?.cancel();
     _disposeCamera();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_mode != Mode.scan) return;
     if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
-      _disposeCamera();
-    } else if (state == AppLifecycleState.resumed) {
+      if (_active != null) {
+        _live.cancel();
+        setState(() {
+          _active = null;
+          _state = PushState.idle;
+        });
+      }
+      if (_mode == Mode.scan) _disposeCamera();
+    } else if (state == AppLifecycleState.resumed && _mode == Mode.scan) {
       _initCamera();
     }
   }
 
-  // ───────────────────────── primo avvio e preparazione ─────────────────────────
+  // ───────────────────────── primo avvio ─────────────────────────
 
   Future<void> _firstRun() async {
     if (!Prefs.flag('mine_set')) {
@@ -111,6 +134,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await Prefs.setFlag('mine_set', true);
     }
     await _checkSetup(openIfMissing: true);
+    // Chiede subito i permessi del microfono, così il primo uso è immediato.
+    try {
+      final p = await _live.permissions();
+      if (!p.ok && !p.denied) await _live.request();
+    } catch (_) {}
   }
 
   Future<void> _checkSetup({bool openIfMissing = false}) async {
@@ -121,7 +149,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (!s.complete) {
       await _openSetup();
     } else if (!s.appleComplete && !Prefs.flag('apple_offered')) {
-      // Una volta: proponi il traduttore Apple (qualità migliore) se disponibile.
       await Prefs.setFlag('apple_offered', true);
       await _openSetup();
     }
@@ -133,123 +160,249 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _checkSetup();
   }
 
+  Future<void> _openAudio() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => AudioScreen(mine: _mine)));
+  }
+
   void _setMine(Lang l) {
     setState(() {
-      _dir.mine = l;
-      if (_dir.partner == l) _dir.partner = l == Lang.en ? Lang.it : Lang.en;
+      _mine = l;
+      if (_partner == l) _partner = null;
       _memo.clear();
-      _live = [];
+      _liveBlocks = [];
     });
-    Prefs.set('mine', _dir.mine);
-    Prefs.set('partner', _dir.partner);
+    Prefs.set('mine', l);
+    Prefs.setMaybe('partner2', _partner);
+  }
+
+  void _setPartner(Lang? l) {
+    setState(() => _partner = l == _mine ? null : l);
+    Prefs.setMaybe('partner2', _partner);
   }
 
   Future<void> _pickMine() async {
-    if (_btn != PushState.idle) return;
-    final l = await pickLanguage(context, _dir.mine);
+    if (_active != null) return;
+    final l = await pickLanguage(context, _mine);
     if (l != null) _setMine(l);
   }
 
-  void _missing(MissingLanguage e) {
-    comicToast(
-      context,
-      'Manca il pacchetto ${e.lang.flag} ${e.lang.label}: tocca ⬇ in alto per scaricarlo.',
-      color: MC.red,
+  Future<void> _pickPartner() async {
+    if (_active != null) return;
+    final l = await showModalBottomSheet<Object>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(12),
+        child: ComicPanel(
+          color: MC.paper,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const OutlinedTitle('LINGUA DELL\'ALTRO', size: 26),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, 'auto'),
+                  child: ComicPanel(
+                    color: _partner == null ? MC.cyan : MC.white,
+                    shadow: 3,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.auto_awesome, size: 26),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'AUTOMATICA: la riconosco io',
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final l in Lang.values.where((l) => l != _mine))
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, l),
+                        child: ComicPanel(
+                          color: l == _partner ? MC.cyan : MC.white,
+                          shadow: 3,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          child: Text(
+                            '${l.flag} ${l.label}',
+                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
+    if (l == 'auto') _setPartner(null);
+    if (l is Lang) _setPartner(l);
   }
 
-  // ───────────────────────── pulsante ─────────────────────────
+  void _missing(MissingLanguage e) =>
+      _toast('Manca il pacchetto ${e.lang.flag} ${e.lang.label}: tocca ⬇ in alto per scaricarlo.', error: true);
 
-  void _onPress() {
+  void _toast(String msg, {bool error = false}) => comicToast(context, msg, color: error ? MC.red : MC.yellow);
+
+  // ───────────────────────── voce ─────────────────────────
+
+  Future<void> _press(Side side) async {
+    _ignoreRelease = false;
+    if (_active != null || _state != PushState.idle) {
+      _ignoreRelease = true;
+      return;
+    }
     if (!_ready) {
       _ignoreRelease = true;
       _openSetup();
       return;
     }
-    _ignoreRelease = false;
-    if (_mode == Mode.talk) _startTalk();
-  }
-
-  void _onRelease() {
-    if (_ignoreRelease) return;
-    _mode == Mode.talk ? _finishTalk() : _shoot();
-  }
-
-  // ───────────────────────── voce ─────────────────────────
-
-  Future<void> _startTalk() async {
-    setState(() => _btn = PushState.recording);
-    final ok = await _speech.startRecording();
-    if (!ok && mounted) {
-      setState(() => _btn = PushState.idle);
+    if (side == Side.me && _partner == null) {
       _ignoreRelease = true;
-      comicToast(context, 'Serve il permesso del microfono: Impostazioni › Manga Vox › Microfono.', color: MC.red);
+      _toast(
+        'Prima fai parlare l\'altra persona col pulsante azzurro (riconosco la sua lingua), oppure sceglila qui sotto.',
+      );
+      return;
+    }
+    _speech.stopSpeaking();
+    setState(() {
+      _active = side;
+      _state = PushState.recording;
+      _liveTranslation = '';
+    });
+    final lang = side == Side.me ? _mine : _partner; // null = da riconoscere
+    bool ok;
+    try {
+      ok = await _live.start(lang);
+    } catch (e) {
+      ok = false;
+    }
+    if (!ok && mounted) {
+      setState(() {
+        _active = null;
+        _state = PushState.idle;
+      });
+      _ignoreRelease = true;
+      _toast('Il microfono non è attivo: lo attiviamo dal pannello AUDIO.', error: true);
+      _openAudio();
     }
   }
 
-  Future<void> _finishTalk() async {
-    if (_btn != PushState.recording) return;
-    setState(() => _btn = PushState.busy);
+  /// Traduzione in tempo reale delle parole parziali (mentre si parla).
+  void _onPartial() {
+    if (_active == null || _state != PushState.recording) return;
+    setState(() {});
+    final from = _active == Side.me ? _mine : _partner;
+    final to = _active == Side.me ? _partner : _mine;
+    final text = _live.partial.value.trim();
+    if (from == null || to == null || text.isEmpty) return;
+    _partialTimer?.cancel();
+    _partialTimer = Timer(const Duration(milliseconds: 350), () async {
+      final seq = ++_partialSeq;
+      try {
+        final out = await _tr.translate(text, from, to);
+        if (mounted && seq == _partialSeq && _state == PushState.recording) {
+          setState(() => _liveTranslation = out);
+        }
+      } catch (_) {}
+    });
+  }
+
+  Future<void> _release(Side side) async {
+    if (_ignoreRelease || _active != side || _state != PushState.recording) return;
+    _partialTimer?.cancel();
+    _partialSeq++;
+    setState(() => _state = PushState.busy);
+    LiveResult? r;
     try {
-      final heard = await _speech.stopAndTranscribe();
+      r = await _live.stop();
       if (!mounted) return;
-      if (heard.tooShort) {
-        comicToast(context, 'Tieni premuto il pulsante MENTRE parli, poi lascialo.');
+      if (r.error != null) {
+        _toast('Errore del microfono: ${r.error}', error: true);
         return;
       }
-      if (heard.error != null) {
-        comicToast(context, 'Errore del riconoscimento vocale: ${heard.error}', color: MC.red);
+      if (r.tooShort) {
+        _toast('Tieni premuto il pulsante MENTRE parli, poi lascialo.');
         return;
       }
-      if (heard.silent) {
-        comicToast(
-          context,
-          'Il microfono non riceve audio (${heard.debug}). Controlla Impostazioni › Manga Vox › Microfono '
-          'e che nessun\'altra app lo stia usando.',
-          color: MC.red,
-        );
+      if (r.silent && r.text.isEmpty) {
+        _toast('Non sento la voce: prova il microfono nel pannello AUDIO 🔊.', error: true);
         return;
       }
-      final text = heard.text;
-      if (text.isEmpty) {
-        comicToast(
-          context,
-          'Ho sentito la voce ma non ho capito le parole: parla più vicino e un po\' più a lungo. (${heard.debug})',
-        );
+
+      var from = side == Side.me ? _mine : _partner;
+      var text = r.text;
+
+      if (side == Side.them && (from == null || text.isEmpty) && r.audioPath != null) {
+        // Lingua dell'interlocutore ancora sconosciuta (o non capita):
+        // la riconosce Whisper, poi la frase viene trascritta bene in quella lingua.
+        final d = await _speech.detect(r.audioPath!);
+        if (!mounted) return;
+        final lang = d.lang;
+        if (lang == null) {
+          _toast('Non ho riconosciuto la lingua. Parlo: italiano, inglese, tedesco, francese, russo, cinese.');
+          return;
+        }
+        if (lang == _mine) {
+          _toast('Questa era ${_mine.label}: per la tua lingua usa il pulsante giallo IO.');
+          return;
+        }
+        if (lang != _partner) _setPartner(lang);
+        from = lang;
+        text = (await _live.recognizeFile(r.audioPath!, lang))?.trim() ?? '';
+        if (text.isEmpty) text = d.text;
+      }
+
+      if (from == null || text.isEmpty) {
+        _toast('Non ho capito le parole: parla un po\' più vicino e più a lungo.');
         return;
       }
-      final lang = await LangDetect.instance.detect(text);
-      if (!mounted) return;
-      if (lang == null) {
-        comicToast(context, 'Lingua non riconosciuta. Parlo: italiano, inglese, tedesco, francese, russo e cinese.');
-        return;
-      }
-      final (from, to) = _dir.route(lang);
-      Prefs.set('partner', _dir.partner);
+      final to = side == Side.me ? _partner! : _mine;
       final out = await _tr.translate(text, from, to);
       if (!mounted) return;
       setState(() {
-        _talk.add(_Msg(from: from, to: to, original: text, translated: out));
-        _btn = PushState.idle;
+        _talk.add(_Msg(side: side, from: from!, to: to, original: text, translated: out));
+        _active = null;
+        _state = PushState.idle;
+        _liveTranslation = '';
       });
       await _speech.speak(out, to);
     } on MissingLanguage catch (e) {
       if (mounted) _missing(e);
     } catch (e) {
-      if (mounted) comicToast(context, 'Qualcosa è andato storto: $e', color: MC.red);
+      if (mounted) _toast('Qualcosa è andato storto: $e', error: true);
     } finally {
-      if (mounted && _btn != PushState.idle) setState(() => _btn = PushState.idle);
+      LiveSpeech.deleteAudio(r?.audioPath);
+      if (mounted && (_active != null || _state != PushState.idle)) {
+        setState(() {
+          _active = null;
+          _state = PushState.idle;
+          _liveTranslation = '';
+        });
+      }
     }
   }
 
   // ───────────────────────── scanner ─────────────────────────
 
   Future<void> _setMode(Mode m) async {
-    if (m == _mode || _btn != PushState.idle) return;
+    if (m == _mode || _active != null || _shooting) return;
     setState(() {
       _mode = m;
       _scanResult = null;
-      _live = [];
+      _liveBlocks = [];
       _liveStatus = null;
     });
     if (m == Mode.scan) {
@@ -284,7 +437,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _cam = c;
         _camError = null;
       });
-      await _startLive();
+      await _startLiveScan();
     } on CameraException catch (e) {
       if (mounted) {
         setState(
@@ -308,8 +461,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await c.dispose();
   }
 
-  /// Traduzione dal vivo: parte da sola appena la fotocamera è pronta.
-  Future<void> _startLive() async {
+  Future<void> _startLiveScan() async {
     final c = _cam;
     if (c == null || !c.value.isInitialized || c.value.isStreamingImages) return;
     try {
@@ -317,7 +469,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } catch (_) {}
   }
 
-  Future<void> _stopLive() async {
+  Future<void> _stopLiveScan() async {
     final c = _cam;
     if (c != null && c.value.isStreamingImages) {
       try {
@@ -328,7 +480,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _onFrame(CameraImage image) async {
     final now = DateTime.now();
-    if (_frameBusy || _btn != PushState.idle || _scanResult != null) return;
+    if (_frameBusy || _shooting || _scanResult != null) return;
     if (now.difference(_lastFrame) < const Duration(milliseconds: 650)) return;
     _frameBusy = true;
     _lastFrame = now;
@@ -351,23 +503,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       if (blocks.isEmpty) {
         setState(() {
-          _live = [];
+          _liveBlocks = [];
           _liveStatus = null;
         });
         return;
       }
       final lang = await LangDetect.instance.detect(blocks.map((b) => b.$2).join(' '));
-      final mine = _dir.mine;
+      final mine = _mine;
       if (lang == null) {
         setState(() {
-          _live = [];
+          _liveBlocks = [];
           _liveStatus = 'Lingua non riconosciuta (per il russo premi SCATTA)';
         });
         return;
       }
       if (lang == mine) {
         setState(() {
-          _live = [];
+          _liveBlocks = [];
           _liveStatus = 'Testo già in ${mine.flag} ${mine.label}';
         });
         return;
@@ -378,9 +530,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         out.add(_LiveBlock(box, text, _memo[key] ??= await _tr.translate(text, lang, mine)));
       }
       if (_memo.length > 400) _memo.clear();
-      if (mounted && _btn == PushState.idle && _scanResult == null && mine == _dir.mine) {
+      if (mounted && !_shooting && _scanResult == null && mine == _mine) {
         setState(() {
-          _live = out;
+          _liveBlocks = out;
           _liveImage = upright;
           _liveStatus = '${lang.flag} ➜ ${mine.flag}';
         });
@@ -388,7 +540,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } on MissingLanguage catch (e) {
       if (mounted) {
         setState(() {
-          _live = [];
+          _liveBlocks = [];
           _liveStatus = 'Manca il pacchetto ${e.lang.flag} ${e.lang.label}: tocca ⬇ in alto';
         });
       }
@@ -420,33 +572,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  /// Pulsante in modalità scanner: scatta e traduce tutto nella MIA lingua.
+  /// Scatta e traduce tutto il testo nella MIA lingua.
   Future<void> _shoot() async {
     final c = _cam;
-    if (c == null || !c.value.isInitialized || _btn != PushState.idle) return;
+    if (!_ready) {
+      _openSetup();
+      return;
+    }
+    if (c == null || !c.value.isInitialized || _shooting) return;
     setState(() {
-      _btn = PushState.busy;
-      _live = [];
+      _shooting = true;
+      _liveBlocks = [];
     });
     try {
-      await _stopLive();
+      await _stopLiveScan();
       final shot = await c.takePicture();
       final r = await _ocr.readFile(shot.path);
       unawaited(File(shot.path).delete().catchError((_) => File(shot.path)));
       if (!mounted) return;
       if (r.blocks.isEmpty) {
-        comicToast(context, 'Nessun testo trovato. Avvicinati e tieni fermo il telefono!');
+        _toast('Nessun testo trovato. Avvicinati e tieni fermo il telefono!');
         return;
       }
       final from = r.lang;
       if (from == null) {
-        comicToast(context, 'Lingua del testo non riconosciuta.');
+        _toast('Lingua del testo non riconosciuta.');
         return;
       }
-      final to = _dir.mine;
       final out = <(String, String)>[];
       for (final b in r.blocks) {
-        out.add((b, await _tr.translate(b, from, to)));
+        out.add((b, await _tr.translate(b, from, _mine)));
       }
       if (mounted) {
         setState(() {
@@ -457,25 +612,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } on MissingLanguage catch (e) {
       if (mounted) _missing(e);
     } catch (e) {
-      if (mounted) comicToast(context, 'Scansione non riuscita: $e', color: MC.red);
+      if (mounted) _toast('Scansione non riuscita: $e', error: true);
     } finally {
-      if (mounted) setState(() => _btn = PushState.idle);
-      if (_scanResult == null) await _startLive();
+      if (mounted) setState(() => _shooting = false);
+      if (_scanResult == null) await _startLiveScan();
     }
   }
 
   Future<void> _closeResult() async {
     setState(() => _scanResult = null);
     _speech.stopSpeaking();
-    await _startLive();
+    await _startLiveScan();
   }
 
   // ───────────────────────── UI ─────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final btnSize = (width * (_mode == Mode.scan ? 0.38 : 0.5)).clamp(130.0, 220.0);
     return Scaffold(
       backgroundColor: MC.black,
       body: Stack(
@@ -483,8 +636,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           if (_mode == Mode.talk)
             HalftoneBackground(
-              speedLines: _btn == PushState.recording,
-              focus: const Alignment(0, 0.62),
+              speedLines: _state == PushState.recording,
+              focus: Alignment(_active == Side.me ? 0.5 : -0.5, 0.7),
               child: const SizedBox.expand(),
             )
           else ...[
@@ -496,23 +649,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 _topBar(),
                 Expanded(child: _mode == Mode.talk ? _talkContent() : _scanContent()),
-                ValueListenableBuilder<double>(
-                  valueListenable: _speech.level,
-                  builder: (_, lvl, _) => PushButton3D(
-                    level: lvl,
-                    state: _ready ? _btn : PushState.disabled,
-                    size: btnSize,
-                    icon: _mode == Mode.talk ? Icons.mic : Icons.photo_camera,
-                    label: !_ready
-                        ? 'PREPARA\nOFFLINE'
-                        : _mode == Mode.talk
-                        ? 'TIENI\nPREMUTO'
-                        : 'SCATTA!',
-                    onPress: _onPress,
-                    onRelease: _onRelease,
-                  ),
-                ),
-                _myLanguage(),
+                if (_mode == Mode.talk) _talkButtons() else _scanButton(),
                 const SizedBox(height: 6),
               ],
             ),
@@ -522,21 +659,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _topBar() => Padding(
-    padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
-    child: Row(
-      children: [
-        const OutlinedTitle('MANGA VOX', size: 28, stroke: 5),
-        const Spacer(),
-        _modeSwitch(),
-        IconButton(
-          tooltip: 'Lingue offline',
-          onPressed: _btn == PushState.idle ? _openSetup : null,
-          icon: Icon(Icons.download_for_offline, size: 30, color: _mode == Mode.scan ? MC.yellow : MC.black),
-        ),
-      ],
-    ),
-  );
+  Widget _topBar() {
+    final onCam = _mode == Mode.scan;
+    final iconColor = onCam ? MC.yellow : MC.black;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 0, 0),
+      child: Row(
+        children: [
+          const OutlinedTitle('MANGA VOX', size: 26, stroke: 5),
+          const Spacer(),
+          _modeSwitch(),
+          IconButton(
+            tooltip: 'Audio e microfono',
+            onPressed: _active == null ? _openAudio : null,
+            icon: Icon(Icons.tune, size: 28, color: iconColor),
+          ),
+          IconButton(
+            tooltip: 'Lingue offline',
+            onPressed: _active == null ? _openSetup : null,
+            icon: Icon(Icons.download_for_offline, size: 28, color: iconColor),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _modeSwitch() => ComicPanel(
     padding: const EdgeInsets.all(2),
@@ -551,12 +697,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () => _setMode(m),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: _mode == m ? MC.black : MC.white,
                   borderRadius: BorderRadius.circular(3),
                 ),
-                child: Icon(icon, size: 24, color: _mode == m ? MC.yellow : MC.black),
+                child: Icon(icon, size: 22, color: _mode == m ? MC.yellow : MC.black),
               ),
             ),
           ),
@@ -564,100 +710,149 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ),
   );
 
-  /// In basso: la MIA lingua, l'unica da scegliere. Tutto viene tradotto qui.
-  Widget _myLanguage() => Padding(
-    padding: const EdgeInsets.only(top: 2),
-    child: GestureDetector(
-      onTap: _pickMine,
-      child: ComicPanel(
-        color: MC.yellow,
-        shadow: 3,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        child: Row(
+  /// I due pulsanti: 1 = l'altra persona (lingua automatica), 2 = io.
+  Widget _talkButtons() {
+    final width = MediaQuery.sizeOf(context).width;
+    final size = (width * 0.36).clamp(110.0, 175.0);
+    Widget column(Side side) {
+      final isMe = side == Side.me;
+      final active = _active == side;
+      final otherBusy = _active != null && !active;
+      final lang = isMe ? _mine : _partner;
+      final state = !_ready
+          ? PushState.disabled
+          : otherBusy
+          ? PushState.disabled
+          : (active ? _state : PushState.idle);
+      return Expanded(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('LA MIA LINGUA  ', style: comic(17)),
-            Text(_dir.mine.flag, style: const TextStyle(fontSize: 20)),
-            Text(
-              ' ${_dir.mine.label.toUpperCase()}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ValueListenableBuilder<double>(
+              valueListenable: _live.level,
+              builder: (_, lvl, _) => PushButton3D(
+                state: state,
+                level: active ? lvl : 0,
+                size: size,
+                icon: isMe ? Icons.person : Icons.record_voice_over,
+                idleFace: isMe ? MC.yellow : MC.cyan,
+                idleSide: isMe ? const Color(0xFFC79A00) : const Color(0xFF00708A),
+                label: isMe ? 'IO\n${_mine.flag}' : (lang == null ? 'LUI/LEI\nAUTO' : 'LUI/LEI\n${lang.flag}'),
+                onPress: () => _press(side),
+                onRelease: () => _release(side),
+              ),
             ),
-            const Icon(Icons.arrow_drop_down, color: MC.black),
+            GestureDetector(
+              onTap: isMe ? _pickMine : _pickPartner,
+              child: ComicPanel(
+                color: isMe ? MC.yellow : MC.cyan,
+                shadow: 3,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      lang == null ? '✨ AUTO' : '${lang.flag} ${lang.label}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: MC.black, size: 20),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-      ),
-    ),
-  );
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [column(Side.them), column(Side.me)]),
+    );
+  }
+
+  Widget _scanButton() {
+    final width = MediaQuery.sizeOf(context).width;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PushButton3D(
+          state: !_ready ? PushState.disabled : (_shooting ? PushState.busy : PushState.idle),
+          size: (width * 0.34).clamp(110.0, 170.0),
+          icon: Icons.photo_camera,
+          label: 'SCATTA!',
+          onPress: () {},
+          onRelease: _shoot,
+        ),
+        GestureDetector(
+          onTap: _pickMine,
+          child: ComicPanel(
+            color: MC.yellow,
+            shadow: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            child: Text(
+              'TRADUCO IN ${_mine.flag} ${_mine.label.toUpperCase()} ▾',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _talkContent() {
-    if (_talk.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+    final speaking = _active != null && _state == PushState.recording;
+    final children = <Widget>[];
+    if (_talk.isEmpty && !speaking) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
           child: SpeechBubble(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('TIENI PREMUTO E PARLA!', textAlign: TextAlign.center, style: comic(26)),
+                Text('DUE PULSANTI, TIENI PREMUTO E PARLA!', textAlign: TextAlign.center, style: comic(22)),
                 const SizedBox(height: 6),
                 Text(
-                  'Riconosco da sola la lingua di chi parla. Se parli ${_dir.mine.label} traduco per l\'altro, '
-                  'se l\'altro risponde traduco in ${_dir.mine.label} per te.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  '🔵 LUI/LEI: l\'altra persona parla nella sua lingua, la riconosco da sola.\n'
+                  '🟡 IO: parli tu in ${_mine.label}.\n'
+                  'Lascia il pulsante e leggo la traduzione ad alta voce.',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, height: 1.35),
                 ),
-                const SizedBox(height: 8),
-                Text(Lang.values.map((l) => l.flag).join('  '), style: const TextStyle(fontSize: 22)),
               ],
             ),
           ),
         ),
       );
     }
-    final items = _talk.reversed.toList();
-    return ListView.builder(
-      reverse: true,
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 16),
-      itemCount: items.length,
-      itemBuilder: (_, i) {
-        final m = items[i];
-        final fromMe = m.from == _dir.mine;
-        return Align(
+    final width = MediaQuery.sizeOf(context).width;
+    for (final m in _talk.reversed) {
+      final fromMe = m.side == Side.me;
+      children.add(
+        Align(
           alignment: fromMe ? Alignment.centerRight : Alignment.centerLeft,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.86),
+            constraints: BoxConstraints(maxWidth: width * 0.86),
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
               child: GestureDetector(
-                onTap: () => _speech.speak(m.translated, m.to),
+                onTap: () => _speech.speak(m.translated, m.to, force: true),
                 child: SpeechBubble(
-                  color: fromMe ? MC.white : MC.yellow,
+                  color: fromMe ? MC.yellow : MC.cyan,
                   tailLeft: !fromMe,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('${m.from.flag} ➜ ${m.to.flag}', style: const TextStyle(fontSize: 15)),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.volume_up, size: 18, color: MC.black),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+                      Text('${m.from.flag} ➜ ${m.to.flag}  🔊', style: const TextStyle(fontSize: 14)),
+                      const SizedBox(height: 3),
                       Text(
                         m.translated,
-                        style: TextStyle(
-                          fontSize: i == 0 ? 24 : 19,
-                          fontWeight: FontWeight.w900,
-                          color: MC.black,
-                          height: 1.2,
-                        ),
+                        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: MC.black, height: 1.2),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         m.original,
-                        style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
+                        style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
                       ),
                     ],
                   ),
@@ -665,8 +860,57 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-        );
-      },
+        ),
+      );
+    }
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            reverse: true,
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            children: children.reversed.toList(),
+          ),
+        ),
+        if (_active != null) _livePanel(),
+      ],
+    );
+  }
+
+  /// Riquadro "in diretta": parole riconosciute e traduzione mentre si parla.
+  Widget _livePanel() {
+    final isMe = _active == Side.me;
+    final from = isMe ? _mine : _partner;
+    final to = isMe ? _partner : _mine;
+    final heard = _live.partial.value;
+    final busy = _state == PushState.busy;
+    final placeholder = busy
+        ? (from == null ? 'Riconosco la lingua…' : 'Traduco…')
+        : (from == null ? 'Parla pure: riconosco la lingua quando lasci il pulsante' : 'Ti ascolto…');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: ComicPanel(
+        color: MC.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('${from?.flag ?? '✨'} ➜ ${to?.flag ?? '?'}  IN DIRETTA', style: comic(16, color: MC.red)),
+            const SizedBox(height: 4),
+            Text(
+              _liveTranslation.isNotEmpty ? _liveTranslation : (heard.isEmpty ? placeholder : '…'),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, height: 1.2),
+            ),
+            if (heard.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  heard,
+                  style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -706,7 +950,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   /// L'anteprima riempie lo schermo (BoxFit.cover): stessa trasformazione.
   Widget _liveOverlay() {
     final img = _liveImage;
-    if (img == null || _live.isEmpty) return const SizedBox.shrink();
+    if (img == null || _liveBlocks.isEmpty) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, cons) {
         final scale = [cons.maxWidth / img.width, cons.maxHeight / img.height].reduce((a, b) => a > b ? a : b);
@@ -714,7 +958,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         final dy = (cons.maxHeight - img.height * scale) / 2;
         return Stack(
           children: [
-            for (final b in _live)
+            for (final b in _liveBlocks)
               Positioned(
                 left: (dx + b.box.left * scale).clamp(0.0, cons.maxWidth - 40),
                 top: (dy + b.box.top * scale).clamp(0.0, cons.maxHeight - 24),
@@ -749,7 +993,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _scanContent() {
     final maxH = MediaQuery.sizeOf(context).height * 0.5;
     if (_scanResult != null) {
-      final to = _dir.mine;
       return Align(
         alignment: Alignment.bottomCenter,
         child: Padding(
@@ -764,7 +1007,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: [
-                      Text('${_scanFrom?.flag ?? ''} ➜ ${to.flag}', style: const TextStyle(fontSize: 18)),
+                      Text('${_scanFrom?.flag ?? ''} ➜ ${_mine.flag}', style: const TextStyle(fontSize: 18)),
                       const Spacer(),
                       GestureDetector(
                         onTap: _closeResult,
@@ -780,7 +1023,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         for (final (orig, tr) in _scanResult!)
                           InkWell(
-                            onTap: () => _speech.speak(tr, to),
+                            onTap: () => _speech.speak(tr, _mine, force: true),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 5),
                               child: Column(
@@ -814,7 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       );
     }
-    final status = _liveStatus ?? 'Inquadra un testo: lo traduco in ${_dir.mine.flag} ${_dir.mine.label}';
+    final status = _liveStatus ?? 'Inquadra un testo: lo traduco in ${_mine.flag} ${_mine.label}';
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(

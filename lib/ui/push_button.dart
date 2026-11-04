@@ -22,7 +22,13 @@ class PushButton3D extends StatefulWidget {
     this.icon = Icons.mic,
     this.size = 210,
     this.level = 0,
+    this.idleFace = MC.yellow,
+    this.idleSide = const Color(0xFFC79A00),
   });
+
+  /// Colori a riposo (faccia e fianco del cilindro).
+  final Color idleFace;
+  final Color idleSide;
 
   /// Volume del microfono 0..1: anima le barre mentre registra.
   final double level;
@@ -110,7 +116,7 @@ class _PushButton3DState extends State<PushButton3D> with TickerProviderStateMix
       PushState.recording => (MC.red, const Color(0xFF9E1B26), MC.white),
       PushState.busy => (MC.cyan, const Color(0xFF00708A), MC.black),
       PushState.disabled => (const Color(0xFFDDDDDD), const Color(0xFF9A9A9A), const Color(0xFF777777)),
-      PushState.idle => (MC.yellow, const Color(0xFFC79A00), MC.black),
+      PushState.idle => (widget.idleFace, widget.idleSide, MC.black),
     };
     final label = switch (widget.state) {
       PushState.recording => 'TI\nASCOLTO!',

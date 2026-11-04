@@ -120,14 +120,14 @@ void main() {
 
   testWidgets('home: un solo pulsante 3D, pronto all\'uso', (tester) async {
     _phone(tester);
-    File('${tmp.path}/ggml-small-q5_1.bin').writeAsBytesSync(List.filled(1100000, 0));
+    File('${tmp.path}/ggml-tiny-q5_1.bin').writeAsBytesSync(List.filled(1100000, 0));
     await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen()));
     await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
     await tester.pump();
-    expect(find.byType(PushButton3D), findsOneWidget);
-    expect(find.text('TIENI\nPREMUTO'), findsOneWidget);
-    expect(find.text('LA MIA LINGUA  '), findsOneWidget);
-    expect(find.text('AUTO'), findsNothing);
+    // Due pulsanti: 1 = l'altra persona (lingua automatica), 2 = io.
+    expect(find.byType(PushButton3D), findsNWidgets(2));
+    expect(find.text('LUI/LEI\nAUTO'), findsOneWidget);
+    expect(find.textContaining('IO\n'), findsOneWidget);
     await _shot(tester, find.byType(HomeScreen), 'home');
   });
 
@@ -192,7 +192,7 @@ void main() {
   testWidgets('preparazione offline: un pulsante scarica tutto', (tester) async {
     _phone(tester);
     modelsDownloaded = false;
-    File('${tmp.path}/ggml-small-q5_1.bin').deleteSync();
+    File('${tmp.path}/ggml-tiny-q5_1.bin').deleteSync();
     await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: SetupScreen()));
     await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
     await tester.pump();

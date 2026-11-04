@@ -21,7 +21,11 @@ class PushButton3D extends StatefulWidget {
     this.label = 'TIENI\nPREMUTO',
     this.icon = Icons.mic,
     this.size = 210,
+    this.level = 0,
   });
+
+  /// Volume del microfono 0..1: anima le barre mentre registra.
+  final double level;
 
   final PushState state;
   final VoidCallback onPress;
@@ -36,10 +40,11 @@ class PushButton3D extends StatefulWidget {
 }
 
 class _PushButton3DState extends State<PushButton3D> with TickerProviderStateMixin {
-  late final AnimationController _press =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 90));
-  late final AnimationController _pulse =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+  late final AnimationController _press = AnimationController(vsync: this, duration: const Duration(milliseconds: 90));
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
   bool _down = false;
 
   @override
@@ -143,18 +148,26 @@ class _PushButton3DState extends State<PushButton3D> with TickerProviderStateMix
                     offset: Offset(0, f - depth / 2),
                     child: SizedBox.square(
                       dimension: s * 0.8,
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        if (widget.state == PushState.busy)
-                          SizedBox.square(
-                            dimension: s * 0.2,
-                            child: CircularProgressIndicator(strokeWidth: 6, color: ink),
-                          )
-                        else
-                          Icon(widget.state == PushState.recording ? Icons.graphic_eq : widget.icon,
-                              size: s * 0.24, color: ink),
-                        SizedBox(height: s * 0.03),
-                        Text(label, textAlign: TextAlign.center, style: comic(s * 0.105, color: ink)),
-                      ]),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.state == PushState.busy)
+                            SizedBox.square(
+                              dimension: s * 0.2,
+                              child: CircularProgressIndicator(strokeWidth: 6, color: ink),
+                            )
+                          else if (widget.state == PushState.recording)
+                            _Bars(level: widget.level, color: ink, size: s * 0.24)
+                          else
+                            Icon(widget.icon, size: s * 0.24, color: ink),
+                          SizedBox(height: s * 0.03),
+                          Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: comic(s * 0.105, color: ink),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -215,8 +228,11 @@ class _CylinderPainter extends CustomPainter {
         final a = i / 16 * math.pi * 2 + 0.1;
         final wob = math.sin((pulse! * 2 + i * 0.37) * math.pi * 2) * 0.03;
         final r1 = r * (1.12 + wob), r2 = r * (1.27 + wob);
-        canvas.drawLine(Offset(cx + math.cos(a) * r1, cy + depth / 2 + math.sin(a) * r1),
-            Offset(cx + math.cos(a) * r2, cy + depth / 2 + math.sin(a) * r2), lines);
+        canvas.drawLine(
+          Offset(cx + math.cos(a) * r1, cy + depth / 2 + math.sin(a) * r1),
+          Offset(cx + math.cos(a) * r2, cy + depth / 2 + math.sin(a) * r2),
+          lines,
+        );
       }
     }
 
@@ -295,4 +311,34 @@ class _CylinderPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CylinderPainter old) =>
       old.offset != offset || old.face != face || old.pulse != pulse || old.side != side;
+}
+
+/// Barre del volume del microfono dentro il pulsante.
+class _Bars extends StatelessWidget {
+  const _Bars({required this.level, required this.color, required this.size});
+  final double level;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    const shape = [0.45, 0.75, 1.0, 0.75, 0.45];
+    return SizedBox(
+      width: size * 1.2,
+      height: size,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          for (final k in shape)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 80),
+              width: size * 0.13,
+              height: size * (0.15 + 0.85 * (level * k).clamp(0.0, 1.0)),
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(size)),
+            ),
+        ],
+      ),
+    );
+  }
 }

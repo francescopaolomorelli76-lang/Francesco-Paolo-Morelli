@@ -12,11 +12,9 @@ class TranslatorService {
   final _manager = OnDeviceTranslatorModelManager();
   final Map<String, OnDeviceTranslator> _cache = {};
 
-  Future<bool> isDownloaded(Lang lang) =>
-      _manager.isModelDownloaded(lang.mlkit.bcpCode);
+  Future<bool> isDownloaded(Lang lang) => _manager.isModelDownloaded(lang.mlkit.bcpCode);
 
-  Future<bool> download(Lang lang) =>
-      _manager.downloadModel(lang.mlkit.bcpCode, isWifiRequired: false);
+  Future<bool> download(Lang lang) => _manager.downloadModel(lang.mlkit.bcpCode, isWifiRequired: false);
 
   Future<bool> delete(Lang lang) => _manager.deleteModel(lang.mlkit.bcpCode);
 
@@ -33,10 +31,7 @@ class TranslatorService {
     final clean = text.trim();
     if (clean.isEmpty || from == to) return clean;
     final key = '${from.name}>${to.name}';
-    final translator = _cache[key] ??= OnDeviceTranslator(
-      sourceLanguage: from.mlkit,
-      targetLanguage: to.mlkit,
-    );
+    final translator = _cache[key] ??= OnDeviceTranslator(sourceLanguage: from.mlkit, targetLanguage: to.mlkit);
     return translator.translateText(clean);
   }
 

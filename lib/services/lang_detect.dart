@@ -47,6 +47,11 @@ class LangDetect {
   }
 
   static int cyrillicLetters(String t) => t.runes.where((r) => r >= 0x0400 && r <= 0x04FF).length;
-  static int allLetters(String t) =>
-      t.runes.where((r) => String.fromCharCode(r).toLowerCase() != String.fromCharCode(r).toUpperCase() || (r >= 0x4E00 && r <= 0x9FFF)).length;
+  static int allLetters(String t) => t.runes
+      .where(
+        (r) =>
+            String.fromCharCode(r).toLowerCase() != String.fromCharCode(r).toUpperCase() ||
+            (r >= 0x4E00 && r <= 0x9FFF),
+      )
+      .length;
 }

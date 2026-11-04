@@ -59,17 +59,16 @@ class OcrService {
     final latin = results[0], cyr = results[1];
     final latinText = latin.join(' '), cyrText = cyr.join(' ');
     final cyrLetters = LangDetect.cyrillicLetters(cyrText);
-    final isRussian = cyrLetters >= 6 &&
+    final isRussian =
+        cyrLetters >= 6 &&
         cyrLetters >= 0.6 * LangDetect.allLetters(cyrText) &&
         cyrLetters > 0.8 * LangDetect.allLetters(latinText);
     if (isRussian) return OcrResult(Lang.ru, cyr);
     return OcrResult(await LangDetect.instance.detect(latinText), latin);
   }
 
-  static List<String> blocksOf(RecognizedText result) => result.blocks
-      .map((b) => b.lines.map((l) => l.text).join(' ').trim())
-      .where((t) => t.isNotEmpty)
-      .toList();
+  static List<String> blocksOf(RecognizedText result) =>
+      result.blocks.map((b) => b.lines.map((l) => l.text).join(' ').trim()).where((t) => t.isNotEmpty).toList();
 
   static List<String> splitParagraphs(String text) => text
       .split(RegExp(r'\n\s*\n'))

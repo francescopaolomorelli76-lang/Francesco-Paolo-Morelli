@@ -17,13 +17,13 @@ class MangaVoxApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Manga Vox',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: MC.yellow, primary: MC.black, secondary: MC.red),
-          scaffoldBackgroundColor: MC.paper,
-          useMaterial3: true,
-        ),
-        home: const HomeScreen(),
-      );
+    title: 'Manga Vox',
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: MC.yellow, primary: MC.black, secondary: MC.red),
+      scaffoldBackgroundColor: MC.paper,
+      useMaterial3: true,
+    ),
+    home: const HomeScreen(),
+  );
 }

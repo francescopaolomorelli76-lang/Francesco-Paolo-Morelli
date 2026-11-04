@@ -31,25 +31,33 @@ class OutlinedTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = comic(size, spacing: 2);
-    return Stack(children: [
-      Transform.translate(
-        offset: const Offset(3, 3),
-        child: Text(text, style: base.copyWith(
-          foreground: Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = stroke
-            ..color = MC.black,
-        )),
-      ),
-      Text(text, style: base.copyWith(
-        foreground: Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = stroke
-          ..strokeJoin = StrokeJoin.round
-          ..color = MC.black,
-      )),
-      Text(text, style: base.copyWith(color: fill)),
-    ]);
+    return Stack(
+      children: [
+        Transform.translate(
+          offset: const Offset(3, 3),
+          child: Text(
+            text,
+            style: base.copyWith(
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = stroke
+                ..color = MC.black,
+            ),
+          ),
+        ),
+        Text(
+          text,
+          style: base.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = stroke
+              ..strokeJoin = StrokeJoin.round
+              ..color = MC.black,
+          ),
+        ),
+        Text(text, style: base.copyWith(color: fill)),
+      ],
+    );
   }
 }
 
@@ -70,10 +78,8 @@ class HalftoneBackground extends StatelessWidget {
   final Alignment focus;
 
   @override
-  Widget build(BuildContext context) => CustomPaint(
-        painter: _HalftonePainter(color, dotColor, speedLines, focus),
-        child: child,
-      );
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: _HalftonePainter(color, dotColor, speedLines, focus), child: child);
 }
 
 class _HalftonePainter extends CustomPainter {
@@ -139,15 +145,15 @@ class ComicPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: MC.black, width: 3.5),
-          boxShadow: [BoxShadow(color: MC.black, offset: Offset(shadow, shadow))],
-        ),
-        child: child,
-      );
+    padding: padding,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: MC.black, width: 3.5),
+      boxShadow: [BoxShadow(color: MC.black, offset: Offset(shadow, shadow))],
+    ),
+    child: child,
+  );
 }
 
 /// Nuvoletta con coda. [tailLeft] decide da che lato esce la coda.
@@ -168,12 +174,9 @@ class SpeechBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-        painter: _BubblePainter(color, tailLeft, tailUp),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(18, tailUp ? 30 : 14, 18, tailUp ? 14 : 30),
-          child: child,
-        ),
-      );
+    painter: _BubblePainter(color, tailLeft, tailUp),
+    child: Padding(padding: EdgeInsets.fromLTRB(18, tailUp ? 30 : 14, 18, tailUp ? 14 : 30), child: child),
+  );
 }
 
 class _BubblePainter extends CustomPainter {
@@ -191,15 +194,15 @@ class _BubblePainter extends CustomPainter {
     final tx = left ? size.width * 0.22 : size.width * 0.78;
     final tailPath = up
         ? (Path()
-          ..moveTo(tx - 14, body.top + 2)
-          ..lineTo(tx + (left ? -16 : 16), 0)
-          ..lineTo(tx + 12, body.top + 2)
-          ..close())
+            ..moveTo(tx - 14, body.top + 2)
+            ..lineTo(tx + (left ? -16 : 16), 0)
+            ..lineTo(tx + 12, body.top + 2)
+            ..close())
         : (Path()
-          ..moveTo(tx - 12, body.bottom - 2)
-          ..lineTo(tx + (left ? -16 : 16), size.height)
-          ..lineTo(tx + 14, body.bottom - 2)
-          ..close());
+            ..moveTo(tx - 12, body.bottom - 2)
+            ..lineTo(tx + (left ? -16 : 16), size.height)
+            ..lineTo(tx + 14, body.bottom - 2)
+            ..close());
     final shape = Path.combine(PathOperation.union, Path()..addRRect(rr), tailPath);
     canvas.drawPath(shape.shift(const Offset(4, 4)), Paint()..color = MC.black);
     canvas.drawPath(shape, Paint()..color = color);
@@ -244,8 +247,7 @@ class BurstButton extends StatefulWidget {
 }
 
 class _BurstButtonState extends State<BurstButton> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
 
   @override
   void didUpdateWidget(BurstButton old) {
@@ -289,10 +291,13 @@ class _BurstButtonState extends State<BurstButton> with SingleTickerProviderStat
                         dimension: widget.size * 0.28,
                         child: CircularProgressIndicator(strokeWidth: 5, color: ink),
                       )
-                    : Column(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(widget.icon, size: widget.size * 0.3, color: ink),
-                        Text(widget.label, style: comic(widget.size * 0.15, color: ink)),
-                      ]),
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(widget.icon, size: widget.size * 0.3, color: ink),
+                          Text(widget.label, style: comic(widget.size * 0.15, color: ink)),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -360,20 +365,23 @@ class ComicButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Opacity(
-          opacity: onTap == null ? 0.5 : 1,
-          child: ComicPanel(
-            color: color,
-            shadow: 4,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              if (icon != null) ...[Icon(icon, color: textColor, size: size + 2), const SizedBox(width: 6)],
-              Text(label, style: comic(size, color: textColor)),
-            ]),
-          ),
+    onTap: onTap,
+    child: Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: ComicPanel(
+        color: color,
+        shadow: 4,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[Icon(icon, color: textColor, size: size + 2), const SizedBox(width: 6)],
+            Text(label, style: comic(size, color: textColor)),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Selettore lingua: mostra bandiera + sigla, apre una griglia.
@@ -385,80 +393,95 @@ class LangPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: () async {
-          final picked = await pickLanguage(context, value);
-          if (picked != null) onChanged(picked);
-        },
-        child: ComicPanel(
-          color: color,
-          shadow: 4,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Text(value.flag, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 8),
-            Text(value.short, style: comic(24)),
-            const Icon(Icons.arrow_drop_down, color: MC.black),
-          ]),
-        ),
-      );
+    onTap: () async {
+      final picked = await pickLanguage(context, value);
+      if (picked != null) onChanged(picked);
+    },
+    child: ComicPanel(
+      color: color,
+      shadow: 4,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(value.flag, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 8),
+          Text(value.short, style: comic(24)),
+          const Icon(Icons.arrow_drop_down, color: MC.black),
+        ],
+      ),
+    ),
+  );
 }
 
 Future<Lang?> pickLanguage(BuildContext context, Lang current) => showModalBottomSheet<Lang>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(12),
-        child: ComicPanel(
-          color: MC.paper,
-          child: SafeArea(
-            top: false,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const OutlinedTitle('SCEGLI LA LINGUA!', size: 28),
-              const SizedBox(height: 12),
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 2,
-                childAspectRatio: 2.6,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  for (final l in Lang.values)
-                    GestureDetector(
-                      onTap: () => Navigator.pop(ctx, l),
-                      child: ComicPanel(
-                        color: l == current ? MC.yellow : MC.white,
-                        shadow: 3,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(children: [
+  context: context,
+  backgroundColor: Colors.transparent,
+  builder: (ctx) => Padding(
+    padding: const EdgeInsets.all(12),
+    child: ComicPanel(
+      color: MC.paper,
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const OutlinedTitle('SCEGLI LA LINGUA!', size: 28),
+            const SizedBox(height: 12),
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              childAspectRatio: 2.6,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                for (final l in Lang.values)
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx, l),
+                    child: ComicPanel(
+                      color: l == current ? MC.yellow : MC.white,
+                      shadow: 3,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        children: [
                           Text(l.flag, style: const TextStyle(fontSize: 26)),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(l.label,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                            child: Text(
+                              l.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                            ),
                           ),
-                        ]),
+                        ],
                       ),
                     ),
-                ],
-              ),
-            ]),
-          ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
 
 void comicToast(BuildContext context, String msg, {Color color = MC.yellow}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      content: ComicPanel(
-        color: color,
-        child: Text(msg, style: const TextStyle(color: MC.black, fontWeight: FontWeight.w700, fontSize: 15)),
+    ..showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: ComicPanel(
+          color: color,
+          child: Text(
+            msg,
+            style: const TextStyle(color: MC.black, fontWeight: FontWeight.w700, fontSize: 15),
+          ),
+        ),
       ),
-    ));
+    );
 }

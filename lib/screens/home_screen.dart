@@ -139,14 +139,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_btn != PushState.recording) return;
     setState(() => _btn = PushState.busy);
     try {
-      final text = await _speech.stopAndTranscribe();
+      final heard = await _speech.stopAndTranscribe();
       if (!mounted) return;
-      if (text == null) {
+      if (heard.tooShort) {
         comicToast(context, 'Tieni premuto il pulsante MENTRE parli, poi lascialo.');
         return;
       }
+      if (heard.error != null) {
+        comicToast(context, 'Errore del riconoscimento vocale: ${heard.error}', color: MC.red);
+        return;
+      }
+      if (heard.silent) {
+        comicToast(
+          context,
+          'Il microfono non riceve audio (${heard.debug}). Controlla Impostazioni › Manga Vox › Microfono e che nessun\'altra app lo stia usando.',
+          color: MC.red,
+        );
+        return;
+      }
+      final text = heard.text;
       if (text.isEmpty) {
-        comicToast(context, 'Non ho sentito niente… riprova!');
+        comicToast(
+          context,
+          'Ho sentito la voce ma non ho capito le parole: parla più vicino e un po\' più a lungo. (${heard.debug})',
+        );
         return;
       }
       final lang = await LangDetect.instance.detect(text);
@@ -341,75 +357,89 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final btnSize = (width * 0.5).clamp(150.0, 220.0);
     return Scaffold(
       backgroundColor: MC.black,
-      body: Stack(fit: StackFit.expand, children: [
-        if (_mode == Mode.talk)
-          HalftoneBackground(
-            speedLines: _btn == PushState.recording,
-            focus: const Alignment(0, 0.62),
-            child: const SizedBox.expand(),
-          )
-        else
-          _cameraLayer(),
-        SafeArea(
-          child: Column(children: [
-            _topBar(),
-            Expanded(child: _mode == Mode.talk ? _talkContent() : _scanContent()),
-            PushButton3D(
-              state: _ready ? _btn : PushState.disabled,
-              size: btnSize,
-              icon: _mode == Mode.talk ? Icons.mic : Icons.center_focus_strong,
-              label: _ready ? 'TIENI\nPREMUTO' : 'PREPARA\nOFFLINE',
-              onPress: _onPress,
-              onRelease: _onRelease,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_mode == Mode.talk)
+            HalftoneBackground(
+              speedLines: _btn == PushState.recording,
+              focus: const Alignment(0, 0.62),
+              child: const SizedBox.expand(),
+            )
+          else
+            _cameraLayer(),
+          SafeArea(
+            child: Column(
+              children: [
+                _topBar(),
+                Expanded(child: _mode == Mode.talk ? _talkContent() : _scanContent()),
+                ValueListenableBuilder<double>(
+                  valueListenable: _speech.level,
+                  builder: (_, lvl, _) => PushButton3D(
+                    level: lvl,
+                    state: _ready ? _btn : PushState.disabled,
+                    size: btnSize,
+                    icon: _mode == Mode.talk ? Icons.mic : Icons.center_focus_strong,
+                    label: _ready ? 'TIENI\nPREMUTO' : 'PREPARA\nOFFLINE',
+                    onPress: _onPress,
+                    onRelease: _onRelease,
+                  ),
+                ),
+                _statusLine(),
+                const SizedBox(height: 6),
+              ],
             ),
-            _statusLine(),
-            const SizedBox(height: 6),
-          ]),
-        ),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _topBar() => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
-        child: Row(children: [
-          const OutlinedTitle('MANGA VOX', size: 28, stroke: 5),
-          const Spacer(),
-          _modeSwitch(),
-          IconButton(
-            tooltip: 'Lingue offline',
-            onPressed: _btn == PushState.idle ? _openSetup : null,
-            icon: Icon(_ready ? Icons.offline_pin : Icons.download_for_offline,
-                size: 30, color: _mode == Mode.scan ? MC.yellow : MC.black),
+    padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
+    child: Row(
+      children: [
+        const OutlinedTitle('MANGA VOX', size: 28, stroke: 5),
+        const Spacer(),
+        _modeSwitch(),
+        IconButton(
+          tooltip: 'Lingue offline',
+          onPressed: _btn == PushState.idle ? _openSetup : null,
+          icon: Icon(
+            _ready ? Icons.offline_pin : Icons.download_for_offline,
+            size: 30,
+            color: _mode == Mode.scan ? MC.yellow : MC.black,
           ),
-        ]),
-      );
+        ),
+      ],
+    ),
+  );
 
   Widget _modeSwitch() => ComicPanel(
-        padding: const EdgeInsets.all(2),
-        shadow: 3,
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          for (final (m, icon, tip) in [
-            (Mode.talk, Icons.mic, 'Voce'),
-            (Mode.scan, Icons.photo_camera, 'Scanner'),
-          ])
-            Tooltip(
-              message: tip,
-              child: GestureDetector(
-                onTap: () => _setMode(m),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _mode == m ? MC.black : MC.white,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Icon(icon, size: 24, color: _mode == m ? MC.yellow : MC.black),
+    padding: const EdgeInsets.all(2),
+    shadow: 3,
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final (m, icon, tip) in [(Mode.talk, Icons.mic, 'Voce'), (Mode.scan, Icons.photo_camera, 'Scanner')])
+          Tooltip(
+            message: tip,
+            child: GestureDetector(
+              onTap: () => _setMode(m),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _mode == m ? MC.black : MC.white,
+                  borderRadius: BorderRadius.circular(3),
                 ),
+                child: Icon(icon, size: 24, color: _mode == m ? MC.yellow : MC.black),
               ),
             ),
-        ]),
-      );
+          ),
+      ],
+    ),
+  );
 
   /// Sotto il pulsante: chi parla cosa. La mia lingua si tocca per cambiarla.
   Widget _statusLine() {
@@ -417,43 +447,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final txtColor = onCam ? MC.white : MC.black;
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        GestureDetector(
-          onTap: _btn == PushState.idle
-              ? () async {
-                  final l = await pickLanguage(context, _dir.mine);
-                  if (l != null) {
-                    setState(() => _dir.mine = l);
-                    _savePair();
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: _btn == PushState.idle
+                ? () async {
+                    final l = await pickLanguage(context, _dir.mine);
+                    if (l != null) {
+                      setState(() => _dir.mine = l);
+                      _savePair();
+                    }
                   }
-                }
-              : null,
-          child: ComicPanel(
-            color: MC.yellow,
+                : null,
+            child: ComicPanel(
+              color: MC.yellow,
+              shadow: 3,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('IO ', style: comic(18)),
+                  Text(_dir.mine.flag, style: const TextStyle(fontSize: 20)),
+                  Text(' ${_dir.mine.short}', style: comic(18)),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Icon(Icons.sync_alt, color: txtColor, size: 26),
+          ),
+          ComicPanel(
+            color: MC.cyan,
             shadow: 3,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text('IO ', style: comic(18)),
-              Text(_dir.mine.flag, style: const TextStyle(fontSize: 20)),
-              Text(' ${_dir.mine.short}', style: comic(18)),
-            ]),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(_dir.partner.flag, style: const TextStyle(fontSize: 20)),
+                Text(' ${_dir.partner.short} ', style: comic(18)),
+                Text('AUTO', style: comic(13, color: MC.white)),
+              ],
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Icon(Icons.sync_alt, color: txtColor, size: 26),
-        ),
-        ComicPanel(
-          color: MC.cyan,
-          shadow: 3,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Text(_dir.partner.flag, style: const TextStyle(fontSize: 20)),
-            Text(' ${_dir.partner.short} ', style: comic(18)),
-            Text('AUTO', style: comic(13, color: MC.white)),
-          ]),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -463,17 +502,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: SpeechBubble(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('TIENI PREMUTO E PARLA!', textAlign: TextAlign.center, style: comic(26)),
-              const SizedBox(height: 6),
-              const Text(
-                'In qualsiasi lingua: la riconosco da sola. Lascia il pulsante e traduco ad alta voce.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(Lang.values.map((l) => l.flag).join('  '), style: const TextStyle(fontSize: 22)),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('TIENI PREMUTO E PARLA!', textAlign: TextAlign.center, style: comic(26)),
+                const SizedBox(height: 6),
+                const Text(
+                  'In qualsiasi lingua: la riconosco da sola. Lascia il pulsante e traduco ad alta voce.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(Lang.values.map((l) => l.flag).join('  '), style: const TextStyle(fontSize: 22)),
+              ],
+            ),
           ),
         ),
       );
@@ -497,20 +539,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 child: SpeechBubble(
                   color: fromMe ? MC.white : MC.yellow,
                   tailLeft: !fromMe,
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text('${m.from.flag} ➜ ${m.to.flag}', style: const TextStyle(fontSize: 15)),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.volume_up, size: 18, color: MC.black),
-                    ]),
-                    const SizedBox(height: 4),
-                    Text(m.translated,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('${m.from.flag} ➜ ${m.to.flag}', style: const TextStyle(fontSize: 15)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.volume_up, size: 18, color: MC.black),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        m.translated,
                         style: TextStyle(
-                            fontSize: i == 0 ? 24 : 19, fontWeight: FontWeight.w900, color: MC.black, height: 1.2)),
-                    const SizedBox(height: 4),
-                    Text(m.original,
-                        style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Color(0xAA111111))),
-                  ]),
+                          fontSize: i == 0 ? 24 : 19,
+                          fontWeight: FontWeight.w900,
+                          color: MC.black,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        m.original,
+                        style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -543,7 +599,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ? const CircularProgressIndicator(color: MC.yellow)
             : Padding(
                 padding: const EdgeInsets.all(24),
-                child: ComicPanel(color: MC.red, child: Text(_camError!, style: comic(22, color: MC.white))),
+                child: ComicPanel(
+                  color: MC.red,
+                  child: Text(_camError!, style: comic(22, color: MC.white)),
+                ),
               ),
       ),
     );
@@ -555,24 +614,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_btn == PushState.recording) {
       panel = _live.isEmpty
           ? Text('Inquadra il testo… ⚡  (per il russo lascia il pulsante)', style: comic(20))
-          : _pairs(_live, header: _liveLang == null ? null : '${_liveLang!.flag} ➜ ${_dir.targetFor(_liveLang!).flag}  LIVE');
+          : _pairs(
+              _live,
+              header: _liveLang == null ? null : '${_liveLang!.flag} ➜ ${_dir.targetFor(_liveLang!).flag}  LIVE',
+            );
     } else if (_scanResult != null) {
       final (from, to) = _scanPair!;
-      panel = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          Text('${from.flag} ➜ ${to.flag}', style: const TextStyle(fontSize: 18)),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => setState(() => _scanResult = null),
-            child: const Icon(Icons.close, size: 26, color: MC.black),
+      panel = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text('${from.flag} ➜ ${to.flag}', style: const TextStyle(fontSize: 18)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => setState(() => _scanResult = null),
+                child: const Icon(Icons.close, size: 26, color: MC.black),
+              ),
+            ],
           ),
-        ]),
-        const Divider(color: MC.black, thickness: 2),
-        Flexible(child: _pairs(_scanResult!, speakIn: to)),
-      ]);
+          const Divider(color: MC.black, thickness: 2),
+          Flexible(child: _pairs(_scanResult!, speakIn: to)),
+        ],
+      );
     } else if (_btn == PushState.idle) {
-      panel = Text('Inquadra un cartello o un menù e TIENI PREMUTO. Lascia per tradurre la foto intera.',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800));
+      panel = Text(
+        'Inquadra un cartello o un menù e TIENI PREMUTO. Lascia per tradurre la foto intera.',
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+      );
     }
     return Align(
       alignment: Alignment.bottomCenter,
@@ -589,24 +659,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _pairs(List<(String, String)> items, {String? header, Lang? speakIn}) => ListView(
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        children: [
-          if (header != null) Text(header, style: comic(16)),
-          for (final (orig, tr) in items)
-            InkWell(
-              onTap: speakIn == null ? null : () => _speech.speak(tr, speakIn),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(tr, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: MC.black)),
-                  Text(orig,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Color(0x99111111))),
-                ]),
-              ),
+    shrinkWrap: true,
+    padding: EdgeInsets.zero,
+    children: [
+      if (header != null) Text(header, style: comic(16)),
+      for (final (orig, tr) in items)
+        InkWell(
+          onTap: speakIn == null ? null : () => _speech.speak(tr, speakIn),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr,
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: MC.black),
+                ),
+                Text(
+                  orig,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Color(0x99111111)),
+                ),
+              ],
             ),
-        ],
-      );
+          ),
+        ),
+    ],
+  );
 }

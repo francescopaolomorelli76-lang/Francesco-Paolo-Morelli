@@ -23,5 +23,6 @@ class Direction {
 
 extension DirectionPeek on Direction {
   /// Come [route] ma senza aggiornare l'interlocutore (per lo scanner dal vivo).
-  Lang targetFor(Lang detected) => detected == mine ? (partner == mine ? (mine == Lang.en ? Lang.it : Lang.en) : partner) : mine;
+  Lang targetFor(Lang detected) =>
+      detected == mine ? (partner == mine ? (mine == Lang.en ? Lang.it : Lang.en) : partner) : mine;
 }

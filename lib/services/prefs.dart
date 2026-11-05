@@ -13,6 +13,9 @@ class Prefs {
   static bool flag(String key, {bool fallback = false}) => _p.getBool(key) ?? fallback;
   static Future<void> setFlag(String key, bool v) => _p.setBool(key, v);
 
+  static String str(String key, [String fallback = '']) => _p.getString(key) ?? fallback;
+  static Future<void> setStr(String key, String v) => _p.setString(key, v);
+
   static double number(String key, double fallback) => _p.getDouble(key) ?? fallback;
   static Future<void> setNumber(String key, double v) => _p.setDouble(key, v);
 

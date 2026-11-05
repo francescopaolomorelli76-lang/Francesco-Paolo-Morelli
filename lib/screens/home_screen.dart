@@ -9,6 +9,7 @@ import '../languages.dart';
 import '../services/lang_detect.dart';
 import '../services/live_speech.dart';
 import '../services/ocr_service.dart';
+import '../services/pitch.dart';
 import '../services/prefs.dart';
 import '../services/setup_service.dart';
 import '../services/speech_service.dart';
@@ -25,10 +26,20 @@ enum Mode { talk, scan }
 enum Side { them, me }
 
 class _Msg {
-  _Msg({required this.side, required this.from, required this.to, required this.original, required this.translated});
+  _Msg({
+    required this.side,
+    required this.from,
+    required this.to,
+    required this.original,
+    required this.translated,
+    this.gender,
+  });
   final Side side;
   final Lang from, to;
   final String original, translated;
+
+  /// Uomo/donna di chi ha parlato (dal tono), per leggere con una voce simile.
+  final VoiceGender? gender;
 }
 
 /// Un blocco di testo inquadrato e la sua traduzione, con la posizione
@@ -342,6 +353,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
 
+      // Uomo o donna? Lo stima il tono della voce, in parallelo alla traduzione.
+      final genderFuture = r.audioPath == null ? Future<VoiceGender?>.value() : genderFromWav(r.audioPath!);
       var from = side == Side.me ? _mine : _partner;
       var text = r.text;
 
@@ -371,14 +384,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
       final to = side == Side.me ? _partner! : _mine;
       final out = await _tr.translate(text, from, to);
+      final gender = await genderFuture;
       if (!mounted) return;
       setState(() {
-        _talk.add(_Msg(side: side, from: from!, to: to, original: text, translated: out));
+        _talk.add(_Msg(side: side, from: from!, to: to, original: text, translated: out, gender: gender));
         _active = null;
         _state = PushState.idle;
         _liveTranslation = '';
       });
-      await _speech.speak(out, to);
+      await _speech.speak(out, to, gender: gender);
     } on MissingLanguage catch (e) {
       if (mounted) _missing(e);
     } catch (e) {
@@ -836,14 +850,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
               child: GestureDetector(
-                onTap: () => _speech.speak(m.translated, m.to, force: true),
+                onTap: () => _speech.speak(m.translated, m.to, gender: m.gender, force: true),
                 child: SpeechBubble(
                   color: fromMe ? MC.yellow : MC.cyan,
                   tailLeft: !fromMe,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${m.from.flag} ➜ ${m.to.flag}  🔊', style: const TextStyle(fontSize: 14)),
+                      Text(
+                        '${m.from.flag} ➜ ${m.to.flag}  🔊${m.gender == VoiceGender.male ? '  ♂' : (m.gender == VoiceGender.female ? '  ♀' : '')}',
+                        style: const TextStyle(fontSize: 14),
+                      ),
                       const SizedBox(height: 3),
                       Text(
                         m.translated,

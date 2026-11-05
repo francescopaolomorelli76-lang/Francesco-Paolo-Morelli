@@ -7,7 +7,32 @@ import 'package:whisper_ggml/whisper_ggml.dart';
 
 import '../languages.dart';
 import 'lang_detect.dart';
+import 'pitch.dart';
 import 'prefs.dart';
+
+/// Una voce di sintesi installata sul telefono.
+class TtsVoice {
+  TtsVoice({required this.id, required this.name, required this.locale, required this.quality, this.gender});
+  final String id, name, locale;
+
+  /// "premium", "enhanced" o "default".
+  final String quality;
+  final VoiceGender? gender;
+
+  int get rank => switch (quality) {
+    'premium' => 3,
+    'enhanced' => 2,
+    _ => 1,
+  };
+
+  String get qualityLabel => switch (quality) {
+    'premium' => '⭐ Premium',
+    'enhanced' => 'Migliorata',
+    _ => 'Base',
+  };
+
+  Map<String, String> get asMap => {'identifier': id, 'name': name, 'locale': locale};
+}
 
 /// Lingua riconosciuta da un audio, con il testo trascritto da Whisper.
 class Detected {
@@ -32,7 +57,6 @@ class SpeechService {
   static const _native = MethodChannel('manga_vox/native');
 
   final _tts = FlutterTts();
-  bool _ttsReady = false;
   String? _modelPathCache;
 
   // ───────────── impostazioni voce ─────────────
@@ -146,23 +170,105 @@ class SpeechService {
   static String cleanTranscript(String s) =>
       s.replaceAll(RegExp(r'\[[^\]]*\]|\([^)]*\)|\*[^*]*\*'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
 
+  // ───────────── voci ─────────────
+
+  List<TtsVoice>? _voices;
+
+  /// Uomo/donna come chi parla (riconosciuto dal tono della voce).
+  bool get autoGender => Prefs.flag('voice_auto', fallback: true);
+  Future<void> setAutoGender(bool v) => Prefs.setFlag('voice_auto', v);
+
+  /// Voce usata quando il genere non è automatico o non si riconosce.
+  VoiceGender get defaultGender =>
+      Prefs.str('voice_default', 'female') == 'male' ? VoiceGender.male : VoiceGender.female;
+  Future<void> setDefaultGender(VoiceGender g) => Prefs.setStr('voice_default', g.name);
+
+  /// Voce scelta dall'utente per lingua e genere ('' = automatica, la migliore).
+  String chosenVoiceId(Lang l, VoiceGender g) => Prefs.str('voice_${l.name}_${g.name}');
+  Future<void> setChosenVoice(Lang l, VoiceGender g, String id) => Prefs.setStr('voice_${l.name}_${g.name}', id);
+
+  /// Ricarica l'elenco (dopo aver scaricato nuove voci nelle impostazioni).
+  void refreshVoices() => _voices = null;
+
+  /// Voci installate per una lingua, dalla migliore. Esclude le voci
+  /// "giocattolo" e quelle robotiche di sistema.
+  Future<List<TtsVoice>> voicesFor(Lang lang) async {
+    if (_voices == null) {
+      final out = <TtsVoice>[];
+      try {
+        final raw = await _tts.getVoices;
+        for (final v in (raw as List? ?? [])) {
+          if (v is! Map) continue;
+          final id = '${v['identifier'] ?? v['name'] ?? ''}';
+          if (id.isEmpty || id.contains('speech.synthesis.voice') || id.contains('eloquence')) continue;
+          final g = '${v['gender'] ?? ''}';
+          out.add(
+            TtsVoice(
+              id: id,
+              name: '${v['name'] ?? id}',
+              locale: '${v['locale'] ?? ''}'.replaceAll('_', '-'),
+              quality: '${v['quality'] ?? 'default'}',
+              gender: g == 'male' ? VoiceGender.male : (g == 'female' ? VoiceGender.female : null),
+            ),
+          );
+        }
+      } catch (_) {}
+      _voices = out;
+    }
+    final code = lang.locale.split('-').first.toLowerCase();
+    final list = _voices!.where((v) => v.locale.toLowerCase().split('-').first == code).toList();
+    list.sort((a, b) {
+      final exact = (b.locale == lang.locale ? 1 : 0) - (a.locale == lang.locale ? 1 : 0);
+      if (b.rank != a.rank) return b.rank - a.rank;
+      if (exact != 0) return exact;
+      return a.name.compareTo(b.name);
+    });
+    return list;
+  }
+
+  /// La voce da usare: quella scelta, altrimenti la migliore del genere giusto.
+  Future<TtsVoice?> pickVoice(Lang lang, VoiceGender gender) async {
+    final all = await voicesFor(lang);
+    if (all.isEmpty) return null;
+    final chosen = chosenVoiceId(lang, gender);
+    if (chosen.isNotEmpty) {
+      for (final v in all) {
+        if (v.id == chosen) return v;
+      }
+    }
+    for (final v in all) {
+      if (v.gender == gender) return v;
+    }
+    return all.first;
+  }
+
   // ───────────── sintesi vocale ─────────────
 
-  Future<void> speak(String text, Lang lang, {bool force = false}) async {
+  /// Legge [text] in [lang]. [gender] = genere di chi ha parlato (se noto):
+  /// con "uomo/donna automatico" la traduzione usa una voce dello stesso genere.
+  Future<void> speak(String text, Lang lang, {VoiceGender? gender, TtsVoice? voice, bool force = false}) async {
     if (text.trim().isEmpty || (!speakAloud && !force)) return;
-    if (!_ttsReady) {
-      _ttsReady = true;
-      await _tts.setSharedInstance(true);
-      await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playAndRecord, [
-        IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
-        IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-        IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
-      ], IosTextToSpeechAudioMode.voicePrompt);
-    }
+    final g = (autoGender ? gender : null) ?? defaultGender;
+    final v = voice ?? await pickVoice(lang, g);
     await _tts.stop();
+    if (Platform.isIOS) {
+      // Modalità "riproduzione": volume pieno e altoparlante (la modalità
+      // registrazione dell'iPhone abbassa il volume). Il microfono la
+      // reimposta da solo quando si preme di nuovo un pulsante.
+      await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
+        IosTextToSpeechAudioCategoryOptions.duckOthers,
+      ], IosTextToSpeechAudioMode.defaultMode);
+      await _tts.setSharedInstance(true);
+    }
     await _tts.setLanguage(lang.locale);
+    if (v != null) {
+      try {
+        await _tts.setVoice(v.asMap);
+      } catch (_) {}
+    }
     await _tts.setVolume(volume);
     await _tts.setSpeechRate(rate);
+    await _tts.setPitch(1.0);
     await _tts.speak(text);
   }
 

@@ -5,6 +5,7 @@ import 'package:volume_controller/volume_controller.dart';
 
 import '../languages.dart';
 import '../services/live_speech.dart';
+import '../services/pitch.dart';
 import '../services/speech_service.dart';
 import '../ui/manga.dart';
 
@@ -30,6 +31,8 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
   bool _testing = false;
   double _testPeak = -160;
   String? _testResult;
+  late Lang _voiceLang = widget.mine;
+  List<TtsVoice>? _voices;
 
   static const _sample = {
     Lang.it: 'Ciao! Mi senti bene?',
@@ -45,6 +48,7 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _refresh();
+    _loadVoices();
     try {
       VolumeController.instance.showSystemUI = false;
       _volSub = VolumeController.instance.addListener((v) {
@@ -67,7 +71,11 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
   // Al ritorno dalle impostazioni dell'iPhone, aggiorna lo stato.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _refresh();
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+      _speech.refreshVoices();
+      _loadVoices();
+    }
   }
 
   Future<void> _refresh() async {
@@ -75,6 +83,11 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
       final p = await _live.permissions();
       if (mounted) setState(() => _perm = p);
     } catch (_) {}
+  }
+
+  Future<void> _loadVoices() async {
+    final v = await _speech.voicesFor(_voiceLang);
+    if (mounted) setState(() => _voices = v);
   }
 
   Future<void> _activate() async {
@@ -244,16 +257,143 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Suggerimento: se la voce è bassa, togli il silenzioso e alza il volume del telefono qui sopra.',
+                    'Suggerimento: se la voce è bassa, togli il silenzioso e alza il volume del telefono qui sopra '
+                    '(la traduzione usa sempre l\'altoparlante a volume pieno).',
                     style: TextStyle(fontSize: 13, color: Color(0xAA111111), fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // ───── Voci
+            _section('🗣 VOCI'),
+            _voicesPanel(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _voicesPanel() {
+    final voices = _voices;
+    final auto = _speech.autoGender;
+    return ComicPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            activeThumbColor: MC.red,
+            title: const Text('Uomo o donna come chi parla', style: TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: const Text('Riconosco dal tono se parla un uomo o una donna e uso una voce simile.'),
+            value: auto,
+            onChanged: (v) => setState(() => _speech.setAutoGender(v)),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  auto ? 'Se non lo riconosco, uso:' : 'Voce da usare:',
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              for (final g in VoiceGender.values)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: ComicButton(
+                    label: g == VoiceGender.female ? '♀ DONNA' : '♂ UOMO',
+                    size: 15,
+                    color: _speech.defaultGender == g ? MC.yellow : MC.white,
+                    onTap: () => setState(() => _speech.setDefaultGender(g)),
+                  ),
+                ),
+            ],
+          ),
+          const Divider(color: MC.black, thickness: 2, height: 24),
+          const Text('Scegli la voce per ogni lingua', style: TextStyle(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final l in Lang.values)
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _voiceLang = l;
+                      _voices = null;
+                    });
+                    _loadVoices();
+                  },
+                  child: ComicPanel(
+                    color: l == _voiceLang ? MC.yellow : MC.white,
+                    shadow: 2,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text('${l.flag} ${l.short}', style: comic(18)),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (voices == null)
+            const Center(child: CircularProgressIndicator(color: MC.black))
+          else if (voices.isEmpty)
+            Text('Nessuna voce ${_voiceLang.label} installata sul telefono.')
+          else
+            for (final g in VoiceGender.values) ..._genderVoices(g, voices),
+          const SizedBox(height: 8),
+          const Text(
+            'Voci più naturali (non robotiche): sull\'iPhone vai in Impostazioni › Accessibilità › Contenuto letto › Voci, '
+            'scegli la lingua e scarica una voce "Migliorata" o "Premium". Poi torna qui: la trovi nell\'elenco e la uso da sola.',
+            style: TextStyle(fontSize: 13, color: Color(0xAA111111), fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _genderVoices(VoiceGender g, List<TtsVoice> all) {
+    final list = all.where((v) => v.gender == g || v.gender == null).toList();
+    if (list.isEmpty) return [];
+    final chosen = _speech.chosenVoiceId(_voiceLang, g);
+    Widget tile(String title, String? badge, String id, TtsVoice? voice) => InkWell(
+      onTap: () {
+        setState(() => _speech.setChosenVoice(_voiceLang, g, id));
+        if (voice != null) _speech.speak(_sample[_voiceLang]!, _voiceLang, voice: voice, force: true);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(chosen == id ? Icons.radio_button_checked : Icons.radio_button_off, color: MC.black),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            if (badge != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: badge.startsWith('⭐') ? MC.yellow : (badge == 'Migliorata' ? MC.cyan : MC.white),
+                  border: Border.all(color: MC.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(badge, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              ),
+            if (voice != null) const Icon(Icons.play_arrow, color: MC.black),
+          ],
+        ),
+      ),
+    );
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 2),
+        child: Text(g == VoiceGender.female ? '♀ VOCE DONNA' : '♂ VOCE UOMO', style: comic(18, color: MC.red)),
+      ),
+      tile('Automatica (la migliore installata)', null, '', null),
+      for (final v in list) tile('${v.name}  (${v.locale})', v.qualityLabel, v.id, v),
+    ];
   }
 
   Widget _section(String t) => Padding(

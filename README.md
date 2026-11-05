@@ -26,6 +26,8 @@ Al centro c'è **un unico grande pulsante 3D**.
 ### 🎛 Audio (icona in alto)
 Stato e attivazione di microfono e riconoscimento vocale, **prova microfono** con indicatore, volume del telefono, volume e velocità della voce, lettura ad alta voce sì/no, **prova voce**.
 
+**Voci:** l'app riconosce dal tono se parla un **uomo o una donna** e legge la traduzione con una voce dello stesso genere (si può disattivare). Per ogni lingua si può scegliere la voce, con la qualità indicata (⭐ Premium, Migliorata, Base) e l'ascolto di prova. Le voci più naturali si scaricano gratis sull'iPhone in *Impostazioni › Accessibilità › Contenuto letto › Voci*. La traduzione viene letta sempre dall'altoparlante a volume pieno.
+
 ### 📷 Scanner (interruttore in alto)
 - **Inquadra e basta**: l'app riconosce la lingua del testo e scrive la traduzione nella **tua lingua** sopra il testo, in tempo reale.
 - Il pulsante **SCATTA!** fotografa e traduce tutto il testo, blocco per blocco (tocca un blocco per ascoltarlo).

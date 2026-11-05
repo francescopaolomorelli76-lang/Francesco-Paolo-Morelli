@@ -65,6 +65,8 @@ p{margin:0}
 
 /* ── telefono disegnato ── */
 .phone{justify-self:center;width:min(300px,100%);aspect-ratio:9/18.5;background:var(--ink);border-radius:42px;padding:12px;box-shadow:10px 10px 0 #11111155;transform:rotate(3deg)}
+.screen.real{padding:0;background:var(--paper)}
+.screen.real img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
 .screen{height:100%;border-radius:32px;background:var(--paper);background-image:radial-gradient(circle,var(--dot) 1.2px,transparent 1.6px);background-size:10px 10px;overflow:hidden;display:flex;flex-direction:column;padding:16px 12px 14px}
 .screen .bar{display:flex;align-items:center;justify-content:space-between}
 .screen .logo{font-family:var(--display);font-size:20px;color:var(--yellow);-webkit-text-stroke:3.5px var(--ink);paint-order:stroke fill;letter-spacing:.04em}
@@ -179,17 +181,7 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
     </div>
 
     <div class="phone" aria-label="Manga Vox mentre traduce una conversazione">
-      <div class="screen">
-        <div class="bar"><span class="logo">MANGA VOX</span><span class="sw"><span>🎤</span><span>📷</span></span></div>
-        <div class="chat">
-          <div class="bub them anim2"><span class="meta">🇯🇵 ➜ 🇮🇹 🔊 ♂</span><b>Dov'è la stazione?</b><small>駅はどこですか？</small></div>
-          <div class="bub me anim"><span class="meta">🇮🇹 ➜ 🇯🇵 🔊 ♀</span><b>まっすぐ行って、右です。</b><small>Sempre dritto, poi a destra.</small></div>
-        </div>
-        <div class="btns">
-          <span class="b3d"><i>LUI/LEI<br>🇯🇵</i></span>
-          <span class="b3d me press"><i>IO<br>🇮🇹</i></span>
-        </div>
-      </div>
+      <div class="screen real"><img src="media/app-screen.jpg" alt="Schermata reale di Manga Vox: una frase italiana tradotta in cinese, con i due pulsanti 3D LUI/LEI e IO"></div>
     </div>
     <span class="pow" aria-hidden="true">WOW!</span>
   </div>

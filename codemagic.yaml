@@ -1,6 +1,58 @@
 # Compilazione iOS nel cloud (Mac di Codemagic) e invio a TestFlight.
 # Guida passo passo: docs/TESTFLIGHT.md
 workflows:
+  # ── ANDROID ─────────────────────────────────────────────────────────────
+  # Prova: APK da installare direttamente su un telefono Android (non per lo store).
+  android-test:
+    name: Android prova (APK)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.47.9
+      java: 17
+    scripts:
+      - name: Modello vocale da includere nell'app
+        script: ./scripts/fetch_models.sh
+      - name: Pacchetti Flutter
+        script: flutter pub get
+      - name: Test
+        script: flutter test
+      - name: Compila APK
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+
+  # Play Store: pacchetto AAB firmato con la tua chiave di caricamento.
+  # Prima: Codemagic › Team settings › Code signing identities › Android keystores
+  # › carica il file .jks con nome di riferimento "manga_vox_upload" (vedi docs/PLAY_STORE.md).
+  android-release:
+    name: Android → Play Store (AAB)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.47.9
+      java: 17
+      android_signing:
+        - manga_vox_upload
+    scripts:
+      - name: Modello vocale da includere nell'app
+        script: ./scripts/fetch_models.sh
+      - name: Pacchetti Flutter
+        script: flutter pub get
+      - name: Chiave di firma
+        script: |
+          cat > "$CM_BUILD_DIR/android/key.properties" <<PROPS
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          PROPS
+      - name: Compila AAB
+        script: flutter build appbundle --release --build-number=$((BUILD_NUMBER + 100))
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+
+  # ── iOS ─────────────────────────────────────────────────────────────────
   # Prova gratuita: app NON firmata da installare con Sideloadly (docs/PROVA_IPHONE.md).
   # Non serve l'account Apple Developer.
   ios-unsigned:

@@ -2,6 +2,8 @@ import 'package:google_mlkit_language_id/google_mlkit_language_id.dart';
 
 import '../languages.dart';
 
+enum Script { cyrillic, han, kana, hangul, other }
+
 /// Riconosce la lingua di un testo, offline (ML Kit Language ID).
 class LangDetect {
   LangDetect._();
@@ -9,42 +11,67 @@ class LangDetect {
 
   final _id = LanguageIdentifier(confidenceThreshold: 0.3);
 
-  /// Lingua supportata più probabile, oppure null se non riconosciuta.
+  /// Lingua più probabile (tra tutte quelle conosciute), o null.
+  /// Chi la usa controlla se è installata (Langs.isInstalled).
   Future<Lang?> detect(String text) async {
     final t = text.trim();
     if (t.isEmpty) return null;
-    // Scorciatoie affidabili basate sull'alfabeto.
-    final script = scriptGuess(t);
-    if (script != null) return script;
+    final script = scriptOf(t);
+    List<Lang> candidates = [];
     try {
-      final candidates = await _id.identifyPossibleLanguages(t);
-      for (final c in candidates) {
-        final l = Lang.fromCode(c.languageTag);
-        if (l != null) return l;
-      }
+      final ids = await _id.identifyPossibleLanguages(t);
+      candidates = [for (final c in ids) ?Lang.fromCode(c.languageTag)];
     } catch (_) {}
-    return null;
+    // L'alfabeto decide con certezza alcune lingue.
+    switch (script) {
+      case Script.kana:
+        return Lang.fromName('ja', Lang.zh);
+      case Script.han:
+        return Lang.zh;
+      case Script.hangul:
+        return Lang.fromName('ko', Lang.en);
+      case Script.cyrillic:
+        const cyrillic = {'ru', 'uk', 'bg', 'be', 'mk'};
+        for (final l in candidates) {
+          if (cyrillic.contains(l.name)) return l;
+        }
+        return Lang.ru;
+      case Script.other:
+        return candidates.isEmpty ? null : candidates.first;
+    }
   }
 
-  /// Russo e cinese si riconoscono dall'alfabeto con certezza.
-  static Lang? scriptGuess(String t) {
-    var letters = 0, cyr = 0, han = 0;
+  /// Alfabeto prevalente del testo.
+  static Script scriptOf(String t) {
+    var letters = 0, cyr = 0, han = 0, kana = 0, hangul = 0;
     for (final r in t.runes) {
       if (r >= 0x0400 && r <= 0x04FF) {
         cyr++;
-        letters++;
+      } else if (r >= 0x3040 && r <= 0x30FF) {
+        kana++;
+      } else if (r >= 0xAC00 && r <= 0xD7AF) {
+        hangul++;
       } else if (r >= 0x4E00 && r <= 0x9FFF) {
         han++;
-        letters++;
-      } else if ((r >= 0x41 && r <= 0x5A) || (r >= 0x61 && r <= 0x7A) || (r >= 0xC0 && r <= 0x24F)) {
-        letters++;
+      } else if (String.fromCharCode(r).toLowerCase() == String.fromCharCode(r).toUpperCase()) {
+        continue;
       }
+      letters++;
     }
-    if (letters == 0) return null;
-    if (han / letters > 0.3) return Lang.zh;
-    if (cyr / letters > 0.5) return Lang.ru;
-    return null;
+    if (letters == 0) return Script.other;
+    if (kana > 0 && (kana + han) / letters > 0.3) return Script.kana;
+    if (hangul / letters > 0.3) return Script.hangul;
+    if (han / letters > 0.3) return Script.han;
+    if (cyr / letters > 0.5) return Script.cyrillic;
+    return Script.other;
   }
+
+  /// Compatibilità: russo e cinese riconosciuti dall'alfabeto.
+  static Lang? scriptGuess(String t) => switch (scriptOf(t)) {
+    Script.han => Lang.zh,
+    Script.cyrillic => Lang.ru,
+    _ => null,
+  };
 
   static int cyrillicLetters(String t) => t.runes.where((r) => r >= 0x0400 && r <= 0x04FF).length;
   static int allLetters(String t) => t.runes

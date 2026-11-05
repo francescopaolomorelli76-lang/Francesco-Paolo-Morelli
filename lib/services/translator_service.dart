@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 import '../languages.dart';
+import 'langs.dart';
 
 /// Il pacchetto di traduzione di una lingua non è sul telefono.
 class MissingLanguage implements Exception {
@@ -63,7 +64,7 @@ class TranslatorService {
   Future<List<Lang>> appleMissing(Lang mine) async {
     if (!await appleAvailable()) return [];
     final out = <Lang>[];
-    for (final l in Lang.values) {
+    for (final l in Langs.installed) {
       if (l == mine) continue;
       if (!await appleReady(l, mine) || !await appleReady(mine, l)) out.add(l);
     }

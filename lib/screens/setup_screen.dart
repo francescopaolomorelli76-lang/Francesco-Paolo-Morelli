@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../languages.dart';
 import '../services/setup_service.dart';
+import '../services/langs.dart';
 import '../ui/manga.dart';
+import 'world_screen.dart';
 
 /// Preparazione offline: un solo pulsante scarica voce + lingue.
 class SetupScreen extends StatefulWidget {
@@ -102,10 +103,25 @@ class _SetupScreenState extends State<SetupScreen> {
                 child: Column(
                   children: [
                     _item('🎤', 'Voce offline (riconosce la lingua)', s?.voiceReady),
-                    for (final l in Lang.values) _item(l.flag, l.label, s == null ? null : !s.missingLangs.contains(l)),
+                    for (final l in Langs.installed)
+                      _item(l.flag, l.label, s == null ? null : !s.missingLangs.contains(l)),
                     if (s != null && s.appleAvailable)
                       _item('🍎', 'Traduttore Apple, qualità migliore (consigliato)', s.appleComplete),
                   ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Center(
+                child: ComicButton(
+                  label: '🌍 LINGUE DEL MONDO',
+                  color: MC.white,
+                  size: 20,
+                  onTap: _running
+                      ? null
+                      : () async {
+                          await Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldScreen()));
+                          await _refresh();
+                        },
                 ),
               ),
               if (s != null && s.appleAvailable && !s.appleComplete && !_running) ...[

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 import '../languages.dart';
+import '../services/langs.dart';
 import '../services/live_speech.dart';
 import '../services/pitch.dart';
 import '../services/speech_service.dart';
@@ -252,7 +253,7 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
                     child: ComicButton(
                       label: 'PROVA VOCE',
                       icon: Icons.volume_up,
-                      onTap: () => _speech.speak(_sample[widget.mine]!, widget.mine, force: true),
+                      onTap: () => _speech.speak(_sample[widget.mine] ?? widget.mine.label, widget.mine, force: true),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -317,7 +318,7 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
             spacing: 6,
             runSpacing: 6,
             children: [
-              for (final l in Lang.values)
+              for (final l in Langs.installed)
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -360,7 +361,9 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
     Widget tile(String title, String? badge, String id, TtsVoice? voice) => InkWell(
       onTap: () {
         setState(() => _speech.setChosenVoice(_voiceLang, g, id));
-        if (voice != null) _speech.speak(_sample[_voiceLang]!, _voiceLang, voice: voice, force: true);
+        if (voice != null) {
+          _speech.speak(_sample[_voiceLang] ?? _voiceLang.label, _voiceLang, voice: voice, force: true);
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),

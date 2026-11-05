@@ -7,6 +7,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 
 import '../languages.dart';
 import '../services/lang_detect.dart';
+import '../services/langs.dart';
 import '../services/live_speech.dart';
 import '../services/ocr_service.dart';
 import '../services/pitch.dart';
@@ -19,6 +20,7 @@ import '../ui/push_button.dart';
 import 'audio_screen.dart';
 import 'language_screen.dart';
 import 'setup_screen.dart';
+import 'world_screen.dart';
 
 enum Mode { talk, scan }
 
@@ -171,6 +173,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _checkSetup();
   }
 
+  Future<void> _openWorld() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldScreen()));
+    _memo.clear();
+    if (mounted) setState(() {});
+  }
+
+  /// La lingua riconosciuta non è ancora scaricata: lo dico e propongo il download.
+  void _notInstalled(Lang l) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
+          backgroundColor: MC.black,
+          content: Text(
+            'Ho riconosciuto ${l.flag} ${l.itName}, ma non è ancora scaricata.',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          action: SnackBarAction(label: '🌍 SCARICA', textColor: MC.yellow, onPressed: _openWorld),
+        ),
+      );
+  }
+
   Future<void> _openAudio() async {
     await Navigator.push(context, MaterialPageRoute(builder: (_) => AudioScreen(mine: _mine)));
   }
@@ -237,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    for (final l in Lang.values.where((l) => l != _mine))
+                    for (final l in Langs.installed.where((l) => l != _mine))
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx, l),
                         child: ComicPanel(
@@ -252,12 +278,36 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx, 'world'),
+                  child: const ComicPanel(
+                    color: MC.yellow,
+                    shadow: 3,
+                    child: Row(
+                      children: [
+                        Text('🌍', style: TextStyle(fontSize: 24)),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'ALTRE LINGUE DEL MONDO: tocca il paese e la scarico',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+    if (l == 'world') {
+      await _openWorld();
+      return;
+    }
     if (l == 'auto') _setPartner(null);
     if (l is Lang) _setPartner(l);
   }
@@ -365,7 +415,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         if (!mounted) return;
         final lang = d.lang;
         if (lang == null) {
-          _toast('Non ho riconosciuto la lingua. Parlo: italiano, inglese, tedesco, francese, russo, cinese.');
+          _toast('Non ho riconosciuto la lingua: parla un po\' più a lungo e più vicino.');
+          return;
+        }
+        if (!Langs.isInstalled(lang)) {
+          _notInstalled(lang);
           return;
         }
         if (lang == _mine) {
@@ -531,6 +585,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         });
         return;
       }
+      if (!Langs.isInstalled(lang)) {
+        setState(() {
+          _liveBlocks = [];
+          _liveStatus = 'È ${lang.flag} ${lang.itName}: scaricala da 🌍 (pulsante ⬇ in alto)';
+        });
+        return;
+      }
       if (lang == mine) {
         setState(() {
           _liveBlocks = [];
@@ -611,6 +672,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final from = r.lang;
       if (from == null) {
         _toast('Lingua del testo non riconosciuta.');
+        return;
+      }
+      if (!Langs.isInstalled(from)) {
+        _notInstalled(from);
         return;
       }
       final out = <(String, String)>[];
@@ -840,7 +905,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }
     final width = MediaQuery.sizeOf(context).width;
-    for (final m in _talk.reversed) {
+    // Ordine di chat: la più vecchia in alto, la nuova sotto. La lista è
+    // "rovesciata" (ancorata in basso), quindi l'ultima resta sempre visibile.
+    for (final m in _talk) {
       final fromMe = m.side == Side.me;
       children.add(
         Align(

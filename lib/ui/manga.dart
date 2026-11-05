@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../languages.dart';
+import '../services/langs.dart';
 
 /// MC = "Manga Colors". Kit grafico "manga / fumetto action": inchiostro nero, carta,
 /// retini a puntini, linee cinetiche, esplosioni e nuvolette.
@@ -436,7 +437,7 @@ Future<Lang?> pickLanguage(BuildContext context, Lang current) => showModalBotto
               crossAxisSpacing: 10,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                for (final l in Lang.values)
+                for (final l in Langs.installed)
                   GestureDetector(
                     onTap: () => Navigator.pop(ctx, l),
                     child: ComicPanel(

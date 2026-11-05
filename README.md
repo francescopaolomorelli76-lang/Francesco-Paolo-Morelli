@@ -2,7 +2,7 @@
 
 App per **iPhone e Android** di traduzione simultanea **offline**, pensata per dialoghi veloci tra due persone, con **scanner di testo da foto** e traduzione in tempo reale. Grafica manga/fumetto action.
 
-**Lingue:** 🇮🇹 Italiano · 🇬🇧 Inglese · 🇩🇪 Tedesco · 🇫🇷 Francese · 🇷🇺 Russo · 🇨🇳 Cinese
+**Lingue:** 🇮🇹 Italiano · 🇬🇧 Inglese · 🇩🇪 Tedesco · 🇫🇷 Francese · 🇷🇺 Russo · 🇨🇳 Cinese incluse, più **🌍 59 lingue del mondo** scaricabili toccando il paese (spagnolo, portoghese, arabo, giapponese, coreano, hindi, turco, greco, polacco, ucraino, …).
 
 <p>
 <img src="docs/screenshots/icon.png" width="120" alt="Icona">
@@ -22,6 +22,9 @@ Al centro c'è **un unico grande pulsante 3D**.
 - 🟡 **IO** (destra): tieni premuto e parla nella **tua lingua**.
 - Mentre si parla, le parole e la **traduzione compaiono in diretta**; al rilascio la traduzione definitiva arriva subito e viene letta ad alta voce.
 - Tocca una nuvoletta per riascoltarla.
+
+### 🌍 Lingue del mondo
+Da ⬇ in alto › **LINGUE DEL MONDO**, oppure dal riquadro sotto il pulsante azzurro: cerca o scorri i paesi, **tocca il paese** e l'app scarica la sua lingua per l'offline (circa 30 MB). Da lì la lingua viene riconosciuta in automatico, tradotta e letta; si rimuove tenendola premuta. Se l'app riconosce una lingua non ancora scaricata, propone subito **🌍 SCARICA**.
 
 ### 🎛 Audio (icona in alto)
 Stato e attivazione di microfono e riconoscimento vocale, **prova microfono** con indicatore, volume del telefono, volume e velocità della voce, lettura ad alta voce sì/no, **prova voce**.

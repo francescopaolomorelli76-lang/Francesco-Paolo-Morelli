@@ -16,6 +16,9 @@ class Prefs {
   static String str(String key, [String fallback = '']) => _p.getString(key) ?? fallback;
   static Future<void> setStr(String key, String v) => _p.setString(key, v);
 
+  static List<String> list(String key) => _p.getStringList(key) ?? const [];
+  static Future<void> setList(String key, List<String> v) => _p.setStringList(key, v);
+
   static double number(String key, double fallback) => _p.getDouble(key) ?? fallback;
   static Future<void> setNumber(String key, double v) => _p.setDouble(key, v);
 

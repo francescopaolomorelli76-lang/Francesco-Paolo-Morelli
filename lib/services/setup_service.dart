@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../languages.dart';
+import 'langs.dart';
 import 'prefs.dart';
 import 'speech_service.dart';
 import 'translator_service.dart';
@@ -27,7 +28,7 @@ class SetupService {
   static Future<SetupStatus> status() async {
     final voice = await SpeechService.instance.installBundledModel() || await SpeechService.instance.modelReady();
     final tr = TranslatorService.instance;
-    final missing = await tr.missing(Lang.values);
+    final missing = await tr.missing(Langs.installed);
     final apple = await tr.appleAvailable();
     final appleMissing = apple ? await tr.appleMissing(Prefs.get('mine', Lang.deviceDefault())) : <Lang>[];
     return SetupStatus(missing, voice, appleAvailable: apple, appleMissing: appleMissing);

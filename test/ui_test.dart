@@ -7,7 +7,7 @@ import 'package:manga_vox/languages.dart';
 import 'package:manga_vox/screens/home_screen.dart';
 import 'package:manga_vox/screens/language_screen.dart';
 import 'package:manga_vox/screens/setup_screen.dart';
-import 'package:manga_vox/services/direction.dart';
+import 'package:manga_vox/screens/world_screen.dart';
 import 'package:manga_vox/services/lang_detect.dart';
 import 'package:manga_vox/services/ocr_service.dart';
 import 'package:manga_vox/services/prefs.dart';
@@ -74,30 +74,6 @@ void main() {
     );
   });
 
-  group('direzione automatica', () {
-    test('parlo nella mia lingua → traduce verso l\'interlocutore', () {
-      final d = Direction(mine: Lang.it, partner: Lang.en);
-      expect(d.route(Lang.it), (Lang.it, Lang.en));
-    });
-    test('sento il tedesco → l\'interlocutore diventa tedesco e traduco in italiano', () {
-      final d = Direction(mine: Lang.it, partner: Lang.en);
-      expect(d.route(Lang.de), (Lang.de, Lang.it));
-      expect(d.partner, Lang.de);
-      expect(d.route(Lang.it), (Lang.it, Lang.de));
-    });
-    test('account in inglese: l\'inglese è "mio", l\'italiano è dell\'interlocutore', () {
-      final d = Direction(mine: Lang.en, partner: Lang.en);
-      expect(d.route(Lang.en), (Lang.en, Lang.it));
-      expect(d.route(Lang.ru), (Lang.ru, Lang.en));
-    });
-    test('scanner: targetFor non cambia l\'interlocutore', () {
-      final d = Direction(mine: Lang.it, partner: Lang.fr);
-      expect(d.targetFor(Lang.zh), Lang.it);
-      expect(d.targetFor(Lang.it), Lang.fr);
-      expect(d.partner, Lang.fr);
-    });
-  });
-
   test('alfabeto: russo e cinese riconosciuti con certezza', () {
     expect(LangDetect.scriptGuess('Где находится вокзал?'), Lang.ru);
     expect(LangDetect.scriptGuess('火车站在哪里？'), Lang.zh);
@@ -107,7 +83,24 @@ void main() {
   test('codici lingua', () {
     expect(Lang.fromCode('zh-Hans'), Lang.zh);
     expect(Lang.fromCode('en_US'), Lang.en);
-    expect(Lang.fromCode('es'), isNull);
+    expect(Lang.fromCode('es')?.itName, 'Spagnolo');
+    expect(Lang.fromCode('iw')?.itName, 'Ebraico');
+    expect(Lang.fromCode('xx'), isNull);
+  });
+
+  test('lingue del mondo: 59 lingue, ogni paese punta a una lingua esistente', () {
+    expect(Lang.all.length, 59);
+    expect(Lang.all.map((l) => l.name).toSet().length, 59);
+    for (final c in Country.all) {
+      expect(Lang.fromCode(c.lang), isNotNull, reason: c.it);
+    }
+    expect(Country.all.firstWhere((c) => c.it == 'Brasile').language.itName, 'Portoghese');
+    expect(Country.all.firstWhere((c) => c.it == 'Italia').flag, '🇮🇹');
+  });
+
+  test('alfabeto: giapponese e coreano', () {
+    expect(LangDetect.scriptOf('駅はどこですか'), Script.kana);
+    expect(LangDetect.scriptOf('역이 어디예요?'), Script.hangul);
   });
 
   test('trascrizione ripulita dalle annotazioni di Whisper', () {
@@ -187,6 +180,21 @@ void main() {
     await tester.tap(find.text('Italiano'));
     await tester.pump();
     await _shot(tester, find.byType(LanguageScreen), 'language');
+  });
+
+  testWidgets('lingue del mondo: paesi con la loro lingua e ricerca', (tester) async {
+    _phone(tester);
+    modelsDownloaded = false;
+    await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: WorldScreen()));
+    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 100)));
+    await tester.pump();
+    expect(find.text('Afghanistan'), findsOneWidget);
+    await _shot(tester, find.byType(WorldScreen), 'world');
+    await tester.enterText(find.byType(TextField), 'brasi');
+    await tester.pump();
+    expect(find.text('Brasile'), findsOneWidget);
+    expect(find.text('Portoghese · Português'), findsOneWidget);
+    expect(find.text('Afghanistan'), findsNothing);
   });
 
   testWidgets('preparazione offline: un pulsante scarica tutto', (tester) async {

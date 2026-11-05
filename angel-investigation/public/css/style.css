@@ -436,3 +436,13 @@ p { margin: 0 0 1em; }
 .channel--note { cursor: default; }
 .channel--note:hover { transform: none; border-color: var(--line); }
 .channel--note small { word-break: normal; }
+
+/* ---------- FAQ ---------- */
+.faq { max-width: 860px; margin: 0 auto; display: grid; gap: 12px; }
+.faq__item { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); transition: border-color .2s; }
+.faq__item[open] { border-color: var(--line-strong); }
+.faq__item summary { list-style: none; cursor: pointer; padding: 18px 54px 18px 22px; position: relative; font-weight: 600; font-size: 1rem; }
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after { content: "+"; position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font: 700 1.3rem/1 var(--font-display); color: var(--pink); transition: transform .2s; }
+.faq__item[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+.faq__item p { margin: 0; padding: 0 22px 20px; color: var(--muted); }

@@ -93,7 +93,7 @@ app.use((req, res, next) => {
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'Content-Security-Policy':
       "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; " +
-      "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws: wss:; " +
+      "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws: wss: https://formsubmit.co; " +
       "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
   });
   next();

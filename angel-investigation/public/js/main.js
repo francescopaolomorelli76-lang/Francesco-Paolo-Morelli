@@ -65,6 +65,43 @@
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
+
+  // Invio del modulo: prima al server del sito; se il sito è su hosting statico
+  // (nessun server), invio tramite FormSubmit direttamente alla casella email.
+  const EMAIL = 'angelinvestigation07@libero.it';
+  async function sendForm(data) {
+    let res;
+    try {
+      res = await fetch('/api/contatto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } catch { res = null; }
+    if (res && res.headers.get('content-type')?.includes('application/json')) {
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.ok) throw new Error(out.error || 'Invio non riuscito.');
+      return;
+    }
+    if (data.website) return; // campo trappola anti-spam
+    const r = await fetch('https://formsubmit.co/ajax/' + EMAIL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        _subject: 'Richiesta dal sito Angel Investigation',
+        _template: 'table',
+        _captcha: 'false',
+        Nome: data.nome, Email: data.email, Telefono: data.telefono || '-',
+        Servizio: data.servizio, Messaggio: data.messaggio,
+        _replyto: data.email,
+      }),
+    }).catch(() => null);
+    const out = r ? await r.json().catch(() => ({})) : {};
+    if (!r || !r.ok || String(out.success) !== 'true') {
+      throw new Error('Invio non riuscito. Scrivici direttamente a ' + EMAIL);
+    }
+  }
+
   // Modulo contatti
   const form = document.getElementById('contactForm');
   const status = document.getElementById('formStatus');
@@ -83,13 +120,7 @@
     btn.disabled = true;
     status.textContent = 'Invio in corso…';
     try {
-      const res = await fetch('/api/contatto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok || !out.ok) throw new Error(out.error || 'Invio non riuscito.');
+      await sendForm(data);
       form.reset();
       status.textContent = 'Richiesta inviata. Ti ricontatteremo in via riservata entro 24 ore.';
       status.classList.add('ok');

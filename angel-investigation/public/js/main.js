@@ -97,9 +97,13 @@
       }),
     }).catch(() => null);
     const out = r ? await r.json().catch(() => ({})) : {};
-    if (!r || !r.ok || String(out.success) !== 'true') {
-      throw new Error('Invio non riuscito. Scrivici direttamente a ' + EMAIL);
+    if (r && r.ok && String(out.success) === 'true') return;
+    const msg = String(out.message || '');
+    if (/activat/i.test(msg)) {
+      throw new Error('Il modulo è in fase di attivazione: il titolare del sito deve confermare la mail di FormSubmit. Nel frattempo scrivici a ' + EMAIL);
     }
+    console.warn('FormSubmit:', r && r.status, msg);
+    throw new Error('Invio non riuscito' + (msg ? ' (' + msg + ')' : '') + '. Scrivici direttamente a ' + EMAIL);
   }
 
   // Modulo contatti

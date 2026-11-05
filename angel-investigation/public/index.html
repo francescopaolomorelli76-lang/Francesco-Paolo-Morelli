@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Angel Investigation | Agenzia di investigazioni private</title>
+  <meta name="description" content="Angel Investigation: investigazioni private e aziendali con metodo, discrezione assoluta e piena tutela della privacy. Consulenza riservata via chat o email.">
+  <meta name="theme-color" content="#07060b">
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Vai al contenuto</a>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header" id="top">
+    <div class="container header__inner">
+      <a href="#top" class="brand" aria-label="Angel Investigation, torna all'inizio">
+        <img src="img/logo.svg" alt="" width="40" height="40">
+        <span class="brand__text"><strong>ANGEL</strong><small>INVESTIGATION</small></span>
+      </a>
+
+      <nav class="nav" id="nav" aria-label="Menu principale">
+        <ul>
+          <li><a href="#servizi">Servizi</a></li>
+          <li><a href="#metodo">Metodo</a></li>
+          <li><a href="#agenzia">Agenzia</a></li>
+          <li><a href="#privacy">Riservatezza</a></li>
+          <li><a href="#contatti">Contatti</a></li>
+        </ul>
+        <button class="btn btn--primary nav__cta" type="button" data-open-chat>Chat riservata</button>
+      </nav>
+
+      <button class="burger" id="burger" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__grid" aria-hidden="true"></div>
+      <div class="container hero__inner">
+        <div class="hero__copy reveal">
+          <p class="eyebrow"><span class="dot"></span> Agenzia investigativa autorizzata</p>
+          <h1>La verità,<br><span class="grad">con discrezione.</span></h1>
+          <p class="lead">Investigazioni private e aziendali condotte con metodo, tecnologia e riservatezza assoluta. Ogni caso viene trattato come un'operazione: pianificata, documentata, protetta.</p>
+          <div class="hero__actions">
+            <button class="btn btn--primary" type="button" data-open-chat>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>
+              Parla con un investigatore
+            </button>
+            <a class="btn btn--ghost" href="#servizi">Scopri i servizi</a>
+          </div>
+          <ul class="hero__trust">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/></svg>Riservatezza totale</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Prove utilizzabili in giudizio</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Risposta entro 24 ore</li>
+          </ul>
+        </div>
+
+        <!-- Figura agente in stile spy -->
+        <div class="hero__visual reveal" aria-hidden="true">
+          <div class="radar">
+            <span class="radar__ring r1"></span>
+            <span class="radar__ring r2"></span>
+            <span class="radar__ring r3"></span>
+            <span class="radar__sweep"></span>
+          </div>
+          <svg class="agent" viewBox="0 0 400 620" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="coat" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#1b1030"/>
+                <stop offset="1" stop-color="#05040a"/>
+              </linearGradient>
+              <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#ff2d95"/>
+                <stop offset="1" stop-color="#8b5cf6"/>
+              </linearGradient>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g stroke="url(#rim)" stroke-width="2.2" filter="url(#glow)" stroke-linejoin="round">
+              <!-- cappello -->
+              <path fill="url(#coat)" d="M166 114 L172 70 Q200 58 228 70 L234 114 Z"/>
+              <path fill="url(#coat)" d="M140 116 Q200 100 260 116 Q272 121 256 126 Q200 116 144 126 Q128 121 140 116 Z"/>
+              <!-- testa e collo -->
+              <path fill="#07050d" d="M176 126 Q174 166 200 172 Q226 166 224 126 Z"/>
+              <rect x="189" y="166" width="22" height="18" fill="#07050d" stroke="none"/>
+              <!-- cappotto -->
+              <path fill="url(#coat)" d="M200 180 L150 192 Q122 200 118 232 L102 420 Q100 442 113 444 L127 442 L133 332 L136 522 L181 526 L184 604 L198 604 L200 474 L202 604 L216 604 L219 526 L264 522 L267 332 L273 442 L287 444 Q300 442 298 420 L282 232 Q278 200 250 192 Z"/>
+              <!-- risvolti -->
+              <path fill="none" d="M200 182 L176 252 L200 308 M200 182 L224 252 L200 308"/>
+              <path fill="none" d="M133 332 L267 332" stroke-dasharray="4 6"/>
+            </g>
+            <!-- cravatta -->
+            <path d="M196 184 L204 184 L207 262 L200 274 L193 262 Z" fill="#ff2d95" opacity=".9"/>
+            <!-- occhiali / visore -->
+            <rect x="180" y="134" width="40" height="6" rx="3" fill="#ff2d95" filter="url(#glow)"/>
+            <!-- linea di scansione -->
+            <rect class="scanline" x="80" y="60" width="240" height="3" fill="#8b5cf6" opacity=".75"/>
+          </svg>
+
+          <div class="hud hud--a">
+            <span class="hud__label">SOGGETTO</span>
+            <span class="hud__value">IDENTIFICATO</span>
+            <span class="hud__bar"><i></i></span>
+          </div>
+          <div class="hud hud--b">
+            <span class="hud__label">CANALE</span>
+            <span class="hud__value">CIFRATO · TLS</span>
+          </div>
+          <div class="hud hud--c">
+            <span class="hud__label">STATO DOSSIER</span>
+            <span class="hud__value">RISERVATO</span>
+          </div>
+        </div>
+      </div>
+      <a href="#servizi" class="hero__scroll" aria-label="Scorri ai servizi"><span></span></a>
+    </section>
+
+    <!-- ============ SERVIZI ============ -->
+    <section class="section" id="servizi">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Aree operative</p>
+          <h2>Servizi <span class="grad">investigativi</span></h2>
+          <p class="section__sub">Interveniamo per privati, aziende e studi legali. Ogni incarico è affidato a un team dedicato e regolato da mandato scritto.</p>
+        </header>
+
+        <div class="cards">
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9-9.5C1.6 7.8 4 4 7.5 4c2 0 3.5 1.2 4.5 2.6C13 5.2 14.5 4 16.5 4 20 4 22.4 7.8 21 11.5 19 16.5 12 21 12 21z"/></svg></div>
+            <h3>Infedeltà coniugale</h3>
+            <p>Verifiche discrete sulla fedeltà del partner, con documentazione fotografica e video utilizzabile in sede di separazione.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></div>
+            <h3>Indagini aziendali</h3>
+            <p>Concorrenza sleale, infedeltà dei dipendenti, assenteismo, abuso dei permessi 104 e tutela del patrimonio aziendale.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14M8 8a5.5 5.5 0 0 0 0 8M16 8a5.5 5.5 0 0 1 0 8"/></svg></div>
+            <h3>Bonifiche ambientali</h3>
+            <p>Ricerca di microspie, localizzatori GPS e software spia su ambienti, veicoli, computer e smartphone.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/><circle cx="11" cy="9.5" r="2"/><path d="M7.5 15a4 4 0 0 1 7 0"/></svg></div>
+            <h3>Rintraccio persone</h3>
+            <p>Localizzazione di debitori, eredi, testimoni e persone scomparse, nel pieno rispetto della normativa.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <h3>Indagini difensive</h3>
+            <p>Supporto agli avvocati nella raccolta di elementi di prova ai sensi dell'art. 391-bis c.p.p.</p>
+          </article>
+          <article class="card reveal">
+            <div class="card__icon"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-5 8 5v10"/><path d="M9 19v-6h6v6"/><path d="M2 19h20"/></svg></div>
+            <h3>Minori e famiglia</h3>
+            <p>Tutela dei figli minori, frequentazioni a rischio, uso di sostanze, affidamento e verifiche sul tenore di vita.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METODO ============ -->
+    <section class="section section--alt" id="metodo">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Protocollo operativo</p>
+          <h2>Come <span class="grad">lavoriamo</span></h2>
+        </header>
+        <ol class="steps">
+          <li class="step reveal">
+            <span class="step__num">01</span>
+            <h3>Primo contatto</h3>
+            <p>Ci scrivi in chat o per email. Il colloquio è gratuito, senza impegno e coperto dal segreto professionale.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">02</span>
+            <h3>Analisi del caso</h3>
+            <p>Valutiamo fattibilità e liceità dell'indagine e ti presentiamo un piano operativo con preventivo chiaro.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">03</span>
+            <h3>Operazione</h3>
+            <p>Gli agenti operano sul campo con strumenti professionali, aggiornandoti tramite canale riservato.</p>
+          </li>
+          <li class="step reveal">
+            <span class="step__num">04</span>
+            <h3>Dossier finale</h3>
+            <p>Ricevi una relazione dettagliata con prove documentate, valida per l'uso in sede legale.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ AGENZIA ============ -->
+    <section class="section" id="agenzia">
+      <div class="container agency">
+        <div class="agency__visual reveal" aria-hidden="true">
+          <svg viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff2d95"/>
+                <stop offset="1" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <g fill="none" stroke="url(#g2)" stroke-width="1.5" opacity=".9">
+              <circle cx="210" cy="210" r="190" stroke-dasharray="2 8"/>
+              <circle cx="210" cy="210" r="150"/>
+              <circle cx="210" cy="210" r="100" stroke-dasharray="40 12"/>
+              <path d="M210 10v80M210 330v80M10 210h80M330 210h80"/>
+            </g>
+            <!-- coppia di agenti -->
+            <g fill="#0b0814" stroke="url(#g2)" stroke-width="2" stroke-linejoin="round">
+              <path d="M150 150 L154 124 Q170 116 186 124 L190 150 Z"/>
+              <path d="M136 151 Q170 142 204 151 Q210 154 200 157 Q170 151 140 157 Q130 154 136 151 Z"/>
+              <path d="M156 158 Q156 184 170 188 Q184 184 184 158 Z"/>
+              <path d="M170 194 L140 202 Q124 208 122 226 L114 320 L128 322 L132 262 L134 340 L160 342 L162 380 L170 380 L170 320 L172 380 L180 380 L182 342 L206 340 L208 262 L212 322 L226 320 L218 226 Q216 208 200 202 Z"/>
+              <!-- agente donna -->
+              <path d="M262 132 Q240 132 240 160 Q238 196 230 206 L256 200 Z"/>
+              <path d="M262 132 Q284 132 284 160 Q286 196 294 206 L268 200 Z"/>
+              <ellipse cx="262" cy="160" rx="16" ry="20"/>
+              <path d="M262 196 L240 204 Q228 210 228 226 L222 300 L234 302 L240 250 L232 330 L248 334 L252 380 L260 380 L262 334 L264 380 L272 380 L276 334 L292 330 L284 250 L290 302 L302 300 L296 226 Q296 210 284 204 Z"/>
+            </g>
+            <rect x="160" y="166" width="20" height="4" rx="2" fill="#ff2d95"/>
+            <rect x="252" y="158" width="20" height="4" rx="2" fill="#8b5cf6"/>
+          </svg>
+        </div>
+        <div class="agency__copy reveal">
+          <p class="eyebrow">Chi siamo</p>
+          <h2>Un'agenzia, <span class="grad">un codice</span></h2>
+          <p>Angel Investigation nasce con una missione precisa: dare risposte certe a chi ne ha bisogno, senza mai compromettere la sua sicurezza e la sua reputazione.</p>
+          <p>Operiamo con licenza prefettizia ai sensi dell'art. 134 T.U.L.P.S., con investigatori formati, strumentazione di ultima generazione e un rigoroso codice etico.</p>
+          <dl class="stats">
+            <div><dt data-count="15">0</dt><dd>anni di esperienza</dd></div>
+            <div><dt data-count="1200" data-suffix="+">0</dt><dd>casi risolti</dd></div>
+            <div><dt data-count="98" data-suffix="%">0</dt><dd>clienti soddisfatti</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PRIVACY ============ -->
+    <section class="section section--alt" id="privacy">
+      <div class="container">
+        <header class="section__head reveal">
+          <p class="eyebrow">Protocollo di riservatezza</p>
+          <h2>La tua privacy <span class="grad">è la nostra priorità</span></h2>
+        </header>
+        <div class="shields">
+          <div class="shield reveal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <h3>Comunicazioni protette</h3>
+            <p>Chat e modulo viaggiano su connessione cifrata. La chat non viene salvata su disco e si cancella alla chiusura.</p>
+          </div>
+          <div class="shield reveal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M3 3l18 18"/></svg>
+            <h3>Nessun tracciamento</h3>
+            <p>Il sito non usa cookie di profilazione, pixel pubblicitari o strumenti di analisi di terze parti.</p>
+          </div>
+          <div class="shield reveal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+            <h3>Conformità GDPR</h3>
+            <p>Trattiamo i dati secondo il Regolamento UE 2016/679 e il Codice Deontologico degli investigatori privati.</p>
+          </div>
+          <div class="shield reveal">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            <h3>Anonimato garantito</h3>
+            <p>Puoi chiedere informazioni senza fornire il tuo nome. I dati servono solo quando conferisci l'incarico.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONTATTI ============ -->
+    <section class="section" id="contatti">
+      <div class="container contact">
+        <div class="contact__info reveal">
+          <p class="eyebrow">Canale riservato</p>
+          <h2>Contattaci <span class="grad">in sicurezza</span></h2>
+          <p>Scegli il canale che preferisci: chat in tempo reale con un investigatore oppure email. Rispondiamo entro 24 ore, anche nei festivi.</p>
+
+          <button class="channel" type="button" data-open-chat>
+            <span class="channel__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg></span>
+            <span><strong>Chat in tempo reale</strong><small id="chatStatusText">Verifica disponibilità…</small></span>
+          </button>
+          <a class="channel" href="mailto:info@angelinvestigation.it">
+            <span class="channel__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+            <span><strong>Email</strong><small>info@angelinvestigation.it</small></span>
+          </a>
+          <a class="channel" href="tel:+390000000000">
+            <span class="channel__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg></span>
+            <span><strong>Telefono</strong><small>+39 000 000 0000</small></span>
+          </a>
+        </div>
+
+        <form class="form reveal" id="contactForm" novalidate>
+          <h3>Richiesta di consulenza</h3>
+          <div class="form__row">
+            <label>Nome o pseudonimo<input name="nome" required maxlength="80" autocomplete="name"></label>
+            <label>Email<input name="email" type="email" required maxlength="254" autocomplete="email"></label>
+          </div>
+          <div class="form__row">
+            <label>Telefono <em>(facoltativo)</em><input name="telefono" type="tel" maxlength="40" autocomplete="tel"></label>
+            <label>Servizio
+              <select name="servizio">
+                <option>Infedeltà coniugale</option>
+                <option>Indagini aziendali</option>
+                <option>Bonifiche ambientali</option>
+                <option>Rintraccio persone</option>
+                <option>Indagini difensive</option>
+                <option>Minori e famiglia</option>
+                <option>Altro</option>
+              </select>
+            </label>
+          </div>
+          <label>Descrivi brevemente il caso<textarea name="messaggio" rows="5" required maxlength="4000" placeholder="Non serve entrare nei dettagli: ti ricontatteremo noi in via riservata."></textarea></label>
+          <label class="hp" aria-hidden="true">Sito web<input name="website" tabindex="-1" autocomplete="off"></label>
+          <label class="check"><input type="checkbox" name="consenso" required> <span>Ho letto l'<a href="privacy.html">informativa sulla privacy</a> e acconsento al trattamento dei dati per essere ricontattato.</span></label>
+          <button class="btn btn--primary btn--block" type="submit">Invia in modo riservato</button>
+          <p class="form__status" id="formStatus" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="brand">
+        <img src="img/logo.svg" alt="" width="34" height="34">
+        <span class="brand__text"><strong>ANGEL</strong><small>INVESTIGATION</small></span>
+      </div>
+      <p class="footer__legal">Licenza prefettizia n. [da inserire] · P.IVA [da inserire]<br>Sede: [indirizzo da inserire]</p>
+      <nav class="footer__links" aria-label="Link legali">
+        <a href="privacy.html">Privacy</a>
+        <a href="#contatti">Contatti</a>
+      </nav>
+      <p class="footer__copy">© <span id="year"></span> Angel Investigation. Tutti i diritti riservati.</p>
+    </div>
+  </footer>
+
+  <!-- ============ CHAT ============ -->
+  <button class="chat-fab" id="chatFab" type="button" aria-label="Apri la chat riservata" aria-controls="chat" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/></svg>
+    <span class="chat-fab__dot" id="fabDot"></span>
+  </button>
+
+  <section class="chat" id="chat" aria-label="Chat riservata" hidden>
+    <header class="chat__head">
+      <div class="chat__agent">
+        <span class="chat__avatar"><img src="img/logo.svg" alt=""></span>
+        <div>
+          <strong>Investigatore di turno</strong>
+          <small id="chatStatus"><i class="status-dot"></i> Connessione…</small>
+        </div>
+      </div>
+      <div class="chat__tools">
+        <button type="button" id="chatEnd" title="Cancella conversazione" aria-label="Cancella la conversazione">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+        </button>
+        <button type="button" id="chatClose" title="Chiudi" aria-label="Chiudi la chat">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="chat__body" id="chatBody" aria-live="polite">
+      <div class="msg msg--system">
+        <p>Benvenuto nel canale riservato di Angel Investigation. I messaggi non vengono salvati e si cancellano alla chiusura della conversazione. Puoi restare anonimo.</p>
+      </div>
+    </div>
+
+    <p class="chat__typing" id="chatTyping" hidden>L'investigatore sta scrivendo…</p>
+
+    <form class="chat__offline" id="chatOffline" hidden>
+      <input type="email" name="email" placeholder="La tua email" required maxlength="254" aria-label="La tua email">
+      <button class="btn btn--primary" type="submit">Invia</button>
+    </form>
+
+    <form class="chat__form" id="chatForm" autocomplete="off">
+      <input type="text" id="chatName" placeholder="Nome o pseudonimo (facoltativo)" maxlength="60" aria-label="Nome o pseudonimo">
+      <div class="chat__send">
+        <textarea id="chatInput" rows="1" placeholder="Scrivi un messaggio…" maxlength="2000" aria-label="Messaggio"></textarea>
+        <button type="submit" aria-label="Invia messaggio">
+          <svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

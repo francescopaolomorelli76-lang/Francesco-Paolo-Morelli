@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Console operatore | Angel Investigation</title>
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/operatore.css">
+</head>
+<body class="op">
+  <section class="op-login" id="login">
+    <form class="form op-login__box" id="loginForm">
+      <div class="brand"><img src="img/logo.svg" alt="" width="40" height="40"><span class="brand__text"><strong>ANGEL</strong><small>CONSOLE OPERATORE</small></span></div>
+      <label>Password di accesso<input type="password" name="password" required autocomplete="current-password"></label>
+      <button class="btn btn--primary btn--block" type="submit">Accedi</button>
+      <p class="form__status err" id="loginError" role="alert"></p>
+    </form>
+  </section>
+
+  <section class="op-app" id="app" hidden>
+    <aside class="op-list" id="list">
+      <header class="op-list__head">
+        <div class="brand"><img src="img/logo.svg" alt="" width="32" height="32"><span class="brand__text"><strong>ANGEL</strong><small>CONSOLE</small></span></div>
+        <span class="op-badge"><i class="status-dot on"></i> Online</span>
+      </header>
+      <ul id="convs"></ul>
+      <p class="op-empty" id="empty">Nessuna conversazione attiva.</p>
+    </aside>
+
+    <main class="op-chat" id="pane">
+      <header class="op-chat__head">
+        <button class="op-back" id="back" type="button" aria-label="Torna alle conversazioni">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div><strong id="convName">Seleziona una conversazione</strong><small id="convState"></small></div>
+        <button class="btn btn--ghost op-close" id="closeConv" type="button" hidden>Chiudi e cancella</button>
+      </header>
+      <div class="chat__body" id="msgs"></div>
+      <p class="chat__typing" id="typing" hidden>Il visitatore sta scrivendo…</p>
+      <form class="chat__form" id="replyForm" hidden>
+        <div class="chat__send">
+          <textarea id="reply" rows="1" placeholder="Rispondi…" maxlength="2000" aria-label="Risposta"></textarea>
+          <button type="submit" aria-label="Invia"><svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-8z"/></svg></button>
+        </div>
+      </form>
+    </main>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/operatore.js"></script>
+</body>
+</html>

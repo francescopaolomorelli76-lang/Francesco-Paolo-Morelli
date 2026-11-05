@@ -1,0 +1,16 @@
+{
+  "name": "angel-investigation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sito Angel Investigation con chat in tempo reale e modulo email",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.16",
+    "socket.io": "^4.8.1"
+  }
+}

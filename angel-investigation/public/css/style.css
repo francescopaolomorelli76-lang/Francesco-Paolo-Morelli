@@ -424,3 +424,15 @@ p { margin: 0 0 1em; }
   .hud--b { right: -16%; }
   .hud--c { left: -10%; }
 }
+
+/* ---------- Assistente virtuale ---------- */
+.msg--bot { align-self: flex-start; }
+.msg--bot p { background: linear-gradient(135deg, rgba(255,45,149,.14), rgba(139,92,246,.16)); border: 1px solid var(--line-strong); border-bottom-left-radius: 4px; }
+.msg__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.msg__btn { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid transparent; background: var(--grad); color: #fff; font: 600 .8rem/1 var(--font-body); text-decoration: none; cursor: pointer; }
+.msg__btn--ghost { background: transparent; border-color: var(--line); color: var(--text); }
+.msg__btn--ghost:hover { border-color: var(--line-strong); }
+.chat__tools button.is-armed { color: #ff6b8b; background: rgba(255,107,139,.12); }
+.channel--note { cursor: default; }
+.channel--note:hover { transform: none; border-color: var(--line); }
+.channel--note small { word-break: normal; }

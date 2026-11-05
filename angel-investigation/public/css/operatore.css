@@ -37,3 +37,6 @@
   .op-app.show-chat .op-chat { display: flex; }
   .op-back { display: grid; place-items: center; }
 }
+.op-chat .msg--bot { align-self: flex-end; text-align: right; }
+.op-chat .msg--bot p { text-align: left; border-radius: 16px 16px 4px 16px; }
+.op-chat .msg--bot time::before { content: "Assistente · "; }

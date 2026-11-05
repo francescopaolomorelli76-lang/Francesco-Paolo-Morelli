@@ -22,7 +22,7 @@ ADMIN_PASSWORD="una-password-lunga" npm start
 | `ADMIN_PASSWORD` | Password della console operatore. Senza, la console è disattivata |
 | `CHAT_TTL_HOURS` | Dopo quante ore di inattività le chat vengono cancellate (predefinito 24) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Server di posta per inviare le richieste |
-| `MAIL_TO` | Indirizzo che riceve le richieste del modulo |
+| `MAIL_TO` | Indirizzo che riceve le richieste del modulo (es. angelinvestigation07@libero.it) |
 | `MAIL_FROM` | Mittente delle email (predefinito `SMTP_USER`) |
 
 Se SMTP non è configurato, le richieste vengono salvate in `data/inbox.jsonl` (escluso da git).
@@ -36,5 +36,10 @@ Se SMTP non è configurato, le richieste vengono salvate in `data/inbox.jsonl` (
 
 ## Da completare
 
-Dati da inserire in `public/index.html` e `public/privacy.html`: telefono, email, indirizzo,
-P.IVA, numero di licenza prefettizia e i numeri della sezione "Agenzia" (anni, casi, percentuale).
+I numeri della sezione "Agenzia" (anni, casi, percentuale) sono di esempio: sostituirli con quelli reali o toglierli.
+
+## Assistente della chat
+
+La chat si apre con "Angel", assistente virtuale automatico (`public/js/bot.js`): saluta, fa due o tre
+domande di cortesia e alla fine invita a scrivere a angelinvestigation07@libero.it.
+Se un operatore è collegato alla console e risponde, l'assistente si ferma e prosegue la persona.

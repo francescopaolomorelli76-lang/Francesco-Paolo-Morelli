@@ -236,7 +236,6 @@ io.on('connection', (socket) => {
     text = clean(text, 2000);
     if (!text) return;
     let c = conversations.get(id);
-    const isNew = !c;
     if (!c) {
       c = { name: clean(name, 60) || 'Visitatore', messages: [], lastActive: Date.now(), unread: 0 };
       conversations.set(id, c);
@@ -251,38 +250,21 @@ io.on('connection', (socket) => {
     io.to('operators').emit('message', { id, ...msg });
     io.to('operators').emit('conversation:update', summary(id));
 
-    if (isNew && operatorsOnline() === 0) {
-      const auto = {
-        from: 'system',
-        text: 'Al momento nessun operatore è collegato. Lascia la tua email con il modulo qui sotto e ti ricontatteremo in via riservata.',
-        at: Date.now(),
-      };
-      socket.emit('message', auto);
-      socket.emit('offline:form');
-    }
+  });
+
+  // Risposte dell'assistente virtuale: salvate nella conversazione e mostrate alla console
+  socket.on('bot', ({ text }) => {
+    const c = conversations.get(id);
+    text = clean(text, 2000);
+    if (!c || !text) return;
+    const msg = { from: 'bot', text, at: Date.now() };
+    c.messages.push(msg);
+    c.lastActive = msg.at;
+    io.to('operators').emit('message', { id, ...msg });
+    io.to('operators').emit('conversation:update', summary(id));
   });
 
   socket.on('typing', () => io.to('operators').emit('typing', id));
-
-  socket.on('offline', async ({ email, name }) => {
-    email = clean(email, 254);
-    if (!isEmail(email) || rateLimited('off:' + id, 3, 60 * 60 * 1000)) return;
-    const c = conversations.get(id);
-    const transcript = (c?.messages || [])
-      .filter((m) => m.from === 'visitor')
-      .map((m) => '- ' + m.text)
-      .join('\n');
-    try {
-      await deliverMessage('Messaggio dalla chat (operatore offline)', {
-        nome: clean(name, 60) || c?.name || 'Visitatore',
-        email,
-        messaggio: '\n' + transcript,
-      });
-      socket.emit('message', { from: 'system', text: 'Grazie. Ti scriveremo all\'indirizzo indicato il prima possibile.', at: Date.now() });
-    } catch (err) {
-      console.error('Invio email fallito:', err.message);
-    }
-  });
 
   socket.on('end', () => {
     conversations.delete(id);

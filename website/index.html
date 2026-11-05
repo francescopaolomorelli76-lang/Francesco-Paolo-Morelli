@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta property="og:title" content="Manga Vox">
 <meta property="og:description" content="Tieni premuto, parla, lascia: il traduttore simultaneo offline in stile fumetto.">
-<meta property="og:image" content="media/app-screen.jpg">
+<meta property="og:image" content="media/trailer-poster.jpg">
 <title>Manga Vox</title>
 <meta name="description" content="Manga Vox: traduttore simultaneo offline in stile fumetto. Tieni premuto, parla, lascia: traduce e lo dice ad alta voce.">
 <link rel="icon" href="favicon-64.png">
@@ -131,7 +131,7 @@ section{padding-block:clamp(40px,7vw,70px)}
 @media (prefers-reduced-motion:reduce){.flags div{animation:none}}
 
 .video{display:grid;grid-template-columns:.8fr 1.2fr;gap:24px;align-items:center}
-.video .frame{aspect-ratio:9/16;max-height:560px;width:100%;max-width:330px;justify-self:center;background:var(--ink);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--red);border-radius:6px;display:grid;place-items:center;overflow:hidden;color:var(--yellow);text-align:center;padding:18px}
+.video .frame{aspect-ratio:9/16;max-height:620px;padding:0;width:100%;max-width:330px;justify-self:center;background:var(--ink);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--red);border-radius:6px;display:grid;place-items:center;overflow:hidden;color:var(--yellow);text-align:center;padding:18px}
 .video .frame video{width:100%;height:100%;object-fit:cover;display:block}
 .video .frame .ph{font-family:var(--display);font-size:30px;letter-spacing:.05em}
 .video .frame .ph small{display:block;font-family:var(--body);font-weight:800;font-size:15px;color:var(--white);margin-top:10px;letter-spacing:0}
@@ -229,11 +229,11 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
   <section id="trailer">
     <div class="video">
       <div class="frame" id="video-frame">
-        <div class="ph">IL TRAILER STA ARRIVANDO<small>Il regista ha chiesto più esplosioni.</small></div>
+        <video src="media/trailer.mp4" poster="media/trailer-poster.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Trailer di Manga Vox: due ragazzi a Pechino si capiscono grazie all'app"></video>
       </div>
       <div>
         <h2 class="outline" style="font-size:clamp(38px,6vw,64px)">IL TRAILER</h2>
-        <p style="margin-top:14px;font-weight:800;max-width:30em">Venti secondi di fumetto in movimento: un turista, un passante giapponese, un telefono e un pulsante giallo che salva la giornata.</p>
+        <p style="margin-top:14px;font-weight:800;max-width:30em">Dieci secondi di fumetto in movimento: un turista italiano a Pechino, una ragazza del posto, un telefono e due pulsanti che salvano la giornata. Lui cerca un bar, lei gli indica la strada, tutti e due ridono.</p>
       </div>
     </div>
   </section>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta property="og:title" content="Manga Vox">
+<meta property="og:description" content="Tieni premuto, parla, lascia: il traduttore simultaneo offline in stile fumetto.">
+<meta property="og:image" content="icon-256.png">
+<title>Manga Vox</title>
+<meta name="description" content="Manga Vox: traduttore simultaneo offline in stile fumetto. Tieni premuto, parla, lascia: traduce e lo dice ad alta voce.">
+<link rel="icon" href="favicon-64.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: una tavola manga — riquadri a vignetta con gutter nero, hero inclinata con linee cinetiche, telefono disegnato che mostra l'app al lavoro. Un solo look "carta e inchiostro", scelto apposta. */
+:root{
+  --ink:#111111;
+  --paper:#FFF8E7;
+  --yellow:#FFD60A;
+  --red:#E63946;
+  --cyan:#00B4D8;
+  --white:#FFFFFF;
+  --muted:#3A3426;
+  --dot:#1111111f;
+  --display:'Bangers','Impact','Arial Black',sans-serif;
+  --body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --gutter:max(16px, env(safe-area-inset-left, 0px));
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font:600 17px/1.55 var(--body);
+  background-image:radial-gradient(circle,var(--dot) 1.4px,transparent 1.8px);background-size:13px 13px;
+  overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.04em;line-height:1;margin:0;text-wrap:balance}
+p{margin:0}
+.outline{color:var(--yellow);-webkit-text-stroke:7px var(--ink);paint-order:stroke fill;text-shadow:5px 5px 0 var(--ink)}
+.panel{background:var(--white);border:4px solid var(--ink);box-shadow:7px 7px 0 var(--ink);border-radius:4px}
+
+/* ── barra in alto ── */
+.top{display:flex;align-items:center;gap:12px;padding-block:18px}
+.top img{width:52px;height:52px;border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink)}
+.top .name{font-family:var(--display);font-size:32px;letter-spacing:.06em}
+.top .spacer{flex:1}
+.chip{font-family:var(--display);font-size:18px;letter-spacing:.06em;background:var(--yellow);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:4px 12px;border-radius:4px;text-decoration:none;white-space:nowrap}
+
+/* ── hero ── */
+.hero{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center;
+  background:var(--yellow);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--ink);
+  padding:clamp(22px,4vw,44px);overflow:hidden;clip-path:polygon(0 0,100% 0,100% 94%,0 100%);padding-bottom:clamp(44px,6vw,70px)}
+.hero::before{content:"";position:absolute;inset:-40%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 72% 46%,#0000 0 2.2deg,#1111111c 2.2deg 3.4deg)}
+.hero > *{position:relative;min-width:0}
+.kicker{display:inline-block;font-family:var(--display);font-size:20px;letter-spacing:.08em;background:var(--ink);color:var(--yellow);padding:4px 12px;transform:rotate(-2deg)}
+.hero h1{font-size:clamp(46px,8vw,96px);margin-top:16px}
+.hero h1 .red{color:var(--red)}
+.hero .lead{margin-top:18px;font-size:clamp(17px,2vw,20px);font-weight:800;max-width:34em}
+.ctas{display:flex;flex-wrap:wrap;gap:14px;margin-top:24px}
+.btn{font-family:var(--display);font-size:22px;letter-spacing:.06em;text-decoration:none;border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:10px 18px;border-radius:4px;background:var(--white);display:inline-flex;gap:8px;align-items:center;transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+.btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink)}
+.btn.red{background:var(--red);color:var(--white)}
+.soon{font-size:14px;font-weight:800;margin-top:10px;color:var(--muted)}
+.pow{position:absolute;right:-8px;top:-6px;font-family:var(--display);font-size:30px;color:var(--white);background:var(--red);
+  border:4px solid var(--ink);padding:14px 18px;transform:rotate(12deg);
+  clip-path:polygon(50% 0,61% 22%,85% 8%,78% 34%,100% 38%,80% 55%,96% 78%,70% 72%,62% 100%,50% 78%,36% 100%,30% 72%,4% 80%,20% 56%,0 38%,22% 34%,14% 8%,38% 22%)}
+
+/* ── telefono disegnato ── */
+.phone{justify-self:center;width:min(300px,100%);aspect-ratio:9/18.5;background:var(--ink);border-radius:42px;padding:12px;box-shadow:10px 10px 0 #11111155;transform:rotate(3deg)}
+.screen{height:100%;border-radius:32px;background:var(--paper);background-image:radial-gradient(circle,var(--dot) 1.2px,transparent 1.6px);background-size:10px 10px;overflow:hidden;display:flex;flex-direction:column;padding:16px 12px 14px}
+.screen .bar{display:flex;align-items:center;justify-content:space-between}
+.screen .logo{font-family:var(--display);font-size:20px;color:var(--yellow);-webkit-text-stroke:3.5px var(--ink);paint-order:stroke fill;letter-spacing:.04em}
+.screen .sw{display:flex;border:2.5px solid var(--ink);border-radius:4px;background:var(--white);font-size:12px}
+.screen .sw span{padding:2px 7px}.screen .sw span:first-child{background:var(--ink)}
+.chat{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;padding:10px 2px}
+.bub{position:relative;max-width:88%;border:3px solid var(--ink);border-radius:18px;padding:7px 11px 8px;filter:drop-shadow(3px 3px 0 var(--ink));font-size:14px;line-height:1.25}
+.bub b{display:block;font-size:16px;font-weight:900}
+.bub small{display:block;font-style:italic;color:var(--muted);font-size:12px;margin-top:2px}
+.bub.them{align-self:flex-start;background:var(--cyan)}
+.bub.me{align-self:flex-end;background:var(--yellow)}
+.bub::after{content:"";position:absolute;bottom:-11px;width:14px;height:12px;background:inherit;border-bottom:3px solid var(--ink)}
+.bub.them::after{left:20px;border-left:3px solid var(--ink);transform:skewX(-35deg)}
+.bub.me::after{right:20px;border-right:3px solid var(--ink);transform:skewX(35deg)}
+.bub .meta{font-size:11px}
+.btns{display:flex;justify-content:space-around;padding-top:6px}
+.b3d{--face:var(--cyan);--side:#00708A;width:86px;height:86px;border-radius:50%;position:relative;margin-bottom:12px}
+.b3d.me{--face:var(--yellow);--side:#C79A00}
+.b3d::before{content:"";position:absolute;inset:0;top:12px;border-radius:50%;background:var(--side);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.b3d i{position:absolute;inset:0;border-radius:50%;border:3px solid var(--ink);
+  background:radial-gradient(circle at 32% 28%,#ffffffb0,var(--face) 52%);display:grid;place-items:center;
+  font-family:var(--display);font-style:normal;font-size:13px;line-height:1;text-align:center;letter-spacing:.04em}
+.b3d.press i{animation:press 3.2s infinite}
+@keyframes press{0%,18%,62%,100%{transform:translateY(0)}24%,56%{transform:translateY(10px)}}
+.bub.anim{animation:pop 3.2s infinite}
+.bub.anim2{animation:pop2 3.2s infinite}
+@keyframes pop{0%,58%{opacity:.25;transform:scale(.96)}66%,100%{opacity:1;transform:none}}
+@keyframes pop2{0%,20%{opacity:.25}30%,100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.b3d.press i,.bub.anim,.bub.anim2{animation:none}}
+
+/* ── sezioni ── */
+section{padding-block:clamp(40px,7vw,70px)}
+.title-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.title-row h2{font-size:clamp(38px,6vw,64px)}
+.title-row p{font-weight:800;color:var(--muted);max-width:32em}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.step{padding:22px;position:relative;min-width:0}
+.step .n{position:absolute;top:-18px;left:16px;font-family:var(--display);font-size:24px;background:var(--red);color:var(--white);border:3px solid var(--ink);border-radius:50%;width:44px;height:44px;display:grid;place-items:center;box-shadow:3px 3px 0 var(--ink)}
+.step h3{font-size:34px;margin-top:10px}
+.step p{margin-top:8px}
+.step:nth-child(2){background:var(--cyan)}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat{padding:20px 20px 22px;min-width:0}
+.feat .ico{font-size:34px;line-height:1}
+.feat h3{font-size:28px;margin-top:10px}
+.feat p{margin-top:6px}
+.feat.y{background:var(--yellow)}
+.feat.c{background:var(--cyan)}
+
+.flags{margin-top:28px;border-block:4px solid var(--ink);background:var(--white);overflow:hidden;white-space:nowrap}
+.flags div{display:inline-block;padding:10px 0;font-size:30px;letter-spacing:.35em;animation:slide 40s linear infinite}
+@keyframes slide{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.flags div{animation:none}}
+
+.video{display:grid;grid-template-columns:.8fr 1.2fr;gap:24px;align-items:center}
+.video .frame{aspect-ratio:9/16;max-height:560px;width:100%;max-width:330px;justify-self:center;background:var(--ink);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--red);border-radius:6px;display:grid;place-items:center;overflow:hidden;color:var(--yellow);text-align:center;padding:18px}
+.video .frame video{width:100%;height:100%;object-fit:cover;display:block}
+.video .frame .ph{font-family:var(--display);font-size:30px;letter-spacing:.05em}
+.video .frame .ph small{display:block;font-family:var(--body);font-weight:800;font-size:15px;color:var(--white);margin-top:10px;letter-spacing:0}
+
+.faq{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.q{padding:18px 20px;min-width:0}
+.q h3{font-family:var(--body);font-weight:900;font-size:19px;letter-spacing:0;line-height:1.3}
+.q p{margin-top:6px}
+.q:nth-child(odd){transform:rotate(-.6deg)}
+.q:nth-child(even){transform:rotate(.5deg)}
+
+.final{background:var(--red);color:var(--white);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--ink);padding:clamp(24px,4vw,44px);text-align:center;position:relative;overflow:hidden}
+.final::before{content:"";position:absolute;inset:-50%;background:repeating-conic-gradient(from 0deg at 50% 50%,#0000 0 3deg,#ffffff18 3deg 4.5deg)}
+.final > *{position:relative}
+.final h2{font-size:clamp(40px,7vw,80px);color:var(--yellow);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:5px 5px 0 var(--ink)}
+.final p{margin-top:12px;font-weight:800;font-size:19px}
+.final .btn{margin-top:20px;color:var(--ink)}
+
+footer{padding-block:30px 40px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:800;color:var(--muted)}
+footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;clip-path:none}
+  .phone{width:min(270px,82%)}
+  .steps,.grid{grid-template-columns:1fr 1fr}
+  .video{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .steps,.grid,.faq{grid-template-columns:1fr}
+  .top .chip{display:none}
+  .pow{font-size:22px;padding:10px 12px}
+  .q:nth-child(n){transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <img src="icon-256.png" alt="Icona di Manga Vox">
+    <span class="name">MANGA VOX</span>
+    <span class="spacer"></span>
+    <a class="chip" href="#come">COME FUNZIONA</a>
+  </header>
+
+  <div class="hero">
+    <div>
+      <span class="kicker">TRADUTTORE SIMULTANEO · ANCHE OFFLINE</span>
+      <h1 class="outline">LUI PARLA GIAPPONESE.<br>TU NO.<br><span class="red">NESSUN DRAMMA!</span></h1>
+      <p class="lead">Tieni premuto, parla, lascia. Manga Vox traduce al volo e lo dice ad alta voce. Anche in aereo, in montagna o in quel ristorante dove il Wi-Fi è un concetto filosofico.</p>
+      <div class="ctas">
+        <a class="btn red" href="#trailer">▶ GUARDA IL TRAILER</a>
+        <a class="btn" href="#come">COME FUNZIONA</a>
+      </div>
+      <p class="soon">In arrivo su App Store e Google Play.</p>
+    </div>
+
+    <div class="phone" aria-label="Manga Vox mentre traduce una conversazione">
+      <div class="screen">
+        <div class="bar"><span class="logo">MANGA VOX</span><span class="sw"><span>🎤</span><span>📷</span></span></div>
+        <div class="chat">
+          <div class="bub them anim2"><span class="meta">🇯🇵 ➜ 🇮🇹 🔊 ♂</span><b>Dov'è la stazione?</b><small>駅はどこですか？</small></div>
+          <div class="bub me anim"><span class="meta">🇮🇹 ➜ 🇯🇵 🔊 ♀</span><b>まっすぐ行って、右です。</b><small>Sempre dritto, poi a destra.</small></div>
+        </div>
+        <div class="btns">
+          <span class="b3d"><i>LUI/LEI<br>🇯🇵</i></span>
+          <span class="b3d me press"><i>IO<br>🇮🇹</i></span>
+        </div>
+      </div>
+    </div>
+    <span class="pow" aria-hidden="true">WOW!</span>
+  </div>
+
+  <section id="come">
+    <div class="title-row">
+      <h2 class="outline">COME FUNZIONA</h2>
+      <p>Due pulsanti. Se sai suonare un campanello, sai usare Manga Vox.</p>
+    </div>
+    <div class="steps">
+      <div class="panel step"><span class="n">1</span><h3>TIENI PREMUTO</h3><p>Azzurro per chi hai davanti, giallo per te. La lingua dell'altro? La capisce da sola.</p></div>
+      <div class="panel step"><span class="n">2</span><h3>PARLA</h3><p>Le parole e la traduzione compaiono mentre parli. Sì, anche gli "ehm".</p></div>
+      <div class="panel step"><span class="n">3</span><h3>LASCIA</h3><p>In un attimo la traduzione arriva e viene letta ad alta voce. L'altro annuisce. Missione compiuta.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="title-row">
+      <h2 class="outline">SUPERPOTERI</h2>
+      <p>Tutto quello che serve per farsi capire, niente di quello che complica la vita.</p>
+    </div>
+    <div class="grid">
+      <div class="panel feat y"><div class="ico">✈️</div><h3>OFFLINE COME UN SAMURAI</h3><p>Traduce e riconosce la voce sul telefono. Internet serve solo la prima volta, per scaricare le lingue.</p></div>
+      <div class="panel feat"><div class="ico">🌍</div><h3>59 LINGUE, UN DITO</h3><p>Tocchi il paese, la lingua si scarica. Dal Brasile al Giappone, passando per Helsinki.</p></div>
+      <div class="panel feat c"><div class="ico">📷</div><h3>SCANNER DA MENÙ</h3><p>Inquadri il cartello o il menù e la traduzione compare sopra il testo. Addio "ho ordinato a caso".</p></div>
+      <div class="panel feat c"><div class="ico">🎭</div><h3>VOCE GIUSTA</h3><p>Se parla un uomo risponde una voce maschile, se parla una donna una femminile. Le voci le scegli tu.</p></div>
+      <div class="panel feat"><div class="ico">🔊</div><h3>VOLUME DA STADIO</h3><p>La traduzione esce dall'altoparlante a volume pieno. Microfono e voce si regolano dall'app.</p></div>
+      <div class="panel feat y"><div class="ico">🤐</div><h3>ZERO SPIONAGGIO</h3><p>La tua voce resta sul telefono. Niente account, niente pubblicità, niente pettegolezzi.</p></div>
+    </div>
+  </section>
+</div>
+
+<div class="flags" aria-label="Alcune delle lingue disponibili"><div>🇮🇹🇬🇧🇩🇪🇫🇷🇷🇺🇨🇳🇪🇸🇯🇵🇰🇷🇧🇷🇵🇹🇳🇱🇬🇷🇹🇷🇵🇱🇺🇦🇸🇪🇳🇴🇩🇰🇫🇮🇭🇺🇨🇿🇷🇴🇸🇦🇮🇱🇮🇳🇹🇭🇻🇳🇮🇩🇮🇹🇬🇧🇩🇪🇫🇷🇷🇺🇨🇳🇪🇸🇯🇵🇰🇷🇧🇷🇵🇹🇳🇱🇬🇷🇹🇷🇵🇱🇺🇦🇸🇪🇳🇴🇩🇰🇫🇮🇭🇺🇨🇿🇷🇴🇸🇦🇮🇱🇮🇳🇹🇭🇻🇳🇮🇩</div></div>
+
+<div class="wrap">
+  <section id="trailer">
+    <div class="video">
+      <div class="frame" id="video-frame">
+        <div class="ph">IL TRAILER STA ARRIVANDO<small>Il regista ha chiesto più esplosioni.</small></div>
+      </div>
+      <div>
+        <h2 class="outline" style="font-size:clamp(38px,6vw,64px)">IL TRAILER</h2>
+        <p style="margin-top:14px;font-weight:800;max-width:30em">Venti secondi di fumetto in movimento: un turista, un passante giapponese, un telefono e un pulsante giallo che salva la giornata.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="title-row">
+      <h2 class="outline">DOMANDE (QUASI) SERIE</h2>
+    </div>
+    <div class="faq">
+      <div class="panel q"><h3>Serve internet?</h3><p>Solo la prima volta, per scaricare le lingue. Poi puoi perderti nel deserto con tranquillità.</p></div>
+      <div class="panel q"><h3>Traduce anche mia suocera?</h3><p>Le parole sì. Per i sottintesi la tecnologia non è ancora pronta.</p></div>
+      <div class="panel q"><h3>E se non so che lingua parla l'altro?</h3><p>Nemmeno tu devi saperlo: tiene premuto lui, parla, e Manga Vox la riconosce da solo.</p></div>
+      <div class="panel q"><h3>Quando esce?</h3><p>Presto su App Store e Google Play. Nel frattempo allenati a dire "konnichiwa".</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="final">
+      <h2>PARLA. LASCIA. CAPISCI.</h2>
+      <p>Manga Vox arriva presto sul tuo telefono. Il mondo è grande, la tua conversazione no.</p>
+      <a class="btn" href="#trailer">▶ GUARDA IL TRAILER</a>
+    </div>
+  </section>
+
+  <footer>
+    <img src="icon-256.png" alt="">
+    <span>Manga Vox · fatto in Italia con tanto inchiostro</span>
+  </footer>
+</div>
+</body>
+</html>

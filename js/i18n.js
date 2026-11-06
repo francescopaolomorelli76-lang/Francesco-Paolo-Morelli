@@ -4,7 +4,7 @@ window.I18N = {
   it: {
     nav_services: "Servizi", nav_clock: "Orari", nav_game: "Gioca", nav_contact: "Contatti",
     lang_label: "Scegli la tua nazione", lang_search: "Cerca un paese…",
-    sound_on: "Suoni: ON", sound_off: "Suoni: OFF",
+    sound_on: "Musica e suoni: ON (tocca per spegnere)", sound_off: "Musica e suoni: OFF (tocca per accendere)",
     hero_kicker: "Clean&Clear presenta",
     hero_sub: "di Sgombero e Pulizie",
     hero_tag: "Liberiamo spazi, restituiamo valore al vostro immobile.",
@@ -84,13 +84,14 @@ window.I18N = {
     contact_sub: "Sopralluogo e preventivo su richiesta. Rispondiamo veloci, quasi quanto puliamo.",
     footer: "Fatto con amore, sapone e un pizzico di ironia.",
     foam_party: "🎉 SCHIUMA PARTY! Hai trovato l'easter egg di Saverio!",
-    gt_note: "Traduzione automatica attiva"
+    gt_note: "Traduzione automatica attiva",
+    music_hint: "Toccami per la musica! 🎵"
   },
 
   en: {
     nav_services: "Services", nav_clock: "Hours", nav_game: "Play", nav_contact: "Contact",
     lang_label: "Choose your country", lang_search: "Search a country…",
-    sound_on: "Sound: ON", sound_off: "Sound: OFF",
+    sound_on: "Music & sounds: ON (tap to turn off)", sound_off: "Music & sounds: OFF (tap to turn on)",
     hero_kicker: "Clean&Clear presents",
     hero_sub: "Clearance & Cleaning",
     hero_tag: "We free up space and give your property its value back.",
@@ -170,13 +171,14 @@ window.I18N = {
     contact_sub: "Inspection and quote on request. We reply fast, almost as fast as we clean.",
     footer: "Made with love, soap and a pinch of irony.",
     foam_party: "🎉 FOAM PARTY! You found Saverio's easter egg!",
-    gt_note: "Automatic translation on"
+    gt_note: "Automatic translation on",
+    music_hint: "Tap me for music! 🎵"
   },
 
   fr: {
     nav_services: "Services", nav_clock: "Horaires", nav_game: "Jouer", nav_contact: "Contact",
     lang_label: "Choisissez votre pays", lang_search: "Chercher un pays…",
-    sound_on: "Son : ON", sound_off: "Son : OFF",
+    sound_on: "Musique et sons : ON", sound_off: "Musique et sons : OFF",
     hero_kicker: "Clean&Clear présente",
     hero_sub: "Débarras & Nettoyage",
     hero_tag: "Nous libérons l'espace et redonnons de la valeur à votre bien.",
@@ -256,13 +258,14 @@ window.I18N = {
     contact_sub: "Visite et devis sur demande. Nous répondons vite, presque aussi vite que nous nettoyons.",
     footer: "Fait avec amour, savon et une pincée d'ironie.",
     foam_party: "🎉 SOIRÉE MOUSSE ! Vous avez trouvé l'easter egg de Saverio !",
-    gt_note: "Traduction automatique activée"
+    gt_note: "Traduction automatique activée",
+    music_hint: "Touche-moi pour la musique ! 🎵"
   },
 
   de: {
     nav_services: "Leistungen", nav_clock: "Öffnungszeiten", nav_game: "Spielen", nav_contact: "Kontakt",
     lang_label: "Wähle dein Land", lang_search: "Land suchen…",
-    sound_on: "Ton: AN", sound_off: "Ton: AUS",
+    sound_on: "Musik & Töne: AN", sound_off: "Musik & Töne: AUS",
     hero_kicker: "Clean&Clear präsentiert",
     hero_sub: "Entrümpelung & Reinigung",
     hero_tag: "Wir schaffen Platz und geben Ihrer Immobilie ihren Wert zurück.",
@@ -342,13 +345,14 @@ window.I18N = {
     contact_sub: "Besichtigung und Angebot auf Anfrage. Wir antworten schnell, fast so schnell, wie wir putzen.",
     footer: "Gemacht mit Liebe, Seife und einer Prise Ironie.",
     foam_party: "🎉 SCHAUMPARTY! Du hast Saverios Easter Egg gefunden!",
-    gt_note: "Automatische Übersetzung aktiv"
+    gt_note: "Automatische Übersetzung aktiv",
+    music_hint: "Tipp mich an für Musik! 🎵"
   },
 
   es: {
     nav_services: "Servicios", nav_clock: "Horario", nav_game: "Jugar", nav_contact: "Contacto",
     lang_label: "Elige tu país", lang_search: "Buscar un país…",
-    sound_on: "Sonido: ON", sound_off: "Sonido: OFF",
+    sound_on: "Música y sonidos: ON", sound_off: "Música y sonidos: OFF",
     hero_kicker: "Clean&Clear presenta",
     hero_sub: "Vaciados y Limpieza",
     hero_tag: "Liberamos espacios y devolvemos valor a tu inmueble.",
@@ -428,13 +432,14 @@ window.I18N = {
     contact_sub: "Visita y presupuesto a petición. Respondemos rápido, casi tanto como limpiamos.",
     footer: "Hecho con amor, jabón y una pizca de ironía.",
     foam_party: "🎉 ¡FIESTA DE ESPUMA! ¡Has encontrado el easter egg de Saverio!",
-    gt_note: "Traducción automática activa"
+    gt_note: "Traducción automática activa",
+    music_hint: "¡Tócame para la música! 🎵"
   },
 
   pt: {
     nav_services: "Serviços", nav_clock: "Horário", nav_game: "Jogar", nav_contact: "Contacto",
     lang_label: "Escolha o seu país", lang_search: "Procurar um país…",
-    sound_on: "Som: ON", sound_off: "Som: OFF",
+    sound_on: "Música e sons: ON", sound_off: "Música e sons: OFF",
     hero_kicker: "Clean&Clear apresenta",
     hero_sub: "Esvaziamentos e Limpezas",
     hero_tag: "Libertamos espaços e devolvemos valor ao seu imóvel.",
@@ -514,7 +519,8 @@ window.I18N = {
     contact_sub: "Visita e orçamento a pedido. Respondemos depressa, quase tanto como limpamos.",
     footer: "Feito com amor, sabão e uma pitada de ironia.",
     foam_party: "🎉 FESTA DA ESPUMA! Encontrou o easter egg do Saverio!",
-    gt_note: "Tradução automática ativa"
+    gt_note: "Tradução automática ativa",
+    music_hint: "Toca-me para ouvir música! 🎵"
   }
 };
 

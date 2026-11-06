@@ -85,7 +85,15 @@ window.I18N = {
     footer: "Fatto con amore, sapone e un pizzico di ironia.",
     foam_party: "🎉 SCHIUMA PARTY! Hai trovato l'easter egg di Saverio!",
     gt_note: "Traduzione automatica attiva",
-    music_hint: "Toccami per la musica! 🎵"
+    music_hint: "Toccami per la musica! 🎵",
+    cookie_title: "🍪 Biscotti? Solo quelli tecnici!",
+    cookie_text: "Questo sito non usa cookie di profilazione né pubblicità. Ricorda solo lingua, musica e punteggi del gioco sul tuo dispositivo. Il traduttore automatico di Google (per le lingue diverse da IT, EN, FR, DE, ES, PT) si attiva solo se lo accetti.",
+    cookie_translate_text: "Per tradurre il sito in questa lingua usiamo Google Translate: Google riceverà il tuo indirizzo IP e salverà un cookie tecnico. Vuoi attivarlo?",
+    cookie_accept: "Accetta tutto",
+    cookie_reject: "Solo necessari",
+    cookie_translate_accept: "Attiva il traduttore",
+    privacy_link: "Privacy e cookie",
+    cookie_prefs: "Preferenze cookie"
   },
 
   en: {
@@ -172,7 +180,15 @@ window.I18N = {
     footer: "Made with love, soap and a pinch of irony.",
     foam_party: "🎉 FOAM PARTY! You found Saverio's easter egg!",
     gt_note: "Automatic translation on",
-    music_hint: "Tap me for music! 🎵"
+    music_hint: "Tap me for music! 🎵",
+    cookie_title: "🍪 Cookies? Only the technical ones!",
+    cookie_text: "This site uses no profiling or advertising cookies. It only remembers your language, music and game scores on your device. Google's automatic translator (for languages other than IT, EN, FR, DE, ES, PT) is enabled only if you accept.",
+    cookie_translate_text: "To translate the site into this language we use Google Translate: Google will receive your IP address and store a technical cookie. Turn it on?",
+    cookie_accept: "Accept all",
+    cookie_reject: "Necessary only",
+    cookie_translate_accept: "Turn on translator",
+    privacy_link: "Privacy & cookies",
+    cookie_prefs: "Cookie preferences"
   },
 
   fr: {
@@ -259,7 +275,15 @@ window.I18N = {
     footer: "Fait avec amour, savon et une pincée d'ironie.",
     foam_party: "🎉 SOIRÉE MOUSSE ! Vous avez trouvé l'easter egg de Saverio !",
     gt_note: "Traduction automatique activée",
-    music_hint: "Touche-moi pour la musique ! 🎵"
+    music_hint: "Touche-moi pour la musique ! 🎵",
+    cookie_title: "🍪 Des cookies ? Seulement techniques !",
+    cookie_text: "Ce site n'utilise aucun cookie de profilage ni de publicité. Il mémorise seulement la langue, la musique et les scores du jeu sur votre appareil. Le traducteur automatique de Google (pour les langues autres que IT, EN, FR, DE, ES, PT) n'est activé qu'avec votre accord.",
+    cookie_translate_text: "Pour traduire le site dans cette langue, nous utilisons Google Traduction : Google recevra votre adresse IP et enregistrera un cookie technique. L'activer ?",
+    cookie_accept: "Tout accepter",
+    cookie_reject: "Nécessaires uniquement",
+    cookie_translate_accept: "Activer le traducteur",
+    privacy_link: "Confidentialité et cookies",
+    cookie_prefs: "Préférences cookies"
   },
 
   de: {
@@ -346,7 +370,15 @@ window.I18N = {
     footer: "Gemacht mit Liebe, Seife und einer Prise Ironie.",
     foam_party: "🎉 SCHAUMPARTY! Du hast Saverios Easter Egg gefunden!",
     gt_note: "Automatische Übersetzung aktiv",
-    music_hint: "Tipp mich an für Musik! 🎵"
+    music_hint: "Tipp mich an für Musik! 🎵",
+    cookie_title: "🍪 Kekse? Nur technische!",
+    cookie_text: "Diese Website verwendet keine Profiling- oder Werbe-Cookies. Sie speichert nur Sprache, Musik und Spielstände auf deinem Gerät. Der automatische Google-Übersetzer (für andere Sprachen als IT, EN, FR, DE, ES, PT) wird nur mit deiner Zustimmung aktiviert.",
+    cookie_translate_text: "Um die Website in diese Sprache zu übersetzen, nutzen wir Google Übersetzer: Google erhält deine IP-Adresse und speichert ein technisches Cookie. Aktivieren?",
+    cookie_accept: "Alle akzeptieren",
+    cookie_reject: "Nur notwendige",
+    cookie_translate_accept: "Übersetzer aktivieren",
+    privacy_link: "Datenschutz & Cookies",
+    cookie_prefs: "Cookie-Einstellungen"
   },
 
   es: {
@@ -433,7 +465,15 @@ window.I18N = {
     footer: "Hecho con amor, jabón y una pizca de ironía.",
     foam_party: "🎉 ¡FIESTA DE ESPUMA! ¡Has encontrado el easter egg de Saverio!",
     gt_note: "Traducción automática activa",
-    music_hint: "¡Tócame para la música! 🎵"
+    music_hint: "¡Tócame para la música! 🎵",
+    cookie_title: "🍪 ¿Galletas? ¡Solo las técnicas!",
+    cookie_text: "Este sitio no usa cookies de perfilado ni de publicidad. Solo recuerda el idioma, la música y las puntuaciones del juego en tu dispositivo. El traductor automático de Google (para idiomas distintos de IT, EN, FR, DE, ES, PT) solo se activa si lo aceptas.",
+    cookie_translate_text: "Para traducir el sitio a este idioma usamos Google Translate: Google recibirá tu dirección IP y guardará una cookie técnica. ¿Lo activamos?",
+    cookie_accept: "Aceptar todo",
+    cookie_reject: "Solo necesarias",
+    cookie_translate_accept: "Activar el traductor",
+    privacy_link: "Privacidad y cookies",
+    cookie_prefs: "Preferencias de cookies"
   },
 
   pt: {
@@ -520,7 +560,15 @@ window.I18N = {
     footer: "Feito com amor, sabão e uma pitada de ironia.",
     foam_party: "🎉 FESTA DA ESPUMA! Encontrou o easter egg do Saverio!",
     gt_note: "Tradução automática ativa",
-    music_hint: "Toca-me para ouvir música! 🎵"
+    music_hint: "Toca-me para ouvir música! 🎵",
+    cookie_title: "🍪 Cookies? Só os técnicos!",
+    cookie_text: "Este site não usa cookies de perfil nem de publicidade. Só memoriza o idioma, a música e as pontuações do jogo no seu dispositivo. O tradutor automático da Google (para idiomas além de IT, EN, FR, DE, ES, PT) só é ativado se aceitar.",
+    cookie_translate_text: "Para traduzir o site para este idioma usamos o Google Tradutor: a Google receberá o seu endereço IP e guardará um cookie técnico. Ativar?",
+    cookie_accept: "Aceitar tudo",
+    cookie_reject: "Só necessários",
+    cookie_translate_accept: "Ativar o tradutor",
+    privacy_link: "Privacidade e cookies",
+    cookie_prefs: "Preferências de cookies"
   }
 };
 

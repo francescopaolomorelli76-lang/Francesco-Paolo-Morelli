@@ -11,9 +11,7 @@
   <meta name="theme-color" content="#1d3a78">
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -35,7 +33,7 @@
     <div class="tools">
       <div class="lang">
         <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-          <img id="langFlag" src="https://flagcdn.com/w40/it.png" alt="" width="24" height="18" onerror="this.style.visibility='hidden'">
+          <img id="langFlag" src="img/flags/it.svg" alt="" width="24" height="18" onerror="this.style.visibility='hidden'">
           <span id="langCode">IT</span> ▾
         </button>
         <div class="lang-panel" id="langPanel" hidden>
@@ -264,7 +262,7 @@
     <img class="footer-logo" src="img/logo-s.webp" alt="" width="64" height="64" loading="lazy">
     <p class="notranslate"><b>Saverio</b> di Sgombero e Pulizie · Clean&amp;Clear · +39 344 180 4205</p>
     <p data-i18n="footer">Fatto con amore, sapone e un pizzico di ironia.</p>
-    <p class="small">© <span id="year"></span></p>
+    <p class="small"><a href="privacy.html" data-i18n="privacy_link">Privacy e cookie</a> · <button type="button" class="linklike" id="cookiePrefs" data-i18n="cookie_prefs">Preferenze cookie</button> · © <span id="year"></span></p>
   </footer>
 
   <!-- batuffolo di polvere che scappa -->
@@ -272,6 +270,19 @@
     <img class="dust-img" src="img/batuffolo.webp" alt="" width="96" height="67">
   </button>
   <div class="toast" id="toast" role="status"></div>
+  <!-- informativa cookie -->
+  <div class="cookie" id="cookieBar" hidden role="dialog" aria-labelledby="cookieTitle">
+    <img class="cookie-img" src="img/batuffolo.webp" alt="" width="90" height="63">
+    <div class="cookie-body">
+      <p class="cookie-title" id="cookieTitle" data-i18n="cookie_title">🍪 Biscotti? Solo quelli tecnici!</p>
+      <p class="cookie-text" id="cookieText"></p>
+      <div class="cookie-actions">
+        <button type="button" class="btn btn-small" id="cookieReject" data-i18n="cookie_reject">Solo necessari</button>
+        <button type="button" class="btn btn-gold btn-small" id="cookieAccept">Accetta tutto</button>
+        <a href="privacy.html" data-i18n="privacy_link">Privacy e cookie</a>
+      </div>
+    </div>
+  </div>
   <!-- player musica: la testa di Saverio -->
   <button class="music-fab" id="musicBtn" type="button" aria-pressed="false" aria-label="Musica">
     <span class="fab-ring"></span>

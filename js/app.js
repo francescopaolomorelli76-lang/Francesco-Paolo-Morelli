@@ -172,6 +172,7 @@
   }
 
   function setLanguage(code, country) {
+    if (!I18N[code] && !(consent && consent.translate)) { showCookie("translate", [code, country]); return; }
     selLang = code; selCountry = country;
     store.set("sav_lang", code); store.set("sav_country", country);
     if (I18N[code]) {
@@ -186,6 +187,31 @@
     }
   }
 
+  /* ---------- CONSENSO COOKIE (solo il traduttore Google ne ha bisogno) ---------- */
+  let consent = store.get("sav_consent", null), pendingLang = null;
+  const cookieBar = $("#cookieBar");
+  function showCookie(mode, pending) {
+    pendingLang = pending || null;
+    cookieBar.dataset.mode = mode;
+    $("#cookieText").textContent = t(mode === "translate" ? "cookie_translate_text" : "cookie_text");
+    $("#cookieAccept").textContent = t(mode === "translate" ? "cookie_translate_accept" : "cookie_accept");
+    cookieBar.hidden = false;
+  }
+  function saveConsent(translate) {
+    consent = { translate, v: 1, date: new Date().toISOString() };
+    store.set("sav_consent", consent);
+    cookieBar.hidden = true;
+  }
+  $("#cookieAccept").addEventListener("click", () => {
+    saveConsent(true);
+    if (pendingLang) { const [c, cc] = pendingLang; pendingLang = null; setLanguage(c, cc); }
+  });
+  $("#cookieReject").addEventListener("click", () => {
+    saveConsent(false); pendingLang = null;
+    if (!I18N[selLang]) setLanguage("it", "IT"); // il traduttore era attivo: lo spegniamo
+  });
+  $("#cookiePrefs").addEventListener("click", () => showCookie("info"));
+
   function initLanguage() {
     if (!selLang) {
       const nav = (navigator.language || "it").toLowerCase();
@@ -199,6 +225,10 @@
     if (I18N[selLang]) {
       curLang = selLang;
       if (hasGoogCookie()) setGoogCookie(null);
+    } else if (!(consent && consent.translate)) {
+      // traduttore non autorizzato: si torna all'italiano
+      selLang = "it"; selCountry = "IT"; curLang = "it";
+      if (hasGoogCookie()) setGoogCookie(null);
     } else {
       curLang = "it";
       if (!hasGoogCookie()) setGoogCookie(`/it/${selLang}`);
@@ -211,7 +241,7 @@
 
   // pannello nazioni
   const langBtn = $("#langBtn"), langPanel = $("#langPanel"), langSearch = $("#langSearch"), langList = $("#langList");
-  const flagUrl = cc => `https://flagcdn.com/w40/${cc.toLowerCase()}.png`;
+  const flagUrl = cc => `img/flags/${cc.toLowerCase()}.svg`;
   function renderLangButton() {
     const c = COUNTRIES.find(x => x[0] === selCountry) || COUNTRIES.find(x => x[2] === selLang) || COUNTRIES[0];
     $("#langFlag").src = flagUrl(c[0]);
@@ -226,7 +256,7 @@
         const li = document.createElement("li");
         const b = document.createElement("button");
         b.type = "button"; b.setAttribute("role", "option");
-        b.innerHTML = `<img src="${flagUrl(cc)}" alt="" loading="lazy"><span></span><small>${I18N[lang] ? '<span class="star">★</span> ' : ""}${lang.split("-")[0]}</small>`;
+        b.innerHTML = `<img src="${flagUrl(cc)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span></span><small>${I18N[lang] ? '<span class="star">★</span> ' : ""}${lang.split("-")[0]}</small>`;
         b.querySelector("span").textContent = name;
         b.addEventListener("click", () => { closeLang(); swoosh(); setLanguage(lang, cc); });
         li.appendChild(b); langList.appendChild(li);
@@ -620,5 +650,6 @@
   /* ---------- avvio ---------- */
   $("#year").textContent = new Date().getFullYear();
   initLanguage();
+  if (!consent) setTimeout(() => { if (cookieBar.hidden) showCookie("info"); }, 1200);
   renderStats();
 })();

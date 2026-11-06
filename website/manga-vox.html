@@ -143,6 +143,29 @@ section{padding-block:clamp(40px,7vw,70px)}
 .final p{margin-top:12px;font-weight:800;font-size:19px}
 .final .btn{margin-top:20px;color:var(--ink)}
 
+
+/* ── Progetto Arca ── */
+.arca{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,3vw,34px);align-items:center;background:var(--white);border:5px solid var(--ink);box-shadow:9px 9px 0 var(--cyan);padding:clamp(22px,4vw,40px);position:relative;overflow:hidden}
+.arca::after{content:"";position:absolute;right:-60px;bottom:-60px;width:260px;height:260px;border-radius:50%;background-image:radial-gradient(circle,#00B4D833 2px,transparent 2.6px);background-size:12px 12px;pointer-events:none}
+.arca > *{position:relative;min-width:0}
+.heart{width:clamp(110px,16vw,170px);aspect-ratio:1;display:grid;place-items:center;background:var(--red);border:5px solid var(--ink);color:var(--white);font-size:clamp(46px,7vw,72px);
+  clip-path:polygon(50% 0,61% 22%,85% 8%,78% 34%,100% 38%,80% 55%,96% 78%,70% 72%,62% 100%,50% 78%,36% 100%,30% 72%,4% 80%,20% 56%,0 38%,22% 34%,14% 8%,38% 22%);transform:rotate(-8deg)}
+.arca .tag{display:inline-block;font-family:var(--display);font-size:18px;letter-spacing:.08em;background:var(--cyan);border:3px solid var(--ink);padding:2px 10px;transform:rotate(-1.5deg)}
+.arca h2{font-size:clamp(34px,5.5vw,58px);margin-top:12px}
+.arca p{margin-top:12px;max-width:40em}
+.arca .slogan{font-family:var(--display);font-size:clamp(22px,3vw,30px);letter-spacing:.05em;margin-top:16px}
+.arca .slogan span{background:var(--yellow);padding:0 6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.arca .note{font-size:13px;color:var(--muted);font-weight:700}
+
+/* ── Download ── */
+.stores{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:24px}
+.store{display:flex;align-items:center;gap:14px;min-width:min(280px,100%);background:var(--ink);color:var(--white);text-decoration:none;border:4px solid var(--ink);box-shadow:6px 6px 0 #11111188;border-radius:14px;padding:12px 22px;text-align:left;position:relative}
+.store .ico{font-size:40px;line-height:1}
+.store small{display:block;font-weight:800;font-size:13px;opacity:.85}
+.store b{display:block;font-family:var(--display);font-weight:400;font-size:30px;letter-spacing:.05em;line-height:1}
+.store[aria-disabled="true"]{cursor:default}
+.store .soonbadge{position:absolute;top:-14px;right:-10px;font-family:var(--display);font-size:16px;letter-spacing:.06em;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);padding:1px 8px;transform:rotate(8deg)}
+@media (max-width:560px){.arca{grid-template-columns:1fr;justify-items:start}}
 footer{padding-block:30px 40px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:800;color:var(--muted)}
 footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
 
@@ -165,7 +188,7 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
     <img src="icon-256.png" alt="Icona di Manga Vox">
     <span class="name">MANGA VOX</span>
     <span class="spacer"></span>
-    <a class="chip" href="#come">COME FUNZIONA</a>
+    <a class="chip" href="#download">⬇ SCARICA</a>
   </header>
 
   <div class="hero">
@@ -175,7 +198,7 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
       <p class="lead">Tieni premuto, parla, lascia. Manga Vox traduce al volo e lo dice ad alta voce. Anche in aereo, in montagna o in quel ristorante dove il Wi-Fi è un concetto filosofico.</p>
       <div class="ctas">
         <a class="btn red" href="#trailer">▶ GUARDA IL TRAILER</a>
-        <a class="btn" href="#come">COME FUNZIONA</a>
+        <a class="btn" href="#download">⬇ SCARICA</a>
       </div>
       <p class="soon">In arrivo su App Store e Google Play.</p>
     </div>
@@ -241,11 +264,29 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
     </div>
   </section>
 
-  <section>
+  <section id="arca">
+    <div class="arca">
+      <div class="heart" aria-hidden="true">❤</div>
+      <div>
+        <span class="tag">UN PULSANTE IN PIÙ</span>
+        <h2 class="outline">OGNI DOWNLOAD FA DEL BENE</h2>
+        <p>Manga Vox aiuta le persone a capirsi. Ci sembrava giusto che aiutasse anche chi ha più bisogno: <b>parte del ricavato andrà ai bambini sostenuti dalla Fondazione Progetto Arca</b>.</p>
+        <p>Progetto Arca è nata a Milano nel 1994 e da allora sta accanto a chi vive in grave povertà. Accoglie mamme con bambini, offre appartamenti alle famiglie con figli che hanno perso la casa e porta cibo e beni di prima necessità a chi ne ha bisogno, in tante città italiane.</p>
+        <p class="slogan"><span>Tu scarichi, noi traduciamo, loro sorridono.</span></p>
+        <p class="note">Manga Vox è un progetto indipendente e non è affiliato alla Fondazione Progetto Arca: la donazione è un impegno di chi ha creato l'app.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
     <div class="final">
-      <h2>PARLA. LASCIA. CAPISCI.</h2>
-      <p>Manga Vox arriva presto sul tuo telefono. Il mondo è grande, la tua conversazione no.</p>
-      <a class="btn" href="#trailer">▶ GUARDA IL TRAILER</a>
+      <h2>SCARICALA!</h2>
+      <p>Parla. Lascia. Capisci. Il mondo è grande, la tua conversazione no.</p>
+      <div class="stores">
+        <a class="store" aria-disabled="true" role="link" tabindex="0"><span class="ico" aria-hidden="true">📱</span><span><small>Presto su</small><b>APP STORE</b><small>iPhone</small></span><span class="soonbadge">PRESTO!</span></a>
+        <a class="store" aria-disabled="true" role="link" tabindex="0"><span class="ico" aria-hidden="true">🤖</span><span><small>Presto su</small><b>GOOGLE PLAY</b><small>Android</small></span><span class="soonbadge">PRESTO!</span></a>
+      </div>
+      <p style="font-size:15px">I pulsanti si accendono appena l'app è sugli store. Nel frattempo: <a href="#trailer" style="color:var(--yellow)">guarda il trailer</a>.</p>
     </div>
   </section>
 

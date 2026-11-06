@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Saverio – Sgombero e Pulizie | Clean&amp;Clear</title>
+  <meta name="description" content="Saverio di Sgombero e Pulizie (Clean&Clear): sgombero di ville, casali, strutture ricettive, appartamenti, garage e cantine. Pulizie professionali e sanificazione certificata. Tel. +39 344 180 4205">
+  <meta property="og:title" content="Saverio – Sgombero e Pulizie">
+  <meta property="og:description" content="Liberiamo spazi, restituiamo valore al vostro immobile. Pulizie e sanificazione certificata.">
+  <meta property="og:image" content="img/og-image.jpg">
+  <meta name="theme-color" content="#1d3a78">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="bubbles" aria-hidden="true"></canvas>
+  <div id="gt" style="display:none"></div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="topbar">
+    <a href="#top" class="brand notranslate" aria-label="Saverio – home">
+      <img class="brand-logo" src="img/logo-s.webp" alt="" width="42" height="42">
+      <span class="brand-name">Saverio</span>
+    </a>
+    <nav class="nav">
+      <a href="#servizi" data-i18n="nav_services">Servizi</a>
+      <a href="#orologio" data-i18n="nav_clock">Orari</a>
+      <a href="#gioco" data-i18n="nav_game">Gioca</a>
+      <a href="#contatti" data-i18n="nav_contact">Contatti</a>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true" title="Suoni">🔊</button>
+      <div class="lang">
+        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <img id="langFlag" src="https://flagcdn.com/w40/it.png" alt="" width="24" height="18" onerror="this.style.visibility='hidden'">
+          <span id="langCode">IT</span> ▾
+        </button>
+        <div class="lang-panel" id="langPanel" hidden>
+          <p class="lang-title" data-i18n="lang_label">Scegli la tua nazione</p>
+          <input type="search" id="langSearch" data-i18n-ph="lang_search" placeholder="Cerca un paese…" autocomplete="off">
+          <ul id="langList" role="listbox" class="notranslate"></ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+      <div class="hero-text">
+        <p class="kicker" data-i18n="hero_kicker">Clean&amp;Clear presenta</p>
+        <h1 class="title">
+          <span class="saverio notranslate" aria-label="Saverio">
+            <span>S</span><span>a</span><span>v</span><span>e</span><span>r</span><span>i</span><span>o</span>
+          </span>
+          <span class="subtitle" data-i18n="hero_sub">di Sgombero e Pulizie</span>
+        </h1>
+        <p class="tagline" data-i18n="hero_tag">Liberiamo spazi, restituiamo valore al vostro immobile.</p>
+        <div class="pills">
+          <span data-i18n="s1_title">Sgombero</span><span data-i18n="s2_title">Pulizie</span><span data-i18n="s3_title">Sanificazione</span><span>✔ Cert.</span>
+        </div>
+        <div class="cta">
+          <a class="btn btn-gold" href="tel:+393441804205">📞 <span data-i18n="cta_call">Chiama Saverio</span></a>
+          <a class="btn btn-navy" href="https://wa.me/393441804205" target="_blank" rel="noopener">💬 <span data-i18n="cta_wa">Scrivi su WhatsApp</span></a>
+        </div>
+        <p class="phone notranslate"><a href="tel:+393441804205">+39 344 180 4205</a></p>
+        <p class="hint" data-i18n="hero_hint">Muovi il mouse: stai facendo le bolle.</p>
+      </div>
+
+      <div class="hero-mascot">
+        <div class="speech" id="speech" aria-live="polite"><span id="speechText"></span><span class="caret">|</span></div>
+        <button class="mascot" id="mascot" type="button" data-i18n-title="saverio_click" title="Cliccami!">
+          <img class="m-main" src="img/saverio-hero.webp" alt="Saverio, la mascotte con il cappellino blu, fa l'occhiolino e alza il pollice" width="471" height="900">
+          <img class="m-alt" src="img/saverio-saluto.webp" alt="" width="700" height="861">
+          <span class="sparkle s1">✦</span><span class="sparkle s2">✧</span><span class="sparkle s3">✦</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== MARQUEE ===== -->
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+
+    <!-- ===== SERVIZI ===== -->
+    <section id="servizi" class="section">
+      <h2 data-i18n="services_title">Cosa facciamo (benissimo)</h2>
+      <p class="section-sub" data-i18n="services_sub">Tre servizi, zero scuse.</p>
+      <div class="cards">
+        <div class="card" tabindex="0">
+          <div class="card-inner">
+            <div class="card-front">
+              <img class="card-img card-img-tall" src="img/servizio-sgombero.webp" alt="Saverio trasporta una pila di scatoloni" loading="lazy">
+              <h3 data-i18n="s1_title">Sgombero</h3>
+              <p data-i18n="s1_text"></p>
+              <span class="flip-hint" data-i18n="flip_hint">Gira la carta ↻</span>
+            </div>
+            <div class="card-back"><div class="card-icon">🚲</div><p data-i18n="s1_joke"></p></div>
+          </div>
+        </div>
+        <div class="card" tabindex="0">
+          <div class="card-inner">
+            <div class="card-front">
+              <img class="card-img" src="img/servizio-pulizie.webp" alt="Saverio pattina col mocio su un pavimento lucidissimo" loading="lazy">
+              <h3 data-i18n="s2_title">Pulizie</h3>
+              <p data-i18n="s2_text"></p>
+              <span class="flip-hint" data-i18n="flip_hint">Gira la carta ↻</span>
+            </div>
+            <div class="card-back"><div class="card-icon">🛋️</div><p data-i18n="s2_joke"></p></div>
+          </div>
+        </div>
+        <div class="card" tabindex="0">
+          <div class="card-inner">
+            <div class="card-front">
+              <img class="card-img card-img-tall" src="img/servizio-sanificazione.webp" alt="Saverio con mascherina sanifica e i germi scappano con le valigie" loading="lazy">
+              <h3 data-i18n="s3_title">Sanificazione</h3>
+              <p data-i18n="s3_text"></p>
+              <span class="flip-hint" data-i18n="flip_hint">Gira la carta ↻</span>
+            </div>
+            <div class="card-back"><div class="card-icon">🦠</div><p data-i18n="s3_joke"></p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== OROLOGIO ===== -->
+    <section id="orologio" class="section clock-section">
+      <h2 data-i18n="clock_title">L'orologio di Saverio</h2>
+      <p class="section-sub" data-i18n="clock_sub"></p>
+      <div class="clock-wrap">
+        <div class="clock" id="clock">
+          <svg viewBox="0 0 300 300" role="img" aria-label="Orologio">
+            <defs>
+              <radialGradient id="face" cx="50%" cy="40%" r="65%">
+                <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef3ff"/>
+              </radialGradient>
+              <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#f6dd8f"/><stop offset=".5" stop-color="#c9a24a"/><stop offset="1" stop-color="#8f6a1e"/>
+              </linearGradient>
+              <radialGradient id="bub" cx="35%" cy="30%" r="70%">
+                <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+                <stop offset=".35" stop-color="#bfe8ff" stop-opacity=".5"/>
+                <stop offset=".75" stop-color="#e4c6ff" stop-opacity=".35"/>
+                <stop offset="1" stop-color="#7fc8ff" stop-opacity=".8"/>
+              </radialGradient>
+            </defs>
+            <circle cx="150" cy="150" r="146" fill="url(#gold)"/>
+            <circle cx="150" cy="150" r="134" fill="url(#face)"/>
+            <g id="ticks"></g>
+            <!-- lancetta ore: SCOPA -->
+            <g id="hHour" class="hand">
+              <rect x="146.5" y="88" width="7" height="72" rx="3" fill="#8b5a2b"/>
+              <path d="M136 98 L164 98 L158 70 L142 70 Z" fill="#e8b84a" stroke="#9c7420" stroke-width="2"/>
+              <path d="M141 74 V96 M146 72 V97 M150 71 V97 M154 72 V97 M159 74 V96" stroke="#9c7420" stroke-width="1.4"/>
+              <rect x="140" y="96" width="20" height="6" rx="2" fill="#1d3a78"/>
+            </g>
+            <!-- lancetta minuti: MOCIO -->
+            <g id="hMin" class="hand">
+              <rect x="147.5" y="52" width="5" height="108" rx="2.5" fill="#1d3a78"/>
+              <rect x="141" y="48" width="18" height="8" rx="3" fill="#c9a24a"/>
+              <g stroke="#9ad3ff" stroke-width="3" stroke-linecap="round" class="mop">
+                <path d="M143 48 Q140 36 144 26"/><path d="M147 48 Q146 34 148 22"/>
+                <path d="M151 48 Q153 34 151 22"/><path d="M155 48 Q159 36 156 26"/>
+                <path d="M149 48 Q150 38 149 30"/>
+              </g>
+            </g>
+            <!-- lancetta secondi: bacchetta delle bolle -->
+            <g id="hSec" class="hand">
+              <line x1="150" y1="175" x2="150" y2="48" stroke="#d9455f" stroke-width="2.4" stroke-linecap="round"/>
+              <circle cx="150" cy="38" r="11" fill="url(#bub)" stroke="#7fc8ff" stroke-width="1.5"/>
+              <circle cx="146" cy="34" r="3" fill="#fff"/>
+            </g>
+            <circle cx="150" cy="150" r="13" fill="#1d3a78"/>
+            <text x="150" y="156" text-anchor="middle" class="clock-s">S</text>
+          </svg>
+          <!-- faccina che fa l'occhiolino -->
+          <div class="clock-face-eyes" aria-hidden="true"><span></span><span class="wink"></span></div>
+        </div>
+
+        <div class="clock-info">
+          <p class="digital notranslate" id="digital">--:--:--</p>
+          <p class="rome"><span data-i18n="clock_rome">Ora italiana</span> · <span id="dayName" class="notranslate"></span></p>
+          <div class="status-row"><img class="status-img" id="statusImg" src="img/saverio-saluto.webp" alt=""><p class="status" id="openStatus"></p></div>
+          <h3 data-i18n="hours_title">Orari</h3>
+          <table class="hours">
+            <tr data-day="week"><td data-i18n="hours_week">Lunedì – Venerdì</td><td class="notranslate" id="hWeek"></td></tr>
+            <tr data-day="sat"><td data-i18n="hours_sat">Sabato</td><td class="notranslate" id="hSat"></td></tr>
+            <tr data-day="sun"><td data-i18n="hours_sun">Domenica</td><td data-i18n="closed_sun"></td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== GIOCO ===== -->
+    <section id="gioco" class="section">
+      <h2 data-i18n="game_title">Pulisci tu, per una volta</h2>
+      <p class="section-sub" data-i18n="game_sub"></p>
+      <div class="scrub">
+        <img src="img/banner-pulizie.jpg" alt="Banner Saverio Pulizie e Splendore: La cura che vedi, la freschezza che senti">
+        <canvas id="dirt"></canvas>
+      </div>
+      <div class="scrub-bar">
+        <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+        <span><span data-i18n="game_clean">Pulito al</span> <b id="cleanPct" class="notranslate">0%</b></span>
+        <button class="btn btn-small" id="resetDirt" type="button" data-i18n="game_reset">Risporca tutto 😈</button>
+      </div>
+      <div class="game-done" id="gameDone" hidden><img src="img/saverio-festa.webp" alt="Saverio festeggia tra bolle e coriandoli" loading="lazy"><p data-i18n="game_done"></p></div>
+
+      <div class="stats">
+        <div class="stat"><b id="statBubbles" class="notranslate">0</b><span data-i18n="bubbles_label">Bolle</span></div>
+        <div class="stat"><b id="statDust" class="notranslate">0</b><span data-i18n="dust_label">Polvere</span></div>
+        <div class="stat"><b id="statSocks" class="notranslate">0</b><span data-i18n="socks_label">Calzini</span></div>
+      </div>
+      <p class="hint center" data-i18n="dust_hint"></p>
+    </section>
+
+    <!-- ===== SCUSE ===== -->
+    <section class="section excuse">
+      <h2 data-i18n="excuse_title">Generatore di scuse per non pulire</h2>
+      <p class="section-sub" data-i18n="excuse_sub"></p>
+      <div class="excuse-box">
+        <img class="excuse-img" id="excuseImg" src="img/saverio-scettico.webp" alt="Saverio ascolta la scusa con un sopracciglio alzato" loading="lazy">
+        <div class="excuse-body">
+        <p class="excuse-text" id="excuseText">🤔 …</p>
+        <p class="excuse-outro" id="excuseOutro" hidden data-i18n="excuse_outro"></p>
+        <button class="btn btn-gold" id="excuseBtn" type="button">🎲 <span data-i18n="excuse_btn">Genera una scusa</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== RECENSIONI IMMAGINARIE ===== -->
+    <section class="section">
+      <h2 data-i18n="reviews_title">Recensioni immaginarie (ma verosimili)</h2>
+      <p class="section-sub" data-i18n="reviews_sub"></p>
+      <div class="reviews" id="reviews"></div>
+    </section>
+
+    <!-- ===== BANNER ===== -->
+    <section class="section">
+      <h2 data-i18n="banners_title">Le nostre facce (pulitissime)</h2>
+      <div class="banners">
+        <img src="img/banner-sgombero.jpg" alt="Banner Saverio di Sgombero e Pulizie: Liberiamo spazi, restituiamo valore al vostro immobile" loading="lazy">
+        <img src="img/banner-pulizie.jpg" alt="Banner Saverio Pulizie e Splendore" loading="lazy">
+      </div>
+    </section>
+
+    <!-- ===== CONTATTI ===== -->
+    <section id="contatti" class="section contact">
+      <img class="contact-mascot" src="img/saverio-telefono.webp" alt="Saverio corre a rispondere al telefono" loading="lazy">
+      <div>
+        <h2 data-i18n="contact_title">Chiamaci prima che la polvere chieda la residenza</h2>
+        <p data-i18n="contact_sub"></p>
+        <p class="big-phone notranslate"><a href="tel:+393441804205">+39 344 180 4205</a></p>
+        <div class="cta">
+          <a class="btn btn-gold" href="tel:+393441804205">📞 <span data-i18n="cta_call">Chiama Saverio</span></a>
+          <a class="btn btn-navy" href="https://wa.me/393441804205" target="_blank" rel="noopener">💬 <span data-i18n="cta_wa">WhatsApp</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img class="footer-logo" src="img/logo-s.webp" alt="" width="64" height="64" loading="lazy">
+    <p class="notranslate"><b>Saverio</b> di Sgombero e Pulizie · Clean&amp;Clear · +39 344 180 4205</p>
+    <p data-i18n="footer">Fatto con amore, sapone e un pizzico di ironia.</p>
+    <p class="small">© <span id="year"></span></p>
+  </footer>
+
+  <!-- batuffolo di polvere che scappa -->
+  <button class="dust" id="dust" type="button" aria-label="Batuffolo di polvere" hidden>
+    <img class="dust-img" src="img/batuffolo.webp" alt="" width="96" height="67">
+  </button>
+  <div class="toast" id="toast" role="status"></div>
+  <img class="party-img" id="partyImg" src="img/saverio-festa.webp" alt="" hidden>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

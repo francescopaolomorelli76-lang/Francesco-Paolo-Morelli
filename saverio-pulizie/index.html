@@ -7,9 +7,10 @@
   <meta name="description" content="Saverio di Sgombero e Pulizie (Clean&Clear): sgombero di ville, casali, strutture ricettive, appartamenti, garage e cantine. Pulizie professionali e sanificazione certificata. Tel. +39 344 180 4205">
   <meta property="og:title" content="Saverio – Sgombero e Pulizie">
   <meta property="og:description" content="Liberiamo spazi, restituiamo valore al vostro immobile. Pulizie e sanificazione certificata.">
-  <meta property="og:image" content="img/banner-sgombero.jpg">
+  <meta property="og:image" content="img/og-image.jpg">
   <meta name="theme-color" content="#1d3a78">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫧</text></svg>">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
@@ -22,7 +23,7 @@
   <!-- ===== HEADER ===== -->
   <header class="topbar">
     <a href="#top" class="brand notranslate" aria-label="Saverio – home">
-      <span class="brand-s">S</span>
+      <img class="brand-logo" src="img/logo-s.webp" alt="" width="42" height="42">
       <span class="brand-name">Saverio</span>
     </a>
     <nav class="nav">
@@ -73,7 +74,8 @@
       <div class="hero-mascot">
         <div class="speech" id="speech" aria-live="polite"><span id="speechText"></span><span class="caret">|</span></div>
         <button class="mascot" id="mascot" type="button" data-i18n-title="saverio_click" title="Cliccami!">
-          <img src="img/saverio.jpg" alt="Saverio, la mascotte con il cappellino blu, fa l'occhiolino e alza il pollice">
+          <img class="m-main" src="img/saverio-hero.webp" alt="Saverio, la mascotte con il cappellino blu, fa l'occhiolino e alza il pollice" width="471" height="900">
+          <img class="m-alt" src="img/saverio-saluto.webp" alt="" width="700" height="861">
           <span class="sparkle s1">✦</span><span class="sparkle s2">✧</span><span class="sparkle s3">✦</span>
         </button>
       </div>
@@ -90,7 +92,7 @@
         <div class="card" tabindex="0">
           <div class="card-inner">
             <div class="card-front">
-              <div class="card-icon">🚚</div>
+              <img class="card-img" src="img/servizio-sgombero.webp" alt="Saverio trasporta una pila di scatoloni" loading="lazy">
               <h3 data-i18n="s1_title">Sgombero</h3>
               <p data-i18n="s1_text"></p>
               <span class="flip-hint" data-i18n="flip_hint">Gira la carta ↻</span>
@@ -101,7 +103,7 @@
         <div class="card" tabindex="0">
           <div class="card-inner">
             <div class="card-front">
-              <div class="card-icon">🧹</div>
+              <img class="card-img" src="img/servizio-pulizie.webp" alt="Saverio pattina col mocio su un pavimento lucidissimo" loading="lazy">
               <h3 data-i18n="s2_title">Pulizie</h3>
               <p data-i18n="s2_text"></p>
               <span class="flip-hint" data-i18n="flip_hint">Gira la carta ↻</span>
@@ -180,7 +182,7 @@
         <div class="clock-info">
           <p class="digital notranslate" id="digital">--:--:--</p>
           <p class="rome"><span data-i18n="clock_rome">Ora italiana</span> · <span id="dayName" class="notranslate"></span></p>
-          <p class="status" id="openStatus"></p>
+          <div class="status-row"><img class="status-img" id="statusImg" src="img/saverio-saluto.webp" alt=""><p class="status" id="openStatus"></p></div>
           <h3 data-i18n="hours_title">Orari</h3>
           <table class="hours">
             <tr data-day="week"><td data-i18n="hours_week">Lunedì – Venerdì</td><td class="notranslate" id="hWeek"></td></tr>
@@ -204,7 +206,7 @@
         <span><span data-i18n="game_clean">Pulito al</span> <b id="cleanPct" class="notranslate">0%</b></span>
         <button class="btn btn-small" id="resetDirt" type="button" data-i18n="game_reset">Risporca tutto 😈</button>
       </div>
-      <p class="game-done" id="gameDone" hidden data-i18n="game_done"></p>
+      <div class="game-done" id="gameDone" hidden><img src="img/saverio-festa.webp" alt="Saverio festeggia tra bolle e coriandoli" loading="lazy"><p data-i18n="game_done"></p></div>
 
       <div class="stats">
         <div class="stat"><b id="statBubbles" class="notranslate">0</b><span data-i18n="bubbles_label">Bolle</span></div>
@@ -243,7 +245,7 @@
 
     <!-- ===== CONTATTI ===== -->
     <section id="contatti" class="section contact">
-      <img class="contact-mascot" src="img/saverio-sgombero.jpg" alt="" loading="lazy">
+      <img class="contact-mascot" src="img/saverio-telefono.webp" alt="Saverio corre a rispondere al telefono" loading="lazy">
       <div>
         <h2 data-i18n="contact_title">Chiamaci prima che la polvere chieda la residenza</h2>
         <p data-i18n="contact_sub"></p>
@@ -257,6 +259,7 @@
   </main>
 
   <footer class="footer">
+    <img class="footer-logo" src="img/logo-s.webp" alt="" width="64" height="64" loading="lazy">
     <p class="notranslate"><b>Saverio</b> di Sgombero e Pulizie · Clean&amp;Clear · +39 344 180 4205</p>
     <p data-i18n="footer">Fatto con amore, sapone e un pizzico di ironia.</p>
     <p class="small">© <span id="year"></span></p>
@@ -264,9 +267,10 @@
 
   <!-- batuffolo di polvere che scappa -->
   <button class="dust" id="dust" type="button" aria-label="Batuffolo di polvere" hidden>
-    <span class="dust-body"><i></i><i></i></span>
+    <img class="dust-img" src="img/batuffolo.webp" alt="" width="96" height="67">
   </button>
   <div class="toast" id="toast" role="status"></div>
+  <img class="party-img" id="partyImg" src="img/saverio-festa.webp" alt="" hidden>
 
   <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>

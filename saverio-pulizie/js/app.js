@@ -290,9 +290,10 @@
     tick();
   }
   const mascot = $("#mascot");
-  let clicks = [];
+  let clicks = [], waveT;
   mascot.addEventListener("click", () => {
-    mascot.classList.remove("jump"); void mascot.offsetWidth; mascot.classList.add("jump");
+    mascot.classList.remove("jump"); void mascot.offsetWidth; mascot.classList.add("jump", "waving");
+    clearTimeout(waveT); waveT = setTimeout(() => mascot.classList.remove("waving"), 2200);
     const r = mascot.getBoundingClientRect();
     bubbleBurst(14, { x: r.left + r.width / 2, y: r.top + r.height * 0.4 });
     popSound(0.8);
@@ -303,6 +304,8 @@
   });
   function foamParty() {
     fanfare(); toast(t("foam_party"), 4000);
+    const pi = $("#partyImg"); pi.hidden = true; void pi.offsetWidth; pi.hidden = false;
+    setTimeout(() => { pi.hidden = true; }, 3700);
     let n = 0;
     const iv = setInterval(() => { bubbleBurst(25); if (++n > 8) clearInterval(iv); }, 160);
   }
@@ -364,6 +367,7 @@
 
   const hHour = $("#hHour"), hMin = $("#hMin"), hSec = $("#hSec");
   const fmtParts = new Intl.DateTimeFormat("en-GB", { timeZone: CONFIG.timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short", hourCycle: "h23" });
+  const SLEEP_IMG = pick(["img/saverio-dorme.webp", "img/saverio-dorme-2.webp"]);
   const DAYS = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
   let romeCache = { s: -1 }, spin = 0, lastStatusKey = "";
   function romeNow() {
@@ -405,6 +409,8 @@
       const st = $("#openStatus");
       st.className = "status " + (open ? "open" : "closed");
       st.textContent = (open ? "🟢 " : "😴 ") + t(open ? "open_now" : "closed_now");
+      const si = $("#statusImg"), want = open ? "img/saverio-saluto.webp" : SLEEP_IMG;
+      if (!si.getAttribute("src").endsWith(want)) si.src = want;
       $$(".hours tr").forEach(tr => tr.classList.remove("today"));
       const rowKey = r.wd === 0 ? "sun" : r.wd === 6 ? "sat" : "week";
       const row = $(`.hours tr[data-day="${rowKey}"]`); if (row) row.classList.add("today");
@@ -507,12 +513,13 @@
     dust.hidden = false; dust.classList.remove("poof");
     let x = -70, speed = rand(1.6, 2.6), tt = 0;
     const fromRight = Math.random() < 0.5; if (fromRight) { x = innerWidth + 10; speed = -speed; }
+    dust.classList.toggle("left", fromRight);
     const step = () => {
       tt += 0.15;
       const r = dust.getBoundingClientRect();
-      const near = Math.hypot(mouseX - (r.left + 29), mouseY - (r.top + 25)) < 140;
+      const near = Math.hypot(mouseX - (r.left + r.width / 2), mouseY - (r.top + r.height / 2)) < 140;
       x += speed * (near ? 2.8 : 1);
-      dust.style.transform = `translate(${x + 70}px, ${-Math.abs(Math.sin(tt)) * (near ? 26 : 12)}px)`;
+      dust.style.transform = `translate(${x + 80}px, ${-Math.abs(Math.sin(tt)) * (near ? 26 : 12)}px)`;
       if (x > innerWidth + 80 || x < -90) { endDust(); return; }
       dustRun = requestAnimationFrame(step);
     };

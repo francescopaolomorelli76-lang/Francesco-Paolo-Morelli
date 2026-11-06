@@ -14,4 +14,4 @@ Sito statico e divertente: basta aprire `index.html` o pubblicare la cartella su
 ## Da personalizzare
 - **Orari di apertura**: in `js/app.js`, oggetto `CONFIG.hours` (ora: lun–ven 8–19, sab 8–13, dom chiuso – da confermare con il cliente).
 - **Testi e battute**: in `js/i18n.js`.
-- **Immagini**: in `img/` (ritagliate dai banner forniti).
+- **Immagini**: in `img/` (illustrazioni di Saverio in WebP con sfondo trasparente, logo, favicon e immagine per la condivisione social `og-image.jpg`).

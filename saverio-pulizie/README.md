@@ -12,6 +12,7 @@ Sito statico e divertente: basta aprire `index.html` o pubblicare la cartella su
 - Generatore di scuse per non pulire, recensioni immaginarie, contatori, pulsanti Chiama e WhatsApp.
 
 ## Da personalizzare
+- **Privacy**: completa i dati del titolare in `privacy.html` (parti evidenziate in giallo) e aggiorna l'hosting se non usi GitHub Pages.
 - **Orari di apertura**: in `js/app.js`, oggetto `CONFIG.hours` (ora: lun–ven 8–19, sab 8–13, dom chiuso – da confermare con il cliente).
 - **Testi e battute**: in `js/i18n.js`.
 - **Immagini**: in `img/` (illustrazioni di Saverio in WebP con sfondo trasparente, logo, favicon e immagine per la condivisione social `og-image.jpg`).

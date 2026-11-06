@@ -176,6 +176,24 @@ section{padding-block:clamp(40px,7vw,70px)}
 .store[aria-disabled="true"]{cursor:default}
 .store .soonbadge{position:absolute;top:-14px;right:-10px;font-family:var(--display);font-size:16px;letter-spacing:.06em;background:var(--yellow);color:var(--ink);border:3px solid var(--ink);padding:1px 8px;transform:rotate(8deg)}
 @media (max-width:560px){.arca{grid-template-columns:1fr;justify-items:start}}
+
+/* ── Mini player del jingle ── */
+.jp{position:fixed;z-index:20;right:max(14px, calc(env(safe-area-inset-right, 0px) + 14px));bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
+  display:flex;align-items:center;gap:10px;background:var(--white);border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:40px;padding:6px 14px 6px 6px}
+.jp button{all:unset;cursor:pointer;width:54px;height:54px;border-radius:50%;position:relative;display:grid;place-items:center}
+.jp button::before{content:"";position:absolute;inset:0;top:6px;border-radius:50%;background:#C79A00;border:3px solid var(--ink)}
+.jp button span{position:absolute;inset:0;bottom:6px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;
+  background:radial-gradient(circle at 32% 28%,#ffffffb0,var(--yellow) 55%);font-size:22px;transition:transform .08s}
+.jp button:active span{transform:translateY(5px)}
+.jp button:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+.jp .lbl{font-family:var(--display);font-size:18px;letter-spacing:.06em;line-height:1}
+.jp .lbl small{display:block;font-family:var(--body);font-weight:800;font-size:11px;letter-spacing:0;color:var(--muted)}
+.eq{display:flex;gap:3px;align-items:flex-end;height:22px}
+.eq i{width:5px;height:6px;background:var(--red);border:1.5px solid var(--ink);border-radius:2px}
+.jp.on .eq i{animation:eq .7s infinite alternate}
+.jp.on .eq i:nth-child(2){animation-delay:.15s}.jp.on .eq i:nth-child(3){animation-delay:.3s}.jp.on .eq i:nth-child(4){animation-delay:.45s}
+@keyframes eq{from{height:5px}to{height:22px}}
+@media (prefers-reduced-motion:reduce){.jp.on .eq i{animation:none;height:16px}}
 footer{padding-block:30px 40px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:800;color:var(--muted)}
 footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
 
@@ -308,5 +326,34 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
     <span>Manga Vox · fatto in Italia con tanto inchiostro · <a href="privacy.html">Privacy</a></span>
   </footer>
 </div>
+
+<div class="jp" id="jp">
+  <button id="jp-btn" aria-label="Avvia il jingle"><span id="jp-ico">▶</span></button>
+  <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="lbl">JINGLE<small id="jp-state">tocca per ascoltare</small></div>
+  <audio id="jingle" src="media/jingle.mp3" loop preload="auto"></audio>
+</div>
+<script>
+(function(){
+  var a=document.getElementById('jingle'),box=document.getElementById('jp'),btn=document.getElementById('jp-btn'),
+      ico=document.getElementById('jp-ico'),st=document.getElementById('jp-state');
+  var KEY='mv_jingle_off', userOff=false;
+  try{userOff=localStorage.getItem(KEY)==='1'}catch(e){}
+  a.volume=0.6;
+  function ui(){var on=!a.paused;box.classList.toggle('on',on);ico.textContent=on?'❚❚':'▶';
+    btn.setAttribute('aria-label',on?'Metti in pausa il jingle':'Avvia il jingle');
+    st.textContent=on?'in onda!':(userOff?'in pausa':'tocca per ascoltare');}
+  function start(){return a.play().then(ui).catch(ui);}
+  a.addEventListener('play',ui);a.addEventListener('pause',ui);
+  btn.addEventListener('click',function(e){e.stopPropagation();
+    if(a.paused){userOff=false;try{localStorage.removeItem(KEY)}catch(_){};start();}
+    else{a.pause();userOff=true;try{localStorage.setItem(KEY,'1')}catch(_){};ui();}});
+  // Parte subito se il browser lo permette, altrimenti al primo tocco o tasto sulla pagina.
+  function firstGesture(){if(!userOff&&a.paused)start();
+    ['pointerdown','keydown','touchstart'].forEach(function(t){document.removeEventListener(t,firstGesture,true)});}
+  if(!userOff){start();['pointerdown','keydown','touchstart'].forEach(function(t){document.addEventListener(t,firstGesture,true)});}
+  ui();
+})();
+</script>
 </body>
 </html>

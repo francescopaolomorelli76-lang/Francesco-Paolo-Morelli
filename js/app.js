@@ -629,7 +629,22 @@
   function renderStats() {
     $("#statBubbles").textContent = bubbleCount.toLocaleString();
     $("#statDust").textContent = dustCount.toLocaleString();
-    $("#statSocks").textContent = Math.floor(bubbleCount / 137).toLocaleString();
+    const socks = Math.floor(bubbleCount / 137);
+    $("#statSocks").textContent = socks.toLocaleString();
+    if (socks > lastSocks) { lastSocks = socks; showSock(); }
+  }
+  /* ---------- calzino spaiato: ogni 137 bolle ne salta fuori uno ---------- */
+  let lastSocks = Math.floor(bubbleCount / 137);
+  const sockPop = $("#sockPop");
+  function showSock() {
+    if (!sockPop.hidden) return;
+    const right = Math.random() < 0.5;
+    sockPop.classList.toggle("from-right", right);
+    sockPop.style.top = rand(18, 58) + "vh";
+    sockPop.hidden = false;
+    popSound(1.4); setTimeout(() => popSound(1.7), 120);
+    toast(t("sock_found"), 3200);
+    setTimeout(() => { sockPop.hidden = true; }, 3000);
   }
   setInterval(() => { renderStats(); store.set("sav_bubbles", bubbleCount); }, 700);
 

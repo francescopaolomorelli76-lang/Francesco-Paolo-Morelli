@@ -306,6 +306,16 @@ body>.skiptranslate{display:none!important}
 .footer a{color:var(--gold-l)}
 @media (max-width:560px){.cookie{flex-direction:column;text-align:center;gap:8px}.cookie-img{width:64px}.cookie-actions{justify-content:center}}
 
+
+/* ===== calzino spaiato che sbuca ===== */
+.sock-pop{position:fixed;left:0;z-index:76;width:min(180px,42vw);height:auto;pointer-events:none;
+  filter:drop-shadow(0 10px 12px rgba(0,0,0,.25));animation:sockL 3s cubic-bezier(.3,1.5,.5,1) forwards}
+.sock-pop.from-right{left:auto;right:0;scale:-1 1}
+.sock-pop[hidden]{display:none}
+@keyframes sockL{0%{transform:translateX(-110%) rotate(-25deg)}18%{transform:translateX(8%) rotate(8deg)}
+  30%,46%,62%{transform:translateX(4%) rotate(-5deg)}38%,54%,70%{transform:translateX(4%) rotate(6deg)}
+  82%{transform:translateX(6%) rotate(0)}100%{transform:translateX(-115%) rotate(-20deg)}}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }

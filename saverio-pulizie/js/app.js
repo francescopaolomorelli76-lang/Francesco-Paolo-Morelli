@@ -324,11 +324,11 @@
     [...items, ...items].forEach(s => { const sp = document.createElement("span"); sp.textContent = s; $("#marquee").appendChild(sp); });
   }
   function renderReviews() {
-    const icons = ["🛋️", "🏚️", "🧦", "🦠"], stars = [5, 5, 5, 1];
+    const arts = ["divano", "cantina", "calzino", "germe"], stars = [5, 5, 5, 1];
     const box = $("#reviews"); box.innerHTML = "";
     t("reviews").forEach((r, i) => {
       const d = document.createElement("article"); d.className = "review";
-      d.innerHTML = `<div class="avatar">${icons[i]}</div><div class="stars">${"★".repeat(stars[i])}${"☆".repeat(5 - stars[i])}</div><h3></h3><p></p>`;
+      d.innerHTML = `<div class="review-art"><img src="img/review-${arts[i]}.webp" alt="" loading="lazy"></div><div class="stars">${"★".repeat(stars[i])}${"☆".repeat(5 - stars[i])}</div><h3></h3><p></p>`;
       d.querySelector("h3").textContent = r.who; d.querySelector("p").textContent = `“${r.text}”`;
       box.appendChild(d);
     });
@@ -554,6 +554,7 @@
     lastExcuse = i;
     const el = $("#excuseText");
     el.textContent = `“${list[i]}”`; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    const ei = $("#excuseImg"); ei.classList.remove("doubt"); void ei.offsetWidth; ei.classList.add("doubt");
     $("#excuseOutro").hidden = false;
     popSound(1.2); bubbleBurst(8, { x: e.clientX, y: e.clientY });
   });

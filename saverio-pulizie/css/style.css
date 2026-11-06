@@ -177,10 +177,13 @@ body>.skiptranslate{display:none!important}
 .stat span{color:var(--muted);font-weight:700}
 
 /* ===== excuse ===== */
-.excuse-box{max-width:720px;margin:0 auto;background:#fff;border:3px dashed var(--navy);border-radius:28px;padding:30px;text-align:center;box-shadow:var(--shadow)}
+.excuse-box{max-width:860px;margin:0 auto;display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center;background:#fff;border:3px dashed var(--navy);border-radius:28px;padding:30px;text-align:center;box-shadow:var(--shadow)}
 .excuse-text{font-family:"Fredoka";font-size:1.45rem;font-weight:600;color:var(--navy);min-height:3em;margin:0 0 10px}
 .excuse-text.pop{animation:popIn .45s cubic-bezier(.3,1.8,.5,1)}
 @keyframes popIn{0%{transform:scale(.6) rotate(-6deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.excuse-img{width:100%;height:auto;filter:drop-shadow(0 10px 10px rgba(29,58,120,.2))}
+.excuse-img.doubt{animation:doubt .6s ease}
+@keyframes doubt{0%,100%{transform:rotate(0)}30%{transform:rotate(-6deg) scale(1.05)}60%{transform:rotate(4deg)}}
 .excuse-outro{color:var(--gold-d);font-weight:800;margin:0 0 18px}
 
 /* ===== reviews ===== */
@@ -188,7 +191,9 @@ body>.skiptranslate{display:none!important}
 .review{background:#fff;border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);position:relative;transition:transform .2s}
 .review:nth-child(odd){transform:rotate(-1.5deg)}.review:nth-child(even){transform:rotate(1.5deg)}
 .review:hover{transform:rotate(0) scale(1.04)}
-.review .avatar{font-size:2.4rem}
+.review-art{height:150px;margin:-6px -6px 10px;border-radius:16px;background:radial-gradient(circle,#fff 0,#fff6dc 70%);display:grid;place-items:center;overflow:hidden}
+.review-art img{max-width:100%;max-height:100%;object-fit:contain;transition:transform .3s}
+.review:hover .review-art img{transform:scale(1.08) rotate(-2deg)}
 .review .stars{color:var(--gold);font-size:1.1rem;letter-spacing:2px}
 .review h3{font-size:1.15rem;margin:6px 0}
 .review p{margin:0;color:var(--muted)}
@@ -252,7 +257,7 @@ body>.skiptranslate{display:none!important}
 .party-img[hidden]{display:none}
 @keyframes partyJump{0%{transform:translate(-50%,110%) rotate(-10deg)}20%{transform:translate(-50%,-8%) rotate(4deg)}35%{transform:translate(-50%,0) rotate(-3deg)}
   50%{transform:translate(-50%,-12%) rotate(3deg)}65%{transform:translate(-50%,0) rotate(0)}85%{transform:translate(-50%,0)}100%{transform:translate(-50%,120%)}}
-@media (max-width:560px){.status-row{flex-direction:column}.status-img{width:100px}.game-done{flex-direction:column}.m-main{height:min(400px,55vh)}}
+@media (max-width:560px){.excuse-box{grid-template-columns:1fr}.excuse-img{width:150px;margin:0 auto}.status-row{flex-direction:column}.status-img{width:100px}.game-done{flex-direction:column}.m-main{height:min(400px,55vh)}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }

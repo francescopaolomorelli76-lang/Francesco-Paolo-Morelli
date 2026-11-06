@@ -67,13 +67,71 @@
       o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.3);
     });
   }
-  const soundBtn = $("#soundBtn");
-  function renderSound() {
-    soundBtn.textContent = soundOn ? "🔊" : "🔇";
-    soundBtn.setAttribute("aria-pressed", String(soundOn));
-    soundBtn.title = t(soundOn ? "sound_on" : "sound_off");
+  /* ---------- MUSICA in loop (Web Audio: loop senza stacchi) ---------- */
+  const MUSIC = { url: "audio/saverio-loop.mp3", loopStart: 0.5, loopEnd: 12.141156, volume: 0.35 };
+  let musicBuf = null, musicSrc = null, musicGain = null, musicLoading = null;
+  function loadMusic(a) {
+    if (musicBuf) return Promise.resolve(musicBuf);
+    if (!musicLoading) musicLoading = fetch(MUSIC.url).then(r => r.arrayBuffer())
+      .then(ab => new Promise((res, rej) => a.decodeAudioData(ab, res, rej)))
+      .then(b => (musicBuf = b))
+      .catch(e => { musicLoading = null; throw e; });
+    return musicLoading;
   }
-  soundBtn.addEventListener("click", () => { soundOn = !soundOn; store.set("sav_sound", soundOn); renderSound(); popSound(); });
+  function startMusic() {
+    const a = audio(); if (!a || musicSrc) return;
+    fabBtn.classList.add("loading");
+    loadMusic(a).then(buf => {
+      fabBtn.classList.remove("loading");
+      if (!soundOn || musicSrc) return;
+      musicGain = a.createGain();
+      musicGain.gain.setValueAtTime(0, a.currentTime);
+      musicGain.gain.linearRampToValueAtTime(MUSIC.volume, a.currentTime + 1.2);
+      const s = a.createBufferSource();
+      s.buffer = buf; s.loop = true; s.loopStart = MUSIC.loopStart; s.loopEnd = Math.min(MUSIC.loopEnd, buf.duration);
+      s.connect(musicGain).connect(a.destination);
+      s.start(0, MUSIC.loopStart);
+      musicSrc = s; renderSound();
+    }).catch(() => { fabBtn.classList.remove("loading"); renderSound(); });
+  }
+  function stopMusic() {
+    if (!musicSrc || !actx) return;
+    const s = musicSrc, g = musicGain, now = actx.currentTime;
+    musicSrc = null;
+    g.gain.cancelScheduledValues(now); g.gain.setValueAtTime(g.gain.value, now); g.gain.linearRampToValueAtTime(0, now + 0.35);
+    try { s.stop(now + 0.4); } catch { /* già fermo */ }
+    renderSound();
+  }
+  // il player: la testa di Saverio
+  const fabBtn = $("#musicBtn"), fabTip = $("#fabTip");
+  function renderSound() {
+    const playing = !!musicSrc;
+    fabBtn.classList.toggle("playing", playing);
+    fabBtn.classList.toggle("off", !soundOn);
+    fabBtn.setAttribute("aria-pressed", String(playing));
+    fabBtn.title = t(soundOn ? "sound_on" : "sound_off");
+    fabBtn.setAttribute("aria-label", fabBtn.title);
+    $("#fabBadge").textContent = playing ? "♪" : soundOn ? "▶" : "🔇";
+    if (playing) fabTip.hidden = true;
+  }
+  fabBtn.addEventListener("click", () => {
+    fabTip.hidden = true;
+    if (soundOn && musicSrc) { stopMusic(); soundOn = false; }
+    else { soundOn = true; startMusic(); popSound(); }
+    store.set("sav_sound", soundOn); renderSound();
+  });
+  // i browser (e l'iPhone) permettono l'audio solo dopo un tocco: la musica parte al primo tocco
+  const firstTouch = e => {
+    if (e.target.closest && e.target.closest("#musicBtn")) return;
+    ["click", "touchend", "keydown"].forEach(ev => removeEventListener(ev, firstTouch, true));
+    if (soundOn) startMusic();
+  };
+  ["click", "touchend", "keydown"].forEach(ev => addEventListener(ev, firstTouch, true));
+  document.addEventListener("visibilitychange", () => {
+    if (!actx) return;
+    if (document.hidden) actx.suspend(); else if (soundOn) actx.resume();
+  });
+  setTimeout(() => { if (!musicSrc) { fabTip.hidden = false; setTimeout(() => (fabTip.hidden = true), 7000); } }, 2500);
 
   /* =========================================================
      TRADUZIONI

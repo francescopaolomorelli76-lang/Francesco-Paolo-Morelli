@@ -38,8 +38,7 @@ body>.skiptranslate{display:none!important}
 .nav a{text-decoration:none;font-weight:800;color:var(--navy);padding:8px 12px;border-radius:999px;transition:.2s}
 .nav a:hover{background:var(--navy);color:#fff;transform:rotate(-3deg) scale(1.06)}
 .tools{display:flex;gap:8px;align-items:center}
-.icon-btn,.lang-btn{border:2px solid var(--navy);background:#fff;border-radius:999px;cursor:pointer;font:inherit;font-weight:800;color:var(--navy)}
-.icon-btn{width:42px;height:42px;font-size:1.2rem}
+.lang-btn{border:2px solid var(--navy);background:#fff;border-radius:999px;cursor:pointer;font:inherit;font-weight:800;color:var(--navy)}
 .lang{position:relative}
 .lang-btn{display:flex;align-items:center;gap:6px;padding:7px 12px}
 .lang-btn img{border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
@@ -258,6 +257,40 @@ body>.skiptranslate{display:none!important}
 @keyframes partyJump{0%{transform:translate(-50%,110%) rotate(-10deg)}20%{transform:translate(-50%,-8%) rotate(4deg)}35%{transform:translate(-50%,0) rotate(-3deg)}
   50%{transform:translate(-50%,-12%) rotate(3deg)}65%{transform:translate(-50%,0) rotate(0)}85%{transform:translate(-50%,0)}100%{transform:translate(-50%,120%)}}
 @media (max-width:560px){.excuse-box{grid-template-columns:1fr}.excuse-img{width:150px;margin:0 auto}.status-row{flex-direction:column}.status-img{width:100px}.game-done{flex-direction:column}.m-main{height:min(400px,55vh)}}
+
+/* ===== player musica: la testa di Saverio ===== */
+.music-fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:58;width:74px;height:74px;border-radius:50%;
+  border:4px solid var(--gold);background:radial-gradient(circle at 50% 35%,#2c56a8,var(--navy-d));padding:0;cursor:pointer;
+  box-shadow:0 8px 20px rgba(18,40,90,.35);overflow:visible;transition:transform .2s;-webkit-tap-highlight-color:transparent}
+.music-fab:hover{transform:scale(1.08) rotate(-4deg)}
+.music-fab:active{transform:scale(.92)}
+.fab-head{position:absolute;left:50%;bottom:2px;width:84px;height:auto;transform:translateX(-50%);transform-origin:50% 90%;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.3));transition:filter .3s}
+.music-fab.playing .fab-head{animation:headBop .727s ease-in-out infinite}
+@keyframes headBop{0%,100%{transform:translateX(-50%) rotate(-8deg) translateY(0)}25%{transform:translateX(-50%) rotate(0) translateY(-6px)}
+  50%{transform:translateX(-50%) rotate(8deg) translateY(0)}75%{transform:translateX(-50%) rotate(0) translateY(-6px)}}
+.music-fab.off .fab-head{filter:grayscale(.6) brightness(.9);transform:translateX(-50%) rotate(-14deg)}
+.music-fab.loading .fab-head{animation:wobble .8s ease infinite}
+.fab-ring{position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--gold-l);opacity:0}
+.music-fab.playing .fab-ring{animation:ring 1.45s ease-out infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+.fab-badge{position:absolute;right:-6px;bottom:-6px;min-width:28px;height:28px;border-radius:50%;background:var(--goldgrad);color:var(--navy-d);
+  font-weight:800;font-size:.95rem;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.fab-notes i{position:absolute;left:50%;top:0;font-style:normal;font-weight:800;color:var(--gold);font-size:1.3rem;opacity:0;text-shadow:0 1px 0 #fff}
+.music-fab.playing .fab-notes i{animation:note 2.2s ease-out infinite}
+.fab-notes i:nth-child(2){animation-delay:.55s!important;color:#7fc8ff}
+.fab-notes i:nth-child(3){animation-delay:1.1s!important}
+.fab-notes i:nth-child(4){animation-delay:1.65s!important;color:var(--pink)}
+@keyframes note{0%{transform:translate(-50%,0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translate(calc(-50% + 38px),-70px) rotate(25deg) scale(1.1);opacity:0}}
+.fab-zzz{position:absolute;right:-4px;top:-14px;font-family:"Fredoka";font-weight:700;color:var(--navy);font-size:.9rem;opacity:0}
+.fab-zzz b{font-size:1.1rem}.fab-zzz i{font-style:normal;font-size:1.3rem}
+.music-fab.off .fab-zzz{opacity:1;animation:bob 2s ease-in-out infinite}
+.fab-tip{position:fixed;left:100px;bottom:calc(36px + env(safe-area-inset-bottom));z-index:58;background:#fff;color:var(--navy);font-family:"Fredoka";font-weight:700;
+  padding:10px 14px;border-radius:16px;border:3px solid var(--navy);box-shadow:var(--shadow);animation:popIn .45s cubic-bezier(.3,1.8,.5,1);max-width:calc(100vw - 120px)}
+.fab-tip::before{content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);border:8px solid transparent;border-right-color:var(--navy)}
+.fab-tip[hidden]{display:none}
+@media (max-width:560px){.music-fab{width:64px;height:64px}.fab-head{width:74px}.fab-tip{left:90px}}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }

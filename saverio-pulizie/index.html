@@ -33,7 +33,6 @@
       <a href="#contatti" data-i18n="nav_contact">Contatti</a>
     </nav>
     <div class="tools">
-      <button class="icon-btn" id="soundBtn" type="button" aria-pressed="true" title="Suoni">🔊</button>
       <div class="lang">
         <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
           <img id="langFlag" src="https://flagcdn.com/w40/it.png" alt="" width="24" height="18" onerror="this.style.visibility='hidden'">
@@ -273,6 +272,15 @@
     <img class="dust-img" src="img/batuffolo.webp" alt="" width="96" height="67">
   </button>
   <div class="toast" id="toast" role="status"></div>
+  <!-- player musica: la testa di Saverio -->
+  <button class="music-fab" id="musicBtn" type="button" aria-pressed="false" aria-label="Musica">
+    <span class="fab-ring"></span>
+    <img class="fab-head" src="img/saverio-testa.webp" alt="" width="90" height="96">
+    <span class="fab-badge" id="fabBadge" aria-hidden="true">▶</span>
+    <span class="fab-notes" aria-hidden="true"><i>♪</i><i>♫</i><i>♪</i><i>♬</i></span>
+    <span class="fab-zzz" aria-hidden="true">z<b>z</b><i>z</i></span>
+  </button>
+  <div class="fab-tip" id="fabTip" hidden data-i18n="music_hint">Toccami per la musica! 🎵</div>
   <img class="party-img" id="partyImg" src="img/saverio-festa.webp" alt="" hidden>
 
   <script src="js/i18n.js"></script>

@@ -244,6 +244,9 @@ form.comic textarea{min-height:96px;resize:vertical}
 @media (prefers-reduced-motion:reduce){.jp.on .eq i{animation:none;height:16px}}
 footer{padding-block:30px 40px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-weight:800;color:var(--muted)}
 footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
+footer .fpm{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:14px}
+footer .fpm img{width:30px;height:30px;border:0;border-radius:50%}
+@media (max-width:560px){footer .fpm{margin-left:0}}
 
 @media (max-width:860px){
   .hero{grid-template-columns:1fr;clip-path:none}
@@ -466,6 +469,7 @@ footer img{width:36px;height:36px;border:2px solid var(--ink);border-radius:8px}
   <footer>
     <img src="icon-256.png" alt="">
     <span>Manga Vox · fatto in Italia con tanto inchiostro · <a href="privacy.html">Privacy</a></span>
+    <span class="fpm"><img src="media/fpm-medal.png" alt="Logo FPM web designer">© 2026 FPM web designer · Tutti i diritti riservati</span>
   </footer>
 </div>
 

@@ -9,6 +9,7 @@ import '../services/live_speech.dart';
 import '../services/pitch.dart';
 import '../services/speech_service.dart';
 import '../ui/manga.dart';
+import 'info_screen.dart';
 
 /// Pannello AUDIO: tutto quello che serve per sentire e farsi sentire,
 /// senza passare dalle impostazioni dell'iPhone.
@@ -270,6 +271,16 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
             // ───── Voci
             _section('🗣 VOCI'),
             _voicesPanel(),
+            const SizedBox(height: 22),
+            Center(
+              child: ComicButton(
+                label: 'INFO E CREDITI',
+                icon: Icons.info_outline,
+                color: MC.white,
+                size: 18,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen())),
+              ),
+            ),
           ],
         ),
       ),

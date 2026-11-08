@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manga_vox/languages.dart';
 import 'package:manga_vox/screens/home_screen.dart';
+import 'package:manga_vox/screens/info_screen.dart';
 import 'package:manga_vox/screens/language_screen.dart';
 import 'package:manga_vox/screens/onboarding_screen.dart';
 import 'package:manga_vox/screens/setup_screen.dart';
@@ -203,6 +204,21 @@ void main() {
     await tester.tap(find.text('ENTRA NELL\'APP!'));
     await advance();
     expect(find.text('APP'), findsOneWidget);
+  });
+
+  testWidgets('info: crediti e diritti FPM web designer', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: InfoScreen()));
+    await tester.runAsync(() async {
+      for (final img in tester.widgetList<Image>(find.byType(Image))) {
+        await precacheImage(img.image, tester.element(find.byType(InfoScreen)));
+      }
+    });
+    await tester.pump();
+    expect(find.text('FPM web designer'), findsOneWidget);
+    expect(find.textContaining('© 2026 FPM web designer'), findsOneWidget);
+    expect(find.textContaining('Tutti i diritti riservati'), findsOneWidget);
+    await _shot(tester, find.byType(InfoScreen), 'info');
   });
 
   testWidgets('primo avvio: scelta della mia lingua, italiano preselezionato', (tester) async {

@@ -122,6 +122,10 @@ La fotocamera e il microfono vanno provati su un **telefono vero**: l'emulatore 
 - Sottotitolo: *Parla, scatta, traduci senza rete*
 - Descrizione breve: *Traduttore vocale e scanner di testo offline in stile fumetto: italiano, inglese, tedesco, francese, russo e cinese.*
 
+## Crediti
+Progettata e realizzata da **FPM web designer** · © 2026 FPM web designer. Tutti i diritti riservati.
+Nell'app: tocca il titolo MANGA VOX o il medaglione FPM per aprire la pagina **Info**.
+
 ## Licenze
 - Font **Bangers**: SIL Open Font License (`assets/fonts/OFL-Bangers.txt`).
 - Dati OCR russi: `tessdata_fast` di Tesseract (Apache 2.0).

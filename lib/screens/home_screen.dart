@@ -18,6 +18,7 @@ import '../services/translator_service.dart';
 import '../ui/manga.dart';
 import '../ui/push_button.dart';
 import 'audio_screen.dart';
+import 'info_screen.dart';
 import 'language_screen.dart';
 import 'setup_screen.dart';
 import 'world_screen.dart';
@@ -733,6 +734,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
+          // Logo FPM, piccolo e discreto: in basso al centro tra le lingue
+          // (pagina Voce) o in basso a destra (pagina Scanner).
+          Positioned(
+            left: _mode == Mode.talk ? 0 : null,
+            right: _mode == Mode.talk ? 0 : 14,
+            bottom: MediaQuery.paddingOf(context).bottom + (_mode == Mode.talk ? 4 : 12),
+            child: Center(
+              child: Opacity(opacity: 0.92, child: FpmBadge(size: _mode == Mode.talk ? 34 : 38)),
+            ),
+          ),
         ],
       ),
     );
@@ -745,7 +756,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.fromLTRB(12, 6, 0, 0),
       child: Row(
         children: [
-          const OutlinedTitle('MANGA VOX', size: 26, stroke: 5),
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const InfoScreen())),
+            child: const OutlinedTitle('MANGA VOX', size: 26, stroke: 5),
+          ),
           const Spacer(),
           _modeSwitch(),
           IconButton(

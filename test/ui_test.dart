@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manga_vox/languages.dart';
 import 'package:manga_vox/screens/home_screen.dart';
 import 'package:manga_vox/screens/language_screen.dart';
+import 'package:manga_vox/screens/onboarding_screen.dart';
 import 'package:manga_vox/screens/setup_screen.dart';
 import 'package:manga_vox/screens/world_screen.dart';
 import 'package:manga_vox/services/lang_detect.dart';
@@ -166,6 +167,42 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('TI\nASCOLTO!'), findsOneWidget);
     await _shot(tester, find.byType(Scaffold), 'recording');
+  });
+
+  testWidgets('introduzione: 5 immagini, si scorre e si entra nell\'app', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(
+      const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: OnboardingScreen(playMusic: false, next: Scaffold(body: Text('APP'))),
+      ),
+    );
+    await tester.runAsync(() async {
+      for (final img in tester.widgetList<Image>(find.byType(Image))) {
+        await precacheImage(img.image, tester.element(find.byType(OnboardingScreen)));
+      }
+    });
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text('INIZIA'), findsOneWidget);
+    expect(find.text('TRADUCI IN 59 LINGUE!'), findsOneWidget);
+    await _shot(tester, find.byType(OnboardingScreen), 'intro');
+    Future<void> advance() async {
+      for (var f = 0; f < 12; f++) {
+        await tester.pump(const Duration(milliseconds: 60));
+      }
+    }
+
+    await tester.tap(find.text('INIZIA'));
+    await advance();
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.text('CONTINUA'));
+      await advance();
+    }
+    expect(find.text('ENTRA NELL\'APP!'), findsOneWidget);
+    expect(find.textContaining('TRADUCI ANCHE OFFLINE'), findsOneWidget);
+    await tester.tap(find.text('ENTRA NELL\'APP!'));
+    await advance();
+    expect(find.text('APP'), findsOneWidget);
   });
 
   testWidgets('primo avvio: scelta della mia lingua, italiano preselezionato', (tester) async {

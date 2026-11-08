@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/prefs.dart';
 import 'ui/manga.dart';
 
@@ -24,6 +25,7 @@ class MangaVoxApp extends StatelessWidget {
       scaffoldBackgroundColor: MC.paper,
       useMaterial3: true,
     ),
-    home: const HomeScreen(),
+    // Ogni avvio: introduzione animata con musica, poi l'app.
+    home: const OnboardingScreen(next: HomeScreen()),
   );
 }

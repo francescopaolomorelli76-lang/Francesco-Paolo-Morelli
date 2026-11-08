@@ -11,6 +11,9 @@ App per **iPhone e Android** di traduzione simultanea **offline**, pensata per d
 <img src="docs/screenshots/setup.png" width="200" alt="Preparazione offline">
 </p>
 
+## Introduzione
+A ogni avvio l'app mostra 5 immagini manga animate, da scorrere con il dito o con il pulsante blu, con la musica di Manga Vox in loop. La musica si può spegnere e l'introduzione si può saltare ("SALTA ›"). Entrando nell'app la musica sfuma.
+
 ## Come si usa: un solo pulsante
 
 Al centro c'è **un unico grande pulsante 3D**.

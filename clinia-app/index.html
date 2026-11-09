@@ -1,0 +1,946 @@
+<title>Clinia App</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0e8f86">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+/* Layout: una colonna "telefono" centrata (piena larghezza su smartphone), contenuto scorrevole e barra schede fissa in basso. */
+:root{
+  --bg:#ffffff; --bg-2:#f2f8f9; --card:#ffffff; --ink:#0b2b38; --ink-2:#3d5a66; --ink-3:#6b8590;
+  --line:#dbeaf0; --accent:#0e8f86; --accent-2:#0a6f69; --accent-soft:#e1f4f3; --on-accent:#ffffff;
+  --azure:#1a7fd0; --azure-soft:#e3f1fc; --green:#0e9f84; --warn:#b45309; --warn-soft:#fdf2e3;
+  --danger:#b91c1c; --danger-soft:#fdecec; --busy:#c9d9df; --shade:rgba(6,24,32,.55);
+  --grad:linear-gradient(120deg,#0e9f84 0%,#14a6b4 50%,#1a7fd0 100%);
+  --f-display:Fraunces,Georgia,"Times New Roman",serif;
+  --f-body:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --r:16px; --r-sm:12px;
+  --shadow:0 8px 24px -10px rgba(14,95,120,.28),0 2px 6px -2px rgba(11,43,56,.08);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1a21; --bg-2:#0f242c; --card:#132c36; --ink:#e6f2f5; --ink-2:#b3cbd3; --ink-3:#86a2ac;
+  --line:#21424e; --accent:#2cc0ae; --accent-2:#5fd6c7; --accent-soft:#123a3c; --on-accent:#05211f;
+  --azure:#62b3f0; --azure-soft:#12304a; --green:#3bd0a8; --warn:#f0b35a; --warn-soft:#3a2a12;
+  --danger:#f08080; --danger-soft:#3a1717; --busy:#2c4a55; --shade:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1a21; --bg-2:#0f242c; --card:#132c36; --ink:#e6f2f5; --ink-2:#b3cbd3; --ink-3:#86a2ac;
+  --line:#21424e; --accent:#2cc0ae; --accent-2:#5fd6c7; --accent-soft:#123a3c; --on-accent:#05211f;
+  --azure:#62b3f0; --azure-soft:#12304a; --green:#3bd0a8; --warn:#f0b35a; --warn-soft:#3a2a12;
+  --danger:#f08080; --danger-soft:#3a1717; --busy:#2c4a55; --shade:rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg-2);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select,textarea{font:inherit;color:var(--ink)}
+:focus-visible{outline:3px solid var(--azure);outline-offset:2px}
+h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+#app{position:relative;height:100%;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:520px){#app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.pad{padding:20px max(16px,env(safe-area-inset-left,0px)) 28px max(16px,env(safe-area-inset-right,0px))}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:12px}
+.between{justify-content:space-between}
+.muted{color:var(--ink-2)}
+.small{font-size:.86rem}
+.tiny{font-size:.76rem;color:var(--ink-3)}
+.hidden{display:none!important}
+
+/* Icone */
+.ic{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.sm{width:18px;height:18px}
+
+/* Barra superiore */
+.topbar{display:flex;align-items:center;gap:8px;min-height:56px;padding:6px max(8px,env(safe-area-inset-left,0px)) 6px max(8px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--bg)}
+.topbar h2{flex:1;font-size:1.05rem;font-weight:700;text-align:center;font-family:var(--f-body)}
+.iconbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
+.iconbtn:hover{background:var(--bg-2)}
+.topbar.plain{border:0}
+
+/* Pulsanti */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:999px;font-weight:700;font-size:1rem;transition:transform .15s,background .2s,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.ghost{border:1.5px solid var(--line);background:var(--card)}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn.danger{border:1.5px solid var(--line);color:var(--danger);background:var(--card)}
+.btn.block{width:100%}
+.btn.sm{min-height:38px;padding:0 14px;font-size:.88rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.link{color:var(--accent);font-weight:700}
+.link.az{color:var(--azure)}
+.actions{display:flex;flex-direction:column;gap:12px;padding:16px max(16px,env(safe-area-inset-left,0px)) 20px max(16px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);background:var(--bg)}
+
+/* Logo */
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1.5rem;color:var(--ink);letter-spacing:-.02em}
+.brand svg{height:34px;width:auto}
+
+/* Splash */
+.splash{flex:1;display:grid;place-items:center;position:relative}
+.splash svg{width:96px;height:112px;animation:pop .8s cubic-bezier(.2,.7,.2,1.2)}
+.spinner{position:absolute;bottom:64px;left:50%;width:30px;height:30px;margin-left:-15px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--ink-3);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+
+/* Titoli */
+.hello{font-family:var(--f-display);font-weight:500;font-size:2.1rem;letter-spacing:-.02em}
+.hello b{color:var(--accent);font-weight:600}
+.h-xl{font-family:var(--f-display);font-weight:500;font-size:1.9rem;letter-spacing:-.015em}
+.h-xl b{color:var(--accent);font-weight:600}
+.h-sec{font-size:1.3rem;font-weight:800;letter-spacing:-.01em}
+.lead{color:var(--ink-2);font-size:1.02rem}
+
+/* Ricerca */
+.searchbox{display:flex;align-items:center;gap:12px;padding:0 18px;min-height:56px;border-radius:999px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink);text-align:left;width:100%}
+.searchbox .ic{color:var(--accent)}
+.searchbox input{flex:1;border:0;background:none;outline:none;min-width:0;font-size:1rem}
+
+/* Banner */
+.banner{position:relative;display:flex;align-items:center;gap:12px;padding:18px 48px 18px 18px;border-radius:var(--r-sm);background:var(--grad);color:#fff;overflow:hidden}
+.banner::before{content:"";position:absolute;left:22px;top:-8px;width:16px;height:16px;background:#0e9f84;transform:rotate(45deg)}
+.banner b{display:block;font-size:1.05rem;line-height:1.3}
+.banner span{font-size:.9rem;opacity:.92}
+.banner .x{position:absolute;right:6px;top:6px;color:#fff}
+.banner svg.mk{flex:none;width:52px;height:60px;opacity:.95}
+
+/* Chip specialità */
+.chips{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);gap:10px;overflow-x:auto;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px)) 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:inline-flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);white-space:nowrap;font-size:1rem;color:var(--ink-2);font-weight:600}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.a-chirurgia{background:var(--azure)}.a-medicina{background:var(--accent)}.a-riabilitazione{background:var(--green)}
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:0 max(16px,env(safe-area-inset-left,0px))}
+.pill{flex:none;padding:9px 14px;border-radius:999px;border:1.5px solid var(--line);font-weight:700;font-size:.88rem;color:var(--ink-2);background:var(--card)}
+.pill.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card.center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 20px}
+.card h3{font-size:1.08rem;font-weight:800}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.76rem;font-weight:700;background:var(--accent-soft);color:var(--accent-2)}
+.badge.az{background:var(--azure-soft);color:var(--azure)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.red{background:var(--danger-soft);color:var(--danger)}
+.badge.grey{background:var(--bg-2);color:var(--ink-3)}
+.illo{width:120px;height:110px}
+
+/* Avatar */
+.av{flex:none;width:56px;height:56px;border-radius:16px;background:var(--grad);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-size:1.25rem}
+.av.lg{width:96px;height:96px;border-radius:28px;font-size:2.2rem}
+.av.round{border-radius:50%}
+.av.sm{width:40px;height:40px;border-radius:12px;font-size:.95rem}
+
+/* Lista specialisti */
+.doc{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;padding:16px;border-radius:var(--r);border:1px solid var(--line);background:var(--card)}
+.doc:hover{border-color:var(--accent)}
+.doc .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.doc .info b{font-size:1.02rem}
+.doc .info .r{color:var(--ink-2);font-size:.88rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.next{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;font-weight:700;color:var(--accent-2);margin-top:4px}
+.stars{color:var(--accent);letter-spacing:1px}
+
+/* Barra schede */
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--bg);padding:6px max(4px,env(safe-area-inset-left,0px)) 8px max(4px,env(safe-area-inset-right,0px))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--ink-3);font-size:.74rem;font-weight:600}
+.tab .ic{width:26px;height:26px}
+.tab.on{color:var(--accent)}
+
+/* Profilo specialista */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:24px 16px 20px;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.hero h1{font-size:1.4rem;font-weight:800}
+.blist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.blist li{display:flex;gap:10px;color:var(--ink-2);font-size:.95rem}
+.blist li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:9px}
+.svc{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.svc:last-child{border-bottom:0}
+.svc .t{flex:1;min-width:0}
+.svc .t b{display:block;font-size:.98rem}
+.price{font-weight:800;white-space:nowrap}
+
+/* Prenotazione */
+.opt{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--card);text-align:left;width:100%}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt .radio{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid var(--ink-3)}
+.opt.on .radio{border:6px solid var(--accent)}
+.days{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px)) 4px}
+.days::-webkit-scrollbar{display:none}
+.day{flex:none;width:62px;padding:10px 0;border-radius:14px;border:1.5px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;gap:2px}
+.day small{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700}
+.day b{font-size:1.25rem}
+.day i{font-style:normal;font-size:.68rem;font-weight:700;color:var(--accent-2)}
+.day.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.day.on small,.day.on i{color:var(--on-accent)}
+.day[disabled]{opacity:.4}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.slot{padding:11px 0;border-radius:10px;border:1.5px solid var(--line);font-weight:700;font-size:.95rem;background:var(--card)}
+.slot.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.slot[disabled]{text-decoration:line-through;color:var(--ink-3);background:var(--bg-2);opacity:.7}
+.sum{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:.95rem}
+.sum dt{color:var(--ink-3)}
+.sum dd{margin:0;font-weight:700;text-align:right}
+textarea,.field input,.field select{width:100%;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--card);padding:14px;outline:none}
+textarea:focus,.field input:focus,.field select:focus{border-color:var(--accent)}
+textarea{min-height:84px;resize:vertical}
+
+/* Form a etichetta interna */
+.field{position:relative;display:block}
+.field span{position:absolute;left:15px;top:8px;font-size:.78rem;color:var(--azure);font-weight:600}
+.field input,.field select{padding:28px 14px 10px;min-height:60px}
+.grid2{display:grid;grid-template-columns:120px 1fr;gap:12px}
+.inline-field{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:0 16px;background:var(--card);min-height:56px}
+.inline-field:focus-within{border-color:var(--accent)}
+.inline-field input{flex:1;border:0;background:none;outline:none;min-width:0;padding:14px 0}
+.inline-field .ic{color:var(--ink-3)}
+.err{color:var(--danger);font-weight:600;font-size:.9rem;min-height:1.3em}
+.or{display:flex;align-items:center;gap:14px;color:var(--ink-3)}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* Segmenti */
+.seg{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;background:var(--bg-2);border:1px solid var(--line)}
+.seg button{padding:10px;border-radius:999px;font-weight:700;color:var(--ink-2);font-size:.92rem}
+.seg button.on{background:var(--card);color:var(--accent-2);box-shadow:var(--shadow)}
+
+/* PIN */
+.pinwrap{flex:1;display:flex;flex-direction:column;padding:56px max(24px,env(safe-area-inset-left,0px)) 24px max(24px,env(safe-area-inset-right,0px))}
+.dots{display:flex;justify-content:center;gap:28px;margin:48px 0 40px}
+.dots i{width:14px;height:14px;border-radius:50%;border:2.5px solid var(--ink)}
+.dots i.f{background:var(--ink)}
+.dots.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 0;margin-top:auto;max-width:340px;width:100%;align-self:center}
+.key{height:68px;font-size:2rem;font-weight:700;border-radius:50%;width:68px;justify-self:center}
+.key:hover{background:var(--bg-2)}
+.key.small{font-size:.95rem;color:var(--accent-2);width:auto;border-radius:12px;padding:0 10px}
+.otp{display:flex;justify-content:center;gap:12px;margin:40px 0}
+.otp i{width:56px;height:62px;border-radius:12px;border:1.5px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:1.6rem;font-weight:700}
+.otp i.cur{border-color:var(--accent)}
+
+/* Liste impostazioni */
+.list{border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:hidden}
+.li{display:flex;align-items:center;gap:14px;padding:15px 16px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.li:last-child{border-bottom:0}
+.li .t{flex:1;min-width:0}
+.li .t small{display:block;color:var(--ink-3);font-size:.82rem}
+.li>.ic{color:var(--accent)}
+.sw{flex:none;width:48px;height:28px;border-radius:999px;background:var(--busy);position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:var(--accent)}
+.sw.on::after{transform:translateX(20px)}
+.label{font-size:.76rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+/* Chat */
+.bubbles{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:10px 14px;border-radius:18px;font-size:.95rem;background:var(--bg-2);border:1px solid var(--line);align-self:flex-start}
+.bub.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.bub small{display:block;font-size:.7rem;opacity:.75;margin-top:2px}
+.composer{display:flex;gap:8px;padding:10px max(12px,env(safe-area-inset-left,0px)) 12px max(12px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);background:var(--bg)}
+.composer input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:999px;padding:12px 16px;background:var(--card);outline:none}
+.composer button{width:48px;height:48px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+
+/* Stanze */
+.room{display:flex;flex-direction:column;gap:10px}
+.tl{position:relative;height:30px;border-radius:8px;background:var(--accent-soft);overflow:hidden}
+.tl .blk{position:absolute;top:0;bottom:0;background:var(--busy);border-left:2px solid var(--bg);font-size:.66rem;font-weight:800;display:grid;place-items:center;color:var(--ink-2);overflow:hidden;white-space:nowrap}
+.tl .blk.mine{background:var(--accent);color:var(--on-accent)}
+.tl .blk.sel{background:repeating-linear-gradient(45deg,var(--azure),var(--azure) 6px,transparent 6px,transparent 10px);border:2px solid var(--azure)}
+.tl-scale{display:flex;justify-content:space-between;font-size:.68rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.8rem;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:10px;border-radius:3px;display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{padding:14px 12px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line)}
+.stat b{display:block;font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums}
+.stat span{font-size:.74rem;color:var(--ink-3);font-weight:600}
+.shift{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.shift-h{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-soft);color:var(--accent-2);font-weight:800;font-size:.92rem}
+.ap{display:flex;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.ap .tm{width:52px;font-weight:800;font-variant-numeric:tabular-nums}
+.ap .t{flex:1;min-width:0}
+.ap .t small{display:block;color:var(--ink-3);font-size:.8rem}
+.ap.free .t{color:var(--ink-3)}
+table.tar{width:100%;border-collapse:collapse;font-size:.92rem}
+table.tar th,table.tar td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.tar th:first-child,table.tar td:first-child{text-align:left}
+table.tar th{font-size:.74rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.svc-edit{display:grid;grid-template-columns:1fr 74px 84px;gap:8px;align-items:center}
+.svc-edit input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card);outline:none;min-width:0}
+.svc-edit input:focus{border-color:var(--accent)}
+
+/* Visite */
+.visit{display:flex;flex-direction:column;gap:12px}
+.vdate{display:flex;gap:14px;align-items:center}
+.cal{flex:none;width:58px;border-radius:12px;overflow:hidden;border:1px solid var(--line);text-align:center;background:var(--card)}
+.cal small{display:block;background:var(--accent);color:var(--on-accent);font-size:.68rem;font-weight:800;text-transform:uppercase;padding:3px 0}
+.cal b{display:block;font-size:1.4rem;padding:4px 0 2px}
+.cal i{display:block;font-style:normal;font-size:.68rem;color:var(--ink-3);padding-bottom:4px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.86rem;color:var(--ink-2)}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.file{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.file:last-child{border:0}
+.ficon{flex:none;width:42px;height:48px;border-radius:8px;background:var(--azure-soft);color:var(--azure);display:grid;place-items:center;font-size:.66rem;font-weight:800}
+
+/* Sovrapposizioni */
+.shade{position:absolute;inset:0;background:var(--shade);z-index:40;display:flex;align-items:flex-end;animation:fade .2s}
+.shade.mid{align-items:center;justify-content:center;padding:24px}
+@keyframes fade{from{opacity:0}}
+.sheet{width:100%;max-height:92%;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;padding:10px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));animation:up .28s cubic-bezier(.2,.7,.2,1)}
+.sheet .grab{width:42px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+@keyframes up{from{transform:translateY(40%)}}
+.dialog{width:100%;max-width:330px;background:var(--card);border-radius:26px;padding:24px;display:flex;flex-direction:column;gap:12px;animation:pop .25s}
+.dialog .fid{width:72px;height:72px;border-radius:18px;background:#34c759;color:#fff;display:grid;place-items:center}
+.dialog .fid .ic{width:42px;height:42px}
+.dialog h3{font-size:1.15rem}
+.notif{position:absolute;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:60;display:flex;gap:12px;padding:12px 14px;border-radius:20px;background:var(--ink);color:var(--bg);box-shadow:var(--shadow);animation:drop .35s cubic-bezier(.2,.7,.2,1.1);text-align:left}
+.notif .av{width:40px;height:40px;border-radius:10px}
+.notif small{display:block;opacity:.7;font-size:.74rem}
+.notif b{display:block;font-size:.92rem}
+@keyframes drop{from{transform:translateY(-120%)}}
+.toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);z-index:70;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-weight:600;font-size:.9rem;max-width:90%;text-align:center;animation:fade .2s}
+.success{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding-top:30px}
+.success .ok{width:84px;height:84px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,.7,.2,1.4)}
+.success .ok .ic{width:44px;height:44px;stroke-width:3}
+.check-list{display:flex;flex-direction:column;gap:18px}
+.check-list div{display:flex;gap:14px;align-items:flex-start}
+.check-list .cc{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.check-list .cc .ic{width:16px;height:16px;stroke-width:3}
+.feat{display:flex;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}
+.feat:last-child{border:0}
+.feat .ic{color:var(--accent);width:28px;height:28px}
+.demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e9f84"/><stop offset=".5" stop-color="#14a6b4"/><stop offset="1" stop-color="#1a7fd0"/></linearGradient>
+    <symbol id="mark" viewBox="0 0 60 70"><path d="M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z" fill="url(#lgc)"/><circle cx="44" cy="10" r="9" fill="#1f4f6e"/></symbol>
+    <symbol id="markw" viewBox="0 0 60 70"><path d="M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z" fill="#fff"/><circle cx="44" cy="10" r="9" fill="#fff" fill-opacity=".8"/></symbol>
+  </defs>
+</svg>
+
+<div id="app" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   CONFIGURAZIONE CLINIA
+   - Le TARIFFE e i PREZZI qui sotto sono di ESEMPIO: vanno sostituiti
+     con il tariffario ufficiale quando sarà disponibile.
+   - Numerazione e tipologia degli studi: da confermare con la clinica.
+   ===================================================================== */
+const CLINIC={name:"Clinia",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 392 994 8545",email:"info@cliniamatera.it",
+  hoursText:"Studi prenotabili: lun–ven 8:00–20:00 · sab 8:00–13:00"};
+const OPEN={1:[480,1200],2:[480,1200],3:[480,1200],4:[480,1200],5:[480,1200],6:[480,780]}; // minuti dalla mezzanotte; domenica chiuso
+const ROOM_TYPES={
+  standard:{label:"Studio standard",desc:"Consulenze e attività specialistiche"},
+  ampio:{label:"Studio ampio e luminoso",desc:"Attività riabilitative e incontri formativi"},
+  compatto:{label:"Studio compatto",desc:"Consulenze riservate e incontri individuali"}};
+const ROOMS=[
+  {id:"s1",name:"Studio 1",type:"standard"},{id:"s2",name:"Studio 2",type:"standard"},{id:"s3",name:"Studio 3",type:"standard"},
+  {id:"s4",name:"Studio 4",type:"ampio"},{id:"s5",name:"Studio 5",type:"compatto"},{id:"s6",name:"Studio 6",type:"compatto"}];
+const TARIFFARIO={ufficiale:false,stanze:{ // € IVA inclusa (esempio)
+  standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
+const DOCTORS=[
+ {id:"marco-morelli",name:"Dott. Marco Morelli",role:"Fisioterapista",area:"riabilitazione",rating:"5,0",reviews:23,
+  bio:["Formazione presso l’Università Aldo Moro (Bari)","Tirocinio presso l’Ospedale Madonna delle Grazie (Matera)","Tirocinio presso l’Ospedale Don Gnocchi (Tricarico)"]},
+ {id:"enrico-pierangeli",name:"Prof. Enrico Pierangeli",role:"Specialista in Neurochirurgia, Neurologia e Oncologia",area:"chirurgia",
+  bio:["Professore a contratto di Neurochirurgia presso la L.U.M. di Casamassima","Direttore della Neurochirurgia dell’Ospedale SS. Annunziata di Taranto (1997–2011)","Oltre 4.000 interventi eseguiti come primo operatore","Autore di circa 200 pubblicazioni scientifiche"]},
+ {id:"feliciana-pellegrino",name:"Dott.ssa Feliciana Pellegrino",role:"Fisioterapista",area:"riabilitazione",
+  bio:["Laureata in Fisioterapia all’Università Aldo Moro con 110 e lode","Riabilitazione ortopedica, neurologica, pediatrica, oncologica e cardio-respiratoria","Formazione in Kinesio Taping Method"]},
+ {id:"michele-picciallo",name:"Dott. Michele Picciallo",role:"Medico chirurgo – Specialista in Dermatologia e Venereologia",area:"medicina",
+  bio:["Specializzazione all’Università di Bari con 70/70 e lode","Master di II livello in Laser in Dermatologia (Sapienza, Roma)","Esperienza in dermoscopia e tumori cutanei"]},
+ {id:"vincenzo-de-leo",name:"Dott. Vincenzo De Leo",role:"Chirurgo generale – Chirurgia oncologica, laparoscopica e robotica",area:"chirurgia",
+  bio:["Specialista in Chirurgia Generale","Chirurgia mininvasiva, laparoscopica e robotica","Patologie del colon-retto, tiroide, colecisti, ernie e proctologia"]},
+ {id:"donato-panetta",name:"Dott. Donato Panetta",role:"Specialista in Ortopedia e Traumatologia",area:"chirurgia",
+  bio:["Chirurgo ortopedico con oltre vent’anni di esperienza","Chirurgia artroscopica del ginocchio","Chirurgia del piede e della mano"]},
+ {id:"maria-alessandra-lassandro",name:"Dott.ssa Maria Alessandra Lassandro",role:"Medico chirurgo – Allergologia e Immunologia Clinica, Medicina Estetica ed Ecografia Clinica",area:"medicina",
+  bio:["Specialista in Allergologia e Immunologia Clinica (Università di Bari, con lode)","Prick test, patch test, spirometria","Formazione in Medicina Estetica ed Ecografia Clinica SIUMB"]},
+ {id:"francesca-trabace",name:"Francesca Trabace",role:"Osteopata D.O.",area:"riabilitazione",
+  bio:["Osteopata D.O. diplomata presso ATSAI Still Academy Italia","Formazione in osteopatia pediatrica","Approccio osteopatico alle disfunzioni dell’ATM"]},
+ {id:"angelo-costantiello",name:"Angelo Costantiello",role:"Tecnico ortopedico – Biomeccanica del piede e ortesi personalizzate",area:"riabilitazione",
+  bio:["Tecnico ortopedico con oltre 30 anni di esperienza","Baropodometria e valutazione posturale","Plantari personalizzati con tecnologie CAD-CAM"]},
+ {id:"rossella-conversano",name:"Rossella Conversano",role:"Laureata in Scienze Motorie – Personal Trainer e Attività Motoria Funzionale",area:"riabilitazione",
+  bio:["Laureata in Scienze Motorie e Attività Sportive","Personal Trainer qualificata ENDAS","Percorsi personalizzati di attività motoria funzionale"]}
+];
+// Prestazioni: [nome, durata in minuti, prezzo € di ESEMPIO]
+const SERVICES={
+ "marco-morelli":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Terapia manuale",30,35]],
+ "enrico-pierangeli":[["Consulenza neurochirurgica",30,150],["Visita di controllo",20,100]],
+ "feliciana-pellegrino":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Kinesio taping",30,30]],
+ "michele-picciallo":[["Visita dermatologica",30,100],["Mappatura nei in dermoscopia",30,120],["Visita di controllo",20,70]],
+ "vincenzo-de-leo":[["Visita chirurgica",30,120],["Visita proctologica",30,120],["Visita di controllo",20,80]],
+ "donato-panetta":[["Visita ortopedica",30,120],["Visita di controllo",20,80]],
+ "maria-alessandra-lassandro":[["Visita allergologica",30,110],["Prick test",30,80],["Ecografia clinica",30,90],["Consulenza di medicina estetica",30,80]],
+ "francesca-trabace":[["Trattamento osteopatico",45,60],["Osteopatia pediatrica",45,60]],
+ "angelo-costantiello":[["Esame baropodometrico",45,60],["Valutazione per plantari su misura",30,40]],
+ "rossella-conversano":[["Seduta di personal training",60,40],["Valutazione motoria funzionale",45,35]]
+};
+const CHIPS=[["Fisioterapista","riabilitazione",["marco-morelli","feliciana-pellegrino"]],["Dermatologo","medicina",["michele-picciallo"]],
+ ["Ortopedico","chirurgia",["donato-panetta"]],["Neurochirurgo","chirurgia",["enrico-pierangeli"]],["Chirurgo generale","chirurgia",["vincenzo-de-leo"]],
+ ["Allergologo","medicina",["maria-alessandra-lassandro"]],["Ecografia","medicina",["maria-alessandra-lassandro"]],
+ ["Medicina estetica","medicina",["maria-alessandra-lassandro","michele-picciallo"]],["Osteopata","riabilitazione",["francesca-trabace"]],
+ ["Plantari su misura","riabilitazione",["angelo-costantiello"]],["Personal trainer","riabilitazione",["rossella-conversano"]],
+ ["Riabilitazione","riabilitazione",["marco-morelli","feliciana-pellegrino","francesca-trabace","rossella-conversano"]]];
+const AREAS={all:"Tutti",chirurgia:"Chirurgia",medicina:"Medicina specialistica",riabilitazione:"Riabilitazione e movimento"};
+// Turni di esempio degli specialisti negli studi: [id, giorni settimana, inizio, fine, studio]
+const SCHEDULE=[["marco-morelli",[1,2,3,4,5],"09:00","13:00","s4"],["feliciana-pellegrino",[1,3,5],"14:00","19:00","s4"],
+ ["enrico-pierangeli",[2],"15:00","19:00","s1"],["michele-picciallo",[1,4],"15:00","19:00","s2"],["vincenzo-de-leo",[3],"09:00","13:00","s1"],
+ ["donato-panetta",[2,5],"09:00","13:00","s2"],["maria-alessandra-lassandro",[1,3],"15:00","19:00","s3"],["francesca-trabace",[2,4],"09:00","13:00","s5"],
+ ["angelo-costantiello",[6],"09:00","13:00","s6"],["angelo-costantiello",[3],"15:00","19:00","s6"],["rossella-conversano",[2,4],"16:00","20:00","s4"]];
+const DEMO_NAMES=["Anna R.","Giuseppe L.","Maria T.","Vito D.","Rosa C.","Nicola P.","Carmela S.","Antonio M.","Lucia F.","Domenico G."];
+const HORIZON=21;
+
+/* ===================== Stato ===================== */
+const KEY="clinia-app-v1";
+const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,v:1});
+let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const UI={screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
+  book:null,day:null,otp:null,authRole:"paziente",showPw:false,proDay:null,roomDay:null,pending:null};
+
+/* ===================== Utilità ===================== */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad2=n=>String(n).padStart(2,"0");
+const dstr=d=>d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+const parseD=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return dstr(d)};
+const today=()=>dstr(new Date());
+const nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m};
+const toT=m=>pad2(Math.floor(m/60))+":"+pad2(m%60);
+const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",minimumFractionDigits:Number.isInteger(n)?0:2}).format(n);
+const fmtD=(s,o)=>parseD(s).toLocaleDateString("it-IT",o||{weekday:"long",day:"numeric",month:"long"});
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return Math.abs(h)};
+const doc=id=>DOCTORS.find(d=>d.id===id);
+const room=id=>ROOMS.find(r=>r.id===id);
+const initials=n=>n.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("");
+const services=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],dur:s[1],price:(S.prices[id]&&S.prices[id][i]!=null)?S.prices[id][i]:s[2]}));
+const logged=()=>!!(S.auth&&S.user&&S.user.tel);
+const isPro=()=>S.auth&&S.auth.role==="professionista";
+const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
+function roomCost(type,min){const t=TARIFFARIO.stanze[type],h=min/60;let c;
+  if(h>=8)c=t.giornata;else if(h>=4)c=Math.min(t.mezza+(h-4)*t.ora,t.giornata);else c=Math.min(h*t.ora,t.mezza);return Math.round(c*100)/100}
+
+/* Prenotazioni degli studi: turni di esempio + prenotazioni fatte nell'app */
+function allBookings(){
+  const out=[];const t0=today();
+  for(let k=-7;k<=HORIZON;k++){const ds=addDays(t0,k),wd=parseD(ds).getDay();
+    for(const[id,days,a,b,r] of SCHEDULE){if(!days.includes(wd))continue;const bid=`seed-${id}-${ds}-${a}`;
+      if(S.cancelled.includes(bid))continue;out.push({id:bid,doctorId:id,date:ds,start:a,end:b,roomId:r,seed:true})}}
+  return out.concat(S.rooms)}
+const bookingsOn=(ds,f)=>allBookings().filter(b=>b.date===ds&&(!f||f(b)));
+/* Appuntamenti di esempio (altri pazienti), stabili per data e orario */
+function demoBusy(docId,ds){const base=services(docId)[0].dur,out=[];
+  for(const b of bookingsOn(ds,b=>b.doctorId===docId))for(let t=toMin(b.start);t+base<=toMin(b.end);t+=base)
+    if(hash(docId+ds+t)%100<32)out.push({start:t,end:t+base,name:DEMO_NAMES[hash(ds+t+docId)%DEMO_NAMES.length],svc:services(docId)[hash(t+docId)%services(docId).length].name,roomId:b.roomId});
+  return out}
+const activeAppts=()=>S.appts.filter(a=>a.status!=="annullata");
+function slotsFor(docId,ds,dur){
+  const busy=demoBusy(docId,ds),mine=activeAppts().filter(a=>a.doctorId===docId&&a.date===ds),res=[];
+  const isToday=ds===today(),nm=nowMin();
+  for(const b of bookingsOn(ds,b=>b.doctorId===docId).sort((x,y)=>toMin(x.start)-toMin(y.start)))
+    for(let t=toMin(b.start);t+dur<=toMin(b.end);t+=dur){
+      if(isToday&&t<=nm+30)continue;
+      const taken=busy.some(x=>overlap(t,t+dur,x.start,x.end))||mine.some(a=>overlap(t,t+dur,toMin(a.time),toMin(a.time)+a.dur));
+      res.push({time:toT(t),roomId:b.roomId,free:!taken})}
+  return res}
+function nextAvail(docId){const d=services(docId)[0].dur;
+  for(let k=0;k<=HORIZON;k++){const ds=addDays(today(),k),s=slotsFor(docId,ds,d).find(x=>x.free);if(s)return{date:ds,time:s.time}}return null}
+
+/* ===================== Icone ===================== */
+const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+ file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+ chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
+ x:'<path d="M18 6 6 18M6 6l12 12"/>',back:'<path d="m15 18-6-6 6-6"/>',right:'<path d="m9 18 6-6-6-6"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ pin:'<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ door:'<path d="M4 21h16M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17"/><path d="M14 12h.01"/>',euro:'<path d="M17 6.5A7 7 0 1 0 17 17.5M4 10h10M4 14h10"/>',
+ bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',plus:'<path d="M12 5v14M5 12h14"/>',lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ face:'<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9v1M15 9v1M12 9v4h-1M9 16c1.5 1 4.5 1 6 0"/>',
+ phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+ send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>',
+ eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',swap:'<path d="M7 16 3 12l4-4M3 12h14M17 8l4 4-4 4"/>',
+ heartplus:'<path d="M11 14H9a2 2 0 0 0-2 2v5M3 21h4l2-3h4l6-4a2 2 0 0 0-2-3l-4 2"/><path d="M17 3.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0 0 3.5L17 10l4-3a2.5 2.5 0 0 0 0-3.5 2.5 2.5 0 0 0-4 0z"/>',
+ trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>'};
+const ic=(n,c="")=>`<svg class="ic${c?" "+c:""}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
+const heartFill=on=>on?`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--accent);stroke:var(--accent)">${P.heart}</svg>`:ic("heart");
+const markSvg=(w=34)=>`<svg viewBox="0 0 60 70" style="width:${w}px;height:${w*70/60}px" aria-hidden="true"><use href="#mark"/></svg>`;
+const brand=()=>`<div class="brand">${markSvg(30)}<span>Clinia</span></div>`;
+
+/* ===================== Rendering ===================== */
+let lastKey="";
+function render(){
+  const sc=app.querySelector(".content");const key=viewKey();const top=sc&&key===lastKey?sc.scrollTop:0;
+  app.innerHTML=screenHTML()+overlayHTML();lastKey=key;
+  const nc=app.querySelector(".content");if(nc)nc.scrollTop=top;
+  const af=app.querySelector("[data-autofocus]");if(af)af.focus();
+}
+function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
+function screenHTML(){
+  switch(UI.screen){
+    case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div></div>`;
+    case "cookie":return cookieScreen();
+    case "auth":return authScreen();
+    case "login":return loginScreen();
+    case "pin-create":case "pin-confirm":case "lock":return pinScreen();
+    case "phone":return phoneScreen();
+    case "otp":return otpScreen();
+    case "health":return healthScreen();
+    case "pro-pick":return proPickScreen();
+    case "notifs":return notifScreen();
+    default:return mainScreen();
+  }
+}
+function overlayHTML(){let h="";
+  if(UI.sheet)h+=`<div class="shade" data-act="closeSheet"><div class="sheet" data-stop>${'<div class="grab"></div>'+sheetHTML()}</div></div>`;
+  if(UI.modal)h+=`<div class="shade mid">${modalHTML()}</div>`;
+  if(UI.notif)h+=`<button class="notif" data-act="dismissNotif">${'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#markw"/></svg></div>'}<div><small>${esc(UI.notif.app||"Messaggi")} · adesso</small><b>${esc(UI.notif.title)}</b><span class="small">${esc(UI.notif.text)}</span></div></button>`;
+  if(UI.toast)h+=`<div class="toast" role="status">${esc(UI.toast)}</div>`;
+  return h}
+let toastT,notifT;
+function toast(t){UI.toast=t;render();clearTimeout(toastT);toastT=setTimeout(()=>{UI.toast=null;render()},2600)}
+function notify(title,text,app_){UI.notif={title,text,app:app_};render();clearTimeout(notifT);notifT=setTimeout(()=>{UI.notif=null;render()},7000)}
+
+/* ---------- Onboarding ---------- */
+function cookieScreen(){return `<div class="screen" style="background:var(--bg-2)">
+  <div class="topbar plain" style="justify-content:center;background:var(--bg-2);border-bottom:1px solid var(--line)">${brand()}</div>
+  <div class="content"><div class="pad stack lead" style="color:var(--ink)">
+   <p>Usiamo cookie e tecnologie simili per far funzionare l’app in modo sicuro, capire quali funzioni servono di più e correggere eventuali problemi.</p>
+   <p>Se scegli <b>Accetto</b>, useremo anche dati di navigazione (schermate visitate, tocchi, modello del dispositivo) per migliorare l’app.</p>
+   <p>Se scegli <b>Rifiuta</b>, useremo solo i cookie strettamente necessari.</p>
+   <p>Puoi cambiare idea in qualsiasi momento dal tuo Profilo, nella sezione Privacy.</p>
+  </div></div>
+  <div class="actions" style="background:var(--bg-2)"><button class="btn primary block" data-act="cookie" data-v="all">Accetto</button><button class="btn ghost block" data-act="cookie" data-v="necessary">Rifiuta</button></div></div>`}
+function authIllo(){return `<svg viewBox="0 0 260 220" style="width:240px;max-width:100%;height:auto" aria-hidden="true">
+  <circle cx="130" cy="110" r="96" fill="var(--accent-soft)"/><ellipse cx="130" cy="112" rx="118" ry="40" fill="none" stroke="#f2c94c" stroke-width="2.5" transform="rotate(-14 130 112)"/>
+  <rect x="96" y="64" width="68" height="96" rx="20" fill="var(--card)" stroke="var(--line)" stroke-width="2"/><use href="#mark" x="112" y="84" width="36" height="42"/>
+  <rect x="112" y="136" width="36" height="8" rx="4" fill="var(--accent)"/>
+  <g transform="translate(26 70)"><rect width="44" height="40" rx="8" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/><path d="M0 12h44" stroke="var(--accent)" stroke-width="2"/><circle cx="14" cy="24" r="2.5" fill="var(--accent)"/><circle cx="24" cy="24" r="2.5" fill="var(--accent)"/><circle cx="34" cy="30" r="2.5" fill="var(--azure)"/></g>
+  <g transform="translate(192 52)"><rect width="42" height="34" rx="10" fill="var(--accent)"/><path d="M12 14h18M12 21h11" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g>
+  <g transform="translate(190 132)"><circle cx="20" cy="20" r="20" fill="var(--azure)"/><path d="M12 28V14h8a5 5 0 0 1 0 10h-8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
+  <circle cx="60" cy="40" r="6" fill="#f2c94c"/><circle cx="214" cy="190" r="5" fill="#f2c94c"/><circle cx="42" cy="170" r="4" fill="var(--accent)"/></svg>`}
+function authScreen(){const r=UI.authRole;return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="authClose" aria-label="Chiudi">${ic("x")}</button></div>
+  <div class="content"><div class="pad stack" style="align-items:center;text-align:center;gap:18px">${authIllo()}
+   <h1 style="font-size:1.45rem;font-weight:800">Accedi a Clinia</h1>
+   <p class="lead">${r==="paziente"?"Prenota le visite con gli specialisti di Clinia a Matera, ricevi i promemoria e scrivi alla reception.":"Prenota gli studi della clinica, gestisci la tua agenda e consulta il tariffario."}</p>
+   <div class="seg" style="width:100%" role="tablist"><button class="${r==="paziente"?"on":""}" data-act="authRole" data-v="paziente">Sono un paziente</button><button class="${r==="professionista"?"on":""}" data-act="authRole" data-v="professionista">Sono un professionista</button></div>
+   <button class="btn primary" style="min-width:160px" data-act="goLogin" data-v="login">Login</button>
+   <p class="muted">Non hai un account? <button class="link" data-act="goLogin" data-v="register">Registrati</button></p></div></div></div>`}
+function loginScreen(){const reg=UI.loginMode==="register";return `<div class="screen" style="background:var(--bg-2)">
+  <div class="topbar" style="background:var(--bg-2)"><button class="iconbtn" data-act="toAuth" aria-label="Indietro">${ic("back")}</button><h2>${brand()}</h2><span style="width:44px"></span></div>
+  <div class="content"><form class="pad stack" data-form="login" novalidate>
+   <h1 style="font-size:1.6rem;font-weight:800;margin-top:16px">${reg?"Crea il tuo account":"Effettua il login al tuo account"}</h1>
+   <p class="muted small">Stai accedendo come <b>${UI.authRole==="paziente"?"paziente":"professionista"}</b>.</p>
+   <label class="inline-field">${ic("mail")}<input id="lg-email" name="email" type="email" autocomplete="email" placeholder="E-mail" required></label>
+   <label class="inline-field">${ic("lock")}<input id="lg-pw" name="pw" type="${UI.showPw?"text":"password"}" autocomplete="${reg?"new-password":"current-password"}" placeholder="Password" required><button type="button" class="iconbtn" data-act="togglePw" aria-label="Mostra password" style="width:36px;height:36px">${ic("eye")}</button></label>
+   ${reg?`<p class="tiny">Almeno 8 caratteri.</p>`:""}
+   <p class="err" id="lg-err"></p>
+   <button class="btn primary block" type="submit">${reg?"Registrati":"Login"}</button>
+   ${reg?"":`<button type="button" class="link" data-act="forgot" style="text-decoration:underline">Hai dimenticato la password?</button>`}
+   <div class="or small">oppure</div>
+   <p class="muted" style="text-align:center">${reg?`Hai già un account? <button type="button" class="link" data-act="goLogin" data-v="login">Accedi</button>`:`Non hai ancora un account? <button type="button" class="link" data-act="goLogin" data-v="register">Registrati!</button>`}</p>
+  </form></div></div>`}
+function pinScreen(){const s=UI.screen;
+  const title=s==="pin-create"?`<b>Crea</b> il tuo PIN a 4 cifre`:s==="pin-confirm"?`<b>Conferma</b> il tuo PIN`:`<b>Bentornato</b>${S.user?", "+esc(S.user.nome):""}`;
+  const sub=s==="pin-create"?"Per proteggere i tuoi dati ti chiederemo il PIN ogni volta che apri l’app.":s==="pin-confirm"?"Ripeti il PIN a 4 cifre che hai appena inserito.":"Inserisci il PIN per sbloccare l’app.";
+  return `<div class="screen"><div class="pinwrap"><h1 class="h-xl">${title}</h1><p class="lead" style="margin-top:8px">${sub}</p>
+   <div class="dots ${UI.shake?"shake":""}" aria-label="${UI.buf.length} cifre inserite su 4">${[0,1,2,3].map(i=>`<i class="${i<UI.buf.length?"f":""}"></i>`).join("")}</div>
+   <p class="err" style="text-align:center">${esc(UI.pinErr||"")}</p>
+   ${keypad(s==="lock"&&S.faceid)}
+   ${s==="lock"?`<button class="link" style="margin-top:16px;align-self:center" data-act="logout">Hai dimenticato il PIN? Esci</button>`:""}
+  </div></div>`}
+function keypad(face){return `<div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-act="key" data-v="${n}">${n}</button>`).join("")}
+  ${face?`<button class="key small" data-act="faceUnlock" aria-label="Sblocca con Face ID">${ic("face")}</button>`:"<span></span>"}<button class="key" data-act="key" data-v="0">0</button><button class="key small" data-act="key" data-v="del">Cancella</button></div>`}
+function phoneScreen(){const u=S.user||{};return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="logout" aria-label="Annulla registrazione">${ic("x")}</button></div>
+ <form class="screen" data-form="phone" novalidate><div class="content"><div class="pad stack">
+  <h1 style="font-size:1.6rem;font-weight:800">Verifica il numero di telefono</h1>
+  <p class="lead">Lo useremo per i promemoria delle visite e per collegare al tuo account le prenotazioni fatte in clinica.</p>
+  <label class="field"><span>Nome*</span><input id="ph-nome" name="nome" value="${esc(u.nome)}" autocomplete="given-name" required></label>
+  <label class="field"><span>Cognome*</span><input id="ph-cognome" name="cognome" value="${esc(u.cognome)}" autocomplete="family-name" required></label>
+  <div class="grid2"><label class="field"><span>Prefisso</span><select id="ph-pref" name="pref">${["+39","+41","+33","+49","+44","+34","+1"].map(p=>`<option ${p===(u.pref||"+39")?"selected":""}>${p}</option>`).join("")}</select></label>
+   <label class="field"><span>Telefono*</span><input id="ph-tel" name="tel" type="tel" inputmode="numeric" value="${esc(u.tel||u.pendingTel)}" autocomplete="tel-national" placeholder="Il tuo numero" required></label></div>
+  <label class="field"><span>Data di nascita*</span><input id="ph-nascita" name="nascita" type="date" value="${esc(u.nascita)}" max="${today()}" required></label>
+  <p class="err" id="ph-err"></p></div></div>
+  <div class="actions"><button class="btn primary block" type="submit">Continua ${ic("arrow","sm")}</button></div></form></div>`}
+function otpScreen(){return `<div class="screen"><div class="pinwrap" style="padding-top:24px"><div style="display:flex;justify-content:flex-end"><button class="iconbtn" data-act="backPhone" aria-label="Indietro">${ic("x")}</button></div>
+  <h1 class="h-xl" style="margin-top:8px">Verifica il tuo <b>numero di telefono</b></h1>
+  <p class="lead" style="margin-top:8px">Abbiamo inviato un codice a 4 cifre al numero ${esc(S.user.pref+" "+S.user.tel)}. Inseriscilo qui per completare la verifica.</p>
+  <div class="otp ${UI.shake?"shake":""}">${[0,1,2,3].map(i=>`<i class="${i===UI.buf.length?"cur":""}">${UI.buf[i]||""}</i>`).join("")}</div>
+  <p class="err" style="text-align:center">${esc(UI.pinErr||"")}</p>
+  <p style="text-align:center">Non hai ricevuto il codice? <button class="link az" data-act="resendOtp">Invialo di nuovo</button></p>
+  ${keypad(false)}</div></div>`}
+function healthScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="link" style="padding:0 12px" data-act="health" data-v="later">Lo farò più tardi</button></div>
+ <div class="content"><div class="pad stack" style="gap:22px">
+  <div style="display:grid;place-items:center"><svg class="illo" viewBox="0 0 120 110" aria-hidden="true"><circle cx="60" cy="55" r="46" fill="var(--bg-2)"/><circle cx="60" cy="55" r="38" fill="none" stroke="var(--accent)" stroke-width="2"/><rect x="36" y="38" width="48" height="36" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="36" y="33" width="14" height="6" rx="2" fill="#f2c94c"/><path d="M60 44l10 4v7c0 6-5 9-10 11-5-2-10-5-10-11v-7z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><rect x="56" y="52" width="8" height="7" rx="1.5" fill="var(--ink)"/></svg></div>
+  <h1 style="font-size:1.6rem;font-weight:800;text-align:center">La tua salute è solo tua. Così come i tuoi dati.</h1>
+  <p style="text-align:center" class="lead">Ci serve il tuo consenso per trattare i dati sanitari e offrirti le funzioni complete. I dati restano protetti e puoi revocare il consenso dal Profilo.</p>
+  <div class="check-list">${["Tratteremo i tuoi dati sanitari per inviarti promemoria e indicazioni prima delle visite.","Conserveremo in modo sicuro i documenti medici che carichi, così li avrai sempre a portata di mano.","Collegheremo al tuo account gli appuntamenti presi in clinica o al telefono."].map(t=>`<div><span class="cc">${ic("check")}</span><span>${t}</span></div>`).join("")}</div>
+ </div></div>
+ <div class="actions"><button class="btn primary block" data-act="health" data-v="yes">Consenti</button><button class="btn ghost block" data-act="health" data-v="limited">Conserva accesso limitato</button></div></div>`}
+function proPickScreen(){return `<div class="screen"><div class="content"><div class="pad stack">
+  <h1 class="h-xl" style="margin-top:20px"><b>Chi sei</b> in Clinia?</h1><p class="lead">Collega il tuo account al tuo profilo di specialista. In produzione l’abbinamento sarà verificato dalla reception.</p>
+  ${DOCTORS.map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}"><span class="av sm">${initials(d.name)}</span><span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
+ </div></div></div>`}
+function notifScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="notifs" data-v="no" aria-label="Chiudi">${ic("x")}</button></div>
+ <div class="content"><div class="pad stack" style="gap:20px">
+  <div style="display:grid;place-items:center"><svg viewBox="0 0 200 110" style="width:220px" aria-hidden="true"><ellipse cx="100" cy="70" rx="90" ry="40" fill="var(--bg-2)"/><circle cx="64" cy="44" r="20" fill="var(--accent)"/><path d="m55 44 6 6 12-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M124 30a16 16 0 0 1 32 0c0 18 8 22 8 22h-48s8-4 8-22" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="140" cy="60" r="5" fill="#f2c94c"/><circle cx="30" cy="20" r="4" fill="#f2c94c"/><circle cx="180" cy="26" r="3" fill="var(--accent)"/></svg></div>
+  <h1 class="h-xl">Vuoi attivare <b>le notifiche?</b></h1><p class="muted">Attivando le notifiche riceverai:</p>
+  <div class="list">${(isPro()?[["cal","Le nuove prenotazioni dei pazienti e le disdette."],["door","I promemoria dei tuoi turni negli studi."],["chat","I messaggi dei pazienti e della reception."]]:[["cal","I promemoria delle visite e gli eventuali cambi di orario."],["chat","I messaggi degli specialisti e della reception."],["heartplus","Le indicazioni per prepararti alla visita."]]).map(([i,t])=>`<div class="feat">${ic(i)}<span class="muted">${t}</span></div>`).join("")}</div>
+ </div></div>
+ <div class="actions"><button class="btn primary block" data-act="notifs" data-v="yes">Attiva le notifiche</button><button class="btn ghost block" data-act="notifs" data-v="no">Più tardi</button></div></div>`}
+
+/* ---------- Area principale ---------- */
+const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
+const PRO_TABS=[["agenda","cal","Agenda"],["stanze","door","Stanze"],["tariffe","euro","Tariffe"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
+function mainScreen(){
+  const tabs=isPro()&&logged()?PRO_TABS:PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=tabs[0][0];
+  const top=UI.stack[UI.stack.length-1];
+  if(top)return pageHTML(top);
+  return `<div class="screen"><div class="content">${tabHTML()}</div>
+  <nav class="tabbar" aria-label="Sezioni">${tabs.map(([k,i,l])=>`<button class="tab ${UI.tab===k?"on":""}" data-act="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}>${k==="profile"&&logged()?`<span class="av round" style="width:26px;height:26px;font-size:.7rem;font-family:var(--f-body);font-weight:800">${esc(initials(S.user.nome+" "+S.user.cognome))}</span>`:ic(i)}<span>${l}</span></button>`).join("")}</nav></div>`}
+function tabHTML(){switch(UI.tab){
+  case "home":return homeTab();case "visite":return visiteTab();case "files":return filesTab();case "msg":return msgTab();case "profile":return profileTab();
+  case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();}}
+function needLogin(title,text){return `<div class="pad stack"><h1 class="h-sec">${title}</h1><div class="card center">${markSvg(44)}<h3>${text}</h3><p class="muted small">Accedi o crea un account in meno di un minuto.</p><button class="btn primary" data-act="openAuth">Accedi o registrati</button></div></div>`}
+function docCard(d){const n=nextAvail(d.id);return `<button class="doc" data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role).toLowerCase())}">
+  <span class="av">${initials(d.name)}</span><span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span>
+  ${d.rating?`<span class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni</span>`:""}
+  ${n?`<span class="next">${ic("clock","sm")} ${cap(fmtD(n.date,{weekday:"short",day:"numeric",month:"short"}))}, ${n.time}</span>`:`<span class="tiny">Nessuna disponibilità nei prossimi giorni</span>`}</span>
+  <span role="button" class="iconbtn" data-act="fav" data-id="${d.id}" aria-label="${S.favs.includes(d.id)?"Rimuovi dai preferiti":"Aggiungi ai preferiti"}">${heartFill(S.favs.includes(d.id))}</span></button>`}
+function nextAppt(){return activeAppts().filter(a=>a.date>today()||(a.date===today()&&toMin(a.time)>=nowMin())).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))[0]}
+function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao.";const na=logged()&&nextAppt();
+  return `<div class="pad stack" style="gap:20px">${markSvg(44)}<h1 class="hello">${nm}</h1>
+  <button class="searchbox" data-act="openSearch">${ic("search")}<span class="muted">Cerca specialisti e prestazioni</span></button>
+  ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${DOCTORS.length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
+  <div class="chips">${CHIPS.map((c,i)=>`<button class="chip" data-act="chip" data-v="${i}"><span class="dot a-${c[1]}"></span>${c[0]}</button>`).join("")}</div>
+  ${na?`<section class="stack" style="gap:10px"><h2 class="h-sec">La tua prossima visita</h2>${visitCard(na,true)}</section>`:""}
+  ${logged()?"":`<section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Configura il tuo account</h2>
+   <div class="card center"><svg class="illo" viewBox="0 0 120 110" aria-hidden="true"><circle cx="60" cy="55" r="46" fill="var(--bg-2)"/><circle cx="60" cy="55" r="32" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="6 6"/><rect x="26" y="58" width="30" height="30" rx="7" fill="var(--card)"/><circle cx="41" cy="68" r="5" fill="var(--accent)"/><path d="M33 82a8 8 0 0 1 16 0z" fill="var(--accent)"/><rect x="64" y="22" width="30" height="30" rx="7" fill="var(--card)"/><use href="#mark" x="71" y="27" width="16" height="19"/></svg>
+   <h3>Tutte le visite in un unico posto</h3><p class="muted">Ritrova le visite prenotate in app, al telefono o in reception.</p><button class="btn ghost block" data-act="openAuth">Accedi o registrati ${ic("arrow","sm")}</button></div></section>`}
+  <section class="stack" style="gap:12px;margin-top:8px"><div><h2 class="h-sec">I tuoi specialisti</h2><p class="muted">Ritrova subito i tuoi preferiti</p></div>
+   ${S.favs.length?S.favs.map(id=>doc(id)).filter(Boolean).map(docCard).join(""):`<div class="card center"><svg class="illo" viewBox="0 0 120 110" aria-hidden="true"><circle cx="54" cy="58" r="40" fill="var(--bg-2)"/><rect x="50" y="14" width="44" height="80" rx="9" fill="var(--card)" stroke="var(--accent)" stroke-width="3"/><path d="M72 66s-12-7-12-15a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 8-12 15-12 15z" fill="#f2c94c"/></svg>
+   <h3>Salva i tuoi specialisti</h3><p class="muted">Tocca ${heartFill(false).replace('class="ic"','class="ic sm" style="vertical-align:-3px"')} sul profilo di uno specialista per ritrovarlo qui.</p><button class="btn ghost block" data-act="openSearch">Sfoglia gli specialisti ${ic("arrow","sm")}</button></div>`}</section>
+  <section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Specialisti di Clinia</h2>${DOCTORS.map(docCard).join("")}</section>
+  <p class="tiny" style="text-align:center">${esc(CLINIC.address)}</p></div>`}
+
+/* ---------- Pagine impilate ---------- */
+function pageHTML(p){switch(p.page){
+  case "search":return searchPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
+function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
+function searchPage(){const chip=UI.chip!=null?CHIPS[UI.chip]:null;
+  const list=DOCTORS.filter(d=>(UI.area==="all"||d.area===UI.area)&&(!chip||chip[2].includes(d.id)));
+  return `<div class="screen">${bar("Cerca")}<div class="content"><div class="pad stack">
+  <label class="searchbox">${ic("search")}<input id="q" type="search" placeholder="Nome, specialità o prestazione" data-input="search" data-autofocus aria-label="Cerca"></label>
+  <div class="pills">${Object.entries(AREAS).map(([k,v])=>`<button class="pill ${UI.area===k&&!chip?"on":""}" data-act="area" data-v="${k}">${v}</button>`).join("")}</div>
+  ${chip?`<div class="row"><span class="badge">${esc(chip[0])}</span><button class="link small" data-act="clearChip">Mostra tutti</button></div>`:""}
+  <div class="stack" id="results">${list.map(d=>docCard(d).replace('data-name="',`data-svc="${esc(services(d.id).map(s=>s.name).join(" ").toLowerCase())}" data-name="`)).join("")}<p class="muted hidden" id="noresults" style="text-align:center;padding:30px">Nessuno specialista trovato.</p></div>
+  </div></div></div>`}
+function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(allBookings().filter(b=>b.doctorId===id&&b.date>=today()).map(b=>b.roomId))];
+  return `<div class="screen">${bar("Profilo",`<button class="iconbtn" data-act="fav" data-id="${id}" aria-label="Preferito">${heartFill(S.favs.includes(id))}</button>`)}
+  <div class="content"><div class="hero"><span class="av lg">${initials(d.name)}</span><h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
+   ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
+  <div class="pad stack" style="gap:22px">
+   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${TARIFFARIO.ufficiale?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
+    ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
+   <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
+    <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px">${rs.map(r=>`<span class="badge grey" style="margin:2px 4px 0 0">${room(r).name} · ${ROOM_TYPES[room(r).type].label}</span>`).join("")}</p></div></div></section>
+   <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Esperienza</h3><ul class="blist">${d.bio.map(b=>`<li>${esc(b)}</li>`).join("")}</ul></section>
+   <button class="btn ghost block" data-act="openChat" data-id="${id}">${ic("chat","sm")} Scrivi allo specialista</button>
+  </div></div><div class="actions"><button class="btn primary block" data-act="bookSvc" data-id="${id}" data-v="0">Prenota una visita</button></div></div>`}
+function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.svc];
+  const days=[];for(let k=0;k<=HORIZON;k++){const ds=addDays(today(),k);const sl=slotsFor(id,ds,s.dur);days.push({ds,free:sl.filter(x=>x.free).length,any:sl.length})}
+  if(!b.date||!days.find(x=>x.ds===b.date&&x.free)){const f=days.find(x=>x.free);b.date=f?f.ds:null;b.time=null}
+  const slots=b.date?slotsFor(id,b.date,s.dur):[];const pick=slots.find(x=>x.time===b.time&&x.free);
+  return `<div class="screen">${bar("Prenota")}<div class="content"><div class="pad stack" style="gap:22px">
+   <div class="row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>
+   <section class="stack" style="gap:10px"><span class="label">1 · Prestazione</span>${svc.map(x=>`<button class="opt ${x.i===b.svc?"on":""}" data-act="bSvc" data-v="${x.i}"><span class="radio"></span><span style="flex:1"><b>${esc(x.name)}</b><span class="tiny" style="display:block">${x.dur} min</span></span><span class="price num">${eur(x.price)}</span></button>`).join("")}</section>
+   <section class="stack" style="gap:10px"><span class="label">2 · Giorno</span><div class="days">${days.map(x=>{const dt=parseD(x.ds);return `<button class="day ${x.ds===b.date?"on":""}" data-act="bDay" data-v="${x.ds}" ${x.free?"":"disabled"}><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${x.free?x.free+" liberi":dt.toLocaleDateString("it-IT",{month:"short"})}</i></button>`}).join("")}</div></section>
+   <section class="stack" style="gap:10px"><span class="label">3 · Orario${b.date?" · "+fmtD(b.date):""}</span>
+    ${b.date?`<div class="slots">${slots.map(x=>`<button class="slot num ${x.time===b.time?"on":""}" data-act="bTime" data-v="${x.time}" ${x.free?"":"disabled"} aria-label="${x.time}${x.free?"":" occupato"}">${x.time}</button>`).join("")}</div>`:`<p class="muted">Nessuna disponibilità nelle prossime tre settimane. Scrivi alla reception per una data.</p>`}</section>
+   <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
+   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>Studio</dt><dd>${room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd></dl><p class="tiny">Il pagamento si effettua in clinica. Puoi disdire gratis fino a 24 ore prima.</p>`:""}
+  </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
+function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
+  <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.</p>
+  <div style="width:100%;text-align:left">${visitCard(a,false)}</div>
+  <div class="card" style="width:100%;text-align:left"><b>Cosa portare</b><ul class="blist" style="margin-top:8px"><li>Documento d’identità e tessera sanitaria</li><li>Esami e referti precedenti (puoi caricarli in “I miei file”)</li><li>Elenco dei farmaci che assumi</li></ul></div>
+ </div></div><div class="actions"><button class="btn primary block" data-act="goVisite">Vai alle mie visite</button><button class="btn ghost block" data-act="home">Torna a Esplora</button></div></div>`}
+
+/* ---------- Visite ---------- */
+function visitCard(a,compact){const d=doc(a.doctorId),dt=parseD(a.date),past=a.date<today()||(a.date===today()&&toMin(a.time)<nowMin());
+  const st=a.status==="annullata"?`<span class="badge red">Annullata</span>`:past?`<span class="badge grey">Conclusa</span>`:`<span class="badge">Confermata</span>`;
+  return `<div class="card visit"><div class="vdate"><div class="cal"><small>${dt.toLocaleDateString("it-IT",{month:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</i></div>
+  <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}</p></div>${st}</div>
+  <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic("door","sm")}${room(a.roomId).name}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
+  ${compact||past||a.status==="annullata"?"":`<div class="row"><button class="btn ghost sm" style="flex:1" data-act="openChat" data-id="${a.doctorId}">${ic("chat","sm")} Scrivi</button><button class="btn danger sm" style="flex:1" data-act="askCancel" data-id="${a.id}">Disdici</button></div>`}</div>`}
+function visiteTab(){if(!logged())return needLogin("Visite","Tutte le tue visite in un unico posto");
+  const now=today()+toT(nowMin());const up=S.appts.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const past=S.appts.filter(a=>!up.includes(a)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));const list=UI.visitSeg==="next"?up:past;
+  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">Visite</h1>
+  <div class="seg"><button class="${UI.visitSeg==="next"?"on":""}" data-act="vseg" data-v="next">Prossime (${up.length})</button><button class="${UI.visitSeg==="past"?"on":""}" data-act="vseg" data-v="past">Passate e annullate</button></div>
+  ${list.length?list.map(a=>visitCard(a,false)).join(""):`<div class="card center">${ic("cal")}<h3>${UI.visitSeg==="next"?"Nessuna visita in programma":"Nessuna visita passata"}</h3><p class="muted small">Scegli uno specialista e prenota in pochi tocchi.</p><button class="btn primary" data-act="openSearch">Prenota una visita</button></div>`}</div>`}
+
+/* ---------- File ---------- */
+function filesTab(){if(!logged())return needLogin("I miei file","Referti ed esami sempre con te");
+  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">I miei file</h1><p class="muted">Carica referti, esami e prescrizioni per mostrarli allo specialista durante la visita.</p>
+  <label class="btn primary block" for="up">${ic("upload","sm")} Carica un documento</label><input id="up" type="file" accept=".pdf,image/*" multiple class="hidden" data-change="upload">
+  <div class="demo-note">${ic("shield","sm")}<span>Nella versione di prova il file resta sul telefono: viene salvato solo il nome.</span></div>
+  ${S.files.length?`<div class="card" style="padding:4px 16px">${S.files.map(f=>`<div class="file"><span class="ficon">${esc((f.name.split(".").pop()||"DOC").slice(0,4).toUpperCase())}</span><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</b><span class="tiny">${(f.size/1024).toFixed(0)} KB · ${fmtD(f.at,{day:"numeric",month:"short",year:"numeric"})}</span></div><button class="iconbtn" data-act="delFile" data-id="${f.id}" aria-label="Elimina ${esc(f.name)}">${ic("trash")}</button></div>`).join("")}</div>`
+  :`<div class="card center">${ic("file")}<h3>Nessun documento</h3><p class="muted small">I file che carichi compariranno qui.</p></div>`}</div>`}
+
+/* ---------- Messaggi ---------- */
+function threadKeys(){
+  if(isPro()&&logged()){const ks=Object.keys(S.msgs).filter(k=>k.startsWith(S.proId+"|"));if(!ks.includes(S.proId+"|demo"))ks.push(S.proId+"|demo");if(!ks.includes("reception|pro-"+S.proId))ks.unshift("reception|pro-"+S.proId);return ks}
+  const ks=Object.keys(S.msgs).filter(k=>k.endsWith("|me"));if(!ks.includes("reception|me"))ks.unshift("reception|me");return ks}
+function threadInfo(k){const[a,b]=k.split("|");
+  if(a==="reception")return{name:"Reception Clinia",sub:"Risponde lun–sab",ini:"C"};
+  if(isPro())return b==="demo"?{name:"Anna R. (esempio)",sub:"Paziente",ini:"AR"}:{name:S.msgs[k].pname||"Paziente",sub:"Paziente",ini:initials(S.msgs[k].pname||"P")};
+  return{name:doc(a).name,sub:doc(a).role,ini:initials(doc(a).name)}}
+function threadMsgs(k){const t=S.msgs[k];if(t)return t.list;
+  if(k.endsWith("|demo"))return[{from:"p",text:"Buongiorno, posso portare alla visita anche la risonanza dell’anno scorso?",at:Date.now()-3600e3}];
+  if(k.startsWith("reception"))return[{from:"r",text:"Benvenuto in Clinia! Scrivici per informazioni su visite, orari e documenti.",at:Date.now()-86400e3}];return[]}
+function msgTab(){if(!logged())return needLogin("Messaggi","Scrivi agli specialisti e alla reception");
+  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">Messaggi</h1><div class="list">${threadKeys().map(k=>{const i=threadInfo(k),m=threadMsgs(k),l=m[m.length-1];
+   return `<button class="li" data-act="openThread" data-id="${esc(k)}"><span class="av sm round">${esc(i.ini)}</span><span class="t"><b>${esc(i.name)}</b><small>${l?esc((l.from==="me"||(isPro()&&l.from==="d")?"Tu: ":"")+l.text):esc(i.sub)}</small></span>${ic("right","sm")}</button>`}).join("")}</div>
+   ${isPro()?"":`<p class="tiny">Per scrivere a uno specialista apri il suo profilo e tocca “Scrivi allo specialista”.</p>`}</div>`}
+function chatPage(k){const i=threadInfo(k),m=threadMsgs(k);const mine=isPro()?["d","pr"]:["me"];
+  return `<div class="screen">${bar(esc(i.name))}<div class="content"><div class="pad bubbles">${m.length?"":`<p class="muted small" style="text-align:center">Scrivi il primo messaggio. ${isPro()?"":"Lo specialista ti risponderà appena possibile."}</p>`}
+  ${m.map(x=>`<div class="bub ${mine.includes(x.from)?"me":""}">${esc(x.text)}<small>${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</small></div>`).join("")}</div></div>
+  <form class="composer" data-form="send" data-id="${esc(k)}"><input id="msg-in" name="t" placeholder="Scrivi un messaggio" autocomplete="off" aria-label="Messaggio" data-autofocus><button type="submit" aria-label="Invia">${ic("send","sm")}</button></form></div>`}
+
+/* ---------- Profilo ---------- */
+function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
+  const sw=(act,on,title,sub,icn)=>`<button class="li" data-act="${act}" role="switch" aria-checked="${!!on}">${ic(icn)}<span class="t">${title}<small>${sub}</small></span><span class="sw ${on?"on":""}"></span></button>`;
+  return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
+  ${pro?`<div class="card row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
+  <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
+  <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
+  <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}</div></div>
+  <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
+  <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
+  <button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`}
+
+/* ---------- Professionista: agenda ---------- */
+function dayStrip(sel,act,countFn,n=14){let h=`<div class="days">`;for(let k=0;k<n;k++){const ds=addDays(today(),k),dt=parseD(ds),closed=!OPEN[dt.getDay()],c=closed?"":countFn(ds);
+  h+=`<button class="day ${ds===sel?"on":""}" data-act="${act}" data-v="${ds}" ${closed?"disabled":""}><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${closed?"chiuso":c}</i></button>`}return h+"</div>"}
+function proAppts(ds){const id=S.proId;const out=demoBusy(id,ds).map(x=>({time:toT(x.start),end:toT(x.end),name:x.name+" (esempio)",svc:x.svc,roomId:x.roomId,demo:true}));
+  for(const a of activeAppts().filter(a=>a.doctorId===id&&a.date===ds))out.push({time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,note:a.note,roomId:a.roomId,id:a.id});
+  return out.sort((a,b)=>a.time.localeCompare(b.time))}
+function agendaTab(){const d=doc(S.proId);if(!UI.proDay||!OPEN[parseD(UI.proDay).getDay()])UI.proDay=firstOpen();const ds=UI.proDay;
+  const mine=bookingsOn(ds,b=>b.doctorId===S.proId).sort((a,b)=>a.start.localeCompare(b.start));
+  const wk=[0,1,2,3,4,5,6].map(k=>addDays(today(),k));const wkMin=allBookings().filter(b=>b.doctorId===S.proId&&wk.includes(b.date)).reduce((s,b)=>s+toMin(b.end)-toMin(b.start),0);
+  const m0=today().slice(0,7);const cost=allBookings().filter(b=>b.doctorId===S.proId&&b.date.startsWith(m0)).reduce((s,b)=>s+roomCost(room(b.roomId).type,toMin(b.end)-toMin(b.start)),0);
+  const todayN=proAppts(today()).length;
+  return `<div class="pad stack" style="gap:20px">${markSvg(40)}<h1 class="hello" style="font-size:1.8rem">Buongiorno, <b>${esc(d.name.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ")[0])}.</b></h1>
+  <div class="stats"><div class="stat"><b>${todayN}</b><span>Visite oggi</span></div><div class="stat"><b>${(wkMin/60).toLocaleString("it-IT")} h</b><span>In studio, 7 giorni</span></div><div class="stat"><b>${eur(Math.round(cost))}</b><span>Studi nel mese</span></div></div>
+  ${dayStrip(ds,"proDay",x=>{const n=proAppts(x).length;return n?n+" visite":"—"})}
+  <h2 class="h-sec">${cap(fmtD(ds))}</h2>
+  ${mine.length?mine.map(b=>{const r=room(b.roomId);const aps=proAppts(ds).filter(a=>a.time>=b.start&&a.time<b.end);
+   return `<div class="shift"><div class="shift-h">${ic("door","sm")}<span style="flex:1">${r.name} · ${ROOM_TYPES[r.type].label}</span><span class="num">${b.start}–${b.end}</span></div>
+   ${aps.length?aps.map(a=>`<div class="ap"><span class="tm">${a.time}</span><span class="t"><b>${esc(a.name)}</b><small>${esc(a.svc)}${a.note?" · “"+esc(a.note)+"”":""}</small></span>${a.demo?"":`<span class="badge az">App</span>`}</div>`).join(""):`<div class="ap free"><span class="tm">—</span><span class="t">Nessuna visita prenotata in questo turno</span></div>`}</div>`}).join("")
+  :`<div class="card center">${ic("door")}<h3>Nessuno studio prenotato</h3><p class="muted small">Prenota uno studio per aprire le tue disponibilità ai pazienti.</p><button class="btn primary" data-act="tab" data-v="stanze">Prenota uno studio</button></div>`}</div>`}
+function firstOpen(){for(let k=0;k<14;k++){const ds=addDays(today(),k);if(OPEN[parseD(ds).getDay()])return ds}return today()}
+
+/* ---------- Professionista: stanze ---------- */
+function timeline(ds,r,sel){const[o,c]=OPEN[parseD(ds).getDay()];const span=c-o;
+  const blk=bookingsOn(ds,b=>b.roomId===r.id).map(b=>{const l=(toMin(b.start)-o)/span*100,w=(toMin(b.end)-toMin(b.start))/span*100,m=b.doctorId===S.proId;
+   return `<span class="blk ${m?"mine":""}" style="left:${l}%;width:${w}%" title="${esc(doc(b.doctorId).name)} ${b.start}–${b.end}">${m?"Tu":initials(doc(b.doctorId).name)}</span>`}).join("");
+  const s=sel?`<span class="blk sel" style="left:${(sel[0]-o)/span*100}%;width:${(sel[1]-sel[0])/span*100}%"></span>`:"";
+  const marks=[];for(let t=o;t<=c;t+=span>360?120:60)marks.push(`<span>${t/60}</span>`);
+  return `<div class="tl" role="img" aria-label="Occupazione di ${r.name}">${blk}${s}</div><div class="tl-scale">${marks.join("")}</div>`}
+function freeMinutes(ds,r){const[o,c]=OPEN[parseD(ds).getDay()];return(c-o)-bookingsOn(ds,b=>b.roomId===r.id).reduce((s,b)=>s+toMin(b.end)-toMin(b.start),0)}
+function stanzeTab(){if(!UI.roomDay||!OPEN[parseD(UI.roomDay).getDay()])UI.roomDay=firstOpen();const ds=UI.roomDay;
+  const my=S.rooms.filter(b=>b.doctorId===S.proId&&b.date>=today()).concat(allBookings().filter(b=>b.seed&&b.doctorId===S.proId&&b.date>=today()&&b.date<=addDays(today(),6))).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
+  return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1><p class="muted small">${esc(CLINIC.hoursText)}</p>
+  ${dayStrip(ds,"roomDay",x=>{const f=ROOMS.filter(r=>freeMinutes(x,r)>=60).length;return f+" liberi"})}
+  <div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Occupato</span><span><i style="background:var(--accent)"></i>Tuo</span></div>
+  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name}</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p></div><span class="price num small">${eur(t.ora)}/h</span></div>
+   ${timeline(ds,r)}<div class="row between"><span class="tiny">${fm>0?"Libero per "+(fm/60).toLocaleString("it-IT")+" h":"Completo"}</span><button class="btn primary sm" data-act="openRoom" data-id="${r.id}" ${fm>=30?"":"disabled"}>Prenota</button></div></div>`}).join("")}
+  <h2 class="h-sec" style="margin-top:8px">I tuoi turni</h2>
+  ${my.length?`<div class="list">${my.map(b=>{const r=room(b.roomId);const cost=roomCost(r.type,toMin(b.end)-toMin(b.start));
+   return `<div class="li">${ic("door")}<span class="t"><b>${cap(fmtD(b.date,{weekday:"short",day:"numeric",month:"short"}))} · <span class="num">${b.start}–${b.end}</span></b><small>${r.name} · ${eur(cost)}${b.seed?" · turno fisso":""}</small></span><button class="iconbtn" data-act="askCancelRoom" data-id="${b.id}" aria-label="Annulla turno">${ic("trash")}</button></div>`}).join("")}</div>`:`<p class="muted">Nessun turno in programma.</p>`}</div>`}
+function roomSheet(){const sh=UI.sheet,r=room(sh.id),ds=UI.roomDay;const[o,c]=OPEN[parseD(ds).getDay()];
+  const opts=(from,to,sel)=>{let h="";for(let t=from;t<=to;t+=30)h+=`<option value="${t}" ${t===sel?"selected":""}>${toT(t)}</option>`;return h};
+  const s=sh.start??o,e=sh.end??Math.min(s+240,c);const busy=bookingsOn(ds,b=>b.roomId===r.id);
+  const conflict=busy.some(b=>overlap(s,e,toMin(b.start),toMin(b.end)));const mine=bookingsOn(ds,b=>b.doctorId===S.proId&&b.roomId!==r.id).some(b=>overlap(s,e,toMin(b.start),toMin(b.end)));
+  const ok=e>s&&!conflict&&!mine;const cost=e>s?roomCost(r.type,e-s):0;
+  return `<div class="stack"><div><h2 style="font-size:1.25rem;font-weight:800">${r.name}</h2><p class="muted small">${ROOM_TYPES[r.type].label} · ${cap(fmtD(ds))}</p></div>
+   ${timeline(ds,r,e>s?[s,e]:null)}
+   <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Dalle</span><select id="rs-start" data-change="roomTime" data-k="start">${opts(o,c-30,s)}</select></label><label class="field"><span>Alle</span><select id="rs-end" data-change="roomTime" data-k="end">${opts(o+30,c,e)}</select></label></div>
+   <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="rs-rep" type="checkbox" ${sh.repeat?"checked":""} data-change="roomRepeat" style="width:20px;height:20px;accent-color:var(--accent)"><span class="t">Ripeti ogni settimana<small>Per le prossime 4 settimane, dove lo studio è libero</small></span></label>
+   ${conflict?`<p class="err">Lo studio è già occupato in parte di questa fascia.</p>`:mine?`<p class="err">Hai già un altro studio prenotato in questa fascia.</p>`:e<=s?`<p class="err">L’orario di fine deve essere dopo l’inizio.</p>`:""}
+   <dl class="card sum"><dt>Durata</dt><dd class="num">${e>s?((e-s)/60).toLocaleString("it-IT")+" h":"—"}</dd><dt>Tariffa</dt><dd class="num">${e>s?eur(cost):"—"}${sh.repeat?" × settimana":""}</dd></dl>
+   ${TARIFFARIO.ufficiale?"":`<p class="tiny">Tariffe di esempio: saranno aggiornate con il tariffario ufficiale di Clinia.</p>`}
+   <button class="btn primary block" data-act="confirmRoom" ${ok?"":"disabled"}>Conferma prenotazione studio</button></div>`}
+
+/* ---------- Professionista: tariffe ---------- */
+function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack" style="gap:20px"><h1 class="h-sec" style="font-size:1.6rem">Tariffe</h1>
+  ${TARIFFARIO.ufficiale?"":`<div class="demo-note">${ic("euro","sm")}<span>Tariffario di esempio. Sarà sostituito con quello ufficiale della clinica.</span></div>`}
+  <section class="card"><h3 style="margin-bottom:8px">Affitto studi</h3><div style="overflow-x:auto"><table class="tar"><thead><tr><th>Studio</th><th>1 ora</th><th>4 ore</th><th>Giornata</th></tr></thead><tbody>
+   ${Object.entries(TARIFFARIO.stanze).map(([k,t])=>`<tr><td><b>${ROOM_TYPES[k].label}</b><br><span class="tiny">${ROOMS.filter(r=>r.type===k).map(r=>r.name).join(", ")}</span></td><td>${eur(t.ora)}</td><td>${eur(t.mezza)}</td><td>${eur(t.giornata)}</td></tr>`).join("")}</tbody></table></div>
+   <p class="tiny" style="margin-top:8px">Oltre le 4 ore si aggiunge la tariffa oraria fino al massimo della giornata.</p></section>
+  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">I pazienti vedono questi prezzi quando prenotano.</p>
+   <div class="svc-edit tiny"><span>Prestazione</span><span>Minuti</span><span>Prezzo €</span></div>
+   ${svc.map(s=>`<div class="svc-edit"><span class="small" style="font-weight:700">${esc(s.name)}</span><input value="${s.dur}" disabled aria-label="Durata ${esc(s.name)}"><input id="pr-${s.i}" name="p${s.i}" inputmode="decimal" value="${s.price}" aria-label="Prezzo ${esc(s.name)}"></div>`).join("")}
+   <button class="btn primary block" type="submit">Salva prezzi</button></form></div>`}
+
+/* ---------- Sheet e modali ---------- */
+function sheetHTML(){const s=UI.sheet;
+  if(s.type==="room")return roomSheet();
+  if(s.type==="confirm")return `<div class="stack"><h2 style="font-size:1.2rem;font-weight:800">${s.title}</h2><p class="muted">${s.text}</p><button class="btn ${s.danger?"danger":"primary"} block" data-act="${s.act}" data-id="${esc(s.id||"")}">${s.ok}</button><button class="btn ghost block" data-act="closeSheet">Indietro</button></div>`;
+  return ""}
+function modalHTML(){const m=UI.modal;
+  if(m.type==="faceid")return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="fid-t"><span class="fid">${ic("face")}</span><h3 id="fid-t">Vuoi consentire a Clinia di usare Face ID?</h3><p class="muted small">Sblocca l’app con il riconoscimento del volto o con l’impronta invece del PIN.</p><button class="btn ghost block" data-act="faceid" data-v="no">Non consentire</button><button class="btn primary block" data-act="faceid" data-v="yes">Consenti</button></div>`;
+  return ""}
+
+/* ===================== Azioni ===================== */
+function go(screen){UI.screen=screen;UI.buf="";UI.pinErr="";UI.shake=false;render()}
+function push(p){UI.stack.push(p);render()}
+function afterAuthFlow(){ // prossimo passo dell'onboarding
+  if(!S.pin)return go("pin-create");
+  if(!S.user||!S.user.tel)return go("phone");
+  if(!S.health)return go("health");
+  if(isPro()&&!S.proId)return go("pro-pick");
+  if(S.notif==null)return go("notifs");
+  UI.screen="main";
+  if(UI.pending){const p=UI.pending;UI.pending=null;UI.stack=p.stack;UI.book=p.book;UI.tab=p.tab;return doConfirmBook()}
+  UI.stack=[];UI.tab=isPro()?"agenda":"home";render()}
+function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
+  const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:slot.roomId,note:b.note||"",patient:S.user.nome+" "+S.user.cognome,status:"confermata",created:Date.now()};
+  S.appts.push(a);save();UI.stack=[{page:"done",id:a.id}];render();
+  setTimeout(()=>notify("Prenotazione confermata",`${a.service} con ${doc(id).name}, ${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}.`,"Clinia"),900)}
+function keyPress(v){
+  if(v==="del"){UI.buf=UI.buf.slice(0,-1);UI.pinErr="";return render()}
+  if(UI.buf.length>=4)return;UI.buf+=v;UI.pinErr="";UI.shake=false;render();
+  if(UI.buf.length<4)return;
+  setTimeout(()=>{const s=UI.screen,b=UI.buf;
+    if(s==="pin-create"){UI.firstPin=b;go("pin-confirm")}
+    else if(s==="pin-confirm"){if(b===UI.firstPin){S.pin=b;save();if(UI.changingPin){UI.changingPin=false;UI.screen="main";toast("PIN aggiornato");}else{UI.buf="";UI.modal={type:"faceid"};render()}}
+      else{UI.screen="pin-create";UI.buf="";UI.pinErr="I PIN non coincidono. Riprova.";UI.shake=true;render()}}
+    else if(s==="lock"){if(b===S.pin){UI.screen="main";UI.buf="";render()}else{UI.buf="";UI.pinErr="PIN errato. Riprova.";UI.shake=true;render()}}
+    else if(s==="otp"){if(b===UI.otp){UI.buf="";afterAuthFlow()}else{UI.buf="";UI.pinErr="Codice non valido. Controlla l’SMS e riprova.";UI.shake=true;render()}}
+  },180)}
+function sendOtp(){UI.otp=String(1000+Math.floor(Math.random()*9000));setTimeout(()=>notify("Clinia",`Il tuo codice di verifica è ${UI.otp}. Non condividerlo con nessuno.`,"Messaggi"),700)}
+
+const ACT={
+  cookie:d=>{S.cookie=d.v;save();go("main")},
+  tab:d=>{UI.tab=d.v;UI.stack=[];render()},
+  home:()=>{UI.stack=[];UI.tab="home";render()},
+  goVisite:()=>{UI.stack=[];UI.tab="visite";UI.visitSeg="next";render()},
+  pop:()=>{UI.stack.pop();render()},
+  openAuth:()=>{UI.authRole=UI.authRole||"paziente";go("auth")},
+  authClose:()=>{UI.pending=null;go("main")},
+  authRole:d=>{UI.authRole=d.v;render()},
+  goLogin:d=>{UI.loginMode=d.v;UI.showPw=false;go("login")},
+  toAuth:()=>go("auth"),
+  togglePw:()=>{const i=$("#lg-pw");UI.showPw=!UI.showPw;if(i)i.type=UI.showPw?"text":"password"},
+  forgot:()=>{const e=$("#lg-email").value.trim();toast(e?"Se l’indirizzo è registrato riceverai un link per reimpostare la password.":"Inserisci prima la tua e-mail.")},
+  key:d=>keyPress(d.v),
+  faceUnlock:()=>{UI.screen="main";UI.buf="";render()},
+  faceid:d=>{S.faceid=d.v==="yes";save();UI.modal=null;afterAuthFlow()},
+  backPhone:()=>go("phone"),
+  resendOtp:()=>{sendOtp();toast("Nuovo codice inviato")},
+  health:d=>{S.health=d.v;save();afterAuthFlow()},
+  pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
+  notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
+  hideBanner:()=>{S.hideBanner=true;save();render()},
+  openSearch:()=>{UI.chip=null;UI.area="all";push({page:"search"})},
+  chip:d=>{UI.chip=+d.v;UI.area="all";push({page:"search"})},
+  clearChip:()=>{UI.chip=null;render()},
+  area:d=>{UI.area=d.v;UI.chip=null;render()},
+  openDoc:d=>push({page:"doctor",id:d.id}),
+  fav:d=>{const i=S.favs.indexOf(d.id);if(i>=0)S.favs.splice(i,1);else S.favs.push(d.id);save();toast(i>=0?"Rimosso dai preferiti":"Aggiunto ai preferiti")},
+  bookSvc:d=>{UI.book={svc:+d.v,date:null,time:null,note:""};push({page:"book",id:d.id})},
+  bSvc:d=>{saveNote();UI.book.svc=+d.v;UI.book.time=null;render()},
+  bDay:d=>{saveNote();UI.book.date=d.v;UI.book.time=null;render()},
+  bTime:d=>{saveNote();UI.book.time=d.v;render()},
+  confirmBook:()=>{saveNote();if(!logged()){UI.pending={stack:UI.stack.slice(),book:{...UI.book},tab:UI.tab};UI.authRole="paziente";if(S.auth&&S.auth.role==="professionista"){S.auth=null;S.proId=null}return go(S.auth?"phone":"auth")}
+    if(isPro()){toast("Per prenotare una visita passa al profilo paziente.");return}doConfirmBook()},
+  vseg:d=>{UI.visitSeg=d.v;render()},
+  askCancel:d=>{const a=S.appts.find(x=>x.id===d.id);UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
+  cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";save();UI.sheet=null;toast("Visita disdetta")},
+  closeSheet:(d,el,e)=>{if(e&&e.target.closest("[data-stop]")&&!el.matches(".btn"))return;UI.sheet=null;render()},
+  delFile:d=>{S.files=S.files.filter(f=>f.id!==d.id);save();render()},
+  openChat:d=>{const k=isPro()?d.id:d.id+"|me";if(!logged()){return ACT.openAuth()}push({page:"chat",id:k})},
+  openThread:d=>push({page:"chat",id:d.id}),
+  dismissNotif:()=>{UI.notif=null;render()},
+  changePin:()=>{UI.changingPin=true;go("pin-create")},
+  toggleFace:()=>{S.faceid=!S.faceid;save();render()},
+  toggleNotif:()=>{S.notif=!S.notif;save();render()},
+  toggleHealth:()=>{S.health=S.health==="yes"?"limited":"yes";save();render()},
+  toggleCookie:()=>{S.cookie=S.cookie==="all"?"necessary":"all";save();render()},
+  switchRole:()=>{const toPro=!isPro();S.auth.role=toPro?"professionista":"paziente";save();UI.stack=[];UI.tab=null;if(toPro&&!S.proId)return go("pro-pick");go("main")},
+  askReset:()=>{UI.sheet={type:"confirm",title:"Ripristinare i dati di prova?",text:"Verranno cancellati account, PIN, visite, file e prenotazioni salvati su questo dispositivo.",ok:"Ripristina",act:"reset",danger:true};render()},
+  reset:()=>{S=FRESH();save();UI.sheet=null;UI.stack=[];UI.tab=null;go("cookie")},
+  logout:()=>{S.auth=null;S.pin=null;S.faceid=false;S.proId=null;S.user=null;S.health=null;S.notif=null;save();UI.stack=[];UI.tab=null;UI.sheet=null;go("main")},
+  proDay:d=>{UI.proDay=d.v;render()},
+  roomDay:d=>{UI.roomDay=d.v;render()},
+  openRoom:d=>{const ds=UI.roomDay,r=room(d.id);const[o,c]=OPEN[parseD(ds).getDay()];
+    let st=o;const busy=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).map(b=>[toMin(b.start),toMin(b.end)]).sort((a,b)=>a[0]-b[0]);
+    for(const[a,b] of busy){if(st+60<=a)break;if(b>st)st=b}const nb=busy.find(x=>x[0]>=st);const en=Math.min(st+240,nb?nb[0]:c,c);
+    UI.sheet={type:"room",id:r.id,start:Math.min(st,c-30),end:Math.max(en,Math.min(st,c-30)+30),repeat:false};render()},
+  confirmRoom:()=>{const sh=UI.sheet,r=room(sh.id);let made=0,skip=[];
+    for(let w=0;w<(sh.repeat?4:1);w++){const ds=addDays(UI.roomDay,7*w);
+      const clash=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
+      if(clash||!OPEN[parseD(ds).getDay()]){skip.push(fmtD(ds,{day:"numeric",month:"short"}));continue}
+      S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id});made++}
+    save();UI.sheet=null;toast(made?`${r.name} prenotato${made>1?" per "+made+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`:"Nessuna prenotazione: lo studio è occupato")},
+  askCancelRoom:d=>{const b=allBookings().find(x=>x.id===d.id);const n=activeAppts().filter(a=>a.doctorId===S.proId&&a.date===b.date&&a.time>=b.start&&a.time<b.end).length;
+    if(n){toast(`Ci sono ${n} visite prenotate in questo turno: spostale prima di annullarlo.`);return}
+    UI.sheet={type:"confirm",title:"Annullare il turno?",text:`${room(b.roomId).name}, ${esc(fmtD(b.date))} ${b.start}–${b.end}. Lo studio tornerà disponibile per gli altri professionisti.`,ok:"Annulla turno",act:"cancelRoom",id:b.id,danger:true};render()},
+  cancelRoom:d=>{if(d.id.startsWith("seed-"))S.cancelled.push(d.id);else S.rooms=S.rooms.filter(x=>x.id!==d.id);save();UI.sheet=null;toast("Turno annullato")}
+};
+function saveNote(){const t=$("#bk-note");if(t&&UI.book)UI.book.note=t.value}
+
+const FORMS={
+  login:f=>{const e=f.email.value.trim(),p=f.pw.value,err=$("#lg-err");
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){err.textContent="Inserisci un indirizzo e-mail valido.";return}
+    if(p.length<(UI.loginMode==="register"?8:6)){err.textContent=UI.loginMode==="register"?"La password deve avere almeno 8 caratteri.":"Password troppo corta.";return}
+    S.auth={email:e,role:UI.authRole};if(UI.authRole==="paziente")S.proId=null;save();afterAuthFlow()},
+  phone:f=>{const v=k=>f[k].value.trim(),err=$("#ph-err");
+    if(!v("nome")||!v("cognome")){err.textContent="Inserisci nome e cognome.";return}
+    const tel=v("tel").replace(/\s+/g,"");if(!/^\d{6,12}$/.test(tel)){err.textContent="Inserisci un numero di telefono valido, solo cifre.";return}
+    if(!v("nascita")){err.textContent="Seleziona la data di nascita.";return}
+    S.user={nome:v("nome"),cognome:v("cognome"),pref:f.pref.value,tel:"",nascita:v("nascita"),pendingTel:tel};save();
+    UI.screen="otp";UI.buf="";UI.pinErr="";render();sendOtp()},
+  send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
+    if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
+    S.msgs[k].list.push({from:isPro()?(k.startsWith("reception")?"pr":"d"):"me",text:t,at:Date.now()});save();render();
+    if(k.startsWith("reception")){setTimeout(()=>{S.msgs[k].list.push({from:"r",text:"Grazie, abbiamo ricevuto il tuo messaggio. La reception ti risponderà al più presto. (risposta automatica)",at:Date.now()});save();render()},1300)}},
+  prices:f=>{const out={};let bad=false;services(S.proId).forEach(s=>{const v=parseFloat(String(f["p"+s.i].value).replace(",","."));if(isNaN(v)||v<0)bad=true;else out[s.i]=Math.round(v*100)/100});
+    if(bad){toast("Controlla i prezzi: usa solo numeri, per esempio 45 o 45,50.");return}S.prices[S.proId]=out;save();toast("Prezzi salvati")}
+};
+// Il telefono viene confermato solo dopo il codice OTP
+const _after=afterAuthFlow;afterAuthFlow=function(){if(S.user&&!S.user.tel&&S.user.pendingTel&&UI.screen==="otp"){S.user.tel=S.user.pendingTel;delete S.user.pendingTel;save()}return _after()};
+
+app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)return;
+  if(el.dataset.act!=="closeSheet"){const inner=el.closest(".doc");if(inner&&inner!==el&&el.dataset.act==="fav"){e.stopPropagation()}}
+  else if(e.target.closest("[data-stop]")&&!e.target.closest(".btn"))return;
+  e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
+app.addEventListener("submit",e=>{e.preventDefault();const f=FORMS[e.target.dataset.form];if(f)f(e.target)});
+app.addEventListener("input",e=>{if(e.target.dataset.input==="search"){const q=e.target.value.trim().toLowerCase();let n=0;
+  app.querySelectorAll("#results .doc").forEach(c=>{const m=!q||(c.dataset.name+" "+(c.dataset.svc||"")).includes(q);c.classList.toggle("hidden",!m);if(m)n++});$("#noresults").classList.toggle("hidden",n>0)}});
+app.addEventListener("change",e=>{const k=e.target.dataset.change;
+  if(k==="upload"){for(const f of e.target.files)S.files.unshift({id:uid(),name:f.name,size:f.size,at:today()});save();toast(e.target.files.length>1?"Documenti caricati":"Documento caricato")}
+  if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
+  if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}});
+
+/* Avvio */
+render();
+setTimeout(()=>{if(!S.cookie)return go("cookie");if(S.pin&&logged())return go("lock");go("main")},1200);
+</script>

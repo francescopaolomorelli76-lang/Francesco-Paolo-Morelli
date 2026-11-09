@@ -371,6 +371,13 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .scan .ic{width:72px;height:72px;stroke-width:1.6}
 .scan::after{content:"";position:absolute;left:12px;right:12px;height:3px;border-radius:3px;background:var(--accent);top:14px;animation:scan 1.2s ease-in-out infinite alternate;opacity:.7}
 @keyframes scan{to{top:80px}}
+.notif.wa .av{background:#fff;border:2px solid #25d366}
+.notif .wab{display:inline-flex;align-items:center;gap:4px;color:#25d366;font-weight:700}
+.chan{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chan button{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:var(--r-sm);border:1.5px solid var(--line);background:var(--card);font-weight:700}
+.chan button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2)}
+.chan .wa-dot{width:22px;height:22px;border-radius:50%;background:#25d366;display:grid;place-items:center;color:#fff}
+.chan .wa-dot .ic{width:13px;height:13px}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -468,7 +475,7 @@ const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:n
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
-const UI={person:"me",sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
+const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
   book:null,day:null,otp:null,authRole:"paziente",showPw:false,proDay:null,roomDay:null,pending:null};
 
 /* ===================== Utilità ===================== */
@@ -578,7 +585,7 @@ function screenHTML(){
 function overlayHTML(){let h="";
   if(UI.sheet)h+=`<div class="shade" data-act="closeSheet"><div class="sheet" data-stop>${'<div class="grab"></div>'+sheetHTML()}</div></div>`;
   if(UI.modal)h+=`<div class="shade mid">${modalHTML()}</div>`;
-  if(UI.notif)h+=`<button class="notif" data-act="dismissNotif">${'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#markw"/></svg></div>'}<div><small>${esc(UI.notif.app||"Messaggi")} · adesso</small><b>${esc(UI.notif.title)}</b><span class="small">${esc(UI.notif.text)}</span></div></button>`;
+  if(UI.notif){const wa=UI.notif.app==="WhatsApp";h+=`<button class="notif ${wa?"wa":""}" data-act="dismissNotif">${wa?'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#mark"/></svg></div>':'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#markw"/></svg></div>'}<div><small>${wa?'<span class="wab">WhatsApp</span> · Clinia · account business':esc(UI.notif.app||"Messaggi")} · adesso</small><b>${esc(UI.notif.title)}</b><span class="small">${esc(UI.notif.text)}</span></div></button>`}
   if(UI.toast)h+=`<div class="toast" role="status">${esc(UI.toast)}</div>`;
   return h}
 let toastT,notifT;
@@ -685,15 +692,21 @@ function phoneScreen(){const u=S.user||{};return `<div class="screen"><div class
   <div class="grid2"><label class="field"><span>Prefisso</span><select id="ph-pref" name="pref">${["+39","+41","+33","+49","+44","+34","+1"].map(p=>`<option ${p===(u.pref||"+39")?"selected":""}>${p}</option>`).join("")}</select></label>
    <label class="field"><span>Telefono*</span><input id="ph-tel" name="tel" type="tel" inputmode="numeric" value="${esc(u.tel||u.pendingTel)}" autocomplete="tel-national" placeholder="Il tuo numero" required></label></div>
   <label class="field"><span>Data di nascita*</span><input id="ph-nascita" name="nascita" type="date" value="${esc(u.nascita)}" max="${today()}" required></label>
+  <div class="stack" style="gap:8px"><span class="label">Come vuoi ricevere il codice?</span><div class="chan" role="radiogroup">
+   <button type="button" class="${UI.otpChannel==="whatsapp"?"on":""}" data-act="otpChan" data-v="whatsapp" role="radio" aria-checked="${UI.otpChannel==="whatsapp"}"><span class="wa-dot">${ic("chat")}</span>WhatsApp</button>
+   <button type="button" class="${UI.otpChannel==="sms"?"on":""}" data-act="otpChan" data-v="sms" role="radio" aria-checked="${UI.otpChannel==="sms"}">${ic("chat","sm")} SMS</button></div></div>
   <p class="err" id="ph-err"></p></div></div>
   <div class="actions"><button class="btn primary block" type="submit">Continua ${ic("arrow","sm")}</button></div></form></div>`}
-function otpScreen(){return `<div class="screen"><div class="pinwrap" style="padding-top:24px"><div style="display:flex;justify-content:flex-end"><button class="iconbtn" data-act="backPhone" aria-label="Indietro">${ic("x")}</button></div>
+function otpScreen(){const wa=UI.otpChannel==="whatsapp",other=wa?"SMS":"WhatsApp",wait=Math.max(0,Math.ceil((UI.otpWait-Date.now())/1000));
+  return `<div class="screen"><div class="pinwrap" style="padding-top:24px"><div style="display:flex;justify-content:flex-end"><button class="iconbtn" data-act="backPhone" aria-label="Indietro">${ic("x")}</button></div>
   <h1 class="h-xl" style="margin-top:8px">Verifica il tuo <b>numero di telefono</b></h1>
-  <p class="lead" style="margin-top:8px">Abbiamo inviato un codice a 4 cifre al numero ${esc(S.user.pref+" "+S.user.tel)}. Inseriscilo qui per completare la verifica.</p>
+  <p class="lead" style="margin-top:8px">Abbiamo inviato ${wa?"su <b>WhatsApp</b>":"via SMS"} un codice a 4 cifre al numero ${esc(S.user.pref+" "+(S.user.tel||S.user.pendingTel))}. Inseriscilo qui per completare la verifica. Il codice vale 10 minuti.</p>
   <div class="otp ${UI.shake?"shake":""}">${[0,1,2,3].map(i=>`<i class="${i===UI.buf.length?"cur":""}">${UI.buf[i]||""}</i>`).join("")}</div>
   <p class="err" style="text-align:center">${esc(UI.pinErr||"")}</p>
-  <p style="text-align:center">Non hai ricevuto il codice? <button class="link az" data-act="resendOtp">Invialo di nuovo</button></p>
+  <p style="text-align:center">Non hai ricevuto il codice? ${wait?`<span class="muted" id="otp-wait">Puoi richiederlo tra <b class="num">${wait}</b> s</span>`:`<button class="link az" data-act="resendOtp">Invialo di nuovo</button>`}</p>
+  <p style="text-align:center;margin-top:6px"><button class="link small" data-act="switchOtp">Ricevilo invece via ${other}</button></p>
   ${keypad(false)}</div></div>`}
+
 function healthScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="link" style="padding:0 12px" data-act="health" data-v="later">Lo farò più tardi</button></div>
  <div class="content"><div class="pad stack" style="gap:22px">
   <div style="display:grid;place-items:center"><svg class="illo" viewBox="0 0 120 110" aria-hidden="true"><circle cx="60" cy="55" r="46" fill="var(--bg-2)"/><circle cx="60" cy="55" r="38" fill="none" stroke="var(--accent)" stroke-width="2"/><rect x="36" y="38" width="48" height="36" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="36" y="33" width="14" height="6" rx="2" fill="#f2c94c"/><path d="M60 44l10 4v7c0 6-5 9-10 11-5-2-10-5-10-11v-7z" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><rect x="56" y="52" width="8" height="7" rx="1.5" fill="var(--ink)"/></svg></div>
@@ -1073,9 +1086,15 @@ function keyPress(v){
     else if(s==="pin-confirm"){if(b===UI.firstPin){S.pin=b;save();if(UI.changingPin){UI.changingPin=false;UI.screen="main";toast("PIN aggiornato");}else{UI.buf="";UI.modal={type:"faceid"};render()}}
       else{UI.screen="pin-create";UI.buf="";UI.pinErr="I PIN non coincidono. Riprova.";UI.shake=true;render()}}
     else if(s==="lock"){if(b===S.pin){UI.screen="main";UI.buf="";render()}else{UI.buf="";UI.pinErr="PIN errato. Riprova.";UI.shake=true;render()}}
-    else if(s==="otp"){if(b===UI.otp){UI.buf="";afterAuthFlow()}else{UI.buf="";UI.pinErr="Codice non valido. Controlla l’SMS e riprova.";UI.shake=true;render()}}
+    else if(s==="otp"){if(b===UI.otp&&Date.now()>UI.otpExp){UI.buf="";UI.pinErr="Il codice è scaduto. Richiedine uno nuovo.";UI.shake=true;render()}else if(b===UI.otp){UI.buf="";afterAuthFlow()}else{UI.buf="";UI.pinErr=UI.otpChannel==="whatsapp"?"Codice non valido. Controlla il messaggio su WhatsApp e riprova.":"Codice non valido. Controlla l’SMS e riprova.";UI.shake=true;render()}}
   },180)}
-function sendOtp(){UI.otp=String(1000+Math.floor(Math.random()*9000));setTimeout(()=>notify("Clinia",`Il tuo codice di verifica è ${UI.otp}. Non condividerlo con nessuno.`,"Messaggi"),700)}
+let otpTimer;
+function sendOtp(){UI.otp=String(1000+Math.floor(Math.random()*9000));UI.otpExp=Date.now()+10*60e3;UI.otpWait=Date.now()+30e3;
+  const wa=UI.otpChannel==="whatsapp";
+  setTimeout(()=>notify(wa?`${UI.otp} è il tuo codice di verifica`:"Clinia",wa?"Per la tua sicurezza non condividere questo codice con nessuno. Scade tra 10 minuti.":`${UI.otp} è il tuo codice di verifica Clinia. Non condividerlo con nessuno.`,wa?"WhatsApp":"Messaggi"),700);
+  clearInterval(otpTimer);otpTimer=setInterval(()=>{if(UI.screen!=="otp"){clearInterval(otpTimer);return}
+    const w=Math.max(0,Math.ceil((UI.otpWait-Date.now())/1000)),el=$("#otp-wait");if(!el){clearInterval(otpTimer);return}
+    if(w)el.querySelector("b").textContent=w;else{clearInterval(otpTimer);render()}},1000)}
 
 const ACT={
   cookie:d=>{S.cookie=d.v;save();go(logged()?"main":"welcome")},
@@ -1099,7 +1118,9 @@ const ACT={
   useCode:()=>{UI.modal=null;render()},
   faceid:d=>{S.faceid=d.v==="yes";save();UI.modal=null;afterAuthFlow()},
   backPhone:()=>go("phone"),
-  resendOtp:()=>{sendOtp();toast("Nuovo codice inviato")},
+  resendOtp:()=>{UI.buf="";UI.pinErr="";sendOtp();render();toast(UI.otpChannel==="whatsapp"?"Nuovo codice inviato su WhatsApp":"Nuovo codice inviato via SMS")},
+  switchOtp:()=>{UI.otpChannel=UI.otpChannel==="whatsapp"?"sms":"whatsapp";UI.buf="";UI.pinErr="";sendOtp();render();toast(UI.otpChannel==="whatsapp"?"Codice inviato su WhatsApp":"Codice inviato via SMS")},
+  otpChan:d=>{UI.otpChannel=d.v;app.querySelectorAll(".chan button").forEach(b=>{const on=b.dataset.v===d.v;b.classList.toggle("on",on);b.setAttribute("aria-checked",on)})},
   health:d=>{S.health=d.v;save();afterAuthFlow()},
   pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},

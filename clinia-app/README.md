@@ -6,6 +6,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 ## Accesso
 - All'avvio si sceglie: **Paziente** (gratis) o **Specialista** (abbonamento mensile, prezzo di esempio in `SUB`)
 - Login o registrazione, poi codice a 4 cifre e/o Face ID a ogni apertura
+- Verifica del telefono con codice a 4 cifre via **WhatsApp** o **SMS** (scade dopo 10 minuti, nuovo invio dopo 30 secondi)
 - Lo specialista attiva l'abbonamento con la carta prima di entrare; può disdirlo o riattivarlo dal Profilo
 
 ## Pazienti
@@ -26,6 +27,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
 
 ## Da completare
+- Invio reale del codice: WhatsApp Business Platform (Meta) con modello di autenticazione approvato, e un fornitore SMS di riserva
 - Prezzo dell'abbonamento specialisti (`SUB.price`, ora 49 € di esempio) e addebito reale ricorrente
 - Tipologia di ciascuno dei 9 studi
 - Pagamenti con carta: collegare un circuito certificato (es. Stripe o Nexi); ora sono simulati e si salvano solo le ultime 4 cifre

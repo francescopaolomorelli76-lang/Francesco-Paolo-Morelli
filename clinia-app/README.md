@@ -5,10 +5,13 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 
 ## Pazienti
 - Avvio con logo, consenso cookie, home "Ciao." con ricerca, specialità e specialisti
+- Ricerca In studio / Online con suggerimenti, risultati con orari prenotabili subito, mappa della sede
+- Filtri: date disponibili, modalità, prestazioni, area, visita i bambini, genere
 - Profilo specialista con prestazioni, prezzi, studio in cui riceve ed esperienza
 - Prenotazione: prestazione → giorno → orario → motivo → conferma
 - Accesso: login/registrazione, PIN a 4 cifre, Face ID, verifica telefono con codice SMS, consenso dati sanitari, notifiche
-- Visite (prossime/passate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
+- Consenso alle statistiche anonime (facoltativo)
+- Visite (prossime/passate/cancellate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
 
 ## Professionisti
 - Agenda giornaliera con turni negli studi e visite prenotate
@@ -16,6 +19,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
 
 ## Da completare
+- Consulenze online: quali specialisti le offrono (ora 4 di esempio in `SERVICES`, quarto valore `1`)
 - **Tariffario ufficiale**: sostituire `TARIFFARIO` e i prezzi in `SERVICES` (ora sono di esempio, `ufficiale:false`)
 - Numerazione/tipologia studi (`ROOMS`) e orari (`OPEN`) da confermare con la clinica
 - Backend condiviso (account, SMS reali, prenotazioni tra più telefoni): ora i dati restano sul dispositivo

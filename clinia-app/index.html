@@ -313,6 +313,34 @@ table.tar th{font-size:.74rem;color:var(--ink-3);text-transform:uppercase;letter
 .feat{display:flex;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}
 .feat:last-child{border:0}
 .feat .ic{color:var(--accent);width:28px;height:28px}
+.mode{padding:12px 20px;border-radius:999px;border:1.5px solid var(--line);font-weight:800;font-size:.86rem;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.mode.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.searchbox.focus{border:1.5px solid var(--accent);border-radius:var(--r-sm);box-shadow:none}
+.sugg{display:flex;flex-direction:column}
+.sg{display:flex;align-items:center;gap:16px;padding:9px 0;font-size:1.05rem;text-align:left;width:100%}
+.sgi{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent-2);display:grid;place-items:center;flex:none}
+.rhead{flex:none;background:var(--bg);display:flex;flex-direction:column;gap:12px;padding:10px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.fchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:0 max(16px,env(safe-area-inset-left,0px))}
+.fchips::-webkit-scrollbar,.tchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-weight:600;font-size:.92rem}
+.fchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-2)}
+.mapcard{position:relative;display:block;width:100%;height:150px;overflow:hidden;border-bottom:1px solid var(--line)}
+svg.map{position:absolute;inset:0;width:100%;height:100%}
+.mapbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;gap:8px;align-items:center;padding:12px 20px;border-radius:999px;background:var(--card);font-weight:700;box-shadow:var(--shadow);white-space:nowrap}
+.bigmap{position:relative;height:200px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.mpin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--shadow);animation:pop .5s}
+.rcard{background:var(--card);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.tchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.tchip{flex:none;display:inline-flex;align-items:center;gap:4px;padding:10px 16px;border-radius:999px;background:var(--azure-soft);color:var(--azure);font-weight:700}
+.tchip:hover{outline:2px solid var(--azure)}
+.fh{font-size:1.05rem;font-weight:800;margin-bottom:4px}
+.fopt{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 0;font-size:1rem;cursor:pointer}
+.fopt input{width:24px;height:24px;accent-color:var(--accent);flex:none;margin:0}
+.fopt input.swi{appearance:none;-webkit-appearance:none;width:48px;height:28px;border-radius:999px;background:var(--busy);position:relative;transition:background .2s;cursor:pointer}
+.fopt input.swi::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.fopt input.swi:checked{background:var(--accent)}
+.fopt input.swi:checked::after{transform:translateX(20px)}
+.seg.seg3{grid-template-columns:repeat(3,1fr)}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -370,13 +398,13 @@ const DOCTORS=[
 ];
 // Prestazioni: [nome, durata in minuti, prezzo € di ESEMPIO]
 const SERVICES={
- "marco-morelli":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Terapia manuale",30,35]],
- "enrico-pierangeli":[["Consulenza neurochirurgica",30,150],["Visita di controllo",20,100]],
+ "marco-morelli":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Terapia manuale",30,35],["Consulenza fisioterapica online",30,30,1]],
+ "enrico-pierangeli":[["Consulenza neurochirurgica",30,150],["Visita di controllo",20,100],["Consulenza online su esami e referti",30,100,1]],
  "feliciana-pellegrino":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Kinesio taping",30,30]],
- "michele-picciallo":[["Visita dermatologica",30,100],["Mappatura nei in dermoscopia",30,120],["Visita di controllo",20,70]],
+ "michele-picciallo":[["Visita dermatologica",30,100],["Mappatura nei in dermoscopia",30,120],["Visita di controllo",20,70],["Consulenza dermatologica online",20,60,1]],
  "vincenzo-de-leo":[["Visita chirurgica",30,120],["Visita proctologica",30,120],["Visita di controllo",20,80]],
  "donato-panetta":[["Visita ortopedica",30,120],["Visita di controllo",20,80]],
- "maria-alessandra-lassandro":[["Visita allergologica",30,110],["Prick test",30,80],["Ecografia clinica",30,90],["Consulenza di medicina estetica",30,80]],
+ "maria-alessandra-lassandro":[["Visita allergologica",30,110],["Prick test",30,80],["Ecografia clinica",30,90],["Consulenza di medicina estetica",30,80],["Consulenza allergologica online",20,60,1]],
  "francesca-trabace":[["Trattamento osteopatico",45,60],["Osteopatia pediatrica",45,60]],
  "angelo-costantiello":[["Esame baropodometrico",45,60],["Valutazione per plantari su misura",30,40]],
  "rossella-conversano":[["Seduta di personal training",60,40],["Valutazione motoria funzionale",45,35]]
@@ -387,6 +415,9 @@ const CHIPS=[["Fisioterapista","riabilitazione",["marco-morelli","feliciana-pell
  ["Medicina estetica","medicina",["maria-alessandra-lassandro","michele-picciallo"]],["Osteopata","riabilitazione",["francesca-trabace"]],
  ["Plantari su misura","riabilitazione",["angelo-costantiello"]],["Personal trainer","riabilitazione",["rossella-conversano"]],
  ["Riabilitazione","riabilitazione",["marco-morelli","feliciana-pellegrino","francesca-trabace","rossella-conversano"]]];
+// Genere e visite pediatriche (dalle biografie: riabilitazione pediatrica, osteopatia pediatrica, ortopedia pediatrica)
+const GENDER={"marco-morelli":"M","enrico-pierangeli":"M","feliciana-pellegrino":"F","michele-picciallo":"M","vincenzo-de-leo":"M","donato-panetta":"M","maria-alessandra-lassandro":"F","francesca-trabace":"F","angelo-costantiello":"M","rossella-conversano":"F"};
+const KIDS=["feliciana-pellegrino","francesca-trabace","donato-panetta"];
 const AREAS={all:"Tutti",chirurgia:"Chirurgia",medicina:"Medicina specialistica",riabilitazione:"Riabilitazione e movimento"};
 // Turni di esempio degli specialisti negli studi: [id, giorni settimana, inizio, fine, studio]
 const SCHEDULE=[["marco-morelli",[1,2,3,4,5],"09:00","13:00","s4"],["feliciana-pellegrino",[1,3,5],"14:00","19:00","s4"],
@@ -399,10 +430,11 @@ const HORIZON=21;
 /* ===================== Stato ===================== */
 const KEY="clinia-app-v1";
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-const UI={screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
+const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
+const UI={sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
   book:null,day:null,otp:null,authRole:"paziente",showPw:false,proDay:null,roomDay:null,pending:null};
 
 /* ===================== Utilità ===================== */
@@ -425,7 +457,7 @@ const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul
 const doc=id=>DOCTORS.find(d=>d.id===id);
 const room=id=>ROOMS.find(r=>r.id===id);
 const initials=n=>n.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("");
-const services=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],dur:s[1],price:(S.prices[id]&&S.prices[id][i]!=null)?S.prices[id][i]:s[2]}));
+const services=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],dur:s[1],price:(S.prices[id]&&S.prices[id][i]!=null)?S.prices[id][i]:s[2],online:!!s[3]}));
 const logged=()=>!!(S.auth&&S.user&&S.user.tel);
 const isPro=()=>S.auth&&S.auth.role==="professionista";
 const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
@@ -474,7 +506,8 @@ const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',cal:'<re
  send:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/>',
  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',swap:'<path d="M7 16 3 12l4-4M3 12h14M17 8l4 4-4 4"/>',
  heartplus:'<path d="M11 14H9a2 2 0 0 0-2 2v5M3 21h4l2-3h4l6-4a2 2 0 0 0-2-3l-4 2"/><path d="M17 3.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0 0 3.5L17 10l4-3a2.5 2.5 0 0 0 0-3.5 2.5 2.5 0 0 0-4 0z"/>',
- trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>'};
+ trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',
+ sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',video:'<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/>'};
 const ic=(n,c="")=>`<svg class="ic${c?" "+c:""}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
 const heartFill=on=>on?`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--accent);stroke:var(--accent)">${P.heart}</svg>`:ic("heart");
 const markSvg=(w=34)=>`<svg viewBox="0 0 60 70" style="width:${w}px;height:${w*70/60}px" aria-hidden="true"><use href="#mark"/></svg>`;
@@ -487,6 +520,7 @@ function render(){
   app.innerHTML=screenHTML()+overlayHTML();lastKey=key;
   const nc=app.querySelector(".content");if(nc)nc.scrollTop=top;
   const af=app.querySelector("[data-autofocus]");if(af)af.focus();
+  const qi=app.querySelector("#q");if(qi&&qi.value)qi.dispatchEvent(new Event("input",{bubbles:true}));
 }
 function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
 function screenHTML(){
@@ -638,24 +672,74 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "search":return searchPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
-function searchPage(){const chip=UI.chip!=null?CHIPS[UI.chip]:null;
-  const list=DOCTORS.filter(d=>(UI.area==="all"||d.area===UI.area)&&(!chip||chip[2].includes(d.id)));
-  return `<div class="screen">${bar("Cerca")}<div class="content"><div class="pad stack">
-  <label class="searchbox">${ic("search")}<input id="q" type="search" placeholder="Nome, specialità o prestazione" data-input="search" data-autofocus aria-label="Cerca"></label>
-  <div class="pills">${Object.entries(AREAS).map(([k,v])=>`<button class="pill ${UI.area===k&&!chip?"on":""}" data-act="area" data-v="${k}">${v}</button>`).join("")}</div>
-  ${chip?`<div class="row"><span class="badge">${esc(chip[0])}</span><button class="link small" data-act="clearChip">Mostra tutti</button></div>`:""}
-  <div class="stack" id="results">${list.map(d=>docCard(d).replace('data-name="',`data-svc="${esc(services(d.id).map(s=>s.name).join(" ").toLowerCase())}" data-name="`)).join("")}<p class="muted hidden" id="noresults" style="text-align:center;padding:30px">Nessuno specialista trovato.</p></div>
+const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
+function pickSvc(id,sq,f){const sv=services(id);let c=sv.filter(s=>sq.mode==="online"?s.online:!s.online);
+  if(f&&f.svcs.length){const m=c.filter(s=>f.svcs.includes(s.name));if(m.length)c=m}return c[0]||sv[0]}
+function firstFree(id,s){for(let k=0;k<=HORIZON;k++){const ds=addDays(today(),k),sl=slotsFor(id,ds,s.dur).filter(x=>x.free);if(sl.length)return{k,date:ds,slots:sl}}return null}
+function matchDocs(f,sq){return DOCTORS.filter(d=>{const sv=services(d.id);
+  if(sq.spec!=null&&!CHIPS[sq.spec][2].includes(d.id))return false;
+  if(sq.q){const t=(d.name+" "+d.role+" "+sv.map(s=>s.name).join(" ")+" "+CHIPS.filter(c=>c[2].includes(d.id)).map(c=>c[0]).join(" ")).toLowerCase();if(!t.includes(sq.q.toLowerCase()))return false}
+  if(sq.mode==="online"&&!sv.some(s=>s.online))return false;
+  if(f.area!=="all"&&d.area!==f.area)return false;
+  if(f.gender!=="all"&&GENDER[d.id]!==f.gender)return false;
+  if(f.kids&&!KIDS.includes(d.id))return false;
+  if(f.svcs.length&&!sv.some(s=>f.svcs.includes(s.name)))return false;
+  if(f.date!=="any"){const n=firstFree(d.id,pickSvc(d.id,sq,f));if(!n||n.k>(f.date==="today"?0:3))return false}
+  return true})}
+const relDay=ds=>{const k=Math.round((parseD(ds)-parseD(today()))/864e5);return k===0?"oggi, "+fmtD(ds,{day:"numeric",month:"long"}):k===1?"domani, "+fmtD(ds,{day:"numeric",month:"long"}):fmtD(ds)};
+const filterCount=f=>(f.date!=="any")+(f.area!=="all")+(f.gender!=="all")+f.kids+f.svcs.length;
+function mapSvg(){return `<svg class="map" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="160" fill="var(--bg-2)"/><path d="M-10 40 Q 120 64 210 22 T 420 30" stroke="var(--azure-soft)" stroke-width="12" fill="none"/><rect x="110" y="96" width="44" height="32" rx="5" fill="var(--accent-soft)"/><rect x="336" y="16" width="48" height="36" rx="5" fill="var(--accent-soft)"/><rect x="18" y="8" width="30" height="26" rx="5" fill="var(--accent-soft)"/><g stroke="var(--card)" stroke-width="6" fill="none" stroke-linecap="round"><path d="M0 112 L400 82"/><path d="M60 0 L92 160"/><path d="M182 0 L170 160"/><path d="M300 0 L330 160"/><path d="M0 60 L400 132"/><path d="M240 0 Q 262 80 400 104"/></g><g stroke="var(--card)" stroke-width="3" fill="none"><path d="M120 0 L130 160M0 140 L400 150M250 60 L350 40"/></g></svg>`}
+function searchPage(){const sq=UI.sq;const chips=CHIPS.map((c,i)=>[c,i]).filter(([c])=>sq.mode==="studio"||c[2].some(id=>services(id).some(s=>s.online)));
+  return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="pop" aria-label="Chiudi">${ic("x")}</button><span style="flex:1"></span></div>
+  <div class="content"><div class="pad stack">
+   <div class="row" role="tablist">${["studio","online"].map(m=>`<button class="mode ${sq.mode===m?"on":""}" data-act="mode" data-v="${m}" role="tab" aria-selected="${sq.mode===m}">${m==="studio"?"In studio":"Online"}</button>`).join("")}</div>
+   <form data-form="search" class="searchbox focus">${ic("search")}<input id="q" type="search" value="${esc(sq.q)}" placeholder="Specialità, nome o prestazione" data-input="search" data-autofocus aria-label="Cerca" enterkeyhint="search"></form>
+   ${sq.mode==="studio"?`<div class="inline-field">${ic("pin")}<span class="muted">Clinia · Via La Martella 5/D, Matera</span></div>`:`<p class="muted small">Videoconsulti con gli specialisti di Clinia, direttamente dal telefono.</p>`}
+   <span class="label">Suggerimenti</span>
+   <div class="sugg">${chips.map(([c,i])=>`<button class="sg" data-act="spec" data-v="${i}" data-name="${esc((c[0]+" "+c[2].map(id=>doc(id).name).join(" ")).toLowerCase())}"><span class="sgi">${ic("user")}</span>${c[0]}</button>`).join("")}
+   ${DOCTORS.filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}"><span class="av sm round">${initials(d.name)}</span><span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
+   <p class="muted hidden" id="noresults">Nessun risultato. Prova con un’altra parola.</p>
+   <button class="btn ghost block" data-act="allResults">Vedi tutti gli specialisti ${ic("arrow","sm")}</button>
   </div></div></div>`}
+function resultsPage(){const sq=UI.sq,f=UI.f,list=matchDocs(f,sq),nF=filterCount(f);
+  const title=(sq.spec!=null?CHIPS[sq.spec][0]:sq.q?"“"+sq.q+"”":"Tutti gli specialisti")+" · "+(sq.mode==="online"?"Online":"In studio");
+  return `<div class="screen" style="background:var(--bg-2)"><div class="rhead"><button class="searchbox" data-act="pop" style="min-height:52px">${ic("back")}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(title)}</span></button>
+   <div class="fchips"><button class="fchip ${f.date!=="any"?"on":""}" data-act="openFilters">${f.date==="today"?"Oggi":f.date==="3"?"Entro 3 giorni":"Date disponibili"}</button>
+    <button class="fchip ${sq.mode==="online"?"on":""}" data-act="toggleOnline" aria-pressed="${sq.mode==="online"}">Consulenza online${sq.mode==="online"?ic("x","sm"):""}</button>
+    <button class="fchip ${f.kids?"on":""}" data-act="toggleKids" aria-pressed="${f.kids}">Visita i bambini${f.kids?ic("x","sm"):""}</button>
+    <button class="fchip ${nF?"on":""}" data-act="openFilters">${ic("sliders","sm")} Filtro${nF?" ("+nF+")":""}</button></div></div>
+  <div class="content">${sq.mode==="studio"?`<button class="mapcard" data-act="openMap">${mapSvg()}<span class="mapbtn">${ic("pin","sm")} Mostra mappa</span></button>`:""}
+   <div class="pad stack" style="gap:14px"><p class="tiny">${list.length} ${list.length===1?"specialista":"specialisti"}</p>
+   ${list.length?list.map(resultCard).join(""):`<div class="card center">${ic("search")}<h3>Nessuno specialista con questi filtri</h3><button class="btn ghost" data-act="clearFilters">Cancella i filtri</button></div>`}</div></div></div>`}
+function resultCard(d){const s=pickSvc(d.id,UI.sq,UI.f),n=firstFree(d.id,s);
+  return `<article class="rcard">${s.online?`<span class="badge az" style="align-self:flex-start">${ic("video","sm")} Videoconsulto</span>`:""}
+  <button class="row" data-act="openDoc" data-id="${d.id}" style="text-align:left;width:100%;align-items:flex-start"><span class="av round" style="width:64px;height:64px">${initials(d.name)}</span><span style="flex:1;min-width:0"><b>${esc(d.name)}</b> <span title="Specialista di Clinia">${markSvg(12)}</span><span class="muted small" style="display:block">${esc(d.role)}</span>${d.rating?`<span class="small"><span class="stars">★★★★★</span> ${d.reviews} recensioni</span>`:""}</span></button>
+  <div class="row between"><span class="row small" style="gap:8px;min-width:0">${ic(s.online?"video":"heartplus","sm")}<span>${esc(s.name)}</span></span><b class="num">${eur(s.price)}</b></div>
+  <div class="row small" style="gap:8px">${ic("cal","sm")}<span>${n?"Prossimo appuntamento: "+relDay(n.date):"Nessuna disponibilità nelle prossime 3 settimane"}</span></div>
+  ${n?`<div class="tchips">${n.slots.slice(0,4).map(x=>`<button class="tchip num" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}" data-v="${x.time}">${x.time}</button>`).join("")}<button class="tchip" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}">Altro ${ic("right","sm")}</button></div>`:""}</article>`}
+function countLabel(){const n=matchDocs(UI.fd,{...UI.sq,mode:UI.fd.mode}).length;return n?`Vedi ${n} ${n===1?"risultato":"risultati"}`:"Nessun risultato"}
+function filtersPage(){const f=UI.fd;const radio=(k,v,l)=>`<label class="fopt"><span>${l}</span><input type="radio" name="f-${k}" value="${v}" ${f[k]===v?"checked":""} data-change="filt" data-k="${k}"></label>`;
+  return `<div class="screen"><div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Chiudi">${ic("x")}</button><h2>Filtri</h2><button class="link" style="padding:0 10px" data-act="resetDraft">Cancella tutto</button></div>
+  <div class="content"><div class="pad stack" style="gap:26px">
+   <section><h3 class="fh">Date disponibili</h3>${radio("date","today","Oggi")}${radio("date","3","Entro 3 giorni")}${radio("date","any","Qualsiasi giorno")}</section>
+   <section><h3 class="fh">Modalità</h3>${radio("mode","studio","In studio")}${radio("mode","online","Consulenza online")}</section>
+   <section><h3 class="fh">Prestazioni</h3><label class="inline-field"><input id="f-svc-q" placeholder="Di quale prestazione hai bisogno?" data-input="fsvc" aria-label="Cerca prestazione">${ic("search")}</label>
+    <div id="fsvcs">${ALL_SVCS.map((n,i)=>`<label class="fopt ${i>=6?"more":""} ${i>=6&&!UI.moreSvcs?"hidden":""}" data-name="${esc(n.toLowerCase())}"><span>${esc(n)}</span><input type="checkbox" value="${esc(n)}" ${f.svcs.includes(n)?"checked":""} data-change="filt" data-k="svcs"></label>`).join("")}</div>
+    ${UI.moreSvcs?"":`<button class="link" style="text-decoration:underline;margin-top:6px" data-act="moreSvcs" id="moresvcs">Vedi tutte (${ALL_SVCS.length})</button>`}</section>
+   <section><h3 class="fh">Area</h3>${Object.entries(AREAS).map(([k,v])=>radio("area",k,v)).join("")}</section>
+   <section><h3 class="fh">Visita i bambini</h3><label class="fopt"><span class="muted">Specialisti che trattano anche i pazienti più giovani</span><input type="checkbox" class="swi" ${f.kids?"checked":""} data-change="filt" data-k="kids"></label></section>
+   <section><h3 class="fh">Genere dello specialista</h3>${radio("gender","F","Femminile")}${radio("gender","M","Maschile")}${radio("gender","all","Tutti")}</section>
+  </div></div><div class="actions"><button class="btn primary block" id="fcount" data-act="applyFilters">${countLabel()}</button></div></div>`}
 function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(allBookings().filter(b=>b.doctorId===id&&b.date>=today()).map(b=>b.roomId))];
   return `<div class="screen">${bar("Profilo",`<button class="iconbtn" data-act="fav" data-id="${id}" aria-label="Preferito">${heartFill(S.favs.includes(id))}</button>`)}
   <div class="content"><div class="hero"><span class="av lg">${initials(d.name)}</span><h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
    ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
   <div class="pad stack" style="gap:22px">
    <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${TARIFFARIO.ufficiale?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
-    ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
+    ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min${s.online?" · online":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
     <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px">${rs.map(r=>`<span class="badge grey" style="margin:2px 4px 0 0">${room(r).name} · ${ROOM_TYPES[room(r).type].label}</span>`).join("")}</p></div></div></section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Esperienza</h3><ul class="blist">${d.bio.map(b=>`<li>${esc(b)}</li>`).join("")}</ul></section>
@@ -667,15 +751,15 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
   const slots=b.date?slotsFor(id,b.date,s.dur):[];const pick=slots.find(x=>x.time===b.time&&x.free);
   return `<div class="screen">${bar("Prenota")}<div class="content"><div class="pad stack" style="gap:22px">
    <div class="row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>
-   <section class="stack" style="gap:10px"><span class="label">1 · Prestazione</span>${svc.map(x=>`<button class="opt ${x.i===b.svc?"on":""}" data-act="bSvc" data-v="${x.i}"><span class="radio"></span><span style="flex:1"><b>${esc(x.name)}</b><span class="tiny" style="display:block">${x.dur} min</span></span><span class="price num">${eur(x.price)}</span></button>`).join("")}</section>
+   <section class="stack" style="gap:10px"><span class="label">1 · Prestazione</span>${svc.map(x=>`<button class="opt ${x.i===b.svc?"on":""}" data-act="bSvc" data-v="${x.i}"><span class="radio"></span><span style="flex:1"><b>${esc(x.name)}</b><span class="tiny" style="display:block">${x.dur} min${x.online?" · videochiamata":""}</span></span><span class="price num">${eur(x.price)}</span></button>`).join("")}</section>
    <section class="stack" style="gap:10px"><span class="label">2 · Giorno</span><div class="days">${days.map(x=>{const dt=parseD(x.ds);return `<button class="day ${x.ds===b.date?"on":""}" data-act="bDay" data-v="${x.ds}" ${x.free?"":"disabled"}><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${x.free?x.free+" liberi":dt.toLocaleDateString("it-IT",{month:"short"})}</i></button>`}).join("")}</div></section>
    <section class="stack" style="gap:10px"><span class="label">3 · Orario${b.date?" · "+fmtD(b.date):""}</span>
     ${b.date?`<div class="slots">${slots.map(x=>`<button class="slot num ${x.time===b.time?"on":""}" data-act="bTime" data-v="${x.time}" ${x.free?"":"disabled"} aria-label="${x.time}${x.free?"":" occupato"}">${x.time}</button>`).join("")}</div>`:`<p class="muted">Nessuna disponibilità nelle prossime tre settimane. Scrivi alla reception per una data.</p>`}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
-   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>Studio</dt><dd>${room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd></dl><p class="tiny">Il pagamento si effettua in clinica. Puoi disdire gratis fino a 24 ore prima.</p>`:""}
+   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd></dl><p class="tiny">Il pagamento si effettua in clinica. Puoi disdire gratis fino a 24 ore prima.</p>`:""}
   </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
 function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
-  <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.</p>
+  <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
   <div style="width:100%;text-align:left">${visitCard(a,false)}</div>
   <div class="card" style="width:100%;text-align:left"><b>Cosa portare</b><ul class="blist" style="margin-top:8px"><li>Documento d’identità e tessera sanitaria</li><li>Esami e referti precedenti (puoi caricarli in “I miei file”)</li><li>Elenco dei farmaci che assumi</li></ul></div>
  </div></div><div class="actions"><button class="btn primary block" data-act="goVisite">Vai alle mie visite</button><button class="btn ghost block" data-act="home">Torna a Esplora</button></div></div>`}
@@ -685,14 +769,18 @@ function visitCard(a,compact){const d=doc(a.doctorId),dt=parseD(a.date),past=a.d
   const st=a.status==="annullata"?`<span class="badge red">Annullata</span>`:past?`<span class="badge grey">Conclusa</span>`:`<span class="badge">Confermata</span>`;
   return `<div class="card visit"><div class="vdate"><div class="cal"><small>${dt.toLocaleDateString("it-IT",{month:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</i></div>
   <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}</p></div>${st}</div>
-  <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic("door","sm")}${room(a.roomId).name}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
+  <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic(a.roomId?"door":"video","sm")}${a.roomId?room(a.roomId).name:"Videochiamata"}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
   ${compact||past||a.status==="annullata"?"":`<div class="row"><button class="btn ghost sm" style="flex:1" data-act="openChat" data-id="${a.doctorId}">${ic("chat","sm")} Scrivi</button><button class="btn danger sm" style="flex:1" data-act="askCancel" data-id="${a.id}">Disdici</button></div>`}</div>`}
-function visiteTab(){if(!logged())return needLogin("Visite","Tutte le tue visite in un unico posto");
-  const now=today()+toT(nowMin());const up=S.appts.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  const past=S.appts.filter(a=>!up.includes(a)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));const list=UI.visitSeg==="next"?up:past;
-  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">Visite</h1>
-  <div class="seg"><button class="${UI.visitSeg==="next"?"on":""}" data-act="vseg" data-v="next">Prossime (${up.length})</button><button class="${UI.visitSeg==="past"?"on":""}" data-act="vseg" data-v="past">Passate e annullate</button></div>
-  ${list.length?list.map(a=>visitCard(a,false)).join(""):`<div class="card center">${ic("cal")}<h3>${UI.visitSeg==="next"?"Nessuna visita in programma":"Nessuna visita passata"}</h3><p class="muted small">Scegli uno specialista e prenota in pochi tocchi.</p><button class="btn primary" data-act="openSearch">Prenota una visita</button></div>`}</div>`}
+function visiteTab(){if(!logged())return needLogin("Le mie visite","Tutte le tue visite in un unico posto");
+  const now=today()+toT(nowMin()),desc=(a,b)=>(b.date+b.time).localeCompare(a.date+a.time);
+  const up=S.appts.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const canc=S.appts.filter(a=>a.status==="annullata").sort(desc),past=S.appts.filter(a=>a.status!=="annullata"&&!up.includes(a)).sort(desc);
+  const seg=UI.visitSeg,list=seg==="next"?up:seg==="past"?past:canc;
+  const empty={next:["Non ci sono visite in programma","Prenota una visita e la vedrai in questa sezione."],past:["Nessuna visita passata","Qui trovi lo storico delle visite concluse."],canc:["Nessuna visita cancellata","Le visite che disdici compariranno qui."]}[seg];
+  return `<div class="pad stack"><div class="row between"><h1 style="font-size:1.8rem;font-weight:800">Le mie visite</h1><button class="iconbtn" style="border:1px solid var(--line);background:var(--card)" data-act="openSearch" aria-label="Prenota una nuova visita">${ic("plus")}</button></div>
+  <div class="seg seg3">${[["next","Prossime"],["past","Passate"],["canc","Cancellate"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="vseg" data-v="${k}">${l}</button>`).join("")}</div>
+  ${list.length?list.map(a=>visitCard(a,false)).join(""):`<div class="stack" style="align-items:center;text-align:center;padding:30px 10px;gap:12px"><svg viewBox="0 0 160 130" style="width:170px" aria-hidden="true"><path d="M30 70c0-40 40-60 70-50s40 50 20 80-90 20-90-30z" fill="var(--accent-soft)"/><rect x="66" y="24" width="56" height="74" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" transform="rotate(8 94 61)"/><rect x="74" y="36" width="36" height="6" rx="3" fill="var(--busy)" transform="rotate(8 94 61)"/><rect x="34" y="60" width="54" height="36" rx="3" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="40" y="66" width="42" height="24" rx="5" fill="var(--accent)"/><circle cx="130" cy="30" r="3" fill="#f2c94c"/><circle cx="34" cy="40" r="3" fill="#f2c94c"/></svg>
+   <h3 style="font-size:1.25rem">${empty[0]}</h3><p class="muted">${empty[1]}</p>${seg==="next"?`<button class="btn primary" data-act="openSearch">Prenota una visita</button>`:""}</div>`}</div>`}
 
 /* ---------- File ---------- */
 function filesTab(){if(!logged())return needLogin("I miei file","Referti ed esami sempre con te");
@@ -729,7 +817,7 @@ function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Cl
   ${pro?`<div class="card row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
-  <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}</div></div>
+  <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
   <button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`}
@@ -801,6 +889,16 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
 /* ---------- Sheet e modali ---------- */
 function sheetHTML(){const s=UI.sheet;
   if(s.type==="room")return roomSheet();
+  if(s.type==="map"){const q=encodeURIComponent("Via La Martella 5/D, 75100 Matera");return `<div class="stack"><div><h2 style="font-size:1.2rem;font-weight:800">Clinia</h2><p class="muted small">${esc(CLINIC.address)}</p></div>
+   <div class="bigmap">${mapSvg()}<span class="mpin">${markSvg(24)}</span></div>
+   <p class="small muted">Tutti gli specialisti ricevono nella stessa sede.</p>
+   <a class="btn primary block" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">${ic("pin","sm")} Apri in Google Maps</a><a class="btn ghost block" href="https://maps.apple.com/?q=${q}" target="_blank" rel="noopener">Apri in Mappe di Apple</a></div>`}
+  if(s.type==="stats")return `<div class="stack" style="align-items:center;text-align:center;gap:16px"><button class="iconbtn" style="align-self:flex-end;margin-top:-8px" data-act="stats" data-v="later" aria-label="Chiudi">${ic("x")}</button>
+   <svg viewBox="0 0 160 100" style="width:180px" aria-hidden="true"><ellipse cx="80" cy="54" rx="56" ry="42" fill="var(--accent-soft)"/><circle cx="56" cy="32" r="9" fill="var(--ink)"/><path d="M48 44h16l5 44H43z" fill="var(--accent)"/><circle cx="104" cy="32" r="9" fill="var(--ink)"/><path d="M96 44h16l5 44H91z" fill="#f2c94c"/><path d="M64 46 80 16 96 46" stroke="var(--ink)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 90h104" stroke="var(--ink)" stroke-width="2"/></svg>
+   <h2 style="font-size:1.45rem;font-weight:800">Il tuo aiuto può migliorare Clinia</h2>
+   <p class="muted">Con il tuo consenso raccogliamo statistiche anonime su come usi l’app, per renderla più semplice per tutti i pazienti.</p>
+   <div class="check-list" style="text-align:left">${["Usiamo solo dati anonimi: nessun nome, numero di telefono o dato sanitario.","Ci servono per capire quali schermate migliorare e dove le prenotazioni si bloccano.","Puoi cambiare idea quando vuoi dal Profilo."].map(t=>`<div><span class="cc">${ic("check")}</span><span>${t}</span></div>`).join("")}</div>
+   <button class="btn primary block" data-act="stats" data-v="yes">Consenti</button><button class="btn ghost block" data-act="stats" data-v="no">Non ora</button></div>`;
   if(s.type==="confirm")return `<div class="stack"><h2 style="font-size:1.2rem;font-weight:800">${s.title}</h2><p class="muted">${s.text}</p><button class="btn ${s.danger?"danger":"primary"} block" data-act="${s.act}" data-id="${esc(s.id||"")}">${s.ok}</button><button class="btn ghost block" data-act="closeSheet">Indietro</button></div>`;
   return ""}
 function modalHTML(){const m=UI.modal;
@@ -818,10 +916,10 @@ function afterAuthFlow(){ // prossimo passo dell'onboarding
   if(S.notif==null)return go("notifs");
   UI.screen="main";
   if(UI.pending){const p=UI.pending;UI.pending=null;UI.stack=p.stack;UI.book=p.book;UI.tab=p.tab;return doConfirmBook()}
-  UI.stack=[];UI.tab=isPro()?"agenda":"home";render()}
+  UI.stack=[];UI.tab=isPro()?"agenda":"home";if(!isPro()&&S.stats==null)UI.sheet={type:"stats"};render()}
 function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
   const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
-  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:slot.roomId,note:b.note||"",patient:S.user.nome+" "+S.user.cognome,status:"confermata",created:Date.now()};
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:S.user.nome+" "+S.user.cognome,status:"confermata",created:Date.now()};
   S.appts.push(a);save();UI.stack=[{page:"done",id:a.id}];render();
   setTimeout(()=>notify("Prenotazione confermata",`${a.service} con ${doc(id).name}, ${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}.`,"Clinia"),900)}
 function keyPress(v){
@@ -859,8 +957,22 @@ const ACT={
   pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
   hideBanner:()=>{S.hideBanner=true;save();render()},
-  openSearch:()=>{UI.chip=null;UI.area="all";push({page:"search"})},
-  chip:d=>{UI.chip=+d.v;UI.area="all";push({page:"search"})},
+  openSearch:()=>{UI.sq={mode:"studio",q:"",spec:null};UI.f=defF();push({page:"search"})},
+  mode:d=>{UI.sq.mode=d.v;render()},
+  spec:d=>{UI.sq.spec=+d.v;UI.sq.q="";push({page:"results"})},
+  allResults:()=>{UI.sq.spec=null;push({page:"results"})},
+  toggleOnline:()=>{UI.sq.mode=UI.sq.mode==="online"?"studio":"online";render()},
+  toggleKids:()=>{UI.f.kids=!UI.f.kids;render()},
+  clearFilters:()=>{UI.f=defF();UI.sq.mode="studio";render()},
+  openFilters:()=>{UI.fd={...UI.f,svcs:[...UI.f.svcs],mode:UI.sq.mode};UI.moreSvcs=false;push({page:"filters"})},
+  resetDraft:()=>{UI.fd={...defF(),mode:"studio"};render()},
+  moreSvcs:()=>{UI.moreSvcs=true;app.querySelectorAll("#fsvcs .more").forEach(x=>x.classList.remove("hidden"));const b=$("#moresvcs");if(b)b.remove()},
+  applyFilters:()=>{const{mode,...f}=UI.fd;UI.f=f;UI.sq.mode=mode;UI.stack.pop();render()},
+  openMap:()=>{UI.sheet={type:"map"};render()},
+  quickBook:d=>{UI.book={svc:+d.svc,date:d.date,time:d.v||null,note:""};push({page:"book",id:d.id})},
+  stats:d=>{if(d.v!=="later")S.stats=d.v==="yes";save();UI.sheet=null;render()},
+  toggleStats:()=>{S.stats=S.stats!==true;save();render()},
+  chip:d=>{UI.sq={mode:"studio",q:"",spec:+d.v};UI.f=defF();push({page:"results"})},
   clearChip:()=>{UI.chip=null;render()},
   area:d=>{UI.area=d.v;UI.chip=null;render()},
   openDoc:d=>push({page:"doctor",id:d.id}),
@@ -874,7 +986,7 @@ const ACT={
   vseg:d=>{UI.visitSeg=d.v;render()},
   askCancel:d=>{const a=S.appts.find(x=>x.id===d.id);UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
   cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";save();UI.sheet=null;toast("Visita disdetta")},
-  closeSheet:(d,el,e)=>{if(e&&e.target.closest("[data-stop]")&&!el.matches(".btn"))return;UI.sheet=null;render()},
+  closeSheet:()=>{UI.sheet=null;render()},
   delFile:d=>{S.files=S.files.filter(f=>f.id!==d.id);save();render()},
   openChat:d=>{const k=isPro()?d.id:d.id+"|me";if(!logged()){return ACT.openAuth()}push({page:"chat",id:k})},
   openThread:d=>push({page:"chat",id:d.id}),
@@ -918,6 +1030,7 @@ const FORMS={
     if(!v("nascita")){err.textContent="Seleziona la data di nascita.";return}
     S.user={nome:v("nome"),cognome:v("cognome"),pref:f.pref.value,tel:"",nascita:v("nascita"),pendingTel:tel};save();
     UI.screen="otp";UI.buf="";UI.pinErr="";render();sendOtp()},
+  search:f=>{UI.sq.q=f.querySelector("#q").value.trim();UI.sq.spec=null;push({page:"results"})},
   send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
     if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
     S.msgs[k].list.push({from:isPro()?(k.startsWith("reception")?"pr":"d"):"me",text:t,at:Date.now()});save();render();
@@ -929,16 +1042,24 @@ const FORMS={
 const _after=afterAuthFlow;afterAuthFlow=function(){if(S.user&&!S.user.tel&&S.user.pendingTel&&UI.screen==="otp"){S.user.tel=S.user.pendingTel;delete S.user.pendingTel;save()}return _after()};
 
 app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)return;
-  if(el.dataset.act!=="closeSheet"){const inner=el.closest(".doc");if(inner&&inner!==el&&el.dataset.act==="fav"){e.stopPropagation()}}
-  else if(e.target.closest("[data-stop]")&&!e.target.closest(".btn"))return;
+  if(el.classList.contains("shade")&&e.target.closest("[data-stop]"))return;
+  if(el.dataset.act==="fav")e.stopPropagation();
   e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
 app.addEventListener("submit",e=>{e.preventDefault();const f=FORMS[e.target.dataset.form];if(f)f(e.target)});
-app.addEventListener("input",e=>{if(e.target.dataset.input==="search"){const q=e.target.value.trim().toLowerCase();let n=0;
-  app.querySelectorAll("#results .doc").forEach(c=>{const m=!q||(c.dataset.name+" "+(c.dataset.svc||"")).includes(q);c.classList.toggle("hidden",!m);if(m)n++});$("#noresults").classList.toggle("hidden",n>0)}});
+app.addEventListener("input",e=>{const k=e.target.dataset.input;
+  if(k==="search"){const q=e.target.value.trim().toLowerCase();UI.sq.q=e.target.value.trim();let n=0;
+    app.querySelectorAll(".sugg .sg").forEach(c=>{const m=q?c.dataset.name.includes(q):!c.hasAttribute("data-doc");c.classList.toggle("hidden",!m);if(m)n++});
+    const nr=$("#noresults");if(nr)nr.classList.toggle("hidden",n>0)}
+  if(k==="fsvc"){const q=e.target.value.trim().toLowerCase();
+    app.querySelectorAll("#fsvcs .fopt").forEach(c=>c.classList.toggle("hidden",q?!c.dataset.name.includes(q):(c.classList.contains("more")&&!UI.moreSvcs)))}});
 app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="upload"){for(const f of e.target.files)S.files.unshift({id:uid(),name:f.name,size:f.size,at:today()});save();toast(e.target.files.length>1?"Documenti caricati":"Documento caricato")}
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
-  if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}});
+  if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}
+  if(k==="filt"){const fk=e.target.dataset.k,fd=UI.fd;
+    if(fk==="svcs"){const v=e.target.value;fd.svcs=e.target.checked?[...fd.svcs,v]:fd.svcs.filter(x=>x!==v)}
+    else if(fk==="kids")fd.kids=e.target.checked;else fd[fk]=e.target.value;
+    const b=$("#fcount");if(b)b.textContent=countLabel()}});
 
 /* Avvio */
 render();

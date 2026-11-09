@@ -378,6 +378,15 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .chan button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2)}
 .chan .wa-dot{width:22px;height:22px;border-radius:50%;background:#25d366;display:grid;place-items:center;color:#fff}
 .chan .wa-dot .ic{width:13px;height:13px}
+.social{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:54px;border-radius:999px;background:var(--line);font-weight:700;font-size:1.05rem;color:var(--ink)}
+.social:hover{filter:brightness(.97)}
+.social svg{width:22px;height:22px;flex:none}
+.help{border-top:1px solid var(--line);padding-top:14px}
+.help summary{list-style:none;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:8px;font-weight:700;color:var(--ink-2);padding:8px}
+.help summary::-webkit-details-marker{display:none}
+.help[open] summary .ic{transform:rotate(180deg)}
+.help .q{padding:12px 0;border-bottom:1px solid var(--line)}
+.help .q:last-child{border:0}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -662,15 +671,24 @@ function loginScreen(){const reg=UI.loginMode==="register";return `<div class="s
   <div class="topbar" style="background:var(--bg-2)"><button class="iconbtn" data-act="toAuth" aria-label="Indietro">${ic("back")}</button><h2>${brand()}</h2><span style="width:44px"></span></div>
   <div class="content"><form class="pad stack" data-form="login" novalidate>
    <h1 style="font-size:1.6rem;font-weight:800;margin-top:16px">${reg?"Crea il tuo account":"Effettua il login al tuo account"}</h1>
-   <p class="muted small">Stai accedendo come <b>${UI.authRole==="paziente"?"paziente":"professionista"}</b>.</p>
+   <p class="muted small">Stai accedendo come <b>${UI.authRole==="paziente"?"paziente":"specialista"}</b>.</p>
+   <button type="button" class="social" data-act="social" data-v="google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continua con Google</button>
+   <button type="button" class="social" data-act="social" data-v="apple"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--ink)"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.1zM13.9 5.2c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>Continua con Apple</button>
+   <div class="or">o</div>
    <label class="inline-field">${ic("mail")}<input id="lg-email" name="email" type="email" autocomplete="email" placeholder="E-mail" required></label>
    <label class="inline-field">${ic("lock")}<input id="lg-pw" name="pw" type="${UI.showPw?"text":"password"}" autocomplete="${reg?"new-password":"current-password"}" placeholder="Password" required><button type="button" class="iconbtn" data-act="togglePw" aria-label="Mostra password" style="width:36px;height:36px">${ic("eye")}</button></label>
    ${reg?`<p class="tiny">Almeno 8 caratteri.</p>`:""}
    <p class="err" id="lg-err"></p>
    <button class="btn primary block" type="submit">${reg?"Registrati":"Login"}</button>
    ${reg?"":`<button type="button" class="link" data-act="forgot" style="text-decoration:underline">Hai dimenticato la password?</button>`}
-   <div class="or small">oppure</div>
+   <hr style="border:0;border-top:1px solid var(--line);margin:4px 0;width:100%">
    <p class="muted" style="text-align:center">${reg?`Hai già un account? <button type="button" class="link" data-act="goLogin" data-v="login">Accedi</button>`:`Non hai ancora un account? <button type="button" class="link" data-act="goLogin" data-v="register">Registrati!</button>`}</p>
+   <details class="help"><summary>Hai bisogno di aiuto? ${ic("down","sm")}</summary>
+    <div class="q"><b>Non ricevo il codice di verifica</b><p class="muted small">Controlla WhatsApp o gli SMS. Dopo 30 secondi puoi richiederlo di nuovo o cambiare canale.</p></div>
+    <div class="q"><b>Ho dimenticato la password</b><p class="muted small">Tocca “Hai dimenticato la password?” e ti mandiamo un link per crearne una nuova.</p></div>
+    <div class="q"><b>Ho usato Google o Apple</b><p class="muted small">Accedi sempre con lo stesso pulsante: non serve una password Clinia.</p></div>
+    <div class="q"><b>Parla con la reception</b><p class="muted small"><span class="num" style="user-select:all">${esc(CLINIC.phone)}</span> · <span style="user-select:all">${esc(CLINIC.email)}</span></p></div>
+   </details>
   </form></div></div>`}
 function pinScreen(){const s=UI.screen;
   const title=s==="pin-create"?`<b>Crea</b> il tuo PIN a 4 cifre`:s==="pin-confirm"?`<b>Conferma</b> il tuo PIN`:`<b>Bentornato</b>${S.user?", "+esc(S.user.nome):""}`;
@@ -910,7 +928,7 @@ function chatPage(k){const i=threadInfo(k),m=threadMsgs(k);const mine=isPro()?["
 /* ---------- Profilo ---------- */
 function settingsBody(){const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
   const sw=(act,on,title,sub,icn)=>`<button class="li" data-act="${act}" role="switch" aria-checked="${!!on}">${ic(icn)}<span class="t">${title}<small>${sub}</small></span><span class="sw ${on?"on":""}"></span></button>`;
-  return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
+  return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}${S.auth.provider?" · accesso con "+(S.auth.provider==="apple"?"Apple":"Google"):""}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
   ${pro?`<div class="card row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
@@ -1041,6 +1059,13 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
 /* ---------- Sheet e modali ---------- */
 function sheetHTML(){const s=UI.sheet;
   if(s.type==="room")return roomSheet();
+  if(s.type==="social"){const ap=s.v==="apple";return `<form class="stack" data-form="social" novalidate><div class="row" style="gap:10px">${ap?`<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--ink)"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.1zM13.9 5.2c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>`:`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`}<h2 style="font-size:1.2rem;font-weight:800">${ap?"Accedi con Apple":"Accedi con Google"}</h2></div>
+   <p class="muted small">Clinia riceverà nome ed e-mail del tuo account ${ap?"Apple":"Google"}. ${UI.loginMode==="register"?"L’account Clinia viene creato subito, senza password.":"Se l’account non esiste ancora, lo creiamo subito."}</p>
+   <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Nome</span><input id="so-nome" name="nome" autocomplete="given-name"></label><label class="field"><span>Cognome</span><input id="so-cognome" name="cognome" autocomplete="family-name"></label></div>
+   <label class="field"><span>E-mail ${ap?"Apple ID":"Google"}*</span><input id="so-email" name="email" type="email" autocomplete="email" required></label>
+   ${ap?`<label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="so-hide" name="hide" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t">Nascondi la mia e-mail<small>Clinia riceverà un indirizzo anonimo che inoltra i messaggi alla tua casella</small></span></label>`:""}
+   <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: questa finestra simula l’accesso. Nell’app pubblicata si apre la schermata ufficiale di ${ap?"Apple (con Face ID)":"Google"}.</span></div>
+   <p class="err" id="so-err"></p><button class="btn primary block" type="submit">Continua</button><button class="btn ghost block" type="button" data-act="closeSheet">Annulla</button></form>`}
   if(s.type==="persons")return `<div class="stack"><h2 style="font-size:1.2rem;font-weight:800">Di chi vuoi vedere visite e file?</h2><div class="list">${persons().map(p=>`<button class="li" data-act="setPerson" data-id="${p.id}">${pav(p)}<span class="t"><b>${esc(p.nome+" "+p.cognome)}</b><small>${esc(p.rel)}</small></span>${UI.person===p.id?ic("check"):""}</button>`).join("")}</div><button class="btn ghost block" data-act="addFamily">${ic("plus","sm")} Aggiungi un familiare</button></div>`;
   if(s.type==="map"){const q=encodeURIComponent("Via La Martella 5/D, 75100 Matera");return `<div class="stack"><div><h2 style="font-size:1.2rem;font-weight:800">Clinia</h2><p class="muted small">${esc(CLINIC.address)}</p></div>
    <div class="bigmap">${mapSvg()}<span class="mpin">${markSvg(24)}</span></div>
@@ -1109,6 +1134,7 @@ const ACT={
   openAuth:()=>go("welcome"),
   authClose:()=>{UI.pending=null;go("welcome")},
   authRole:d=>{UI.authRole=d.v;render()},
+  social:d=>{UI.sheet={type:"social",v:d.v};render()},
   goLogin:d=>{UI.loginMode=d.v;UI.showPw=false;go("login")},
   toAuth:()=>go("auth"),
   togglePw:()=>{const i=$("#lg-pw");UI.showPw=!UI.showPw;if(i)i.type=UI.showPw?"text":"password"},
@@ -1197,6 +1223,12 @@ const ACT={
 function saveNote(){const t=$("#bk-note");if(t&&UI.book)UI.book.note=t.value}
 
 const FORMS={
+  social:f=>{const prov=UI.sheet.v,e=f.email.value.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){$("#so-err").textContent="Inserisci un indirizzo e-mail valido.";return}
+    const email=f.hide&&f.hide.checked?uid()+"@privaterelay.appleid.com":e;
+    S.auth={email,role:UI.authRole,provider:prov};if(UI.authRole==="paziente")S.proId=null;
+    const n=f.nome.value.trim(),c=f.cognome.value.trim();if(n&&(!S.user||!S.user.tel))S.user={...(S.user||{}),nome:n,cognome:c,pref:(S.user&&S.user.pref)||"+39",tel:""};
+    save();UI.sheet=null;toast(prov==="apple"?"Accesso con Apple riuscito":"Accesso con Google riuscito");afterAuthFlow()},
   login:f=>{const e=f.email.value.trim(),p=f.pw.value,err=$("#lg-err");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){err.textContent="Inserisci un indirizzo e-mail valido.";return}
     if(p.length<(UI.loginMode==="register"?8:6)){err.textContent=UI.loginMode==="register"?"La password deve avere almeno 8 caratteri.":"Password troppo corta.";return}

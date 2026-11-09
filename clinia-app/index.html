@@ -356,6 +356,21 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .cbrand{flex:none;width:54px;height:36px;border-radius:7px;background:var(--grad);color:#fff;font-size:.64rem;font-weight:800;display:grid;place-items:center;letter-spacing:.03em}
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:28px 8px}
 .empty svg{width:200px;max-width:70%}
+.rolecard{display:flex;gap:16px;align-items:flex-start;text-align:left;width:100%;padding:20px;border-radius:20px;border:1.5px solid var(--line);background:var(--card);transition:border-color .2s,transform .15s}
+.rolecard:hover{border-color:var(--accent)}
+.rolecard:active{transform:scale(.99)}
+.rolecard .ri{flex:none;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-2)}
+.rolecard .ri.az{background:var(--azure-soft);color:var(--azure)}
+.rolecard .ri .ic{width:28px;height:28px}
+.rolecard b{display:block;font-size:1.12rem}
+.plan{border:2px solid var(--accent);border-radius:20px;padding:20px;background:var(--card);display:flex;flex-direction:column;gap:12px}
+.pprice{display:flex;align-items:baseline;gap:4px}
+.pprice b{font-size:2.4rem;font-weight:800;letter-spacing:-.02em}
+.pprice span{color:var(--ink-3);font-weight:600}
+.scan{width:96px;height:96px;border-radius:24px;display:grid;place-items:center;color:var(--accent);margin:0 auto;position:relative}
+.scan .ic{width:72px;height:72px;stroke-width:1.6}
+.scan::after{content:"";position:absolute;left:12px;right:12px;height:3px;border-radius:3px;background:var(--accent);top:14px;animation:scan 1.2s ease-in-out infinite alternate;opacity:.7}
+@keyframes scan{to{top:80px}}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -384,9 +399,13 @@ const ROOM_TYPES={
   standard:{label:"Studio standard",desc:"Consulenze e attività specialistiche"},
   ampio:{label:"Studio ampio e luminoso",desc:"Attività riabilitative e incontri formativi"},
   compatto:{label:"Studio compatto",desc:"Consulenze riservate e incontri individuali"}};
+// 9 studi numerati da 1 a 9 (la tipologia di ciascuno è da confermare)
 const ROOMS=[
   {id:"s1",name:"Studio 1",type:"standard"},{id:"s2",name:"Studio 2",type:"standard"},{id:"s3",name:"Studio 3",type:"standard"},
-  {id:"s4",name:"Studio 4",type:"ampio"},{id:"s5",name:"Studio 5",type:"compatto"},{id:"s6",name:"Studio 6",type:"compatto"}];
+  {id:"s4",name:"Studio 4",type:"ampio"},{id:"s5",name:"Studio 5",type:"compatto"},{id:"s6",name:"Studio 6",type:"compatto"},
+  {id:"s7",name:"Studio 7",type:"standard"},{id:"s8",name:"Studio 8",type:"standard"},{id:"s9",name:"Studio 9",type:"standard"}];
+// Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
+const SUB={name:"Clinia Specialisti",price:49,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
 const TARIFFARIO={ufficiale:false,stanze:{ // € IVA inclusa (esempio)
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
@@ -445,7 +464,7 @@ const HORIZON=21;
 /* ===================== Stato ===================== */
 const KEY="clinia-app-v1";
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,sub:null,photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
@@ -539,9 +558,12 @@ function render(){
 }
 function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
 function screenHTML(){
+  if(UI.screen==="main"&&!logged())UI.screen="welcome";
   switch(UI.screen){
     case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div></div>`;
     case "cookie":return cookieScreen();
+    case "welcome":return welcomeScreen();
+    case "sub":return subScreen();
     case "auth":return authScreen();
     case "login":return loginScreen();
     case "pin-create":case "pin-confirm":case "lock":return pinScreen();
@@ -581,13 +603,54 @@ function authIllo(){return `<svg viewBox="0 0 260 220" style="width:240px;max-wi
   <g transform="translate(192 52)"><rect width="42" height="34" rx="10" fill="var(--accent)"/><path d="M12 14h18M12 21h11" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g>
   <g transform="translate(190 132)"><circle cx="20" cy="20" r="20" fill="var(--azure)"/><path d="M12 28V14h8a5 5 0 0 1 0 10h-8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
   <circle cx="60" cy="40" r="6" fill="#f2c94c"/><circle cx="214" cy="190" r="5" fill="#f2c94c"/><circle cx="42" cy="170" r="4" fill="var(--accent)"/></svg>`}
-function authScreen(){const r=UI.authRole;return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="authClose" aria-label="Chiudi">${ic("x")}</button></div>
+const addMonth=(ds,n=1)=>{const d=parseD(ds);d.setMonth(d.getMonth()+n);return dstr(d)};
+const subActive=()=>!!S.sub&&(S.sub.status==="attivo"||(S.sub.status==="disdetto"&&S.sub.next>today()));
+function welcomeScreen(){return `<div class="screen"><div class="content"><div class="pad stack" style="gap:18px;padding-top:44px">
+  ${markSvg(52)}<h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
+  <button class="rolecard" data-act="chooseRole" data-v="paziente"><span class="ri">${ic("user")}</span><span style="flex:1;min-width:0"><b>Sono un paziente</b><span class="muted small" style="display:block;margin:4px 0 10px">Prenota le visite, ricevi i promemoria, conserva referti ed esami.</span><span class="badge">Gratis</span></span>${ic("right")}</button>
+  <button class="rolecard" data-act="chooseRole" data-v="professionista"><span class="ri az">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b>Sono uno specialista</b><span class="muted small" style="display:block;margin:4px 0 10px">Agenda, prenotazione degli studi, pazienti, messaggi e pagamenti.</span><span class="badge az">Abbonamento mensile · ${eur(SUB.price)}/mese</span></span>${ic("right")}</button>
+  <p class="tiny" style="text-align:center;margin-top:10px">Clinia · ${esc(CLINIC.address)}</p></div></div></div>`}
+function authScreen(){const r=UI.authRole,pro=r==="professionista";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="authClose" aria-label="Indietro">${ic("back")}</button><span style="flex:1"></span></div>
   <div class="content"><div class="pad stack" style="align-items:center;text-align:center;gap:18px">${authIllo()}
-   <h1 style="font-size:1.45rem;font-weight:800">Accedi a Clinia</h1>
-   <p class="lead">${r==="paziente"?"Prenota le visite con gli specialisti di Clinia a Matera, ricevi i promemoria e scrivi alla reception.":"Prenota gli studi della clinica, gestisci la tua agenda e consulta il tariffario."}</p>
-   <div class="seg" style="width:100%" role="tablist"><button class="${r==="paziente"?"on":""}" data-act="authRole" data-v="paziente">Sono un paziente</button><button class="${r==="professionista"?"on":""}" data-act="authRole" data-v="professionista">Sono un professionista</button></div>
+   <span class="badge ${pro?"az":""}">${pro?"Area specialisti · abbonamento mensile":"Area pazienti · gratis"}</span>
+   <h1 style="font-size:1.45rem;font-weight:800">${pro?"Accedi come specialista":"Accedi a Clinia"}</h1>
+   <p class="lead">${pro?"Gestisci agenda, studi e pazienti. Dopo la registrazione attivi l’abbonamento mensile.":"Prenota le visite con gli specialisti di Clinia a Matera, ricevi i promemoria e scrivi alla reception."}</p>
+   <p class="small muted">Dopo il login proteggi l’app con un codice di 4 cifre o con Face ID.</p>
    <button class="btn primary" style="min-width:160px" data-act="goLogin" data-v="login">Login</button>
-   <p class="muted">Non hai un account? <button class="link" data-act="goLogin" data-v="register">Registrati</button></p></div></div></div>`}
+   <p class="muted">Non hai un account? <button class="link" data-act="goLogin" data-v="register">Registrati</button></p>
+   <button class="link small" data-act="authClose">${pro?"Sei un paziente? Cambia":"Sei uno specialista? Cambia"}</button></div></div></div>`}
+function cardFields(px){return `<label class="field"><span>Intestatario*</span><input id="${px}-name" name="holder" autocomplete="cc-name" required></label>
+    <label class="field"><span>Numero della carta*</span><input id="${px}-num" name="num" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" required></label>
+    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Scadenza*</span><input id="${px}-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" required></label><label class="field"><span>CVV*</span><input id="${px}-cvv" name="cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label></div>`}
+function readCard(f,err){const num=f.num.value.replace(/\D/g,""),m=f.exp.value.match(/^\s*(\d{1,2})\s*\/\s*(\d{2})\s*$/);
+  if(!f.holder.value.trim()){err.textContent="Inserisci il nome dell’intestatario.";return null}
+  if(num.length<13||num.length>19||!luhn(num)){err.textContent="Il numero della carta non è valido. Controlla le cifre.";return null}
+  if(!m||+m[1]<1||+m[1]>12||new Date(2000+ +m[2],+m[1],0)<new Date()){err.textContent="Scadenza non valida o carta scaduta. Usa il formato MM/AA.";return null}
+  if(!/^\d{3,4}$/.test(f.cvv.value)){err.textContent="Il CVV ha 3 o 4 cifre.";return null}
+  return{id:uid(),brand:cardBrand(num),last4:num.slice(-4),exp:m[1].padStart(2,"0")+"/"+m[2],holder:f.holder.value.trim()}}
+function subScreen(){const renew=S.sub&&S.sub.status!=="attivo";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="logout" aria-label="Esci">${ic("x")}</button><span style="flex:1"></span></div>
+ <form class="screen" data-form="sub" novalidate><div class="content"><div class="pad stack" style="gap:18px">
+  <h1 class="h-xl">${renew?"Rinnova l’":""}<b>Abbonamento</b> specialisti</h1>
+  <p class="lead">Per ricevere prenotazioni dai pazienti nell’app serve un abbonamento mensile. Puoi disdirlo quando vuoi dal Profilo.</p>
+  <div class="plan"><div class="row between"><b>${SUB.name}</b><span class="badge">Mensile</span></div>
+   <div class="pprice"><b class="num">${eur(SUB.price)}</b><span>/ mese, IVA inclusa</span></div>${SUB.ufficiale?"":`<p class="tiny">Prezzo di esempio, da confermare.</p>`}
+   <ul class="blist">${SUB.features.map(f=>`<li>${f}</li>`).join("")}</ul>
+   <p class="tiny">L’affitto degli studi si paga a parte, secondo il tariffario.</p></div>
+  <span class="label">Metodo di pagamento</span>${cardFields("sb")}
+  <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: nessun addebito reale. Salviamo solo le ultime 4 cifre. Per provare usa 4242 4242 4242 4242.</span></div>
+  <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="sb-terms" name="terms" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Accetto il rinnovo automatico ogni mese a ${eur(SUB.price)}. Posso disdire in qualsiasi momento: l’abbonamento resta attivo fino alla fine del mese pagato.</span></label>
+  <p class="err" id="sb-err"></p></div></div>
+  <div class="actions"><button class="btn primary block" type="submit">Abbonati a ${eur(SUB.price)}/mese</button></div></form></div>`}
+function subscriptionPage(){const b=S.sub,c=b&&S.cards.find(x=>x.id===b.cardId);const act=b.status==="attivo";
+  const charges=[];for(let d=b.start;d<=today();d=addMonth(d))charges.push(d);
+  return `<div class="screen">${bar("Abbonamento")}<div class="content"><div class="pad stack" style="gap:18px">
+  <div class="plan"><div class="row between"><b>${SUB.name}</b><span class="badge ${act?"":"warn"}">${act?"Attivo":"Disdetto"}</span></div>
+   <div class="pprice"><b class="num">${eur(b.price)}</b><span>/ mese</span></div>
+   <p class="muted small">${act?"Prossimo rinnovo: ":"Attivo fino al "}<b>${esc(fmtD(b.next,{day:"numeric",month:"long",year:"numeric"}))}</b></p>
+   ${c?`<div class="row small">${ic("card","sm")}<span>${c.brand} •••• ${c.last4}</span></div>`:""}</div>
+  <section class="card"><h3 style="margin-bottom:6px">Pagamenti dell’abbonamento</h3>${charges.reverse().map(d=>`<div class="ccard"><span style="flex:1">${esc(fmtD(d,{day:"numeric",month:"long",year:"numeric"}))}</span><b class="num">${eur(b.price)}</b><span class="badge">Pagato</span></div>`).join("")}</section>
+  ${act?`<button class="btn danger block" data-act="askCancelSub">Disdici l’abbonamento</button>`:`<button class="btn primary block" data-act="resumeSub">Riattiva l’abbonamento</button>`}
+  <p class="tiny">${act?"Se disdici, resti attivo fino alla fine del mese già pagato. Poi il tuo profilo non riceverà nuove prenotazioni.":"Riattivando, il rinnovo mensile riprende dalla data indicata sopra."}</p></div></div></div>`}
 function loginScreen(){const reg=UI.loginMode==="register";return `<div class="screen" style="background:var(--bg-2)">
   <div class="topbar" style="background:var(--bg-2)"><button class="iconbtn" data-act="toAuth" aria-label="Indietro">${ic("back")}</button><h2>${brand()}</h2><span style="width:44px"></span></div>
   <div class="content"><form class="pad stack" data-form="login" novalidate>
@@ -687,7 +750,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -849,7 +912,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items=pro?[["settings","gear","Impostazioni e privacy"],["tab:tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
+  const items=pro?[["subscription","card","Abbonamento"+(S.sub?(S.sub.status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tab:tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
     :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -881,9 +944,7 @@ function paymentsPage(){const hist=S.appts.filter(a=>a.status!=="annullata").sor
    ${S.cards.length?`<div style="margin-top:10px">${S.cards.map(c=>`<div class="ccard"><span class="cbrand">${c.brand}</span><span style="flex:1;min-width:0"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">${esc(c.holder)} · scade ${c.exp}</span></span><button class="iconbtn" data-act="delCard" data-id="${c.id}" aria-label="Rimuovi carta">${ic("trash")}</button></div>`).join("")}</div>`:
    `<div class="empty"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M30 70c0-50 60-66 100-56s60 60 30 90-130 20-130-34z" fill="var(--warn-soft)"/><rect x="50" y="26" width="100" height="74" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="50" y="26" width="100" height="10" fill="var(--ink)"/><circle cx="57" cy="31" r="2" fill="#fff"/><circle cx="64" cy="31" r="2" fill="#f2c94c"/><circle cx="71" cy="31" r="2" fill="var(--accent)"/><rect x="78" y="56" width="44" height="28" rx="3" fill="var(--accent)" transform="rotate(-4 100 70)"/><rect x="78" y="62" width="44" height="5" fill="var(--ink)" transform="rotate(-4 100 70)"/><circle cx="148" cy="30" r="18" fill="var(--accent)"/><path d="m140 30 6 6 10-11" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 64h16" stroke="#f2c94c" stroke-width="5" stroke-linecap="round"/></svg>
     <p>Aggiungi la tua carta per prenotare e confermare le visite in modo più semplice e veloce.</p></div>`}
-   ${UI.addCard?`<form class="stack" data-form="card" novalidate style="margin-top:12px"><label class="field"><span>Intestatario*</span><input id="cc-name" name="holder" autocomplete="cc-name" required></label>
-    <label class="field"><span>Numero della carta*</span><input id="cc-num" name="num" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" required></label>
-    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Scadenza*</span><input id="cc-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" required></label><label class="field"><span>CVV*</span><input id="cc-cvv" name="cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label></div>
+   ${UI.addCard?`<form class="stack" data-form="card" novalidate style="margin-top:12px">${cardFields("cc")}
     <p class="err" id="cc-err"></p><div class="demo-note">${ic("lock","sm")}<span>Versione di prova: salviamo solo le ultime 4 cifre e la scadenza, mai il numero completo né il CVV. Nell’app pubblicata la carta sarà gestita da un circuito di pagamento certificato e la clinica non vedrà il numero. Per provare usa 4242 4242 4242 4242.</span></div>
     <button class="btn primary block" type="submit">Salva la carta</button><button class="btn ghost block" type="button" data-act="addCard" data-v="0">Annulla</button></form>`
    :`<div style="display:flex;justify-content:center;margin-top:8px"><button class="btn ghost" style="background:var(--bg-2);border:0" data-act="addCard" data-v="1">${ic("plus","sm")} Aggiungi una nuova carta</button></div>`}</section>
@@ -981,6 +1042,7 @@ function sheetHTML(){const s=UI.sheet;
   if(s.type==="confirm")return `<div class="stack"><h2 style="font-size:1.2rem;font-weight:800">${s.title}</h2><p class="muted">${s.text}</p><button class="btn ${s.danger?"danger":"primary"} block" data-act="${s.act}" data-id="${esc(s.id||"")}">${s.ok}</button><button class="btn ghost block" data-act="closeSheet">Indietro</button></div>`;
   return ""}
 function modalHTML(){const m=UI.modal;
+  if(m.type==="faceScan")return `<div class="dialog" role="dialog" aria-modal="true" aria-label="Face ID" style="text-align:center;align-items:center"><span class="scan">${ic("face")}</span><h3>Face ID</h3><p class="muted small">Guarda lo schermo per sbloccare Clinia (simulato nella versione web).</p><button class="btn ghost block" data-act="useCode">Usa il codice</button></div>`;
   if(m.type==="faceid")return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="fid-t"><span class="fid">${ic("face")}</span><h3 id="fid-t">Vuoi consentire a Clinia di usare Face ID?</h3><p class="muted small">Sblocca l’app con il riconoscimento del volto o con l’impronta invece del PIN.</p><button class="btn ghost block" data-act="faceid" data-v="no">Non consentire</button><button class="btn primary block" data-act="faceid" data-v="yes">Consenti</button></div>`;
   return ""}
 
@@ -988,6 +1050,7 @@ function modalHTML(){const m=UI.modal;
 function go(screen){UI.screen=screen;UI.buf="";UI.pinErr="";UI.shake=false;render()}
 function push(p){UI.stack.push(p);render()}
 function afterAuthFlow(){ // prossimo passo dell'onboarding
+  if(isPro()&&!subActive())return go("sub");
   if(!S.pin)return go("pin-create");
   if(!S.user||!S.user.tel)return go("phone");
   if(!S.health)return go("health");
@@ -1015,20 +1078,25 @@ function keyPress(v){
 function sendOtp(){UI.otp=String(1000+Math.floor(Math.random()*9000));setTimeout(()=>notify("Clinia",`Il tuo codice di verifica è ${UI.otp}. Non condividerlo con nessuno.`,"Messaggi"),700)}
 
 const ACT={
-  cookie:d=>{S.cookie=d.v;save();go("main")},
+  cookie:d=>{S.cookie=d.v;save();go(logged()?"main":"welcome")},
+  chooseRole:d=>{UI.authRole=d.v;go("auth")},
+  askCancelSub:()=>{UI.sheet={type:"confirm",title:"Disdire l’abbonamento?",text:`Resterai attivo fino al ${esc(fmtD(S.sub.next,{day:"numeric",month:"long"}))}. Dopo quella data i pazienti non potranno più prenotare con te dall’app.`,ok:"Disdici",act:"cancelSub",danger:true};render()},
+  cancelSub:()=>{S.sub.status="disdetto";save();UI.sheet=null;toast("Abbonamento disdetto")},
+  resumeSub:()=>{S.sub.status="attivo";save();toast("Abbonamento riattivato")},
   tab:d=>{UI.tab=d.v;UI.stack=[];render()},
   home:()=>{UI.stack=[];UI.tab="home";render()},
   goVisite:()=>{UI.stack=[];UI.tab="visite";UI.visitSeg="next";render()},
   pop:()=>{UI.stack.pop();render()},
-  openAuth:()=>{UI.authRole=UI.authRole||"paziente";go("auth")},
-  authClose:()=>{UI.pending=null;go("main")},
+  openAuth:()=>go("welcome"),
+  authClose:()=>{UI.pending=null;go("welcome")},
   authRole:d=>{UI.authRole=d.v;render()},
   goLogin:d=>{UI.loginMode=d.v;UI.showPw=false;go("login")},
   toAuth:()=>go("auth"),
   togglePw:()=>{const i=$("#lg-pw");UI.showPw=!UI.showPw;if(i)i.type=UI.showPw?"text":"password"},
   forgot:()=>{const e=$("#lg-email").value.trim();toast(e?"Se l’indirizzo è registrato riceverai un link per reimpostare la password.":"Inserisci prima la tua e-mail.")},
   key:d=>keyPress(d.v),
-  faceUnlock:()=>{UI.screen="main";UI.buf="";render()},
+  faceUnlock:()=>{UI.modal={type:"faceScan"};render();setTimeout(()=>{if(UI.modal&&UI.modal.type==="faceScan"){UI.modal=null;UI.screen="main";UI.buf="";render()}},1500)},
+  useCode:()=>{UI.modal=null;render()},
   faceid:d=>{S.faceid=d.v==="yes";save();UI.modal=null;afterAuthFlow()},
   backPhone:()=>go("phone"),
   resendOtp:()=>{sendOtp();toast("Nuovo codice inviato")},
@@ -1084,10 +1152,10 @@ const ACT={
   toggleNotif:()=>{S.notif=!S.notif;save();render()},
   toggleHealth:()=>{S.health=S.health==="yes"?"limited":"yes";save();render()},
   toggleCookie:()=>{S.cookie=S.cookie==="all"?"necessary":"all";save();render()},
-  switchRole:()=>{const toPro=!isPro();S.auth.role=toPro?"professionista":"paziente";save();UI.stack=[];UI.tab=null;if(toPro&&!S.proId)return go("pro-pick");go("main")},
+  switchRole:()=>{const toPro=!isPro();S.auth.role=toPro?"professionista":"paziente";save();UI.stack=[];UI.tab=null;if(toPro&&!subActive())return go("sub");if(toPro&&!S.proId)return go("pro-pick");go("main")},
   askReset:()=>{UI.sheet={type:"confirm",title:"Ripristinare i dati di prova?",text:"Verranno cancellati account, PIN, visite, file e prenotazioni salvati su questo dispositivo.",ok:"Ripristina",act:"reset",danger:true};render()},
   reset:()=>{S=FRESH();save();UI.sheet=null;UI.stack=[];UI.tab=null;go("cookie")},
-  logout:()=>{S.auth=null;S.pin=null;S.faceid=false;S.proId=null;S.user=null;S.health=null;S.notif=null;save();UI.stack=[];UI.tab=null;UI.sheet=null;go("main")},
+  logout:()=>{S.auth=null;S.pin=null;S.faceid=false;S.proId=null;S.user=null;S.health=null;S.notif=null;save();UI.stack=[];UI.tab=null;UI.sheet=null;UI.modal=null;go("welcome")},
   proDay:d=>{UI.proDay=d.v;render()},
   roomDay:d=>{UI.roomDay=d.v;render()},
   openRoom:d=>{const ds=UI.roomDay,r=room(d.id);const[o,c]=OPEN[parseD(ds).getDay()];
@@ -1121,12 +1189,10 @@ const FORMS={
   hinfo:f=>{S.hinfo={gruppo:f.gruppo.value,altezza:f.altezza.value.trim(),peso:f.peso.value.trim(),allergie:f.allergie.value.trim(),farmaci:f.farmaci.value.trim(),patologie:f.patologie.value.trim(),share:f.share.checked};save();UI.stack.pop();toast("Informazioni sanitarie salvate")},
   family:f=>{const v=k=>f[k].value.trim();if(!v("nome")||!v("cognome")||!v("nascita")){$("#fa-err").textContent="Inserisci nome, cognome e data di nascita.";return}
     S.family.push({id:uid(),nome:v("nome"),cognome:v("cognome"),nascita:v("nascita"),rel:f.rel.value});save();toast(v("nome")+" aggiunto ai familiari")},
-  card:f=>{const err=$("#cc-err"),num=f.num.value.replace(/\D/g,""),m=f.exp.value.match(/^\s*(\d{1,2})\s*\/\s*(\d{2})\s*$/);
-    if(!f.holder.value.trim()){err.textContent="Inserisci il nome dell’intestatario.";return}
-    if(num.length<13||num.length>19||!luhn(num)){err.textContent="Il numero della carta non è valido. Controlla le cifre.";return}
-    if(!m||+m[1]<1||+m[1]>12||new Date(2000+ +m[2],+m[1],0)<new Date()){err.textContent="Scadenza non valida o carta scaduta. Usa il formato MM/AA.";return}
-    if(!/^\d{3,4}$/.test(f.cvv.value)){err.textContent="Il CVV ha 3 o 4 cifre.";return}
-    S.cards.push({id:uid(),brand:cardBrand(num),last4:num.slice(-4),exp:m[1].padStart(2,"0")+"/"+m[2],holder:f.holder.value.trim()});save();UI.addCard=false;toast("Carta salvata")},
+  card:f=>{const c=readCard(f,$("#cc-err"));if(!c)return;S.cards.push(c);save();UI.addCard=false;toast("Carta salvata")},
+  sub:f=>{const err=$("#sb-err"),c=readCard(f,err);if(!c)return;if(!f.terms.checked){err.textContent="Per continuare accetta le condizioni dell’abbonamento.";return}
+    S.cards.push(c);S.sub={plan:SUB.name,price:SUB.price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};save();
+    notify("Abbonamento attivato",`${SUB.name}: ${eur(SUB.price)} addebitati su ${c.brand} •••• ${c.last4} (simulato).`,"Clinia");afterAuthFlow()},
   request:f=>{S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
   search:f=>{UI.sq.q=f.querySelector("#q").value.trim();UI.sq.spec=null;push({page:"results"})},
   send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
@@ -1164,5 +1230,5 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
 
 /* Avvio */
 render();
-setTimeout(()=>{if(!S.cookie)return go("cookie");if(S.pin&&logged())return go("lock");go("main")},1200);
+setTimeout(()=>{if(!S.cookie)return go("cookie");if(S.pin&&logged()&&(!isPro()||subActive())){go("lock");if(S.faceid)ACT.faceUnlock();return}if(S.auth)return afterAuthFlow();go("welcome")},1200);
 </script>

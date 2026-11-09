@@ -49,3 +49,6 @@ app.*.map.json
 
 # Modello vocale scaricato durante la compilazione (vedi scripts/fetch_models.sh)
 assets/models/*.bin
+
+# Preventivi: contengono dati personali e prezzi, non pubblicarli
+preventivo-saverio/

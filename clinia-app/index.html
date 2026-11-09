@@ -636,9 +636,9 @@ function authScreen(){const r=UI.authRole,pro=r==="professionista";return `<div 
    <p class="muted">Non hai un account? <button class="link" data-act="goLogin" data-v="register">Registrati</button></p>
    <button class="link small" data-act="authClose">${pro?"Sei un paziente? Cambia":"Sei uno specialista? Cambia"}</button></div></div></div>`}
 function cardFields(px){return `<label class="field"><span>Intestatario*</span><input id="${px}-name" name="holder" autocomplete="cc-name" required></label>
-    <label class="field"><span>Numero della carta*</span><input id="${px}-num" name="num" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" required></label>
-    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Scadenza*</span><input id="${px}-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" required></label><label class="field"><span>CVV*</span><input id="${px}-cvv" name="cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label></div>`}
-function readCard(f,err){const num=f.num.value.replace(/\D/g,""),m=f.exp.value.match(/^\s*(\d{1,2})\s*\/\s*(\d{2})\s*$/);
+    <label class="field"><span>Numero della carta*</span><input id="${px}-num" name="num" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" maxlength="23" data-input="ccnum" required></label>
+    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Scadenza*</span><input id="${px}-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5" data-input="exp" required></label><label class="field"><span>CVV*</span><input id="${px}-cvv" name="cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label></div>`}
+function readCard(f,err){const num=f.num.value.replace(/\D/g,""),m=f.exp.value.replace(/\s/g,"").match(/^(\d{1,2})\/?(\d{2})$/);
   if(!f.holder.value.trim()){err.textContent="Inserisci il nome dell’intestatario.";return null}
   if(num.length<13||num.length>19||!luhn(num)){err.textContent="Il numero della carta non è valido. Controlla le cifre.";return null}
   if(!m||+m[1]<1||+m[1]>12||new Date(2000+ +m[2],+m[1],0)<new Date()){err.textContent="Scadenza non valida o carta scaduta. Usa il formato MM/AA.";return null}
@@ -1264,6 +1264,10 @@ app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)
   e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
 app.addEventListener("submit",e=>{e.preventDefault();const f=FORMS[e.target.dataset.form];if(f)f(e.target)});
 app.addEventListener("input",e=>{const k=e.target.dataset.input;
+  if(k==="exp"){const t=e.target,del=e.inputType&&e.inputType.startsWith("delete");let d=t.value.replace(/\D/g,"").slice(0,4);
+    if(d.length===1&&+d>1)d="0"+d; // "5" diventa "05"
+    t.value=d.length>2||(d.length===2&&!del)?d.slice(0,2)+"/"+d.slice(2):d}
+  if(k==="ccnum"){const t=e.target;t.value=t.value.replace(/\D/g,"").slice(0,19).replace(/(\d{4})(?=\d)/g,"$1 ")}
   if(k==="search"){const q=e.target.value.trim().toLowerCase();UI.sq.q=e.target.value.trim();let n=0;
     app.querySelectorAll(".sugg .sg").forEach(c=>{const m=q?c.dataset.name.includes(q):!c.hasAttribute("data-doc");c.classList.toggle("hidden",!m);if(m)n++});
     const nr=$("#noresults");if(nr)nr.classList.toggle("hidden",n>0)}

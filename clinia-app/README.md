@@ -11,6 +11,8 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Prenotazione: prestazione → giorno → orario → motivo → conferma
 - Accesso: login/registrazione, PIN a 4 cifre, Face ID, verifica telefono con codice SMS, consenso dati sanitari, notifiche
 - Consenso alle statistiche anonime (facoltativo)
+- Profilo con foto, informazioni sanitarie, familiari, pagamenti (carte e storico), richieste, preferiti; impostazioni sotto l'ingranaggio
+- Visite e file per te o per un familiare (selettore persona); prenotazione con scelta di chi è la visita e del pagamento
 - Visite (prossime/passate/cancellate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
 
 ## Professionisti
@@ -19,6 +21,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
 
 ## Da completare
+- Pagamenti con carta: collegare un circuito certificato (es. Stripe o Nexi); ora sono simulati e si salvano solo le ultime 4 cifre
 - Consulenze online: quali specialisti le offrono (ora 4 di esempio in `SERVICES`, quarto valore `1`)
 - **Tariffario ufficiale**: sostituire `TARIFFARIO` e i prezzi in `SERVICES` (ora sono di esempio, `ufficiale:false`)
 - Numerazione/tipologia studi (`ROOMS`) e orari (`OPEN`) da confermare con la clinica

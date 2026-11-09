@@ -341,6 +341,21 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .fopt input.swi:checked{background:var(--accent)}
 .fopt input.swi:checked::after{transform:translateX(20px)}
 .seg.seg3{grid-template-columns:repeat(3,1fr)}
+.ptitle{font-size:2.2rem;font-weight:800;letter-spacing:-.02em}
+.plist{border-top:1px solid var(--line)}
+.plist .li{padding:18px 4px;font-size:1.05rem}
+.plist .li>.ic:first-child{color:var(--ink-2)}
+.avup{position:relative;cursor:pointer;display:block}
+.avimg{border-radius:50%;object-fit:cover;display:block}
+.avcam{position:absolute;right:2px;bottom:2px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;border:3px solid var(--bg)}
+.pchip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink-2)}
+.pav{flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent-2);display:grid;place-items:center;font-weight:700;font-size:.9rem;overflow:hidden}
+.pav img{width:100%;height:100%;object-fit:cover}
+.ccard{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ccard:last-child{border:0}
+.cbrand{flex:none;width:54px;height:36px;border-radius:7px;background:var(--grad);color:#fff;font-size:.64rem;font-weight:800;display:grid;place-items:center;letter-spacing:.03em}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:28px 8px}
+.empty svg{width:200px;max-width:70%}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -430,11 +445,11 @@ const HORIZON=21;
 /* ===================== Stato ===================== */
 const KEY="clinia-app-v1";
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
-const UI={sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
+const UI={person:"me",sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
   book:null,day:null,otp:null,authRole:"paziente",showPw:false,proDay:null,roomDay:null,pending:null};
 
 /* ===================== Utilità ===================== */
@@ -507,7 +522,7 @@ const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',cal:'<re
  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',swap:'<path d="M7 16 3 12l4-4M3 12h14M17 8l4 4-4 4"/>',
  heartplus:'<path d="M11 14H9a2 2 0 0 0-2 2v5M3 21h4l2-3h4l6-4a2 2 0 0 0-2-3l-4 2"/><path d="M17 3.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0 0 3.5L17 10l4-3a2.5 2.5 0 0 0 0-3.5 2.5 2.5 0 0 0-4 0z"/>',
  trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/>',refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',
- sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',video:'<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/>'};
+ sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',down:'<path d="m6 9 6 6 6-6"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',list:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',video:'<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/>'};
 const ic=(n,c="")=>`<svg class="ic${c?" "+c:""}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
 const heartFill=on=>on?`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--accent);stroke:var(--accent)">${P.heart}</svg>`:ic("heart");
 const markSvg=(w=34)=>`<svg viewBox="0 0 60 70" style="width:${w}px;height:${w*70/60}px" aria-hidden="true"><use href="#mark"/></svg>`;
@@ -644,7 +659,7 @@ function mainScreen(){
   const top=UI.stack[UI.stack.length-1];
   if(top)return pageHTML(top);
   return `<div class="screen"><div class="content">${tabHTML()}</div>
-  <nav class="tabbar" aria-label="Sezioni">${tabs.map(([k,i,l])=>`<button class="tab ${UI.tab===k?"on":""}" data-act="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}>${k==="profile"&&logged()?`<span class="av round" style="width:26px;height:26px;font-size:.7rem;font-family:var(--f-body);font-weight:800">${esc(initials(S.user.nome+" "+S.user.cognome))}</span>`:ic(i)}<span>${l}</span></button>`).join("")}</nav></div>`}
+  <nav class="tabbar" aria-label="Sezioni">${tabs.map(([k,i,l])=>`<button class="tab ${UI.tab===k?"on":""}" data-act="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}>${k==="profile"&&logged()?meAv(26):ic(i)}<span>${l}</span></button>`).join("")}</nav></div>`}
 function tabHTML(){switch(UI.tab){
   case "home":return homeTab();case "visite":return visiteTab();case "files":return filesTab();case "msg":return msgTab();case "profile":return profileTab();
   case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();}}
@@ -672,7 +687,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -755,8 +770,12 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
    <section class="stack" style="gap:10px"><span class="label">2 · Giorno</span><div class="days">${days.map(x=>{const dt=parseD(x.ds);return `<button class="day ${x.ds===b.date?"on":""}" data-act="bDay" data-v="${x.ds}" ${x.free?"":"disabled"}><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${x.free?x.free+" liberi":dt.toLocaleDateString("it-IT",{month:"short"})}</i></button>`}).join("")}</div></section>
    <section class="stack" style="gap:10px"><span class="label">3 · Orario${b.date?" · "+fmtD(b.date):""}</span>
     ${b.date?`<div class="slots">${slots.map(x=>`<button class="slot num ${x.time===b.time?"on":""}" data-act="bTime" data-v="${x.time}" ${x.free?"":"disabled"} aria-label="${x.time}${x.free?"":" occupato"}">${x.time}</button>`).join("")}</div>`:`<p class="muted">Nessuna disponibilità nelle prossime tre settimane. Scrivi alla reception per una data.</p>`}</section>
+   ${logged()&&S.family.length?`<section class="stack" style="gap:10px"><span class="label">Per chi è la visita</span>${persons().map(p=>`<button class="opt ${(b.forId||"me")===p.id?"on":""}" data-act="bFor" data-v="${p.id}"><span class="radio"></span>${pav(p)}<span style="flex:1"><b>${esc(p.nome+" "+p.cognome)}</b><span class="tiny" style="display:block">${esc(p.rel)}</span></span></button>`).join("")}</section>`:""}
+   <section class="stack" style="gap:10px"><span class="label">Pagamento</span><button class="opt ${(b.pay||"clinic")==="clinic"?"on":""}" data-act="bPay" data-v="clinic"><span class="radio"></span><span style="flex:1"><b>In clinica</b><span class="tiny" style="display:block">Contanti, carta o bancomat il giorno della visita</span></span></button>
+    ${S.cards.map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
+    ${logged()?`<button class="link small" style="align-self:flex-start" data-act="openPage" data-v="payments">${ic("plus","sm")} Aggiungi una carta</button>`:""}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
-   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd></dl><p class="tiny">Il pagamento si effettua in clinica. Puoi disdire gratis fino a 24 ore prima.</p>`:""}
+   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd><dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">Puoi disdire gratis fino a 24 ore prima.</p>`:""}
   </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
 function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
   <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
@@ -768,27 +787,29 @@ function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="scr
 function visitCard(a,compact){const d=doc(a.doctorId),dt=parseD(a.date),past=a.date<today()||(a.date===today()&&toMin(a.time)<nowMin());
   const st=a.status==="annullata"?`<span class="badge red">Annullata</span>`:past?`<span class="badge grey">Conclusa</span>`:`<span class="badge">Confermata</span>`;
   return `<div class="card visit"><div class="vdate"><div class="cal"><small>${dt.toLocaleDateString("it-IT",{month:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</i></div>
-  <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}</p></div>${st}</div>
+  <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}${a.forId&&a.forId!=="me"?" · per "+esc(a.patient):""}</p></div>${st}</div>
   <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic(a.roomId?"door":"video","sm")}${a.roomId?room(a.roomId).name:"Videochiamata"}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
   ${compact||past||a.status==="annullata"?"":`<div class="row"><button class="btn ghost sm" style="flex:1" data-act="openChat" data-id="${a.doctorId}">${ic("chat","sm")} Scrivi</button><button class="btn danger sm" style="flex:1" data-act="askCancel" data-id="${a.id}">Disdici</button></div>`}</div>`}
 function visiteTab(){if(!logged())return needLogin("Le mie visite","Tutte le tue visite in un unico posto");
-  const now=today()+toT(nowMin()),desc=(a,b)=>(b.date+b.time).localeCompare(a.date+a.time);
-  const up=S.appts.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  const canc=S.appts.filter(a=>a.status==="annullata").sort(desc),past=S.appts.filter(a=>a.status!=="annullata"&&!up.includes(a)).sort(desc);
+  const mineP=S.appts.filter(a=>(a.forId||"me")===UI.person);const now=today()+toT(nowMin()),desc=(a,b)=>(b.date+b.time).localeCompare(a.date+a.time);
+  const up=mineP.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const canc=mineP.filter(a=>a.status==="annullata").sort(desc),past=mineP.filter(a=>a.status!=="annullata"&&!up.includes(a)).sort(desc);
   const seg=UI.visitSeg,list=seg==="next"?up:seg==="past"?past:canc;
   const empty={next:["Non ci sono visite in programma","Prenota una visita e la vedrai in questa sezione."],past:["Nessuna visita passata","Qui trovi lo storico delle visite concluse."],canc:["Nessuna visita cancellata","Le visite che disdici compariranno qui."]}[seg];
-  return `<div class="pad stack"><div class="row between"><h1 style="font-size:1.8rem;font-weight:800">Le mie visite</h1><button class="iconbtn" style="border:1px solid var(--line);background:var(--card)" data-act="openSearch" aria-label="Prenota una nuova visita">${ic("plus")}</button></div>
+  return `<div class="pad stack"><div class="row" style="justify-content:flex-end;gap:10px"><button class="iconbtn" style="border:1px solid var(--line);background:var(--card);width:50px;height:50px" data-act="openSearch" aria-label="Prenota una nuova visita">${ic("plus")}</button>${personChip()}</div><h1 class="ptitle">Le mie visite</h1>
   <div class="seg seg3">${[["next","Prossime"],["past","Passate"],["canc","Cancellate"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="vseg" data-v="${k}">${l}</button>`).join("")}</div>
   ${list.length?list.map(a=>visitCard(a,false)).join(""):`<div class="stack" style="align-items:center;text-align:center;padding:30px 10px;gap:12px"><svg viewBox="0 0 160 130" style="width:170px" aria-hidden="true"><path d="M30 70c0-40 40-60 70-50s40 50 20 80-90 20-90-30z" fill="var(--accent-soft)"/><rect x="66" y="24" width="56" height="74" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" transform="rotate(8 94 61)"/><rect x="74" y="36" width="36" height="6" rx="3" fill="var(--busy)" transform="rotate(8 94 61)"/><rect x="34" y="60" width="54" height="36" rx="3" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="40" y="66" width="42" height="24" rx="5" fill="var(--accent)"/><circle cx="130" cy="30" r="3" fill="#f2c94c"/><circle cx="34" cy="40" r="3" fill="#f2c94c"/></svg>
    <h3 style="font-size:1.25rem">${empty[0]}</h3><p class="muted">${empty[1]}</p>${seg==="next"?`<button class="btn primary" data-act="openSearch">Prenota una visita</button>`:""}</div>`}</div>`}
 
 /* ---------- File ---------- */
 function filesTab(){if(!logged())return needLogin("I miei file","Referti ed esami sempre con te");
-  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">I miei file</h1><p class="muted">Carica referti, esami e prescrizioni per mostrarli allo specialista durante la visita.</p>
-  <label class="btn primary block" for="up">${ic("upload","sm")} Carica un documento</label><input id="up" type="file" accept=".pdf,image/*" multiple class="hidden" data-change="upload">
-  <div class="demo-note">${ic("shield","sm")}<span>Nella versione di prova il file resta sul telefono: viene salvato solo il nome.</span></div>
-  ${S.files.length?`<div class="card" style="padding:4px 16px">${S.files.map(f=>`<div class="file"><span class="ficon">${esc((f.name.split(".").pop()||"DOC").slice(0,4).toUpperCase())}</span><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</b><span class="tiny">${(f.size/1024).toFixed(0)} KB · ${fmtD(f.at,{day:"numeric",month:"short",year:"numeric"})}</span></div><button class="iconbtn" data-act="delFile" data-id="${f.id}" aria-label="Elimina ${esc(f.name)}">${ic("trash")}</button></div>`).join("")}</div>`
-  :`<div class="card center">${ic("file")}<h3>Nessun documento</h3><p class="muted small">I file che carichi compariranno qui.</p></div>`}</div>`}
+  const files=S.files.filter(f=>(f.forId||"me")===UI.person);
+  return `<div class="pad stack" style="gap:18px"><h1 class="ptitle">I miei file</h1><div>${personChip()}</div>
+  <input id="up" type="file" accept=".pdf,image/*" multiple class="hidden" data-change="upload">
+  ${files.length?`<label class="btn primary block" for="up">${ic("upload","sm")} Aggiungi documento</label><div class="card" style="padding:4px 16px">${files.map(f=>`<div class="file"><span class="ficon">${esc((f.name.split(".").pop()||"DOC").slice(0,4).toUpperCase())}</span><div style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</b><span class="tiny">${(f.size/1024).toFixed(0)} KB · ${fmtD(f.at,{day:"numeric",month:"short",year:"numeric"})}</span></div><button class="iconbtn" data-act="delFile" data-id="${f.id}" aria-label="Elimina ${esc(f.name)}">${ic("trash")}</button></div>`).join("")}</div>
+   <p class="tiny">Versione di prova: del file viene salvato solo il nome.</p>`
+  :`<div class="empty" style="padding-top:50px"><svg viewBox="0 0 200 140" aria-hidden="true"><path d="M40 80c-10-40 30-60 60-50s50-20 60 20-20 80-60 70-50-10-60-40z" fill="var(--warn-soft)"/><path d="M70 34h26l10 16" fill="var(--accent-2)" transform="rotate(14 80 40)"/><rect x="128" y="20" width="26" height="18" rx="2" fill="var(--accent-soft)" transform="rotate(-10 140 30)"/><path d="M58 58h26l5 6h46l-10 50H66z" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><rect x="58" y="54" width="14" height="5" fill="#f2c94c"/><path d="M84 72h22M84 78h28" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M135 64l12 4-12 46" fill="var(--busy)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M146 92h14l-6 10h-12z" fill="var(--accent)"/></svg>
+   <h3 style="font-size:1.15rem">Nessun documento aggiunto</h3><p class="muted">Quando aggiungerai referti, esami o prescrizioni${UI.person==="me"?"":" di "+esc(personOf(UI.person).nome)}, saranno conservati qui.</p><label class="btn primary" for="up">Aggiungi documento</label></div>`}</div>`}
 
 /* ---------- Messaggi ---------- */
 function threadKeys(){
@@ -811,7 +832,7 @@ function chatPage(k){const i=threadInfo(k),m=threadMsgs(k);const mine=isPro()?["
   <form class="composer" data-form="send" data-id="${esc(k)}"><input id="msg-in" name="t" placeholder="Scrivi un messaggio" autocomplete="off" aria-label="Messaggio" data-autofocus><button type="submit" aria-label="Invia">${ic("send","sm")}</button></form></div>`}
 
 /* ---------- Profilo ---------- */
-function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
+function settingsBody(){const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
   const sw=(act,on,title,sub,icn)=>`<button class="li" data-act="${act}" role="switch" aria-checked="${!!on}">${ic(icn)}<span class="t">${title}<small>${sub}</small></span><span class="sw ${on?"on":""}"></span></button>`;
   return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
   ${pro?`<div class="card row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
@@ -821,6 +842,63 @@ function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Cl
   <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
   <button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`}
+
+function meAv(z){return S.photo?`<img class="avimg" src="${S.photo}" alt="" style="width:${z}px;height:${z}px">`:`<span class="av round" style="width:${z}px;height:${z}px;font-size:${Math.round(z*.36)}px;font-family:var(--f-body);font-weight:800">${esc(initials(S.user.nome+" "+S.user.cognome))}</span>`}
+const persons=()=>[{id:"me",nome:S.user.nome,cognome:S.user.cognome,rel:"Tu"}].concat(S.family);
+const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
+const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
+function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
+function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
+  const items=pro?[["settings","gear","Impostazioni e privacy"],["tab:tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
+    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
+  return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
+  <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
+   <h2 style="font-size:1.35rem;font-weight:800;text-align:center">${esc(u.nome+" "+u.cognome)}</h2>${pro?`<span class="badge az">${esc(doc(S.proId).name)}</span>`:""}</div>
+  <div class="plist">${items.map(([k,i,l])=>`<button class="li" data-act="openPage" data-v="${k}">${ic(i)}<span class="t">${l}</span>${ic("right","sm")}</button>`).join("")}</div>
+  ${pro?"":`<section class="stack" style="gap:12px;margin-top:10px"><h2 class="h-sec">Preferiti</h2>${S.favs.length?S.favs.map(id=>docCard(doc(id))).join(""):`<div class="card center" style="background:var(--bg-2)"><h3>Non hai ancora salvato dei preferiti</h3><p class="muted small">Quando aggiungerai uno specialista ai preferiti, lo vedrai qui.</p><button class="btn ghost" data-act="openSearch">${ic("search","sm")} Cerca specialisti</button></div>`}</section>`}</div>`}
+function healthPage(){const h=S.hinfo||{};const ta=(k,l,ph)=>`<label class="stack" style="gap:6px"><span class="label">${l}</span><textarea id="hi-${k}" name="${k}" placeholder="${ph}">${esc(h[k]||"")}</textarea></label>`;
+  return `<div class="screen">${bar("Informazioni sanitarie")}<form class="screen" data-form="hinfo"><div class="content"><div class="pad stack">
+   <p class="muted">Queste informazioni aiutano lo specialista a prepararsi alla visita. Restano sul tuo telefono finché non scegli di condividerle.</p>
+   <div class="grid2" style="grid-template-columns:1fr 1fr 1fr"><label class="field"><span>Gruppo</span><select id="hi-gr" name="gruppo">${["—","0+","0−","A+","A−","B+","B−","AB+","AB−"].map(g=>`<option ${h.gruppo===g?"selected":""}>${g}</option>`).join("")}</select></label>
+    <label class="field"><span>Altezza cm</span><input id="hi-alt" name="altezza" inputmode="numeric" value="${esc(h.altezza)}"></label><label class="field"><span>Peso kg</span><input id="hi-peso" name="peso" inputmode="decimal" value="${esc(h.peso)}"></label></div>
+   ${ta("allergie","Allergie","Per esempio: penicillina, nichel, polline")}${ta("farmaci","Farmaci che assumi","Nome e dosaggio")}${ta("patologie","Patologie e interventi","Per esempio: ipertensione, intervento al ginocchio 2019")}
+   <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="hi-share" name="share" type="checkbox" ${h.share?"checked":""} style="width:22px;height:22px;accent-color:var(--accent)"><span class="t">Condividi con gli specialisti che prenoto<small>Lo specialista le vedrà insieme alla prenotazione</small></span></label>
+  </div></div><div class="actions"><button class="btn primary block" type="submit">Salva</button></div></form></div>`}
+function familyPage(){return `<div class="screen">${bar("Familiari")}<div class="content"><div class="pad stack">
+  <p class="muted">Aggiungi figli, genitori o altre persone di cui prenoti le visite. Potrai scegliere per chi è la visita al momento della prenotazione.</p>
+  ${S.family.length?`<div class="list">${S.family.map(f=>`<div class="li">${pav(f)}<span class="t"><b>${esc(f.nome+" "+f.cognome)}</b><small>${esc(f.rel)} · nato/a il ${esc(fmtD(f.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span><button class="iconbtn" data-act="delFamily" data-id="${f.id}" aria-label="Rimuovi ${esc(f.nome)}">${ic("trash")}</button></div>`).join("")}</div>`:""}
+  <form class="card stack" data-form="family" novalidate><h3>Aggiungi un familiare</h3>
+   <label class="field"><span>Nome*</span><input id="fa-nome" name="nome" required></label><label class="field"><span>Cognome*</span><input id="fa-cognome" name="cognome" required></label>
+   <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Data di nascita*</span><input id="fa-nascita" name="nascita" type="date" max="${today()}" required></label>
+    <label class="field"><span>Relazione</span><select id="fa-rel" name="rel">${["Figlio/a","Coniuge","Genitore","Fratello/sorella","Altro"].map(r=>`<option>${r}</option>`).join("")}</select></label></div>
+   <p class="err" id="fa-err"></p><button class="btn primary block" type="submit">${ic("plus","sm")} Aggiungi</button></form></div></div></div>`}
+const cardBrand=n=>/^4/.test(n)?"VISA":/^(5[1-5]|2[2-7])/.test(n)?"MASTERCARD":/^3[47]/.test(n)?"AMEX":"CARTA";
+const luhn=n=>{let s=0,d=false;for(let i=n.length-1;i>=0;i--){let x=+n[i];if(d){x*=2;if(x>9)x-=9}s+=x;d=!d}return s%10===0};
+const payLabel=a=>{const c=a.pay&&a.pay!=="clinic"&&S.cards.find(x=>x.id===a.pay);return c?`Carta •••• ${c.last4}`:"In clinica"};
+function paymentsPage(){const hist=S.appts.filter(a=>a.status!=="annullata").sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  return `<div class="screen" style="background:var(--bg-2)">${bar("Metodi di pagamento")}<div class="content"><div class="stack" style="gap:14px;padding-bottom:24px">
+  <section class="card" style="border-radius:0 0 24px 24px;border-top:0"><h2 style="font-size:1.3rem;font-weight:800">Carte</h2><p class="muted">Semplifica la prenotazione pagando le visite con la tua carta.</p>
+   ${S.cards.length?`<div style="margin-top:10px">${S.cards.map(c=>`<div class="ccard"><span class="cbrand">${c.brand}</span><span style="flex:1;min-width:0"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">${esc(c.holder)} · scade ${c.exp}</span></span><button class="iconbtn" data-act="delCard" data-id="${c.id}" aria-label="Rimuovi carta">${ic("trash")}</button></div>`).join("")}</div>`:
+   `<div class="empty"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M30 70c0-50 60-66 100-56s60 60 30 90-130 20-130-34z" fill="var(--warn-soft)"/><rect x="50" y="26" width="100" height="74" rx="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><rect x="50" y="26" width="100" height="10" fill="var(--ink)"/><circle cx="57" cy="31" r="2" fill="#fff"/><circle cx="64" cy="31" r="2" fill="#f2c94c"/><circle cx="71" cy="31" r="2" fill="var(--accent)"/><rect x="78" y="56" width="44" height="28" rx="3" fill="var(--accent)" transform="rotate(-4 100 70)"/><rect x="78" y="62" width="44" height="5" fill="var(--ink)" transform="rotate(-4 100 70)"/><circle cx="148" cy="30" r="18" fill="var(--accent)"/><path d="m140 30 6 6 10-11" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 64h16" stroke="#f2c94c" stroke-width="5" stroke-linecap="round"/></svg>
+    <p>Aggiungi la tua carta per prenotare e confermare le visite in modo più semplice e veloce.</p></div>`}
+   ${UI.addCard?`<form class="stack" data-form="card" novalidate style="margin-top:12px"><label class="field"><span>Intestatario*</span><input id="cc-name" name="holder" autocomplete="cc-name" required></label>
+    <label class="field"><span>Numero della carta*</span><input id="cc-num" name="num" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" required></label>
+    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Scadenza*</span><input id="cc-exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" required></label><label class="field"><span>CVV*</span><input id="cc-cvv" name="cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required></label></div>
+    <p class="err" id="cc-err"></p><div class="demo-note">${ic("lock","sm")}<span>Versione di prova: salviamo solo le ultime 4 cifre e la scadenza, mai il numero completo né il CVV. Nell’app pubblicata la carta sarà gestita da un circuito di pagamento certificato e la clinica non vedrà il numero. Per provare usa 4242 4242 4242 4242.</span></div>
+    <button class="btn primary block" type="submit">Salva la carta</button><button class="btn ghost block" type="button" data-act="addCard" data-v="0">Annulla</button></form>`
+   :`<div style="display:flex;justify-content:center;margin-top:8px"><button class="btn ghost" style="background:var(--bg-2);border:0" data-act="addCard" data-v="1">${ic("plus","sm")} Aggiungi una nuova carta</button></div>`}</section>
+  <section class="card" style="margin:0 max(16px,env(safe-area-inset-left,0px))"><h3 style="margin-bottom:6px">Storico pagamenti</h3>${hist.length?hist.map(a=>`<div class="ccard"><span style="flex:1;min-width:0"><b>${esc(a.service)}</b><span class="tiny" style="display:block">${esc(fmtD(a.date,{day:"numeric",month:"short",year:"numeric"}))} · ${esc(doc(a.doctorId).name)}</span></span><span style="text-align:right"><b class="num">${eur(a.price)}</b><span class="tiny" style="display:block">${a.pay&&a.pay!=="clinic"?"Pagato · ":"Da pagare · "}${payLabel(a)}</span></span></div>`).join(""):`<p class="muted small">Le visite prenotate compariranno qui.</p>`}</section>
+  </div></div></div>`}
+const REQ_TYPES=["Certificato medico","Fattura o ricevuta","Copia del referto","Richiesta di essere richiamato","Altro"];
+function requestsPage(){return `<div class="screen">${bar("Richieste")}<div class="content"><div class="pad stack">
+  <p class="muted">Chiedi alla reception o a uno specialista un certificato, una fattura o di essere richiamato.</p>
+  <form class="card stack" data-form="request" novalidate><h3>Nuova richiesta</h3>
+   <label class="field"><span>Tipo di richiesta</span><select id="rq-type" name="type">${REQ_TYPES.map(t=>`<option>${t}</option>`).join("")}</select></label>
+   <label class="field"><span>A chi</span><select id="rq-to" name="to"><option value="reception">Reception Clinia</option>${DOCTORS.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select></label>
+   <textarea id="rq-text" name="text" placeholder="Scrivi i dettagli, per esempio la data della visita"></textarea><p class="err" id="rq-err"></p>
+   <button class="btn primary block" type="submit">Invia richiesta</button></form>
+  ${S.requests.length?`<span class="label">Le tue richieste</span><div class="list">${S.requests.map(r=>`<div class="li">${ic("list")}<span class="t"><b>${esc(r.type)}</b><small>${esc(r.to==="reception"?"Reception Clinia":doc(r.to).name)} · ${new Date(r.at).toLocaleDateString("it-IT",{day:"numeric",month:"short"})}${r.text?" · "+esc(r.text):""}</small></span><span class="badge">${esc(r.status)}</span></div>`).join("")}</div>`:""}
+ </div></div></div>`}
 
 /* ---------- Professionista: agenda ---------- */
 function dayStrip(sel,act,countFn,n=14){let h=`<div class="days">`;for(let k=0;k<n;k++){const ds=addDays(today(),k),dt=parseD(ds),closed=!OPEN[dt.getDay()],c=closed?"":countFn(ds);
@@ -889,6 +967,7 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
 /* ---------- Sheet e modali ---------- */
 function sheetHTML(){const s=UI.sheet;
   if(s.type==="room")return roomSheet();
+  if(s.type==="persons")return `<div class="stack"><h2 style="font-size:1.2rem;font-weight:800">Di chi vuoi vedere visite e file?</h2><div class="list">${persons().map(p=>`<button class="li" data-act="setPerson" data-id="${p.id}">${pav(p)}<span class="t"><b>${esc(p.nome+" "+p.cognome)}</b><small>${esc(p.rel)}</small></span>${UI.person===p.id?ic("check"):""}</button>`).join("")}</div><button class="btn ghost block" data-act="addFamily">${ic("plus","sm")} Aggiungi un familiare</button></div>`;
   if(s.type==="map"){const q=encodeURIComponent("Via La Martella 5/D, 75100 Matera");return `<div class="stack"><div><h2 style="font-size:1.2rem;font-weight:800">Clinia</h2><p class="muted small">${esc(CLINIC.address)}</p></div>
    <div class="bigmap">${mapSvg()}<span class="mpin">${markSvg(24)}</span></div>
    <p class="small muted">Tutti gli specialisti ricevono nella stessa sede.</p>
@@ -919,7 +998,7 @@ function afterAuthFlow(){ // prossimo passo dell'onboarding
   UI.stack=[];UI.tab=isPro()?"agenda":"home";if(!isPro()&&S.stats==null)UI.sheet={type:"stats"};render()}
 function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
   const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
-  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:S.user.nome+" "+S.user.cognome,status:"confermata",created:Date.now()};
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",status:"confermata",created:Date.now()};
   S.appts.push(a);save();UI.stack=[{page:"done",id:a.id}];render();
   setTimeout(()=>notify("Prenotazione confermata",`${a.service} con ${doc(id).name}, ${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}.`,"Clinia"),900)}
 function keyPress(v){
@@ -957,6 +1036,15 @@ const ACT={
   pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
   hideBanner:()=>{S.hideBanner=true;save();render()},
+  openPage:d=>{if(d.v.startsWith("tab:")){UI.tab=d.v.slice(4);UI.stack=[];return render()}if(d.v==="payments")UI.addCard=false;saveNote();push({page:d.v})},
+  pickPerson:()=>{UI.sheet={type:"persons"};render()},
+  setPerson:d=>{UI.person=d.id;UI.sheet=null;render()},
+  addFamily:()=>{UI.sheet=null;push({page:"family"})},
+  delFamily:d=>{S.family=S.family.filter(f=>f.id!==d.id);if(UI.person===d.id)UI.person="me";save();toast("Familiare rimosso")},
+  addCard:d=>{UI.addCard=d.v==="1";render()},
+  delCard:d=>{S.cards=S.cards.filter(c=>c.id!==d.id);save();toast("Carta rimossa")},
+  bFor:d=>{saveNote();UI.book.forId=d.v;render()},
+  bPay:d=>{saveNote();UI.book.pay=d.v;render()},
   openSearch:()=>{UI.sq={mode:"studio",q:"",spec:null};UI.f=defF();push({page:"search"})},
   mode:d=>{UI.sq.mode=d.v;render()},
   spec:d=>{UI.sq.spec=+d.v;UI.sq.q="";push({page:"results"})},
@@ -1030,6 +1118,16 @@ const FORMS={
     if(!v("nascita")){err.textContent="Seleziona la data di nascita.";return}
     S.user={nome:v("nome"),cognome:v("cognome"),pref:f.pref.value,tel:"",nascita:v("nascita"),pendingTel:tel};save();
     UI.screen="otp";UI.buf="";UI.pinErr="";render();sendOtp()},
+  hinfo:f=>{S.hinfo={gruppo:f.gruppo.value,altezza:f.altezza.value.trim(),peso:f.peso.value.trim(),allergie:f.allergie.value.trim(),farmaci:f.farmaci.value.trim(),patologie:f.patologie.value.trim(),share:f.share.checked};save();UI.stack.pop();toast("Informazioni sanitarie salvate")},
+  family:f=>{const v=k=>f[k].value.trim();if(!v("nome")||!v("cognome")||!v("nascita")){$("#fa-err").textContent="Inserisci nome, cognome e data di nascita.";return}
+    S.family.push({id:uid(),nome:v("nome"),cognome:v("cognome"),nascita:v("nascita"),rel:f.rel.value});save();toast(v("nome")+" aggiunto ai familiari")},
+  card:f=>{const err=$("#cc-err"),num=f.num.value.replace(/\D/g,""),m=f.exp.value.match(/^\s*(\d{1,2})\s*\/\s*(\d{2})\s*$/);
+    if(!f.holder.value.trim()){err.textContent="Inserisci il nome dell’intestatario.";return}
+    if(num.length<13||num.length>19||!luhn(num)){err.textContent="Il numero della carta non è valido. Controlla le cifre.";return}
+    if(!m||+m[1]<1||+m[1]>12||new Date(2000+ +m[2],+m[1],0)<new Date()){err.textContent="Scadenza non valida o carta scaduta. Usa il formato MM/AA.";return}
+    if(!/^\d{3,4}$/.test(f.cvv.value)){err.textContent="Il CVV ha 3 o 4 cifre.";return}
+    S.cards.push({id:uid(),brand:cardBrand(num),last4:num.slice(-4),exp:m[1].padStart(2,"0")+"/"+m[2],holder:f.holder.value.trim()});save();UI.addCard=false;toast("Carta salvata")},
+  request:f=>{S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
   search:f=>{UI.sq.q=f.querySelector("#q").value.trim();UI.sq.spec=null;push({page:"results"})},
   send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
     if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
@@ -1053,7 +1151,10 @@ app.addEventListener("input",e=>{const k=e.target.dataset.input;
   if(k==="fsvc"){const q=e.target.value.trim().toLowerCase();
     app.querySelectorAll("#fsvcs .fopt").forEach(c=>c.classList.toggle("hidden",q?!c.dataset.name.includes(q):(c.classList.contains("more")&&!UI.moreSvcs)))}});
 app.addEventListener("change",e=>{const k=e.target.dataset.change;
-  if(k==="upload"){for(const f of e.target.files)S.files.unshift({id:uid(),name:f.name,size:f.size,at:today()});save();toast(e.target.files.length>1?"Documenti caricati":"Documento caricato")}
+  if(k==="upload"){for(const f of e.target.files)S.files.unshift({id:uid(),name:f.name,size:f.size,at:today(),forId:UI.person});save();toast(e.target.files.length>1?"Documenti caricati":"Documento caricato")}
+  if(k==="photo"){const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();
+    img.onload=()=>{const z=256,c=document.createElement("canvas"),r=Math.max(z/img.width,z/img.height);c.width=c.height=z;c.getContext("2d").drawImage(img,(z-img.width*r)/2,(z-img.height*r)/2,img.width*r,img.height*r);
+      S.photo=c.toDataURL("image/jpeg",.82);URL.revokeObjectURL(url);save();toast("Foto aggiornata")};img.onerror=()=>toast("Non riesco a leggere questa immagine. Prova con un JPG o PNG.");img.src=url}
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
   if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}
   if(k==="filt"){const fk=e.target.dataset.k,fd=UI.fd;

@@ -9,6 +9,11 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Verifica del telefono con codice a 4 cifre via **WhatsApp** o **SMS** (scade dopo 10 minuti, nuovo invio dopo 30 secondi)
 - Lo specialista attiva l'abbonamento con la carta prima di entrare; può disdirlo o riattivarlo dal Profilo
 
+## Titolare (Dott. Marco Morelli)
+- Accesso riservato e gratuito: login con e-mail `titolare@cliniamatera.it` e password consegnata a parte (nel codice c'è solo l'impronta SHA-256)
+- Nessun abbonamento, studi prenotati senza pagamento
+- Scheda **Clinia**: incassi degli studi, rimborsi da fare, occupazione dei 9 studi
+
 ## Pazienti
 - Avvio con logo, consenso cookie, home "Ciao." con ricerca, specialità e specialisti
 - Ricerca In studio / Online con suggerimenti, risultati con orari prenotabili subito, mappa della sede
@@ -21,12 +26,17 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Visite e file per te o per un familiare (selettore persona); prenotazione con scelta di chi è la visita e del pagamento
 - Visite (prossime/passate/cancellate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
 
+## Specialisti
+- Lo studio si paga subito a Clinia con la carta (anche più settimane insieme); annullando un turno pagato si segna il rimborso
+- Scheda **Pazienti**: totale delle visite, incassato e da incassare; pagato con carta nell'app = pagato in automatico, pagato in struttura = "Segna pagato"
+
 ## Professionisti
 - Agenda giornaliera con turni negli studi e visite prenotate
 - Prenotazione dei **9 studi (Studio 1–9)** con occupazione in tempo reale, ripetizione settimanale e costo calcolato
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
 
 ## Da completare
+- Accesso del titolare e pagamenti: verifica sul server e incasso reale (abbonamenti al gestore dell'app, studi a Clinia)
 - Accesso reale con Google (Google Identity) e Apple (Sign in with Apple, obbligatorio su iPhone se c'è Google)
 - Invio reale del codice: WhatsApp Business Platform (Meta) con modello di autenticazione approvato, e un fornitore SMS di riserva
 - Prezzo dell'abbonamento specialisti (`SUB.price`, ora 49 € di esempio) e addebito reale ricorrente

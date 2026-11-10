@@ -4,7 +4,7 @@
 
 ## Progetto collegato
 - Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
-- Schema, dati iniziali e `migrazione-002-clinia-fpm.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
 - Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
 - Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
 
@@ -32,15 +32,17 @@ Cosa garantisce lo schema (provato su PostgreSQL 16, 18 casi):
 In `index.html` compila `SUPABASE={url:"https://<progetto>.supabase.co",anonKey:"<chiave anon>"}`.
 La chiave anon è pubblica; la chiave **service_role non va mai nell'app**.
 
-## 3. Pagamenti (un conto Stripe intestato a Clinia)
+## 3. Pagamenti in tempo reale (Stripe di Clinia + Connect)
 ```
 supabase secrets set STRIPE_SECRET_KEY=sk_... STRIPE_WEBHOOK_SECRET=whsec_... \
-  STRIPE_PRICE_SPECIALISTA=price_... CRON_SECRET=<stringa lunga casuale>
+  STRIPE_PRICE_SPECIALISTA=price_... FPM_STRIPE_ACCOUNT=acct_... CRON_SECRET=<stringa lunga casuale>
 supabase functions deploy pagamenti
 supabase functions deploy stripe-webhook --no-verify-jwt
 supabase functions deploy commissioni-contanti --no-verify-jwt
+supabase functions deploy licenza-fpm --no-verify-jwt
 ```
-- `pagamenti`: visite (prezzo + 7 €), studi, abbonamento 49,90 €, carta salvata: tutto incassato da Clinia.
-- `stripe-webhook`: aggiorna visite, studi, abbonamenti e movimenti quando Stripe conferma.
-- `commissioni-contanti`: ogni notte aggiunge 7 € per ogni visita pagata in struttura alla fattura mensile dello specialista.
-- I compensi agli specialisti (visite con carta) e a FPM (licenza) partono da Clinia con bonifico: tabelle `specialist_payouts` e `fpm_receipts`.
+- `pagamenti`: visite (prezzo + servizio 7/9 €), stanze, abbonamento 49,90 €, carte salvate (specialista e Clinia), collegamento dei conti per gli accrediti.
+- `stripe-webhook`: appena un pagamento riesce divide subito: visita allo specialista, servizio a FPM (meno 3 % Progetto Arca e ritenuta), abbonamento a FPM, stanze a Clinia.
+- `commissioni-contanti` (cron ogni notte): addebita il servizio delle visite pagate in struttura e accredita FPM.
+- `licenza-fpm` (cron `0 6 1 * *`): per 12 mesi addebita a Clinia 300 € e li accredita netti a FPM.
+- Ogni accredito a FPM è in `fpm_transfers` (tempo reale); le donazioni da fare in `donazioni`.

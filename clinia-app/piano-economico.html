@@ -62,30 +62,24 @@ details.card[open] summary::after{content:" －"}
 <header style="display:flex;flex-direction:column;gap:10px">
   <span class="eyebrow">Clinia App · FPM WebDesignTech</span>
   <h1>Flussi, contratti e compensi</h1>
-  <p class="lead">Il modello in cui tutti gli incassi passano dalla P.IVA di Clinia e tu, autore del software, ricevi i compensi come diritti d’autore senza aprire la partita IVA: come funziona, cosa è già pronto, quali contratti servono e quanto ti resta.</p>
+  <p class="lead">Ogni pagamento si divide in automatico, nel momento in cui avviene: la visita allo specialista, la tua quota a te, il 3 % a Progetto Arca, l’affitto delle stanze a Clinia. Niente bonifici da aspettare. Tu ricevi i compensi come autore del software, senza partita IVA.</p>
   <p class="note">Le indicazioni fiscali e la bozza di contratto sono un punto di partenza: vanno confermate da un commercialista (o dal CAF) e da un avvocato prima della firma.</p>
 </header>
 
 <section>
   <span class="eyebrow">Modello economico</span>
-  <h2>Tutto passa da Clinia</h2>
-  <div class="grid">
-    <div class="card"><span class="pill">Paziente</span><ol>
-      <li>Paga a <b>Clinia</b> la visita + <b>7 €</b> di servizio, con carta nell’app.</li>
-      <li>Oppure paga in struttura: in quel caso i 7 € li paga lo specialista.</li></ol></div>
-    <div class="card"><span class="pill az">Specialista</span><ol>
-      <li>Paga a Clinia l’<b>abbonamento</b> di 49,90 € al mese.</li>
-      <li>Paga a Clinia l’<b>affitto delle stanze</b> che prenota.</li>
-      <li>Riceve da Clinia, con bonifico, le <b>visite incassate con carta</b>.</li></ol></div>
-    <div class="card"><span class="pill">Clinia · Dott. Marco Morelli</span><ol>
-      <li>Incassa tutto sulla sua P.IVA: visite, 7 €, abbonamenti, affitti.</li>
-      <li>Gira agli specialisti le loro visite.</li>
-      <li>Paga a te la licenza: <b>300 € al mese per 12 mesi</b>, poi una <b>royalty</b>.</li>
-      <li>Il suo profilo nell’app è gratuito.</li></ol></div>
-    <div class="card"><span class="pill w">Tu · autore del software</span><ol>
-      <li>Ricevi da Clinia il compenso per la <b>licenza dei diritti d’autore</b> sul software.</li>
-      <li>Niente partita IVA, niente IVA: ricevuta con ritenuta d’acconto del 20 %.</li></ol></div>
-  </div>
+  <h2>Chi riceve cosa, in tempo reale</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Operazione</th><th>Chi paga</th><th>Dove arriva, subito</th></tr></thead>
+    <tbody>
+      <tr><td>Visita prenotata e pagata con carta (es. 60 € + 7 €)</td><td>Paziente</td><td><b>60 €</b> sul conto dello specialista · <b>7 €</b> di servizio: 0,21 € a Progetto Arca, 5,77 € a te, 1,02 € di ritenuta trattenuta da Clinia</td></tr>
+      <tr><td>Visita pagata in struttura</td><td>Paziente allo specialista; lo specialista paga il servizio</td><td>La notte dopo l’app addebita 7 € sulla carta dello specialista e ti accredita la quota come sopra</td></tr>
+      <tr><td>Abbonamento 49,90 € al mese</td><td>Specialista</td><td><b>42,42 €</b> a te, 7,49 € di ritenuta trattenuta da Clinia</td></tr>
+      <tr><td>Affitto delle stanze</td><td>Specialista</td><td>Clinia</td></tr>
+      <tr><td>Licenza, primi 12 mesi</td><td>Clinia (carta o conto registrati)</td><td>Il giorno 1 di ogni mese <b>300 € netti</b> a te; Clinia versa la ritenuta di 52,94 € con F24</td></tr>
+      <tr><td>Dal 13° mese</td><td>—</td><td>Niente più licenza: ti restano abbonamenti e servizio prenotazioni</td></tr>
+    </tbody></table></div>
+  <p class="small muted">Il servizio di prenotazione è di 7 € (impostabile a 9 €). Il 3 % va alla Fondazione Progetto Arca ETS (Milano, C.F. 11183570156): Clinia lo accantona in automatico e lo dona ogni mese. L’IBAN per le donazioni va preso dal sito ufficiale della fondazione.</p>
 </section>
 
 <section>
@@ -108,18 +102,22 @@ details.card[open] summary::after{content:" －"}
 
 <section>
   <span class="eyebrow">Sistema di pagamento</span>
-  <h2>Consiglio: un solo conto Stripe di Clinia</h2>
-  <p>Con tutto incassato da Clinia non serve Stripe Connect: basta un account Stripe normale intestato alla P.IVA della clinica. È più rapido da attivare e costa meno. L’accredito arriva con bonifico SEPA automatico sull’IBAN di Clinia; i compensi agli specialisti e a te partono da Clinia con bonifico (l’app tiene il conto di quanto spetta a ciascuno).</p>
+  <h2>Stripe di Clinia con conti collegati</h2>
+  <p>Il conto Stripe principale è intestato a Clinia (P.IVA), che resta il soggetto che incassa. Ogni specialista e tu avete un <b>conto collegato</b> (Stripe Connect): appena un pagamento riesce, l’app divide l’importo e lo accredita a ciascuno. Da lì Stripe versa sull’IBAN in automatico.</p>
   <div class="grid">
-    <div class="card"><h3>Stripe (Clinia)</h3><ul>
-      <li>Carte, Apple Pay, Google Pay; commissione indicativa sulle carte europee 1,5 % + 0,25 € (da verificare sul listino).</li>
-      <li>Abbonamenti degli specialisti con rinnovo automatico; i 7 € delle visite in struttura si aggiungono alla fattura mensile.</li></ul></div>
-    <div class="card"><h3>PayPal (facoltativo)</h3><ul>
-      <li>Commissione standard in Italia più alta: 3,40 % + quota fissa.</li>
-      <li>Non serve PayPal Commerce Platform: basta un conto PayPal Business di Clinia, eventualmente aggiunto come metodo per i pazienti.</li></ul></div>
-    <div class="card"><h3>Gli specialisti</h3><ul>
-      <li>Serve un <b>mandato all’incasso</b>: Clinia incassa per conto dello specialista e gli gira la somma.</li>
-      <li>La fattura sanitaria della visita al paziente la emette sempre lo specialista.</li></ul></div>
+    <div class="card"><h3>Cosa è già pronto</h3><ul>
+      <li>Divisione automatica di visite, servizio, abbonamenti e affitti nel webhook di Stripe.</li>
+      <li>Addebito notturno del servizio per le visite in struttura.</li>
+      <li>Addebito della licenza a Clinia il giorno 1 di ogni mese, per 12 mesi, con accredito netto a te.</li>
+      <li>Ogni accredito compare subito nella tua area FPM Tech, con le iniziali del paziente e il servizio.</li></ul></div>
+    <div class="card"><h3>Cosa serve per accenderlo</h3><ul>
+      <li>Account Stripe di Clinia con Connect attivo.</li>
+      <li>Il tuo conto collegato: da privato, con documento e IBAN. Stripe chiede la verifica dell’identità; va confermato con Stripe che un privato senza partita IVA possa riceverli.</li>
+      <li>Ogni specialista inserisce l’IBAN al primo accesso e completa la verifica di Stripe.</li></ul></div>
+    <div class="card"><h3>Costi</h3><ul>
+      <li>Carte europee circa 1,5 % + 0,25 € a pagamento (da verificare sul listino Stripe).</li>
+      <li>Connect: piccolo costo per conto collegato attivo e per accredito.</li>
+      <li>PayPal ha commissioni più alte (3,40 % + quota fissa): meglio come metodo aggiuntivo per i pazienti.</li></ul></div>
   </div>
 </section>
 
@@ -131,10 +129,10 @@ details.card[open] summary::after{content:" －"}
     <tbody>
       <tr><td>Tipo di reddito</td><td>Utilizzazione economica di un’opera dell’ingegno da parte dell’autore (art. 53, c. 2, lett. b, TUIR). Il software è un’opera protetta (L. 633/1941, artt. 2 e 64-bis).</td></tr>
       <tr><td>IVA</td><td>Esclusa (art. 3, c. 4, lett. a, DPR 633/72): non serve la partita IVA. Marca da bollo da 2 € sulla ricevuta sopra 77,47 €.</td></tr>
-      <tr><td>Tasse</td><td>Si tassa il 75 % del compenso (60 % se hai meno di 35 anni). Clinia trattiene il 20 % su quella parte come ritenuta d’acconto, la versa e ti manda la Certificazione Unica.</td></tr>
+      <tr><td>Tasse</td><td>Si tassa il 75 % del compenso (60 % se hai meno di 35 anni). Clinia trattiene il 20 % su quella parte (cioè il 15 % del lordo) da ogni accredito, la versa con F24 e ti manda la Certificazione Unica. Per avere 300 € netti, il lordo della licenza è 352,94 €.</td></tr>
       <tr><td>Dichiarazione</td><td>Il reddito si somma allo stipendio nel 730 (quadro D): si paga la differenza tra la tua aliquota IRPEF e la ritenuta già subita.</td></tr>
       <tr><td>Contributi</td><td>Di norma i diritti d’autore dell’autore non pagano contributi INPS: da confermare.</td></tr>
-      <tr><td>Attenzione</td><td>Il compenso deve pagare la <b>licenza del software</b>. Se fai lavori continuativi per Clinia (assistenza, gestione tecnica) quella parte può diventare attività di lavoro autonomo: tienila separata e occasionale (sotto i 5.000 € l’anno niente contributi), oppure valuta in futuro la partita IVA forfettaria.</td></tr>
+      <tr><td>Attenzione</td><td>Con abbonamenti e servizio prenotazioni i tuoi compensi diventano continui e legati alle singole operazioni: fai confermare al commercialista che restino diritti d’autore e non attività commerciale. Il compenso deve pagare la <b>licenza del software</b>. Se fai lavori continuativi per Clinia (assistenza, gestione tecnica) quella parte può diventare attività di lavoro autonomo: tienila separata e occasionale (sotto i 5.000 € l’anno niente contributi), oppure valuta in futuro la partita IVA forfettaria.</td></tr>
       <tr><td>Datore di lavoro</td><td>Verifica il tuo contratto: esclusiva, autorizzazione per incarichi esterni (obbligatoria se sei dipendente pubblico, art. 53 D.Lgs. 165/2001) e che l’app sia nata fuori dall’orario e senza mezzi del lavoro: altrimenti i diritti potrebbero spettare al datore (art. 12-bis L. 633/1941).</td></tr>
     </tbody></table></div>
 </section>
@@ -145,16 +143,16 @@ details.card[open] summary::after{content:" －"}
   <div class="grid">
     <div class="card"><h3>1. Licenza del software</h3><p class="small muted">Tu e Clinia. Il contratto principale: compenso fisso per 12 mesi, poi royalty. Bozza qui sotto.</p></div>
     <div class="card"><h3>2. Specialista e Clinia</h3><p class="small muted">Abbonamento all’app, affitto delle stanze con tariffario, mandato all’incasso delle visite, addebito di 7 € per le visite in struttura, tempi del bonifico mensile.</p></div>
-    <div class="card"><h3>3. Privacy (GDPR)</h3><p class="small muted">Clinia titolare del trattamento; specialisti titolari per i dati clinici dei loro pazienti; tu responsabile del trattamento (art. 28) per la manutenzione; fornitori Supabase, Stripe, Twilio nominati come sub-responsabili; valutazione d’impatto per i dati sanitari.</p></div>
+    <div class="card"><h3>3. Privacy (GDPR)</h3><p class="small muted">Clinia titolare del trattamento; specialisti titolari per i dati clinici dei loro pazienti; tu responsabile del trattamento (art. 28): le iniziali dei pazienti con il servizio ricevuto sono comunque dati personali (pseudonimizzati) e vanno indicati nell’informativa; fornitori Supabase, Stripe, Twilio nominati come sub-responsabili; valutazione d’impatto per i dati sanitari.</p></div>
     <div class="card"><h3>4. Termini per i pazienti</h3><p class="small muted">Condizioni del servizio di prenotazione da 7 €, disdetta e rimborsi, informativa privacy e consenso ai dati sanitari.</p></div>
   </div>
   <details class="card"><summary>Bozza: contratto di licenza d’uso del software “Clinia App”</summary>
     <div class="contract">
       <p><b>Parti.</b> Francesco Paolo Morelli (“Autore”), C.F. […], e Clinia del Dott. Marco Morelli (“Licenziatario”), P.IVA […], con sede in Via La Martella 5/D, Matera.</p>
       <p><b>1. Oggetto.</b> L’Autore, unico autore e titolare dei diritti d’autore sul software “Clinia App” (app, database e funzioni server), concede al Licenziatario la licenza d’uso non esclusiva e non trasferibile dei diritti di utilizzazione economica per l’attività della clinica di Matera. La titolarità dei diritti resta all’Autore.</p>
-      <p><b>2. Corrispettivo fisso.</b> Per i primi 12 mesi dalla consegna il Licenziatario corrisponde 300 € lordi al mese, entro il giorno 10 del mese successivo, con bonifico, a fronte di ricevuta per cessione di diritti d’autore.</p>
-      <p><b>3. Royalty.</b> Dal 13° mese il Licenziatario corrisponde il […] % degli incassi generati dall’app per abbonamenti degli specialisti e servizio di prenotazione da 7 €, calcolati sul riepilogo mensile dell’app, che il Licenziatario rende consultabile all’Autore in forma aggregata.</p>
-      <p><b>4. Ritenuta.</b> Il Licenziatario opera la ritenuta d’acconto del 20 % sul 75 % (60 % se l’Autore ha meno di 35 anni) del compenso e rilascia la Certificazione Unica.</p>
+      <p><b>2. Corrispettivo fisso.</b> Per i primi 12 mesi dalla consegna il Licenziatario corrisponde all’Autore 300 € netti al mese (352,94 € lordi), con addebito automatico il giorno 1 di ogni mese tramite l’app, a fronte di ricevuta per cessione di diritti d’autore.</p>
+      <p><b>3. Corrispettivo variabile.</b> Per tutta la durata il Licenziatario riconosce all’Autore, come ulteriore compenso per la licenza, l’intero importo degli abbonamenti degli specialisti e del servizio di prenotazione (7 € o 9 €), dedotto il 3 % destinato in beneficenza alla Fondazione Progetto Arca ETS. Gli importi sono accreditati automaticamente all’Autore al momento di ciascun incasso, al netto della ritenuta, e sono consultabili nell’app con le sole iniziali dei pazienti.</p>
+      <p><b>4. Ritenuta.</b> Il Licenziatario trattiene da ogni accredito la ritenuta d’acconto del 20 % sul 75 % (60 % se l’Autore ha meno di 35 anni) del compenso, la versa con F24 entro il 16 del mese successivo e rilascia la Certificazione Unica. L’Autore emette una ricevuta riepilogativa mensile.</p>
       <p><b>5. Divieti.</b> Vietati copia, modifica, decompilazione, cessione o sublicenza a terzi, uso per altre strutture senza consenso scritto dell’Autore.</p>
       <p><b>6. Manutenzione.</b> Eventuali interventi straordinari dell’Autore sono pattuiti a parte, di volta in volta, come prestazioni occasionali.</p>
       <p><b>7. Dati personali.</b> Il Licenziatario è titolare del trattamento; l’Autore è nominato responsabile del trattamento con atto separato (art. 28 GDPR) e accede solo ai dati strettamente necessari.</p>
@@ -167,36 +165,32 @@ details.card[open] summary::after{content:" －"}
 
 <section>
   <span class="eyebrow">Stima dei tuoi compensi</span>
-  <h2>Primo anno e dopo</h2>
-  <div class="tbl"><table>
-    <thead><tr><th>Periodo</th><th class="n">Lordo / mese</th><th class="n">Ritenuta</th><th class="n">Bonifico netto</th><th class="n">Netto dopo il 730 (aliquota 35 %)</th></tr></thead>
-    <tbody>
-      <tr><td><b>Mesi 1–12</b> · licenza</td><td class="n">300 €</td><td class="n">45 €</td><td class="n">255 €</td><td class="n">221 €</td></tr>
-      <tr><td><b>Anno 1</b> · totale</td><td class="n">3.600 €</td><td class="n">540 €</td><td class="n">3.060 €</td><td class="n">2.655 €</td></tr>
-    </tbody></table></div>
+  <h2>Quanto ti arriva ogni mese</h2>
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
-    <h3>Calcola la royalty dal 13° mese</h3>
-    <p class="tiny">Base della royalty: abbonamenti degli specialisti + servizio da 7 € per ogni visita.</p>
     <form class="calc" id="calc" onsubmit="return false">
       <label for="c-sp">Specialisti abbonati<input id="c-sp" type="number" min="0" value="9"></label>
-      <label for="c-vis">Visite al mese (totale)<input id="c-vis" type="number" min="0" value="400"></label>
-      <label for="c-roy">Royalty concordata %<input id="c-roy" type="number" min="0" max="100" value="20"></label>
+      <label for="c-vis">Prenotazioni al mese (con servizio)<input id="c-vis" type="number" min="0" value="400"></label>
+      <label for="c-fee">Servizio di prenotazione<select id="c-fee"><option value="7">7 €</option><option value="9">9 €</option></select></label>
+      <label for="c-lic">Periodo<select id="c-lic"><option value="1">Primi 12 mesi (con licenza)</option><option value="0">Dal 13° mese</option></select></label>
       <label for="c-u35">Età<select id="c-u35"><option value="0">35 anni o più</option><option value="1">Meno di 35 anni</option></select></label>
       <label for="c-al">Aliquota IRPEF (dallo stipendio)<select id="c-al"><option value="0.23">23 %</option><option value="0.35" selected>35 %</option><option value="0.43">43 %</option></select></label>
     </form>
     <div class="res" id="res"></div>
-    <p class="tiny">Stima indicativa: non include addizionali regionali e comunali. Falla confermare dal commercialista o dal CAF.</p>
+    <p class="tiny">Accreditato = già al netto della ritenuta d’acconto. “Dopo il 730” stima l’IRPEF finale alla tua aliquota, senza addizionali regionali e comunali. Da far confermare al commercialista o al CAF.</p>
   </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Esempio (9 specialisti, servizio 7 €)</th><th class="n">Prenotazioni</th><th class="n">Lordo</th><th class="n">Accreditato</th><th class="n">Dopo il 730</th></tr></thead>
+    <tbody id="scen"></tbody></table></div>
 </section>
 
 <section>
   <span class="eyebrow">Prossimi collegamenti</span>
   <h2>In ordine, prima i gratuiti</h2>
   <div class="grid">
-    <div class="card"><span class="pill">Fatto</span><h3 style="margin-top:6px">Supabase</h3><p class="small muted">Database collegato, piano gratuito.</p></div>
+    <div class="card"><span class="pill">Fatto</span><h3 style="margin-top:6px">Supabase</h3><p class="small muted">Database collegato, con accrediti e movimenti in tempo reale.</p></div>
     <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Netlify</h3><p class="small muted">Pubblica l’app su un indirizzo web: serve perché database e conferma e-mail funzionino davvero.</p></div>
     <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Accesso con Google</h3><p class="small muted">ID client OAuth su Google Cloud.</p></div>
-    <div class="card"><span class="pill az">Gratis da aprire</span><h3 style="margin-top:6px">Stripe di Clinia</h3><p class="small muted">Si paga solo la commissione sui pagamenti; si parte in modalità test.</p></div>
+    <div class="card"><span class="pill az">Gratis da aprire</span><h3 style="margin-top:6px">Stripe di Clinia + Connect</h3><p class="small muted">Si paga solo la commissione sui pagamenti; si parte in modalità test. Poi colleghi il tuo conto e quelli degli specialisti.</p></div>
     <div class="card"><span class="pill w">A pagamento</span><h3 style="margin-top:6px">Apple, WhatsApp/SMS, fatture</h3><p class="small muted">Apple Developer 99 $ l’anno, Twilio per i codici, servizio di fatturazione elettronica per Clinia.</p></div>
   </div>
 </section>
@@ -211,9 +205,13 @@ details.card[open] summary::after{content:" －"}
 
 <script>
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
+function stima({sp,vis,fee,lic,u35,al}){const q=u35?0.6:0.75,rit=0.2*q;
+  const abb=sp*49.9,serv=vis*fee,arca=serv*0.03,licL=lic?300/(1-rit):0;
+  const lordo=abb+serv-arca+licL,accr=(abb+serv-arca)*(1-rit)+(lic?300:0),irpef=lordo*q*al;
+  return{lordo,accr,dopo:lordo-irpef,arca,abb,serv}}
 function calc(){const g=id=>+document.getElementById(id).value||0;
-  const base=g("c-sp")*49.9+g("c-vis")*7,lordo=base*Math.min(100,g("c-roy"))/100,quota=document.getElementById("c-u35").value==="1"?0.6:0.75;
-  const imp=lordo*quota,rit=imp*0.2,netto=lordo-rit,irpef=imp*(+document.getElementById("c-al").value),dopo=lordo-irpef;
-  document.getElementById("res").innerHTML=`<div><span>Base della royalty al mese</span><b>${eur(base)}</b></div><div><span>Royalty lorda al mese</span><b>${eur(lordo)}</b></div><div><span>Bonifico netto (dopo ritenuta)</span><b>${eur(netto)}</b></div><div class="hl"><span>Netto dopo il 730, al mese</span><b>${eur(dopo)}</b></div><div><span>Netto in un anno</span><b>${eur(dopo*12)}</b></div>`}
+  const r=stima({sp:g("c-sp"),vis:g("c-vis"),fee:g("c-fee"),lic:g("c-lic"),u35:g("c-u35"),al:+document.getElementById("c-al").value});
+  document.getElementById("res").innerHTML=`<div><span>Abbonamenti</span><b>${eur(r.abb)}</b></div><div><span>Servizio prenotazioni</span><b>${eur(r.serv)}</b></div><div><span>A Progetto Arca</span><b>${eur(r.arca)}</b></div><div><span>Accreditato al mese</span><b>${eur(r.accr)}</b></div><div class="hl"><span>Netto dopo il 730, al mese</span><b>${eur(r.dopo)}</b></div><div><span>In un anno</span><b>${eur(r.dopo*12)}</b></div>`}
+document.getElementById("scen").innerHTML=[[1,200],[1,400],[0,400],[1,700]].map(([lic,v])=>{const r=stima({sp:9,vis:v,fee:7,lic,u35:0,al:0.35});return `<tr><td>${lic?"Primi 12 mesi":"Dal 13° mese"}</td><td class="n">${v}</td><td class="n">${eur(r.lordo)}</td><td class="n">${eur(r.accr)}</td><td class="n"><b>${eur(r.dopo)}</b></td></tr>`}).join("");
 document.getElementById("calc").addEventListener("input",calc);calc();
 </script>

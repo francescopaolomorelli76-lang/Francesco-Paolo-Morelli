@@ -1,10 +1,13 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-// Riceve gli eventi di Stripe e aggiorna il database (in tempo reale anche sui telefoni).
-// In Stripe › Sviluppatori › Webhook: URL https://<progetto>.supabase.co/functions/v1/stripe-webhook
-// Eventi: payment_intent.succeeded, payment_intent.payment_failed, invoice.paid,
-//         invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted, charge.refunded
+// Riceve gli eventi di Stripe e fa le divisioni IN TEMPO REALE:
+//   visita    → prezzo subito allo specialista, servizio a FPM (meno 3 % Progetto Arca e ritenuta)
+//   abbonamento → quota a FPM al netto della ritenuta
+//   stanze    → restano a Clinia
+// Stripe › Sviluppatori › Webhook: https://<progetto>.supabase.co/functions/v1/stripe-webhook
+// Eventi: payment_intent.succeeded, payment_intent.payment_failed, invoice.paid, invoice.payment_failed,
+//         customer.subscription.updated, customer.subscription.deleted, charge.refunded
 import Stripe from "npm:stripe@16.12.0";
-import { admin, stripe } from "../_shared/clients.ts";
+import { accreditaFpm, admin, cent, stripe } from "../_shared/clients.ts";
 
 const euro = (c: number) => Math.round(c) / 100;
 const giorno = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
@@ -24,58 +27,54 @@ Deno.serve(async (req) => {
     case "payment_intent.succeeded": {
       const pi = ev.data.object as Stripe.PaymentIntent;
       const m = pi.metadata ?? {};
+      const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
       if (m.tipo === "visita") {
         const { data: a } = await admin.from("appointments")
           .update({ pagato: true, pagato_il: new Date().toISOString(), stato: "confermata" })
-          .eq("id", m.appointment_id).select().single();
-        if (a) await admin.from("payments").upsert([   // tutto incassato da Clinia
-          { tipo: "visita", importo: a.prezzo, beneficiario: "clinica", pagatore_user: a.patient_id,
-            specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta", stato: "riuscito",
-            stripe_payment_intent: pi.id },
-          { tipo: "servizio_paziente", importo: 7, beneficiario: "clinica",
-            pagatore_user: a.patient_id, specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta",
-            stato: "riuscito", stripe_payment_intent: pi.id + ":fee" },
-        ], { onConflict: "stripe_payment_intent" });
+          .eq("id", m.appointment_id).select("*, specialists(specialist_private(stripe_account_id))").single();
+        if (!a) break;
+        // 1) prezzo della visita subito allo specialista
+        const conto = (a as any).specialists?.specialist_private?.stripe_account_id;
+        if (conto) await stripe.transfers.create({ amount: cent(a.prezzo), currency: "eur", destination: conto,
+          source_transaction: charge, transfer_group: `visita-${a.id}`, description: `Visita ${a.giorno} ${a.ora}` },
+          { idempotencyKey: `spec-${a.id}` });
+        await admin.from("payments").upsert({ tipo: "visita", importo: a.prezzo, beneficiario: "specialista",
+          pagatore_user: a.patient_id, specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta",
+          stato: conto ? "riuscito" : "in_attesa", stripe_payment_intent: pi.id }, { onConflict: "stripe_payment_intent" });
+        // 2) servizio di prenotazione a FPM (3 % a Progetto Arca, ritenuta trattenuta da Clinia)
+        await accreditaFpm({ tipo: "servizio_paziente", lordo: Number(a.commissione_app), conBeneficenza: true,
+          sourceCharge: charge, appointment_id: a.id, specialist_id: a.specialist_id, chiave: `serv-${a.id}` });
       }
       if (m.tipo === "studio") {
         const ids = (m.booking_ids ?? "").split(",").filter(Boolean);
         await admin.from("room_bookings").update({ stato: "confermata" }).in("id", ids);
-        const { data: p } = await admin.from("payments").upsert({
-          tipo: "affitto_studio", importo: euro(pi.amount), beneficiario: "clinica", specialist_id: m.specialist_id,
-          room_booking_ids: ids, metodo: "carta", stato: "riuscito", stripe_payment_intent: pi.id,
-        }, { onConflict: "stripe_payment_intent" }).select().single();
+        const { data: p } = await admin.from("payments").upsert({ tipo: "affitto_studio", importo: euro(pi.amount),
+          beneficiario: "clinica", specialist_id: m.specialist_id, room_booking_ids: ids, metodo: "carta",
+          stato: "riuscito", stripe_payment_intent: pi.id }, { onConflict: "stripe_payment_intent" }).select().single();
         if (p) await admin.from("room_bookings").update({ payment_id: p.id }).in("id", ids);
       }
       break;
     }
     case "payment_intent.payment_failed": {
       const pi = ev.data.object as Stripe.PaymentIntent;
-      if (pi.metadata?.tipo === "studio") {   // libera subito gli studi
-        await admin.from("room_bookings").update({ stato: "annullata" })
-          .in("id", (pi.metadata.booking_ids ?? "").split(",")).eq("stato", "in_attesa_pagamento");
-      }
+      if (pi.metadata?.tipo === "studio") await admin.from("room_bookings").update({ stato: "annullata" })
+        .in("id", (pi.metadata.booking_ids ?? "").split(",")).eq("stato", "in_attesa_pagamento");
       break;
     }
-    case "invoice.paid": {   // abbonamento mensile (+ eventuali commissioni delle visite in struttura)
+    case "invoice.paid": {   // abbonamento mensile dello specialista → quota a FPM subito
       const inv = ev.data.object as Stripe.Invoice;
       if (!inv.subscription) break;
       const sub = await stripe.subscriptions.retrieve(inv.subscription as string);
-      await admin.from("subscriptions").update({
-        stato: sub.cancel_at_period_end ? "disdetto" : "attivo",
-        inizio: giorno(sub.start_date), prossimo_rinnovo: giorno(sub.current_period_end),
-      }).eq("stripe_subscription_id", sub.id);
-      for (const riga of inv.lines.data) {
-        if (riga.type === "subscription") {
-          await admin.from("payments").upsert({
-            tipo: "abbonamento_specialista", importo: euro(riga.amount),
-            beneficiario: "clinica", pagatore_user: sub.metadata.user_id, specialist_id: sub.metadata.specialist_id,
-            metodo: "carta", stato: "riuscito", stripe_payment_intent: `${inv.id}:${riga.id}`, stripe_invoice: inv.id,
-          }, { onConflict: "stripe_payment_intent" });
-        } else if (riga.metadata?.tipo === "commissioni_contanti") {
-          await admin.from("payments").update({ stato: "riuscito", stripe_invoice: inv.id })
-            .eq("stripe_payment_intent", `ii:${riga.invoice_item}`);
-        }
-      }
+      await admin.from("subscriptions").update({ stato: sub.cancel_at_period_end ? "disdetto" : "attivo",
+        inizio: giorno(sub.start_date), prossimo_rinnovo: giorno(sub.current_period_end) })
+        .eq("stripe_subscription_id", sub.id);
+      const charge = typeof inv.charge === "string" ? inv.charge : inv.charge?.id;
+      await admin.from("payments").upsert({ tipo: "abbonamento_specialista", importo: euro(inv.amount_paid),
+        beneficiario: "app", pagatore_user: sub.metadata.user_id, specialist_id: sub.metadata.specialist_id,
+        metodo: "carta", stato: "riuscito", stripe_payment_intent: `inv:${inv.id}`, stripe_invoice: inv.id },
+        { onConflict: "stripe_payment_intent" });
+      if (inv.amount_paid > 0) await accreditaFpm({ tipo: "abbonamento", lordo: euro(inv.amount_paid), conBeneficenza: false,
+        sourceCharge: charge ?? undefined, specialist_id: sub.metadata.specialist_id, chiave: `abb-${inv.id}` });
       break;
     }
     case "invoice.payment_failed": {

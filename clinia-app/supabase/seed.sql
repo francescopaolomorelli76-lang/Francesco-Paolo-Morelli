@@ -8,10 +8,7 @@ insert into public.rooms (id,nome,tipo) values
   ('s3','Studio 3','standard'),
   ('s4','Studio 4','ampio'),
   ('s5','Studio 5','compatto'),
-  ('s6','Studio 6','compatto'),
-  ('s7','Studio 7','standard'),
-  ('s8','Studio 8','standard'),
-  ('s9','Studio 9','standard')
+  ('s6','Studio 6','compatto')
 on conflict (id) do update set nome=excluded.nome, tipo=excluded.tipo;
 
 insert into public.room_tariffs (tipo,ora,mezza,giornata,ufficiale) values

@@ -25,7 +25,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Profilo gratuito; sezione **Clinia**: rendiconto (entrate, uscite, saldo), compensi da girare agli specialisti, stanze (nomi, tariffe, foto, vista 3D), spese con ricevuta
 - Accesso riservato: login con e-mail `titolare@cliniamatera.it` e password consegnata a parte (nel codice c'è solo l'impronta SHA-256)
 - Studi prenotati senza pagamento; incassa affitti degli studi e visite dei suoi pazienti
-- Scheda **Clinia**: incassi degli studi, rimborsi da fare, occupazione dei 9 studi
+- Scheda **Clinia**: incassi degli studi, rimborsi da fare, occupazione dei 6 studi
 
 ## Pazienti
 - Con carta: visita + 7 € di servizio; in struttura: solo la visita (i 7 € li paga lo specialista)
@@ -50,7 +50,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 
 ## Professionisti
 - Agenda giornaliera con turni negli studi e visite prenotate
-- Prenotazione dei **9 studi (Studio 1–9)** con occupazione in tempo reale, ripetizione settimanale e costo calcolato
+- Prenotazione dei **6 studi (Studio 1–6: 1–3 da 15 mq, 4 da 20 mq, 5–6 da 12 mq)** con occupazione in tempo reale, ripetizione settimanale e costo calcolato
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
 
 ## Area FPM
@@ -65,7 +65,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Accesso reale con Google (Google Identity) e Apple (Sign in with Apple, obbligatorio su iPhone se c'è Google)
 - Invio reale del codice: WhatsApp Business Platform (Meta) con modello di autenticazione approvato, e un fornitore SMS di riserva
 - Prezzo dell'abbonamento specialisti (`SUB.price`, ora 49 € di esempio) e addebito reale ricorrente
-- Tipologia di ciascuno dei 9 studi
+- Tariffe a ore per l’uso occasionale degli studi (quelle mensili ufficiali sono già caricate)
 - Pagamenti con carta: collegare un circuito certificato (es. Stripe o Nexi); ora sono simulati e si salvano solo le ultime 4 cifre
 - Consulenze online: quali specialisti le offrono (ora 4 di esempio in `SERVICES`, quarto valore `1`)
 - **Tariffario ufficiale**: sostituire `TARIFFARIO` e i prezzi in `SERVICES` (ora sono di esempio, `ufficiale:false`)

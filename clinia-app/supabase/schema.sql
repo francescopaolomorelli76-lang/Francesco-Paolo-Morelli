@@ -73,8 +73,8 @@ create trigger on_auth_user_created after insert on auth.users
 -- Studi e tariffario
 -- ---------------------------------------------------------------------
 create table if not exists public.rooms (
-  id      text primary key,               -- s1 … s9
-  nome    text not null,                  -- Studio 1 … Studio 9
+  id      text primary key,               -- s1 … s6
+  nome    text not null,                  -- Studio 1 … Studio 6
   tipo    text not null check (tipo in ('standard','ampio','compatto')),
   attivo  boolean not null default true
 );

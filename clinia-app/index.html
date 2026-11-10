@@ -1,31 +1,32 @@
 <title>Clinia App</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#0e8f86">
+<meta name="theme-color" content="#2b4a64">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Lora:wght@500;600;700&display=swap">
 <style>
 /* Layout: una colonna "telefono" centrata (piena larghezza su smartphone), contenuto scorrevole e barra schede fissa in basso. */
 :root{
-  --bg:#ffffff; --bg-2:#f2f8f9; --card:#ffffff; --ink:#0b2b38; --ink-2:#3d5a66; --ink-3:#6b8590;
-  --line:#dbeaf0; --accent:#0e8f86; --accent-2:#0a6f69; --accent-soft:#e1f4f3; --on-accent:#ffffff;
-  --azure:#1a7fd0; --azure-soft:#e3f1fc; --green:#0e9f84; --warn:#b45309; --warn-soft:#fdf2e3;
+  /* Colori istituzionali Clinia (Brand Manual): #2B4A64 primario, #2C5E66 secondario, #A38258 terzo, #F5F5F5 quarto */
+  --bg:#ffffff; --bg-2:#f5f5f5; --card:#ffffff; --ink:#1c3144; --ink-2:#465a6b; --ink-3:#717f8b;
+  --line:#e1e5e9; --accent:#2c5e66; --accent-2:#214a51; --accent-soft:#e5eef0; --on-accent:#ffffff;
+  --azure:#2b4a64; --azure-soft:#e5ebf1; --gold:#a38258; --gold-soft:#f3ece3; --green:#2c7a5e; --warn:#b45309; --warn-soft:#fdf2e3;
   --danger:#b91c1c; --danger-soft:#fdecec; --busy:#c9d9df; --shade:rgba(6,24,32,.55);
-  --grad:linear-gradient(120deg,#0e9f84 0%,#14a6b4 50%,#1a7fd0 100%);
-  --f-display:Fraunces,Georgia,"Times New Roman",serif;
-  --f-body:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --grad:linear-gradient(120deg,#2c5e66 0%,#2b4a64 100%);
+  --f-display:Lora,Georgia,"Times New Roman",serif;
+  --f-body:"Myriad Pro","Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --r:16px; --r-sm:12px;
-  --shadow:0 8px 24px -10px rgba(14,95,120,.28),0 2px 6px -2px rgba(11,43,56,.08);
+  --shadow:0 8px 24px -10px rgba(43,74,100,.26),0 2px 6px -2px rgba(28,49,68,.08);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0a1a21; --bg-2:#0f242c; --card:#132c36; --ink:#e6f2f5; --ink-2:#b3cbd3; --ink-3:#86a2ac;
-  --line:#21424e; --accent:#2cc0ae; --accent-2:#5fd6c7; --accent-soft:#123a3c; --on-accent:#05211f;
-  --azure:#62b3f0; --azure-soft:#12304a; --green:#3bd0a8; --warn:#f0b35a; --warn-soft:#3a2a12;
+  --bg:#111a22; --bg-2:#16212b; --card:#1b2833; --ink:#eef1f4; --ink-2:#bcc6cf; --ink-3:#8e9aa5;
+  --line:#2a3a47; --accent:#6fb0b8; --accent-2:#94c7cd; --accent-soft:#1d3a3f; --on-accent:#0d2226;
+  --azure:#8fb2d1; --azure-soft:#1d3044; --gold:#cdab7d; --gold-soft:#3a2f22; --green:#5cc29a; --warn:#f0b35a; --warn-soft:#3a2a12;
   --danger:#f08080; --danger-soft:#3a1717; --busy:#2c4a55; --shade:rgba(0,0,0,.6); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0a1a21; --bg-2:#0f242c; --card:#132c36; --ink:#e6f2f5; --ink-2:#b3cbd3; --ink-3:#86a2ac;
-  --line:#21424e; --accent:#2cc0ae; --accent-2:#5fd6c7; --accent-soft:#123a3c; --on-accent:#05211f;
-  --azure:#62b3f0; --azure-soft:#12304a; --green:#3bd0a8; --warn:#f0b35a; --warn-soft:#3a2a12;
+  --bg:#111a22; --bg-2:#16212b; --card:#1b2833; --ink:#eef1f4; --ink-2:#bcc6cf; --ink-3:#8e9aa5;
+  --line:#2a3a47; --accent:#6fb0b8; --accent-2:#94c7cd; --accent-soft:#1d3a3f; --on-accent:#0d2226;
+  --azure:#8fb2d1; --azure-soft:#1d3044; --gold:#cdab7d; --gold-soft:#3a2f22; --green:#5cc29a; --warn:#f0b35a; --warn-soft:#3a2a12;
   --danger:#f08080; --danger-soft:#3a1717; --busy:#2c4a55; --shade:rgba(0,0,0,.6); color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -103,7 +104,7 @@ p{margin:0}
 
 /* Banner */
 .banner{position:relative;display:flex;align-items:center;gap:12px;padding:18px 48px 18px 18px;border-radius:var(--r-sm);background:var(--grad);color:#fff;overflow:hidden}
-.banner::before{content:"";position:absolute;left:22px;top:-8px;width:16px;height:16px;background:#0e9f84;transform:rotate(45deg)}
+.banner::before{content:"";position:absolute;left:22px;top:-8px;width:16px;height:16px;background:#2c5e66;transform:rotate(45deg)}
 .banner b{display:block;font-size:1.05rem;line-height:1.3}
 .banner span{font-size:.9rem;opacity:.92}
 .banner .x{position:absolute;right:6px;top:6px;color:#fff}
@@ -418,6 +419,9 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:380px){.fgrid{grid-template-columns:1fr}}
 .gal{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.gal img{flex:0 0 72%;max-width:320px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;scroll-snap-align:start}
+.quote{font-family:var(--f-display);font-size:1.15rem;line-height:1.45;color:var(--azure);border-left:3px solid var(--gold);padding:4px 0 4px 14px;margin:0}
+.valori{display:grid;gap:10px}.valori .card b{color:var(--accent);font-size:1rem}
+.payoff{font-family:var(--f-display);font-size:.95rem;color:var(--ink-2);margin-top:6px}
 .r3dthumb{position:relative;display:block}.r3dthumb img{display:block;width:100%;height:150px;object-fit:cover}
 .r3dcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;background:linear-gradient(transparent,rgba(8,30,38,.78));color:#fff;display:flex;flex-direction:column}.r3dcap small{opacity:.9}
 .r3dbadge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92);color:#0b2b38;font-weight:800;font-size:.75rem;padding:4px 9px;border-radius:999px}
@@ -461,9 +465,9 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e9f84"/><stop offset=".5" stop-color="#14a6b4"/><stop offset="1" stop-color="#1a7fd0"/></linearGradient>
-    <symbol id="mark" viewBox="0 0 60 70"><path d="M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z" fill="url(#lgc)"/><circle cx="44" cy="10" r="9" fill="#1f4f6e"/></symbol>
-    <symbol id="markw" viewBox="0 0 60 70"><path d="M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z" fill="#fff"/><circle cx="44" cy="10" r="9" fill="#fff" fill-opacity=".8"/></symbol>
+    <linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c5e66"/><stop offset="1" stop-color="#2b4a64"/></linearGradient>
+    <symbol id="mark" viewBox="96.88 282.84 128.65 165.54"><path fill="#2c5e66" d="M 115.839844 312.804688 C 123.03125 312.746094 130.621094 314.398438 137.566406 316.277344 C 186.992188 329.65625 220.988281 377.949219 172.320312 417.566406 C 158.589844 428.738281 136.886719 438.855469 119.507812 442.296875 C 98.882812 446.382812 120.589844 435.285156 125.621094 431.828125 C 145.898438 417.910156 174.839844 392.285156 164.78125 364.652344 C 159.066406 348.941406 142.019531 332.8125 128.546875 323.347656 C 125.6875 321.335938 117.730469 317.21875 115.980469 315.429688 C 115.550781 314.988281 115.058594 314.632812 115.007812 313.945312 Z M 115.839844 312.804688 "/><path fill="#2b4a64" d="M 189.527344 289.441406 C 223.535156 284.839844 220.867188 337.480469 189.058594 331.113281 C 165.96875 326.492188 167.992188 292.355469 189.527344 289.441406 "/></symbol>
+    <symbol id="markw" viewBox="96.88 282.84 128.65 165.54"><path fill="#fff" fill-opacity="1" d="M 115.839844 312.804688 C 123.03125 312.746094 130.621094 314.398438 137.566406 316.277344 C 186.992188 329.65625 220.988281 377.949219 172.320312 417.566406 C 158.589844 428.738281 136.886719 438.855469 119.507812 442.296875 C 98.882812 446.382812 120.589844 435.285156 125.621094 431.828125 C 145.898438 417.910156 174.839844 392.285156 164.78125 364.652344 C 159.066406 348.941406 142.019531 332.8125 128.546875 323.347656 C 125.6875 321.335938 117.730469 317.21875 115.980469 315.429688 C 115.550781 314.988281 115.058594 314.632812 115.007812 313.945312 Z M 115.839844 312.804688 "/><path fill="#fff" fill-opacity="0.85" d="M 189.527344 289.441406 C 223.535156 284.839844 220.867188 337.480469 189.058594 331.113281 C 165.96875 326.492188 167.992188 292.355469 189.527344 289.441406 "/></symbol>
   </defs>
 </svg>
 
@@ -476,23 +480,38 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
      con il tariffario ufficiale quando sarà disponibile.
    - Numerazione e tipologia degli studi: da confermare con la clinica.
    ===================================================================== */
-const CLINIC={name:"Clinia",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 392 994 8545",email:"info@cliniamatera.it",
+const CLINIC={name:"Clinia",ragione:"Clinia Srl",payoff:"Il centro per professionisti e specialisti",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 329 397 5297",email:"info@cliniamatera.it",pec:"clinia@pec.it",
   hoursText:"Studi prenotabili: lun–ven 8:00–20:00 · sab 8:00–13:00"};
 const OPEN={1:[480,1200],2:[480,1200],3:[480,1200],4:[480,1200],5:[480,1200],6:[480,780]}; // minuti dalla mezzanotte; domenica chiuso
 const ROOM_TYPES={
   standard:{label:"Studio standard",desc:"Consulenze e attività specialistiche"},
   ampio:{label:"Studio ampio e luminoso",desc:"Attività riabilitative e incontri formativi"},
   compatto:{label:"Studio compatto",desc:"Consulenze riservate e incontri individuali"}};
-// 9 studi numerati da 1 a 9 (la tipologia di ciascuno è da confermare)
+// 6 studi (Dettaglio servizi Clinia Srl): 1–3 da 15 mq, 4 da 20 mq, 5–6 da 12 mq
 const ROOMS=[
-  {id:"s1",name:"Studio 1",type:"standard",foto:"img/stanze/studio1.jpg",arco:150,attr:["ecografo"]},{id:"s2",name:"Studio 2",type:"standard"},{id:"s3",name:"Studio 3",type:"standard"},
-  {id:"s4",name:"Studio 4",type:"ampio"},{id:"s5",name:"Studio 5",type:"compatto"},{id:"s6",name:"Studio 6",type:"compatto"},
-  {id:"s7",name:"Studio 7",type:"standard"},{id:"s8",name:"Studio 8",type:"standard"},{id:"s9",name:"Studio 9",type:"standard"}];
+  {id:"s1",name:"Studio 1",type:"standard",mq:15,foto:"img/stanze/studio1.jpg",arco:150,attr:["ecografo"],
+   desc:"Ambiente accogliente e funzionale, dotato di scrivania, sedie, lettino e lavandino. Pensato per visite mediche e attività specialistiche. Completamente accessoriato e climatizzato.",
+   dot:["Scrivania e sedie","Lettino","Lavandino","Ecografo Samsung HS40","Climatizzato"]},
+  {id:"s2",name:"Studio 2",type:"standard",mq:15,foto:"img/stanze/studio2.jpg",arco:110,
+   desc:"Spazio pratico e riservato, attrezzato con scrivania, sedie, lettino e lavandino. Ideale per attività cliniche e specialistiche, climatizzato e pronto all’uso.",
+   dot:["Scrivania e sedie","Lettino","Lavandino","Sgabello medico","Climatizzato"]},
+  {id:"s3",name:"Studio 3",type:"standard",mq:15,foto:"img/stanze/studio3.jpg",arco:140,
+   desc:"Studio confortevole e ben organizzato, con scrivania, sedie, lettino e lavandino. Adatto a visite mediche e attività di consulenza. Climatizzato.",
+   dot:["Scrivania e sedie","Lettino elettrico","Lavandino","Appendiabiti","Climatizzato"]},
+  {id:"s4",name:"Studio 4",type:"ampio",mq:20,foto:"img/stanze/studio4.jpg",arco:125,
+   desc:"Ambiente luminoso, ampio e climatizzato, progettato per garantire massima flessibilità d’uso: attività cliniche e riabilitative, ma anche formazione, piccoli workshop, incontri professionali e sessioni dimostrative.",
+   dot:["Parete a specchio","Palle da fitness e palle mediche","Kettlebell e manubri","Bilanciere con dischi","Elastici e rulli","Finestra","Climatizzato"]},
+  {id:"s5",name:"Studio 5",type:"compatto",mq:12,foto:"img/stanze/studio5.jpg",arco:140,start:30,
+   desc:"Studio raccolto e accogliente, pensato per colloqui e consulenze. Allestito con scrivania e sedie, climatizzato e pronto all’uso.",
+   dot:["Scrivania e sedia","Appendiabiti","Finestra","Climatizzato"]},
+  {id:"s6",name:"Studio 6",type:"compatto",mq:12,foto:"img/stanze/studio6.jpg",arco:165,start:35,
+   desc:"Ambiente luminoso e riservato, climatizzato e pronto all’uso, dotato di scrivania e sedie. Perfetto per visite, consulenze e attività di ascolto.",
+   dot:["Scrivania e sedie","Appendiabiti","Climatizzato"]}];
 // Accesso riservato del titolare, Dott. Marco Morelli: gratuito, senza abbonamento, studi senza pagamento.
 // Nel prototipo la password è verificata sul telefono tramite impronta SHA-256; nell'app pubblicata la verifica sarà sul server.
 const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"2cc96af4eb89484f59cdbb95ad48e80810d53f2863a7440d02e64e2fb1354a75"};
 // A chi vanno i pagamenti
-const PAYEES={rooms:"Clinia – Dott. Marco Morelli",sub:"Clinia (P.IVA della struttura)",visite:"Clinia, che gira il compenso allo specialista"};
+const PAYEES={rooms:"Clinia Srl",sub:"Clinia Srl",visite:"Clinia, che gira il compenso allo specialista"};
 // Compenso a FPM WebDesignTech (autore del software), pagato da Clinia:
 // 300 € al mese per i primi 12 mesi (licenza e fornitura dell'app), poi una royalty da concordare sugli incassi.
 // Primi 12 mesi: 300 € NETTI al mese a FPM (Clinia aggiunge la ritenuta d'acconto). Poi solo abbonamenti e servizio prenotazioni.
@@ -515,7 +534,11 @@ const STRIPE={publishableKey:""};
 const LEGAL={autore:"Francesco Paolo Morelli",marchio:"FPM WebDesignTech",anno:2026,piva:"[da inserire]",sede:"[da inserire]",pec:"[da inserire]"};
 // Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
 const SUB={name:"Clinia Specialisti",price:50,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
-const TARIFFARIO={ufficiale:false,stanze:{ // € IVA inclusa (esempio)
+// Tariffario ufficiale degli studi (Clinia Srl): contratto mensile, prezzi IVA esclusa
+const TARIFFE_MESE={iva:0.22,soluzioni:{A:{nome:"Soluzione A",desc:"Mese, mezza giornata"},B:{nome:"Soluzione B",desc:"Mese, giornata intera"}},
+  mq:{12:{A:1200,B:2000},15:{A:1400,B:2500},20:{A:1700,B:3000}}};
+const PREZZI_PRESTAZIONI_UFFICIALI=false; // i prezzi delle visite li imposta ogni specialista
+const TARIFFARIO={ufficiale:false,stanze:{ // uso occasionale a ore: tariffe indicative, da confermare con Clinia
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
  {id:"marco-morelli",name:"Dott. Marco Morelli",role:"Fisioterapista",area:"riabilitazione",rating:"5,0",reviews:23,
@@ -577,6 +600,7 @@ const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:n
   rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7},payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
+S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
 function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=9;if(S.fpm)S.fpm.fee=9;S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -659,7 +683,7 @@ const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',cal:'<re
  sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',down:'<path d="m6 9 6 6 6-6"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20a7 7 0 0 1 14 0M16 4.5a3.5 3.5 0 0 1 0 7M22 20a7 7 0 0 0-5-6.7"/>',card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',list:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',video:'<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3"/>'};
 const ic=(n,c="")=>`<svg class="ic${c?" "+c:""}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
 const heartFill=on=>on?`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--accent);stroke:var(--accent)">${P.heart}</svg>`:ic("heart");
-const markSvg=(w=34)=>`<svg viewBox="0 0 60 70" style="width:${w}px;height:${w*70/60}px" aria-hidden="true"><use href="#mark"/></svg>`;
+const markSvg=(w=34)=>`<svg viewBox="96.88 282.84 128.65 165.54" style="width:${w}px;height:${Math.round(w*1.2867)}px" aria-hidden="true"><use href="#mark"/></svg>`;
 const brand=()=>`<div class="brand">${markSvg(30)}<span>Clinia</span></div>`;
 
 /* ===================== Rendering ===================== */
@@ -685,9 +709,9 @@ function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.t
 function screenHTML(){
   if(UI.screen==="main"&&!logged())UI.screen="welcome";
   switch(UI.screen){
-    case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div><div class="fpm-splash"><img src="img/fpm-logo-sm.png" alt="">FPM WebDesignTech</div></div>`;
+    case "splash":return `<div class="screen splash"><img src="img/clinia-logo.svg" alt="Clinia" style="width:200px;height:auto"><div class="spinner" role="status" aria-label="Caricamento"></div><div class="fpm-splash"><img src="img/fpm-logo-sm.png" alt="">FPM WebDesignTech</div></div>`;
     case "cookie":return cookieScreen();
-    case "welcome":{const t=UI.stack[UI.stack.length-1];return t&&t.page==="room3d"?room3dPage(t.id):t&&t.page==="attr3d"?attr3dPage(t.id):welcomeScreen()}
+    case "welcome":{const t=UI.stack[UI.stack.length-1];return t&&t.page==="room3d"?room3dPage(t.id):t&&t.page==="attr3d"?attr3dPage(t.id):t&&t.page==="chisiamo"?chiSiamoPage():t&&t.page==="offerta"?offertaPage():welcomeScreen()}
     case "proprof":return proProfScreen(true);
     case "iban":return ibanScreen(true);
     case "sub":return subScreen();
@@ -738,10 +762,11 @@ const planFor=()=>SUB;
 const isFpm=()=>!!(S.auth&&S.auth.fpm);
 const subActive=()=>isOwner()||!!mySub()&&(mySub().status==="attivo"||(mySub().status==="disdetto"&&mySub().next>today()));
 function welcomeScreen(){return `<div class="screen"><div class="content"><div class="pad stack" style="gap:18px;padding-top:44px">
-  ${markSvg(52)}<h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
+  <div><img src="img/clinia-logo.svg" alt="Clinia" style="width:170px;height:auto;display:block"><p class="payoff">${esc(CLINIC.payoff)}</p></div><h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
   <button class="rolecard" data-act="chooseRole" data-v="paziente"><span class="ri">${ic("user")}</span><span style="flex:1;min-width:0"><b>Sono un paziente</b><span class="muted small" style="display:block;margin:4px 0 10px">Prenota le visite, ricevi i promemoria, conserva referti ed esami.</span><span class="badge">Gratis</span></span>${ic("right")}</button>
   <button class="rolecard" data-act="chooseRole" data-v="professionista"><span class="ri az">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b>Sono uno specialista</b><span class="muted small" style="display:block;margin:4px 0 10px">Agenda, prenotazione degli studi, pazienti, messaggi e pagamenti.</span><span class="badge az">Abbonamento mensile · ${eur(SUB.price)}/mese</span></span>${ic("right")}</button>
   <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
+  <div class="row" style="gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost sm" data-act="openPage" data-v="chisiamo">Chi siamo</button><button class="btn ghost sm" data-act="openPage" data-v="offerta">Offerta per professionisti</button></div>
   <div class="stack" style="gap:6px;margin-top:6px"><span class="label" style="text-align:center">Accesso riservato</span><div class="reserved"><button data-act="chooseRole" data-v="titolare">${ic("lock","sm")} Direzione Clinia</button><button data-act="chooseRole" data-v="fpm">${ic("lock","sm")} Area FPM</button></div></div>
   <p class="tiny" style="text-align:center;margin-top:10px">Clinia · ${esc(CLINIC.address)}</p></div></div></div>`}
 function authScreen(){const r=UI.authRole,pro=r==="professionista";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="authClose" aria-label="Indietro">${ic("back")}</button><span style="flex:1"></span></div>
@@ -945,6 +970,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
   ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${DOCTORS.length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
   <button class="card row" data-act="openPage" data-v="arca" style="text-align:left;width:100%;gap:12px;background:var(--accent-soft);border-color:var(--accent)"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--accent-2);display:grid;place-items:center">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Ogni prenotazione aiuta Progetto Arca</b><span class="tiny">Il 3 % del servizio va a chi vive in strada. Scopri la storia</span></span>${ic("right","sm")}</button>
   <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
+  <button class="card row" data-act="openPage" data-v="chisiamo" style="width:100%;text-align:left;gap:12px">${markSvg(26)}<span style="flex:1;min-width:0"><b class="small" style="display:block">Chi siamo</b><span class="tiny">Mission, valori e spazi di Clinia</span></span>${ic("right","sm")}</button>
   <div class="chips">${CHIPS.map((c,i)=>`<button class="chip" data-act="chip" data-v="${i}"><span class="dot a-${c[1]}"></span>${c[0]}</button>`).join("")}</div>
   ${na?`<section class="stack" style="gap:10px"><h2 class="h-sec">La tua prossima visita</h2>${visitCard(na,true)}</section>`:""}
   ${logged()?"":`<section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Configura il tuo account</h2>
@@ -958,7 +984,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1024,7 +1050,7 @@ function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(al
   <div class="content"><div class="hero">${docAv(d,"lg")}<h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
    ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
   <div class="pad stack" style="gap:22px">
-   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${TARIFFARIO.ufficiale?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
+   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${PREZZI_PRESTAZIONI_UFFICIALI?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
     ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min${s.online?" · online":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
     <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px"><button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="reception">${ic("door","sm")} Reception · vedi in 3D</button>${rs.map(r=>`<button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="${r}">${ic("door","sm")} ${esc(room(r).name)} · vedi in 3D</button>`).join("")}</p></div></div></section>
@@ -1111,7 +1137,7 @@ function settingsBody(){if(isFpm())return `<div class="pad stack" style="gap:16p
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
-  <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p><button class="btn ghost sm" data-act="room3d" data-id="reception">${ic("door","sm")} Reception in 3D</button></div></div>
+  <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="openPage" data-v="chisiamo">Chi siamo</button><button class="btn ghost sm" data-act="room3d" data-id="reception">${ic("door","sm")} Reception in 3D</button></div><p class="tiny">${esc(CLINIC.ragione)} · PEC ${esc(CLINIC.pec)}</p></div></div>
   <div class="list"><button class="li" data-act="openCopyright">${ic("shield")}<span class="t">Copyright e note legali<small>© ${LEGAL.anno} FPM WebDesignTech</small></span>${ic("right","sm")}</button></div>
   <div class="card row small">${ic("shield","sm")}<span>${DB.on?"Dati salvati sul database Clinia, aggiornati in tempo reale":"Versione di prova: i dati restano su questo telefono"}</span></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
@@ -1280,6 +1306,39 @@ const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stan
   foto:["img/attrezzature/ecografo-1.jpg","img/attrezzature/ecografo-2.jpg","img/attrezzature/ecografo-3.jpg","img/attrezzature/ecografo-4.jpg"]}};
 const attrDi=r=>(r&&r.attr||[]).map(k=>({k,...ATTREZZATURE[k]}));
 function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.sonde.length} sonde · tocca per vederlo in 3D</small></span><span class="r3dbadge" style="position:static">3D</span></button>`).join("")}</section>`:""}
+const eurM=x=>String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,".")+" €";
+const conIva=x=>Math.round(x*(1+TARIFFE_MESE.iva)*100)/100;
+function tariffeMeseHTML(sel){const l=sel?ROOMS.filter(r=>r.mq===sel.mq):ROOMS;return `<div style="overflow-x:auto"><table class="tar"><thead><tr><th>${sel?"Contratto":"Studio"}</th><th>Mezza giornata<br><span class="tiny">Soluzione A</span></th><th>Giornata intera<br><span class="tiny">Soluzione B</span></th></tr></thead><tbody>
+  ${(sel?[sel]:l).map(r=>{const t=TARIFFE_MESE.mq[r.mq];return `<tr><td><b>${sel?"Al mese":esc(r.name)}</b><br><span class="tiny">${r.mq} mq · ${ROOM_TYPES[r.type].label}</span></td><td>${eurM(t.A)}</td><td>${eurM(t.B)}</td></tr>`}).join("")}</tbody></table></div>
+  <p class="tiny" style="margin-top:6px">Prezzi al mese, IVA esclusa (+22 %). Esempio: ${eurM(TARIFFE_MESE.mq[15].A)} + IVA = ${eurM(conIva(TARIFFE_MESE.mq[15].A))}.</p>`}
+const SERVIZI_INCLUSI=[["Ambienti e struttura",["Studi moderni, accoglienti, già allestiti e pronti all’uso","Sala d’attesa confortevole con reception dedicata","Servizi igienici distinti per professionisti e pazienti"]],
+  ["Servizi inclusi",["Pulizia e igienizzazione periodica","Cura degli studi e delle aree condivise","Connessione internet e Wi-Fi ad alta velocità"]],
+  ["Visibilità e promozione",["Profilo del professionista nel sito web ufficiale del centro","Visibilità sui canali social istituzionali e nelle brochure","Promozione coordinata del centro con attività pubblicitarie mirate"]],
+  ["Valore aggiunto",["Collaborazione e scambio reciproco di pazienti tra i professionisti","Una rete multidisciplinare che valorizza ogni specialista","Valori condivisi: accoglienza, professionalità, benessere e innovazione"]]];
+const contattiHTML=()=>`<section class="card stack" style="gap:8px"><h3>Contatti</h3><p class="small"><b>${esc(CLINIC.ragione)}</b><br>${esc(CLINIC.address)}</p>
+  <div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn ghost sm" href="tel:${CLINIC.phone.replace(/\s/g,"")}">${ic("phone","sm")} ${esc(CLINIC.phone)}</a><a class="btn ghost sm" href="mailto:${CLINIC.email}">${ic("mail","sm")} ${esc(CLINIC.email)}</a></div><p class="tiny">PEC: ${esc(CLINIC.pec)}</p></section>`;
+function offertaPage(){const mail=`mailto:${CLINIC.email}?subject=${encodeURIComponent("Richiesta studio in Clinia")}&body=${encodeURIComponent("Buongiorno,\nvorrei informazioni per un contratto mensile.\nStudio: \nSoluzione (A mezza giornata / B giornata intera): \nMattina o pomeriggio: \nDa quando: \n\nNome e specializzazione: \nTelefono: ")}`;
+  return `<div class="screen">${bar("Offerta per i professionisti")}<div class="content"><div class="pad stack" style="gap:18px">
+  <div><img src="img/clinia-logo.svg" alt="Clinia" style="width:130px;height:auto"><p class="payoff">${esc(CLINIC.payoff)}</p></div>
+  <p class="muted">Studi già allestiti e pronti all’uso, con servizi inclusi e senza oneri gestionali. Scegli lo studio e la formula mensile.</p>
+  <section class="card"><h3 style="margin-bottom:8px">Tariffe mensili</h3>${tariffeMeseHTML()}</section>
+  ${SERVIZI_INCLUSI.map(([t,l])=>`<section class="card"><h3 style="margin-bottom:6px">${esc(t)}</h3><ul class="blist">${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`).join("")}
+  <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Gli studi</h3>${ROOMS.map(r=>`<button class="card row" data-act="room3d" data-id="${r.id}" style="width:100%;text-align:left;gap:12px;padding:10px"><img src="${r.foto}" alt="" style="width:76px;height:56px;object-fit:cover;border-radius:10px"><span style="flex:1;min-width:0"><b>${esc(r.name)} · ${r.mq} mq</b><small class="tiny" style="display:block">${esc(ROOM_TYPES[r.type].label)} · vedi in 3D</small></span>${ic("right","sm")}</button>`).join("")}</section>
+  <a class="btn primary block" href="${mail}">${ic("mail","sm")} Richiedi uno studio</a>
+  ${contattiHTML()}</div></div></div>`}
+function chiSiamoPage(){const V=[["Accoglienza","Un ambiente sereno e confortevole, pensato per mettere a proprio agio professionisti, specialisti e i loro pazienti e clienti."],["Professionalità","Spazi moderni e curati, che favoriscono il lavoro del professionista e trasmettono fiducia a chi si rivolge al centro."],["Collaborazione","Sinergia tra diverse specializzazioni e attività, con scambio di competenze e opportunità."],["Efficienza","Ambienti e servizi organizzati per semplificare la gestione quotidiana e rendere più fluido il lavoro."],["Integrità","Trasparenza, correttezza e pieno rispetto delle normative vigenti."]];
+  return `<div class="screen">${bar("Chi siamo")}<div class="content"><div class="pad stack" style="gap:18px">
+  <div><img src="img/clinia-logo.svg" alt="Clinia" style="width:150px;height:auto"><p class="payoff">${esc(CLINIC.payoff)}</p></div>
+  <blockquote class="quote">“Dove professionisti e specialisti trovano un ambiente su misura, per offrire a pazienti e clienti comfort, qualità e attenzione”</blockquote>
+  <p>Clinia è un centro professionale nato a Matera per offrire a professionisti e specialisti spazi moderni, accoglienti e funzionali. Non è soltanto un luogo fisico: è una comunità che condivide valori comuni e che, attraverso la collaborazione, genera valore aggiunto per i propri pazienti e clienti.</p>
+  <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
+  <section class="card"><h3 style="margin-bottom:4px">Mission</h3><p class="small">Offrire a professionisti e specialisti uno spazio moderno, funzionale e condiviso, in cui esercitare la propria attività con serenità e supporto costante. Creare un ambiente accogliente e organizzato che semplifichi la gestione quotidiana, garantendo a pazienti e clienti comfort, professionalità e attenzione.</p></section>
+  <section class="card"><h3 style="margin-bottom:4px">Vision</h3><p class="small">Diventare un punto di riferimento nel territorio di Matera per la collaborazione tra professionisti e specialisti, promuovendo un approccio multidisciplinare e migliorando la qualità dei servizi offerti a pazienti e clienti.</p></section>
+  <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">I nostri valori</h3><div class="valori">${V.map(([t,d])=>`<div class="card"><b>${t}</b><p class="small muted">${d}</p></div>`).join("")}</div></section>
+  <section class="card"><h3 style="margin-bottom:6px">I nostri spazi</h3><p class="small">${ROOMS.length} studi climatizzati e attrezzati: studi standard per consulenze e attività specialistiche, uno studio ampio e luminoso per attività riabilitative e incontri formativi, studi compatti per consulenze riservate. Completano la struttura una reception dedicata, una sala d’attesa accogliente e servizi igienici distinti per professionisti e pazienti.</p>
+   <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${ROOMS.map(r=>`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} ${esc(r.name)} · ${r.mq} mq</button>`).join("")}</div></section>
+  <button class="btn ghost block" data-act="openPage" data-v="offerta">Sei un professionista? Scopri l’offerta ${ic("arrow","sm")}</button>
+  ${contattiHTML()}</div></div></div>`}
 function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza);return `<div class="screen">${bar(esc(a.breve)+" in 3D")}<div class="content"><div class="pad stack" style="gap:14px">
   <div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
   <p class="tiny">Modello 3D ricostruito dalle foto: trascina per girarlo, pizzica o usa la rotella per avvicinarti.</p>
@@ -1294,7 +1353,9 @@ function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">
   const r=room(id);return `<div class="screen">${bar(esc(r.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
   <p class="tiny">Vista ricostruita dalle foto della stanza: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti.</p>
-  <p class="small"><b>${esc(r.name)}</b> · ${ROOM_TYPES[r.type].label} · ${eur(roomTariff(r).ora)} l’ora</p>${attrCards(r)}</div></div></div>`}
+  <div><h2 style="font-size:1.25rem;font-weight:800">${esc(r.name)} · ${r.mq} mq</h2><p class="tiny">${ROOM_TYPES[r.type].label}</p>${r.desc?`<p class="small muted" style="margin-top:6px">${esc(r.desc)}</p>`:""}</div>
+  ${r.dot?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.dot.map(x=>`<span class="badge grey">${esc(x)}</span>`).join("")}</div>`:""}
+  ${attrCards(r)}<section class="card"><h3 style="margin-bottom:8px">Tariffe mensili</h3>${tariffeMeseHTML(r)}</section></div></div></div>`}
 function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7);
   const head=`<div class="pad stack" style="gap:16px"><div class="row between"><h1 class="ptitle">Clinia</h1><span class="badge">${ic("lock","sm")} Direzione</span></div>
   <div class="seg seg4">${[["rend","Rendiconto"],["spec","Specialisti"],["stanze","Stanze"],["spese","Spese"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="cliSeg" data-v="${k}">${l}</button>`).join("")}</div>`;
@@ -1337,7 +1398,7 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   <button class="btn ghost block" data-act="cliSeg" data-v="spese">${ic("plus","sm")} Segna una spesa</button>
   <p class="tiny">Rendiconto gestionale indicativo, utile per il controllo del mese. Non sostituisce la contabilità del commercialista.${DB.on?"":" Nella versione di prova visite e pazienti sono di esempio."}</p></div>`}
 function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadRoomPhotos();
-  return `<p class="muted small">Nomi, tipologia e tariffe di ogni stanza. Le tariffe valgono subito per le nuove prenotazioni degli specialisti. Aggiungi le foto delle pareti per la vista 3D.</p>
+  return `<p class="muted small">I contratti mensili seguono il tariffario ufficiale (per metratura, IVA esclusa). Qui modifichi nomi, tipologia e tariffe per l’uso occasionale a ore, e le foto per la vista 3D.</p>
   ${ROOMS.map(r=>{const t=roomTariff(r),f=ph[r.id]||[];return `<form class="card stack" data-form="room" data-id="${r.id}" style="gap:10px" novalidate>
    <div class="fgrid"><label class="field"><span>Nome della stanza</span><input id="rn-${r.id}" name="name" value="${esc(r.name)}" maxlength="40"></label>
     <label class="field"><span>Tipologia</span><select id="rt-${r.id}" name="type">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?"selected":""}>${v.label}</option>`).join("")}</select></label></div>
@@ -1345,7 +1406,7 @@ function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadR
    ${f.length?`<div class="thumbs">${f.map((src,i)=>`<div><img src="${src}" alt="Foto ${i+1} di ${esc(r.name)}"><button type="button" data-act="delRoomPhoto" data-id="${r.id}" data-v="${i}" aria-label="Elimina foto">${ic("x")}</button></div>`).join("")}</div>`:""}
    <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length||r.foto?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
    <p class="err" id="re-${r.id}"></p><button class="btn primary sm" type="submit">Salva ${esc(r.name)}</button></form>`}).join("")}
-  ${TARIFFARIO.ufficiale?"":`<p class="tiny">Le tariffe iniziali sono di esempio: inserisci quelle ufficiali e salva ogni stanza.</p>`}`}
+  <p class="tiny">Le tariffe a ore iniziali sono indicative: confermale o modificale e salva ogni studio.</p>`}
 const EXP_CAT=["Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
 function cliniaSpese(m){const list=S.expenses.filter(e=>e.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)),tot=list.reduce((t,e)=>t+e.amount,0);
   return `<form class="card stack" data-form="expense" novalidate style="gap:10px"><h3>Nuova spesa</h3>
@@ -1426,8 +1487,8 @@ N. ${m.replace("-","/")}                         Data: ${new Date().toLocaleDate
 Percipiente: ${LEGAL.autore}
 Codice fiscale: [inserire]   Indirizzo: [inserire]
 
-Committente: Clinia – Dott. Marco Morelli
-${CLINIC.address} – P.IVA: [inserire]
+Committente: Clinia Srl (amministratore: Dott. Marco Morelli)
+${CLINIC.ragione} – ${CLINIC.address} – P.IVA: [inserire]
 
 Compensi di ${meseNome(m)} per la licenza dei diritti di utilizzazione
 economica dell’opera dell’ingegno "Clinia App" (software):
@@ -1474,9 +1535,10 @@ function freeMinutes(ds,r){const[o,c]=OPEN[parseD(ds).getDay()];return(c-o)-book
 function stanzeTab(){if(!UI.roomDay||!OPEN[parseD(UI.roomDay).getDay()])UI.roomDay=firstOpen();const ds=UI.roomDay;
   const my=S.rooms.filter(b=>b.doctorId===S.proId&&b.date>=today()).concat(allBookings().filter(b=>b.seed&&b.doctorId===S.proId&&b.date>=today()&&b.date<=addDays(today(),6))).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
   return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1><p class="muted small">${esc(CLINIC.hoursText)}</p>
+  <button class="card row" data-act="openPage" data-v="offerta" style="width:100%;text-align:left;gap:12px;background:var(--gold-soft);border-color:var(--gold)"><span style="flex:1"><b class="small" style="display:block">Contratto mensile</b><span class="tiny">Mezza giornata da ${eurM(TARIFFE_MESE.mq[12].A)} al mese + IVA · servizi inclusi</span></span>${ic("right","sm")}</button>
   ${dayStrip(ds,"roomDay",x=>{const f=ROOMS.filter(r=>freeMinutes(x,r)>=60).length;return f+" liberi"})}
   <div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Occupato</span><span><i style="background:var(--accent)"></i>Tuo</span></div>
-  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name}</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p>${r.foto||r.attr?`<p style="margin-top:4px">${r.foto?`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button> `:""}${attrDi(r).map(a=>`<button class="badge az" data-act="attr3d" data-id="${a.k}">${esc(a.breve)}</button>`).join(" ")}</p>`:""}</div><span class="price num small">${eur(roomTariff(r).ora)}/h</span></div>
+  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name} · ${r.mq} mq</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p>${r.foto||r.attr?`<p style="margin-top:4px">${r.foto?`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button> `:""}${attrDi(r).map(a=>`<button class="badge az" data-act="attr3d" data-id="${a.k}">${esc(a.breve)}</button>`).join(" ")}</p>`:""}</div><span class="price num small">${eur(roomTariff(r).ora)}/h</span></div>
    ${timeline(ds,r)}<div class="row between"><span class="tiny">${fm>0?"Libero per "+(fm/60).toLocaleString("it-IT")+" h":"Completo"}</span><button class="btn primary sm" data-act="openRoom" data-id="${r.id}" ${fm>=30?"":"disabled"}>Prenota</button></div></div>`}).join("")}
   <h2 class="h-sec" style="margin-top:8px">I tuoi turni</h2>
   ${my.length?`<div class="list">${my.map(b=>{const r=room(b.roomId);const cost=roomCost(r.id,toMin(b.end)-toMin(b.start));
@@ -1492,7 +1554,7 @@ function roomSheet(){if(UI.sheet.step==="pay")return roomPaySheet();const sh=UI.
    <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="rs-rep" type="checkbox" ${sh.repeat?"checked":""} data-change="roomRepeat" style="width:20px;height:20px;accent-color:var(--accent)"><span class="t">Ripeti ogni settimana<small>Per le prossime 4 settimane, dove lo studio è libero</small></span></label>
    ${conflict?`<p class="err">Lo studio è già occupato in parte di questa fascia.</p>`:mine?`<p class="err">Hai già un altro studio prenotato in questa fascia.</p>`:e<=s?`<p class="err">L’orario di fine deve essere dopo l’inizio.</p>`:""}
    <dl class="card sum"><dt>Durata</dt><dd class="num">${e>s?((e-s)/60).toLocaleString("it-IT")+" h":"—"}</dd><dt>Tariffa</dt><dd class="num">${e>s?eur(cost):"—"}${sh.repeat?" × settimana":""}</dd></dl>
-   ${TARIFFARIO.ufficiale?"":`<p class="tiny">Tariffe di esempio: saranno aggiornate con il tariffario ufficiale di Clinia.</p>`}
+   <p class="tiny">Uso occasionale a ore: tariffa indicativa, da confermare con Clinia.</p>
    <button class="btn primary block" data-act="confirmRoom" ${ok?"":"disabled"}>${isOwner()?"Prenota (gratis per il titolare)":"Continua al pagamento"}</button></div>`}
 function roomPaySheet(){const sh=UI.sheet,r=room(sh.id),each=roomCost(r.id,sh.end-sh.start),tot=Math.round(each*sh.plan.length*100)/100;
   return `<form class="stack" data-form="roompay" novalidate><div><h2 style="font-size:1.25rem;font-weight:800">Pagamento a Clinia</h2><p class="muted small">${r.name} · <span class="num">${toT(sh.start)}–${toT(sh.end)}</span></p></div>
@@ -1508,8 +1570,8 @@ function roomPaySheet(){const sh=UI.sheet,r=room(sh.id),each=roomCost(r.id,sh.en
 
 /* ---------- Professionista: tariffe ---------- */
 function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack" style="gap:20px"><h1 class="h-sec" style="font-size:1.6rem">Tariffe</h1>
-  ${TARIFFARIO.ufficiale?"":`<div class="demo-note">${ic("euro","sm")}<span>Tariffario di esempio. Sarà sostituito con quello ufficiale della clinica.</span></div>`}
-  <section class="card"><h3 style="margin-bottom:8px">Affitto studi</h3><div style="overflow-x:auto"><table class="tar"><thead><tr><th>Studio</th><th>1 ora</th><th>4 ore</th><th>Giornata</th></tr></thead><tbody>
+  <section class="card"><h3 style="margin-bottom:8px">Studi: contratto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
+  <section class="card"><h3 style="margin-bottom:4px">Uso occasionale a ore</h3><p class="tiny" style="margin-bottom:8px">Tariffe indicative, da confermare con Clinia.</p><div style="overflow-x:auto"><table class="tar"><thead><tr><th>Studio</th><th>1 ora</th><th>4 ore</th><th>Giornata</th></tr></thead><tbody>
    ${ROOMS.map(r=>{const t=roomTariff(r);return `<tr><td><b>${esc(r.name)}</b><br><span class="tiny">${ROOM_TYPES[r.type].label}</span></td><td>${eur(t.ora)}</td><td>${eur(t.mezza)}</td><td>${eur(t.giornata)}</td></tr>`}).join("")}</tbody></table></div>
    <p class="tiny" style="margin-top:8px">Oltre le 4 ore si aggiunge la tariffa oraria fino al massimo della giornata.</p></section>
   <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">I pazienti vedono questi prezzi quando prenotano.</p>
@@ -1523,7 +1585,7 @@ function sheetHTML(){const s=UI.sheet;
   if(s.type==="cliniaPay")return `<form class="stack" data-form="cliniaPay" novalidate style="gap:12px"><h2 style="font-size:1.2rem;font-weight:800">Pagamento automatico a FPM</h2>
    <p class="muted small">Il giorno 1 di ogni mese, per ${LICENZA.mesi} mesi, l’app addebita ${eur(LICENZA.netto)} e li accredita subito a FPM. La ritenuta d’acconto (${eur(lordoDaNetto(LICENZA.netto)-LICENZA.netto)}) resta a Clinia, che la versa con F24.</p>
    <div class="seg"><button type="button" class="${s.mode==="carta"?"on":""}" data-act="cpMode" data-v="carta">Carta</button><button type="button" class="${s.mode==="sepa"?"on":""}" data-act="cpMode" data-v="sepa">Conto (addebito SEPA)</button></div>
-   ${s.mode==="carta"?cardFields("cp"):`<label class="field"><span>Intestatario</span><input id="cp-holder" name="holder" value="Clinia – Dott. Marco Morelli"></label><label class="field"><span>IBAN di Clinia</span><input id="cp-iban" name="iban" maxlength="34" data-input="iban" placeholder="IT.."></label><label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="cp-ok" name="ok" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Autorizzo l’addebito diretto SEPA mensile su questo conto.</span></label>`}
+   ${s.mode==="carta"?cardFields("cp"):`<label class="field"><span>Intestatario</span><input id="cp-holder" name="holder" value="Clinia Srl"></label><label class="field"><span>IBAN di Clinia</span><input id="cp-iban" name="iban" maxlength="34" data-input="iban" placeholder="IT.."></label><label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="cp-ok" name="ok" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Autorizzo l’addebito diretto SEPA mensile su questo conto.</span></label>`}
    <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: nessun addebito reale.</span></div>
    <p class="err" id="cp-err"></p><button class="btn primary block" type="submit">Attiva il pagamento automatico</button><button class="btn ghost block" type="button" data-act="closeSheet">Annulla</button></form>`;
   if(s.type==="ricevuta")return `<div class="stack" style="gap:12px"><h2 style="font-size:1.2rem;font-weight:800">Ricevuta di ${esc(meseNome(s.m))}</h2><p class="muted small">Completa i dati tra parentesi quadre, firma e consegnala a Clinia. Poi caricala in Documenti.</p><div class="rcpt">${esc(ricevutaText(s.m))}</div><button class="btn primary block" data-act="copyRicevuta">Copia il testo</button><button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
@@ -1971,7 +2033,7 @@ async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+i
     const wall=i=>{const t=tex[i%tex.length].clone();t.needsUpdate=true;t.wrapS=T.RepeatWrapping;t.repeat.x=-1;return new T.MeshBasicMaterial({map:t,side:T.BackSide})};
     const plain=c=>new T.MeshBasicMaterial({color:c,side:T.BackSide});
     scene.add(new T.Mesh(new T.BoxGeometry(6,3,6),[wall(1),wall(3),plain(0xf4f6f6),plain(0xc9b8a4),wall(2),wall(0)]))}
-  let lon=0,lat=0,drag=null,idle=true,pinch=0,dir=1;
+  let lon=(!own.length&&dflt&&dflt.start)||0,lat=0,drag=null,idle=true,pinch=0,dir=1;
   const camH=()=>T.MathUtils.radToDeg(Math.atan(Math.tan(T.MathUtils.degToRad(cam.fov/2))*cam.aspect)),lonMax=()=>arc&&arc<360?Math.max(0,arc/2-camH()):1e9,latMax=()=>Math.max(0,Math.min(80,vHalf-cam.fov/2));
   const clamp=()=>{const L=lonMax(),A=latMax();lon=Math.max(-L,Math.min(L,lon));lat=Math.max(-A,Math.min(A,lat))};
   el.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,lon,lat};idle=false;el.setPointerCapture(e.pointerId);hint.style.display="none"};

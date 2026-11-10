@@ -6,6 +6,15 @@
 	<string>Manga Vox registra la voce solo mentre tieni premuto il pulsante, per tradurla sul telefono.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Manga Vox trasforma la voce in testo sul telefono, in tempo reale, per tradurla.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Manga Vox collega direttamente il tuo iPhone a quello di un amico vicino, anche senza internet, per tradurre la conversazione nelle cuffie.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Manga Vox usa il Bluetooth per collegarsi all'iPhone di un amico vicino, anche senza internet.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_mangavox._tcp</string>
+		<string>_mangavox._udp</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Manga Vox usa la fotocamera per leggere e tradurre testi.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -29,6 +29,9 @@ Al centro c'è **un unico grande pulsante 3D**.
 ### 🌍 Lingue del mondo
 Da ⬇ in alto › **LINGUE DEL MONDO**, oppure dal riquadro sotto il pulsante azzurro: cerca o scorri i paesi, **tocca il paese** e l'app scarica la sua lingua per l'offline (circa 30 MB). Da lì la lingua viene riconosciuta in automatico, tradotta e letta; si rimuove tenendola premuta. Se l'app riconosce una lingua non ancora scaricata, propone subito **🌍 SCARICA**.
 
+### 🔗 Due telefoni, due cuffie (iPhone + iPhone)
+Se tutti e due avete Manga Vox: tocca **🔗 COLLEGA UN AMICO**, l'amico fa lo stesso, e toccate il codice dell'altro. I telefoni si collegano **senza internet** (Bluetooth / Wi-Fi diretto). Da lì ognuno usa solo il suo pulsante **IO** e parla nelle sue cuffie: all'altro telefono arrivano le parole in diretta, tradotte nella lingua del suo proprietario e lette nelle sue cuffie. Tra i telefoni passa solo testo cifrato. Per ora iPhone con iPhone.
+
 ### 🎛 Audio (icona in alto)
 Stato e attivazione di microfono e riconoscimento vocale, **prova microfono** con indicatore, volume del telefono, volume e velocità della voce, lettura ad alta voce sì/no, **prova voce**.
 

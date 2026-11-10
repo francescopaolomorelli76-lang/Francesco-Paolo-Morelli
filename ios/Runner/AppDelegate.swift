@@ -1,5 +1,6 @@
 import AVFoundation
 import Flutter
+import MultipeerConnectivity
 import Speech
 import SwiftUI
 import Translation
@@ -31,6 +32,9 @@ import Vision
     }
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AudioRoutePlugin") {
       AudioRoutePlugin.register(with: registrar)
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "PeerLinkPlugin") {
+      PeerLinkPlugin.register(with: registrar)
     }
   }
 }
@@ -556,4 +560,157 @@ class AudioRoutePlugin: NSObject, FlutterPlugin {
       result(FlutterMethodNotImplemented)
     }
   }
+}
+
+/// Collegamento diretto tra due iPhone con Manga Vox, senza internet
+/// (MultipeerConnectivity: Bluetooth e Wi-Fi diretto). Tra i telefoni
+/// passano solo brevi messaggi di testo (JSON), cifrati.
+class PeerLinkPlugin: NSObject, FlutterPlugin, FlutterStreamHandler, MCSessionDelegate,
+  MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate {
+  private static let service = "mangavox"
+  private var me: MCPeerID?
+  private var session: MCSession?
+  private var advertiser: MCNearbyServiceAdvertiser?
+  private var browser: MCNearbyServiceBrowser?
+  private var found: [String: MCPeerID] = [:]
+  private var sink: FlutterEventSink?
+
+  static func register(with registrar: FlutterPluginRegistrar) {
+    let instance = PeerLinkPlugin()
+    let channel = FlutterMethodChannel(name: "manga_vox/peer", binaryMessenger: registrar.messenger())
+    registrar.addMethodCallDelegate(instance, channel: channel)
+    let events = FlutterEventChannel(name: "manga_vox/peer_events", binaryMessenger: registrar.messenger())
+    events.setStreamHandler(instance)
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    sink = events
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    sink = nil
+    return nil
+  }
+
+  private func emit(_ event: [String: Any]) {
+    DispatchQueue.main.async { self.sink?(event) }
+  }
+
+  func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let args = call.arguments as? [String: Any] ?? [:]
+    switch call.method {
+    case "start":
+      // Rende visibile questo telefono e cerca gli altri (schermata "Collega un amico").
+      if session == nil || me?.displayName != (args["name"] as? String) {
+        shutdown()
+        let peer = MCPeerID(displayName: String(((args["name"] as? String) ?? "Manga Vox").prefix(40)))
+        let newSession = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
+        newSession.delegate = self
+        me = peer
+        session = newSession
+      }
+      guard let peer = me else { result(false); return }
+      advertiser?.stopAdvertisingPeer()
+      browser?.stopBrowsingForPeers()
+      let adv = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: nil, serviceType: PeerLinkPlugin.service)
+      adv.delegate = self
+      adv.startAdvertisingPeer()
+      advertiser = adv
+      let br = MCNearbyServiceBrowser(peer: peer, serviceType: PeerLinkPlugin.service)
+      br.delegate = self
+      br.startBrowsingForPeers()
+      browser = br
+      result(true)
+    case "stopDiscovery":
+      // Smette di farsi trovare, ma resta collegato.
+      advertiser?.stopAdvertisingPeer()
+      browser?.stopBrowsingForPeers()
+      advertiser = nil
+      browser = nil
+      found = [:]
+      result(true)
+    case "invite":
+      guard let id = args["id"] as? String, let peer = found[id], let s = session, let br = browser else {
+        result(false)
+        return
+      }
+      br.invitePeer(peer, to: s, withContext: nil, timeout: 20)
+      result(true)
+    case "send":
+      guard let text = args["data"] as? String, let s = session, !s.connectedPeers.isEmpty,
+            let data = text.data(using: .utf8) else {
+        result(false)
+        return
+      }
+      let reliable = (args["reliable"] as? Bool) ?? true
+      do {
+        try s.send(data, toPeers: s.connectedPeers, with: reliable ? .reliable : .unreliable)
+        result(true)
+      } catch {
+        result(false)
+      }
+    case "stop":
+      shutdown()
+      result(true)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func shutdown() {
+    advertiser?.stopAdvertisingPeer()
+    browser?.stopBrowsingForPeers()
+    session?.disconnect()
+    advertiser = nil
+    browser = nil
+    session = nil
+    me = nil
+    found = [:]
+  }
+
+  // MARK: ricerca
+  func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+    DispatchQueue.main.async { self.found[peerID.displayName] = peerID }
+    emit(["type": "found", "id": peerID.displayName])
+  }
+
+  func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+    DispatchQueue.main.async { self.found.removeValue(forKey: peerID.displayName) }
+    emit(["type": "lost", "id": peerID.displayName])
+  }
+
+  // MARK: inviti (accettati solo mentre la schermata di collegamento è aperta)
+  func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID,
+                  withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+    DispatchQueue.main.async {
+      invitationHandler(self.advertiser != nil && self.session != nil, self.session)
+    }
+  }
+
+  // MARK: sessione
+  func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+    let value: String
+    switch state {
+    case .connected: value = "connected"
+    case .connecting: value = "connecting"
+    case .notConnected: value = "disconnected"
+    @unknown default: value = "disconnected"
+    }
+    emit(["type": "state", "id": peerID.displayName, "state": value])
+  }
+
+  func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+    if let text = String(data: data, encoding: .utf8) {
+      emit(["type": "data", "id": peerID.displayName, "data": text])
+    }
+  }
+
+  func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+
+  func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String,
+               fromPeer peerID: MCPeerID, with progress: Progress) {}
+
+  func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String,
+               fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
 }

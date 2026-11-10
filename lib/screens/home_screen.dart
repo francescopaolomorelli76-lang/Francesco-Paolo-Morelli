@@ -11,6 +11,7 @@ import '../services/lang_detect.dart';
 import '../services/langs.dart';
 import '../services/live_speech.dart';
 import '../services/ocr_service.dart';
+import '../services/peer_link.dart';
 import '../services/pitch.dart';
 import '../services/prefs.dart';
 import '../services/setup_service.dart';
@@ -21,6 +22,7 @@ import '../ui/push_button.dart';
 import 'audio_screen.dart';
 import 'info_screen.dart';
 import 'language_screen.dart';
+import 'pair_screen.dart';
 import 'setup_screen.dart';
 import 'world_screen.dart';
 
@@ -76,6 +78,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final _tr = TranslatorService.instance;
   final _ocr = OcrService.instance;
 
+  // Collegamento con un altro telefono (ognuno in cuffia col pulsante IO).
+  final _link = PeerLink.instance;
+  StreamSubscription<Map<String, dynamic>>? _linkSub;
+  String _remotePartial = '';
+  String _remoteTranslation = '';
+  Lang? _remoteLang;
+  Timer? _remoteTimer;
+  DateTime _lastPartialSent = DateTime.fromMillisecondsSinceEpoch(0);
+  bool get _linked => _link.connected.value != null;
+
   Lang _mine = Prefs.get('mine', Lang.deviceDefault());
   Lang? _partner = Prefs.maybe('partner2');
 
@@ -109,6 +121,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _live.partial.addListener(_onPartial);
+    _link.connected.addListener(_onLinkChanged);
+    _link.partnerLang.addListener(_onPartnerLang);
+    _linkSub = _link.messages.listen(_onRemote);
     WidgetsBinding.instance.addPostFrameCallback((_) => _firstRun());
   }
 
@@ -116,6 +131,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _live.partial.removeListener(_onPartial);
+    _link.connected.removeListener(_onLinkChanged);
+    _link.partnerLang.removeListener(_onPartnerLang);
+    _linkSub?.cancel();
+    _remoteTimer?.cancel();
     _partialTimer?.cancel();
     _disposeCamera();
     super.dispose();
@@ -212,6 +231,72 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
     Prefs.set('mine', l);
     Prefs.setMaybe('partner2', _partner);
+    if (_linked) _link.sayHello(l);
+  }
+
+  // ───────────────────────── telefono collegato ─────────────────────────
+
+  Future<void> _openPair() async {
+    if (_active != null) return;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => PairScreen(mine: _mine)));
+  }
+
+  void _onLinkChanged() {
+    if (!mounted) return;
+    final p = _link.connected.value;
+    setState(() {
+      _remotePartial = '';
+      _remoteTranslation = '';
+    });
+    if (p != null) {
+      _link.sayHello(_mine);
+    } else {
+      _toast('Collegamento con l\'altro telefono interrotto.');
+    }
+  }
+
+  void _onPartnerLang() {
+    final l = _link.partnerLang.value;
+    if (l != null && l != _mine && l != _partner && mounted) _setPartner(l);
+  }
+
+  /// Messaggi dall'altro telefono: parole mentre parla e frasi finite.
+  Future<void> _onRemote(Map<String, dynamic> m) async {
+    final from = Lang.fromCode('${m['lang'] ?? ''}');
+    final text = '${m['text'] ?? ''}'.trim();
+    if (from == null || !mounted) return;
+    switch (m['t']) {
+      case 'partial':
+        setState(() {
+          _remoteLang = from;
+          _remotePartial = text;
+        });
+        _remoteTimer?.cancel();
+        _remoteTimer = Timer(const Duration(milliseconds: 250), () async {
+          try {
+            final out = await _tr.translate(text, from, _mine);
+            if (mounted && _remotePartial == text) setState(() => _remoteTranslation = out);
+          } catch (_) {}
+        });
+      case 'msg':
+        if (text.isEmpty) return;
+        _remoteTimer?.cancel();
+        var out = text;
+        try {
+          out = await _tr.translate(text, from, _mine);
+        } on MissingLanguage catch (e) {
+          _missing(e);
+        } catch (_) {}
+        if (!mounted) return;
+        final g = m['g'] == 'male' ? VoiceGender.male : (m['g'] == 'female' ? VoiceGender.female : null);
+        setState(() {
+          _remotePartial = '';
+          _remoteTranslation = '';
+          _talk.add(_Msg(side: Side.them, from: from, to: _mine, original: text, translated: out, gender: g));
+        });
+        // La frase dell'amico, tradotta, la sento io (nelle cuffie se collegate).
+        await _speech.speak(out, _mine, gender: g, hearer: Hearer.me);
+    }
   }
 
   void _setPartner(Lang? l) {
@@ -332,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _openSetup();
       return;
     }
-    if (side == Side.me && _partner == null) {
+    if (side == Side.me && _partner == null && !_linked) {
       _ignoreRelease = true;
       _toast(
         'Prima fai parlare l\'altra persona col pulsante azzurro (riconosco la sua lingua), oppure sceglila qui sotto.',
@@ -371,6 +456,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final from = _active == Side.me ? _mine : _partner;
     final to = _active == Side.me ? _partner : _mine;
     final text = _live.partial.value.trim();
+    // Collegato a un altro telefono: le mie parole gli arrivano mentre parlo.
+    if (_linked && _active == Side.me && text.isNotEmpty) {
+      final now = DateTime.now();
+      if (now.difference(_lastPartialSent) > const Duration(milliseconds: 300)) {
+        _lastPartialSent = now;
+        _link.sendPartial(text);
+      }
+    }
     if (from == null || to == null || text.isEmpty) return;
     _partialTimer?.cancel();
     _partialTimer = Timer(const Duration(milliseconds: 350), () async {
@@ -437,6 +530,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
       if (from == null || text.isEmpty) {
         _toast('Non ho capito le parole: parla un po\' più vicino e più a lungo.');
+        return;
+      }
+      if (_linked && side == Side.me) {
+        // Collegato: la frase va all'altro telefono, che la traduce e la legge
+        // nelle cuffie del suo proprietario. Qui la mostro soltanto.
+        final gender = await genderFuture;
+        await _link.sendMessage(text, gender: gender?.name);
+        final to = _partner ?? _mine;
+        var shown = text;
+        if (_partner != null) {
+          try {
+            shown = await _tr.translate(text, from, to);
+          } catch (_) {}
+        }
+        if (!mounted) return;
+        setState(() {
+          _talk.add(_Msg(side: side, from: from!, to: to, original: text, translated: shown, gender: gender));
+          _active = null;
+          _state = PushState.idle;
+          _liveTranslation = '';
+        });
         return;
       }
       final to = side == Side.me ? _partner! : _mine;
@@ -863,7 +977,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [column(Side.them), column(Side.me)]),
+      // Collegato a un altro telefono: ognuno usa solo il suo pulsante IO.
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: _linked ? [const Spacer(), column(Side.me), const Spacer()] : [column(Side.them), column(Side.me)],
+      ),
     );
   }
 
@@ -972,6 +1090,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     return Column(
       children: [
+        _linkBar(),
         Expanded(
           child: ListView(
             reverse: true,
@@ -979,10 +1098,75 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             children: children.reversed.toList(),
           ),
         ),
+        if (_remotePartial.isNotEmpty && _active == null) _remotePanel(),
         if (_active != null) _livePanel(),
       ],
     );
   }
+
+  /// In alto: collega un altro telefono, oppure stato del collegamento.
+  Widget _linkBar() {
+    if (!PeerLink.supported) return const SizedBox.shrink();
+    final p = _link.connected.value;
+    if (p == null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: ComicButton(label: '🔗 COLLEGA UN AMICO', size: 15, color: MC.white, onTap: _openPair),
+      );
+    }
+    final l = _link.partnerLang.value;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+      child: ComicPanel(
+        color: MC.cyan,
+        shadow: 3,
+        padding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+        child: Row(
+          children: [
+            const Text('🔗', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Collegato con ${l?.flag ?? p.flag} codice ${p.code}: ognuno parla col suo IO, in cuffia.',
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Scollega',
+              onPressed: _link.disconnect,
+              icon: const Icon(Icons.link_off, color: MC.black),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// L'amico collegato sta parlando: le sue parole tradotte in diretta.
+  Widget _remotePanel() => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+    child: ComicPanel(
+      color: MC.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('${_remoteLang?.flag ?? ''} ➜ ${_mine.flag}  STA PARLANDO…', style: comic(16, color: MC.red)),
+          const SizedBox(height: 4),
+          Text(
+            _remoteTranslation.isNotEmpty ? _remoteTranslation : '…',
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, height: 1.2),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Text(
+              _remotePartial,
+              style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   /// Riquadro "in diretta": parole riconosciute e traduzione mentre si parla.
   Widget _livePanel() {

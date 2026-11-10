@@ -1,6 +1,6 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
 // Riceve gli eventi di Stripe e fa le divisioni IN TEMPO REALE:
-//   visita    → prezzo subito allo specialista, servizio a FPM (meno 3 % Progetto Arca e ritenuta)
+//   visita    → prezzo subito allo specialista, servizio a FPM al netto della ritenuta (FPM dona il 3 % a Progetto Arca)
 //   abbonamento → quota a FPM al netto della ritenuta
 //   stanze    → restano a Clinia
 // Stripe › Sviluppatori › Webhook: https://<progetto>.supabase.co/functions/v1/stripe-webhook
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
         await admin.from("payments").upsert({ tipo: "visita", importo: a.prezzo, beneficiario: "specialista",
           pagatore_user: a.patient_id, specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta",
           stato: conto ? "riuscito" : "in_attesa", stripe_payment_intent: pi.id }, { onConflict: "stripe_payment_intent" });
-        // 2) servizio di prenotazione a FPM (3 % a Progetto Arca, ritenuta trattenuta da Clinia)
+        // 2) servizio di prenotazione a FPM (ritenuta trattenuta da Clinia; il 3 % per Progetto Arca lo bonifica FPM)
         await accreditaFpm({ tipo: "servizio_paziente", lordo: Number(a.commissione_app), conBeneficenza: true,
           sourceCharge: charge, appointment_id: a.id, specialist_id: a.specialist_id, chiave: `serv-${a.id}` });
       }

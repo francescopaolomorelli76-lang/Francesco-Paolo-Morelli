@@ -4,7 +4,7 @@
 
 ## Progetto collegato
 - Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
-- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
 - Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
 - Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
 
@@ -45,4 +45,4 @@ supabase functions deploy licenza-fpm --no-verify-jwt
 - `stripe-webhook`: appena un pagamento riesce divide subito: visita allo specialista, servizio a FPM (meno 3 % Progetto Arca e ritenuta), abbonamento a FPM, stanze a Clinia.
 - `commissioni-contanti` (cron ogni notte): addebita il servizio delle visite pagate in struttura e accredita FPM.
 - `licenza-fpm` (cron `0 6 1 * *`): per 12 mesi addebita a Clinia 300 € e li accredita netti a FPM.
-- Ogni accredito a FPM è in `fpm_transfers` (tempo reale); le donazioni da fare in `donazioni`.
+- Ogni accredito a FPM è in `fpm_transfers` (tempo reale). Il 3 % per Progetto Arca non viene trattenuto: è in `donazioni`, FPM lo bonifica e lo segna; tutti gli utenti vedono la storia con `arca_storia()`.

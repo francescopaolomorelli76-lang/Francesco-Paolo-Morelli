@@ -48,8 +48,9 @@ export async function impostazioni() {
   };
 }
 
-// Accredito immediato a FPM (conto collegato) di una quota lorda, al netto di beneficenza e ritenuta.
-// La ritenuta resta nel saldo di Clinia, che la versa con F24; la beneficenza resta accantonata per Progetto Arca.
+// Accredito immediato a FPM (conto collegato) di una quota lorda, al netto della sola ritenuta
+// (resta nel saldo di Clinia, che la versa con F24). Il 3 % per Progetto Arca NON viene trattenuto:
+// lo si registra nella tabella donazioni e FPM lo bonifica alla fondazione ogni mese.
 export async function accreditaFpm(o: {
   tipo: "servizio_paziente" | "servizio_specialista" | "abbonamento" | "licenza";
   lordo: number; conBeneficenza: boolean; nettoFisso?: number;
@@ -57,9 +58,8 @@ export async function accreditaFpm(o: {
 }) {
   const s = await impostazioni();
   const beneficenza = o.conBeneficenza ? r2(o.lordo * s.beneficenzaPct) : 0;
-  const base = o.lordo - beneficenza;
-  const netto = o.nettoFisso ?? r2(base * (1 - s.ritenuta));
-  const ritenuta = r2(o.lordo - beneficenza - netto);
+  const netto = o.nettoFisso ?? r2(o.lordo * (1 - s.ritenuta));
+  const ritenuta = r2(o.lordo - netto);
   const conto = Deno.env.get("FPM_STRIPE_ACCOUNT");
   let trId: string | null = null, stato = "in_attesa";
   if (conto) {
@@ -74,10 +74,11 @@ export async function accreditaFpm(o: {
     tipo: o.tipo, appointment_id: o.appointment_id ?? null, specialist_id: o.specialist_id ?? null,
     lordo: o.lordo, beneficenza, ritenuta, netto, stripe_transfer_id: trId ?? `attesa:${o.chiave}`, stato,
   }, { onConflict: "stripe_transfer_id" });
-  if (beneficenza) {   // accantona per la donazione del mese
+  if (beneficenza) {   // quota del mese che FPM bonificherà a Progetto Arca
     const mese = new Date().toISOString().slice(0, 7) + "-01";
-    const { data: d } = await admin.from("donazioni").select("importo").eq("mese", mese).maybeSingle();
-    await admin.from("donazioni").upsert({ mese, importo: r2(Number(d?.importo ?? 0) + beneficenza) });
+    const { data: d } = await admin.from("donazioni").select("importo, prenotazioni").eq("mese", mese).maybeSingle();
+    await admin.from("donazioni").upsert({ mese, importo: r2(Number(d?.importo ?? 0) + beneficenza),
+      prenotazioni: Number(d?.prenotazioni ?? 0) + 1 });
   }
   return { netto, ritenuta, beneficenza };
 }

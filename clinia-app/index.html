@@ -494,7 +494,11 @@ const PAYEES={rooms:"Clinia – Dott. Marco Morelli",sub:"Clinia (P.IVA della st
 // Primi 12 mesi: 300 € NETTI al mese a FPM (Clinia aggiunge la ritenuta d'acconto). Poi solo abbonamenti e servizio prenotazioni.
 const LICENZA={netto:300,mesi:12,inizio:"2026-11"};
 // Beneficenza: il 3 % del servizio di prenotazione va a Progetto Arca (IBAN da prendere dal sito ufficiale della fondazione)
-const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",pct:0.03};
+const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",pct:0.03,
+  storia:[["1994","Nasce a Milano per dare aiuto concreto a chi vive in grave povertà ed emarginazione. Il primo intervento è un centro di accoglienza residenziale per persone senza dimora con problemi di dipendenza."],
+    ["2009","Diventa fondazione."],
+    ["Oggi","Assistenza in strada, pasti caldi, cure mediche e accoglienza a Milano, Roma e Napoli. A Baggio (Milano) ha aperto Cascina Vita Nuova, la prima casa dove le persone senza dimora possono vivere con i propri animali."],
+    ["2025","Pubblica il libro sui suoi 30 anni di storia."]]};
 // Accesso riservato FPM (password verificata tramite impronta SHA-256; nell'app pubblicata la verifica è sul server)
 const FPM={email:"fpm@fpmwebdesigntech.it",hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
@@ -934,6 +938,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
   return `<div class="pad stack" style="gap:20px">${markSvg(44)}<h1 class="hello">${nm}</h1>
   <button class="searchbox" data-act="openSearch">${ic("search")}<span class="muted">Cerca specialisti e prestazioni</span></button>
   ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${DOCTORS.length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
+  <button class="card row" data-act="openPage" data-v="arca" style="text-align:left;width:100%;gap:12px;background:var(--accent-soft);border-color:var(--accent)"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--accent-2);display:grid;place-items:center">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Ogni prenotazione aiuta Progetto Arca</b><span class="tiny">Il 3 % del servizio va a chi vive in strada. Scopri la storia</span></span>${ic("right","sm")}</button>
   <div class="chips">${CHIPS.map((c,i)=>`<button class="chip" data-act="chip" data-v="${i}"><span class="dot a-${c[1]}"></span>${c[0]}</button>`).join("")}</div>
   ${na?`<section class="stack" style="gap:10px"><h2 class="h-sec">La tua prossima visita</h2>${visitCard(na,true)}</section>`:""}
   ${logged()?"":`<section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Configura il tuo account</h2>
@@ -947,7 +952,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "ricavi":return ricaviPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1035,7 +1040,7 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
     ${DB.on&&!STRIPE.publishableKey?`<p class="tiny">Il pagamento con carta nell’app si attiva quando colleghiamo Stripe. Per ora paghi in struttura.</p>`:""}${(DB.on&&!STRIPE.publishableKey?[]:S.cards).map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
     ${logged()?`<button class="link small" style="align-self:flex-start" data-act="openPage" data-v="payments">${ic("plus","sm")} Aggiungi una carta</button>`:""}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
-   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd>${(b.pay||"clinic")==="clinic"?`<dt>Da pagare in struttura</dt><dd class="num">${eur(s.price)}</dd>`:`<dt>Visita</dt><dd class="num">${eur(s.price)}</dd><dt>Servizio di prenotazione<small style="display:block;font-weight:500;color:var(--ink-3)">di cui ${eur(r2(APP_FEE*ARCA.pct))} a Progetto Arca</small></dt><dd class="num">${eur(APP_FEE)}</dd><dt>Totale con carta</dt><dd class="num">${eur(s.price+APP_FEE)}</dd>`}<dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">${(b.pay||"clinic")==="clinic"?"Paghi la visita direttamente allo specialista. Nessun costo di servizio per te.":`La visita va subito allo specialista; ${eur(APP_FEE)} sono il costo del servizio di prenotazione, di cui il 3 % in beneficenza a Progetto Arca.`} Puoi disdire gratis fino a 24 ore prima.</p>`:""}
+   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd>${(b.pay||"clinic")==="clinic"?`<dt>Da pagare in struttura</dt><dd class="num">${eur(s.price)}</dd>`:`<dt>Visita</dt><dd class="num">${eur(s.price)}</dd><dt>Servizio di prenotazione<small style="display:block;font-weight:500;color:var(--ink-3)">di cui ${eur(r2(APP_FEE*ARCA.pct))} a <button class="link" data-act="openPage" data-v="arca" style="font-size:inherit">Progetto Arca</button></small></dt><dd class="num">${eur(APP_FEE)}</dd><dt>Totale con carta</dt><dd class="num">${eur(s.price+APP_FEE)}</dd>`}<dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">${(b.pay||"clinic")==="clinic"?"Paghi la visita direttamente allo specialista. Nessun costo di servizio per te.":`La visita va subito allo specialista; ${eur(APP_FEE)} sono il costo del servizio di prenotazione, di cui il 3 % in beneficenza a Progetto Arca.`} Puoi disdire gratis fino a 24 ore prima.</p>`:""}
   </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
 function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
   <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
@@ -1112,8 +1117,8 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items=isFpm()?[["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
-    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
+  const items=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
+    :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
    <h2 style="font-size:1.35rem;font-weight:800;text-align:center">${esc(u.nome+" "+u.cognome)}</h2>${pro?`<span class="badge az">${esc(doc(S.proId).name)}</span>`:""}${isOwner()?`<span class="badge">Direttore di Clinia · accesso gratuito</span>`:""}${isFpm()?`<span class="badge az">FPM WebDesignTech · area riservata</span>`:""}</div>
@@ -1216,7 +1221,7 @@ const otherDocs=()=>DOCTORS.filter(d=>d.id!==OWNER.doctorId);
 const quotaImp=()=>S.fpm.under35?0.6:0.75,RIT=()=>0.2*quotaImp(),lordoDaNetto=n=>r2(n/(1-RIT()));
 const iniz=n=>String(n||"").replace(/\(.*?\)/g,"").split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+".").join("");
 const nowStamp=()=>today()+" "+toT(nowMin());
-function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?x.lordo*ARCA.pct:0,base=x.lordo-arca,rit=x.netto!=null?x.lordo-x.netto:base*RIT();mov.push({...x,arca,rit,netto:x.netto!=null?x.netto:base-rit})};
+function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?x.lordo*ARCA.pct:0,rit=x.netto!=null?x.lordo-x.netto:x.lordo*RIT();mov.push({...x,arca,rit,netto:x.netto!=null?x.netto:x.lordo-rit})};
   for(const d of DOCTORS){const own=d.id===OWNER.doctorId;for(const a of proAllOf(d.id).filter(a=>a.date.startsWith(m))){
     if(a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE,da:"paziente",demo:a.demo});
     else if(a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE,da:"specialista",demo:a.demo})}}
@@ -1235,12 +1240,25 @@ function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(
   const visiteOwn=r2(own.carta+own.strutt),visiteSpecCarta=r2(rows.filter(r=>!r.own).reduce((t,r)=>t+r.carta,0));
   const commissioni=r2(rows.reduce((t,r)=>t+r.nCard*(0.015*APP_FEE+0.25),0)+0.015*(visiteSpecCarta+own.carta)+rows.filter(r=>!r.own).length*(0.015*SUB.price+0.25)+(lic?0.015*LICENZA.netto+0.25:0));
   const spese=S.expenses.filter(e=>e.date.startsWith(m)).reduce((t,e)=>t+e.amount,0);
-  const entrate=r2(visiteOwn+affitti+passaggio),uscite=r2(girato+ritPass+arca+licLordo+commissioni+spese);
+  const entrate=r2(visiteOwn+affitti+passaggio),uscite=r2(girato+ritPass+licLordo+commissioni+spese);
   return{rows,feePaz,feeSpec,abb,affitti,passaggio,arca,girato,ritPass,lic,licLordo,licRit,k,visiteOwn,visiteSpecCarta,commissioni,spese,entrate,uscite,saldo:r2(entrate-uscite),f24:r2(ritPass+licRit)}}
 const monthIndex=m=>{const[a,b]=LICENZA.inizio.split("-").map(Number),[c,d]=m.split("-").map(Number);return (c-a)*12+(d-b)+1};
 const r2=n=>Math.round(n*100)/100;
 function meseNav(act,m){const pm=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()-1))).slice(0,7),nm=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7);
   return `<div class="row between"><button class="iconbtn" data-act="${act}" data-v="${pm}" aria-label="Mese precedente">${ic("back")}</button><b style="text-transform:capitalize">${esc(meseNome(m))}</b><button class="iconbtn" data-act="${act}" data-v="${nm}" aria-label="Mese successivo">${ic("right")}</button></div>`}
+function arcaStoria(){if(DB.on){if(!UI.arcaRemote){UI.arcaRemote=[];DB.loadArca()}return UI.arcaRemote}const out=[];let m=LICENZA.inizio;const fine=today().slice(0,7);
+  while(m<=fine){const f=fpmMese(m);out.push({m,importo:r2(f.arca),pren:f.prenN,fatto:!!S.arca[m]});m=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7)}
+  return out.reverse()}
+function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)),donato=r2(st.filter(x=>x.fatto).reduce((t,x)=>t+x.importo,0));
+  return `<div class="screen">${bar("Progetto Arca")}<div class="content"><div class="pad stack" style="gap:18px">
+  <div class="card stack" style="gap:8px;background:var(--accent-soft);border-color:var(--accent)"><span class="label">Clinia App sostiene</span><h1 style="font-size:1.5rem;font-weight:800">${esc(ARCA.nome)}</h1>
+   <p class="small">Per ogni prenotazione fatta con l’app, il <b>3 % del servizio di prenotazione</b> va a Progetto Arca: ${eur(r2(APP_FEE*ARCA.pct))} su ${eur(APP_FEE)}. Il bonifico lo fa ogni mese FPM WebDesignTech, autore dell’app.</p></div>
+  <div class="stats"><div class="stat"><b>${eur(tot)}</b><span>Raccolti con l’app</span></div><div class="stat"><b>${eur(donato)}</b><span>Già bonificati</span></div><div class="stat"><b>${st.reduce((t,x)=>t+x.pren,0)}</b><span>Prenotazioni che hanno contribuito</span></div></div>
+  <section class="stack" style="gap:10px"><h2 class="h-sec">La storia</h2>
+   ${ARCA.storia.map(([y,t])=>`<div class="row" style="align-items:flex-start;gap:14px"><span class="badge" style="min-width:56px;justify-content:center">${esc(y)}</span><p class="small" style="flex:1">${esc(t)}</p></div>`).join("")}
+   <p class="tiny">${esc(ARCA.nome)} · ${esc(ARCA.sede)} · C.F. ${ARCA.cf}</p></section>
+  <section class="card"><h3 style="margin-bottom:6px">Donazioni mese per mese</h3>${st.map(x=>`<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${x.pren} prenotazioni</span></span><b class="num">${eur(x.importo)}</b><span class="badge ${x.fatto?"":"grey"}">${x.fatto?"Bonificato":"In arrivo"}</span></div>`).join("")}</section>
+  ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
 function room3dPage(id){const r=room(id);return `<div class="screen">${bar(esc(r.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
   <p class="tiny">Vista ricostruita dalle foto delle pareti caricate dalla direzione: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti. Con una sola foto panoramica la vista è a 360°.</p>
@@ -1263,15 +1281,13 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <dt style="grid-column:1/-1;margin-top:8px"><span class="label">Uscite</span></dt>
    <dt>Girato in automatico a FPM<small>abbonamenti e servizio, al netto della ritenuta</small></dt><dd class="neg">− ${eur(c.girato)}</dd>
    <dt>Ritenute trattenute a FPM<small>da versare con F24</small></dt><dd class="neg">− ${eur(c.ritPass)}</dd>
-   <dt>Progetto Arca<small>3 % del servizio prenotazioni</small></dt><dd class="neg">− ${eur(c.arca)}</dd>
    <dt>Licenza Clinia App<small>${c.lic?`${eur(LICENZA.netto)} netti a FPM + ${eur(c.licRit)} di ritenuta · rata ${c.k} di ${LICENZA.mesi}`:c.k>LICENZA.mesi?"terminata dopo 12 mesi":"prima dell’avvio"}</small></dt><dd class="neg">− ${eur(c.licLordo)}</dd>
    <dt>Commissioni di pagamento<small>stima 1,5 % + 0,25 € a operazione</small></dt><dd class="neg">− ${eur(c.commissioni)}</dd>
    <dt>Spese aggiuntive<small>${S.expenses.filter(e=>e.date.startsWith(m)).length} voci segnate da te</small></dt><dd class="neg">− ${eur(r2(c.spese))}</dd>
    <dt class="tot">Saldo</dt><dd class="tot">${eur(c.saldo)}</dd></dl>
   <div class="card stack" style="gap:10px"><h3>Scadenze del mese</h3>
    <div class="row between small"><span>F24 entro il 16: ritenute su compensi FPM</span><b class="num">${eur(c.f24)}</b></div>
-   <label class="chk"><input type="checkbox" data-change="arcaDone" data-m="${m}" ${S.arca[m]?"checked":""}> Donazione a ${esc(ARCA.nome)}: <b class="num">${eur(c.arca)}</b></label>
-   <p class="tiny">${esc(ARCA.nome)}, ${esc(ARCA.sede)}, C.F. ${ARCA.cf}. L’IBAN per le donazioni va preso dal sito ufficiale della fondazione.</p></div>
+   <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
   <div class="card stack" style="gap:10px"><h3>Pagamento automatico a FPM</h3>
    ${S.cliniaPay?`<p class="small">${ic("check","sm")} Attivo con ${esc(S.cliniaPay.label)}. Il giorno 1 di ogni mese, per ${LICENZA.mesi} mesi, l’app addebita ${eur(LICENZA.netto)} e li accredita a FPM. La ritenuta (${eur(lordoDaNetto(LICENZA.netto)-LICENZA.netto)}) la versi tu con F24.</p><button class="btn ghost sm" data-act="cliniaPayEdit">Cambia metodo</button>`
    :`<p class="small muted">Registra la carta o il conto di Clinia: il giorno 1 di ogni mese l’app paga in automatico ${eur(LICENZA.netto)} netti a FPM.</p><button class="btn primary block" data-act="cliniaPayEdit">${ic("card","sm")} Registra carta o conto</button>`}</div>
@@ -1313,9 +1329,13 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
   <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti garantiti`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
    <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)}</small></dt><dd>${eur(f.abbL)}</dd>
    <dt>Servizio prenotazioni<small>${f.prenN} × ${eur(APP_FEE)}</small></dt><dd>${eur(f.prenL)}</dd>
-   <dt>Progetto Arca<small>3 % del servizio prenotazioni</small></dt><dd class="neg">− ${eur(f.arca)}</dd>
    <dt>Ritenute d’acconto<small>trattenute e versate da Clinia con F24</small></dt><dd class="neg">− ${eur(r2(f.rit-(f.licN?lordoDaNetto(LICENZA.netto)-LICENZA.netto:0)))}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
+  <div class="card stack" style="gap:10px"><div class="row between"><h3>${ic("heartplus","sm")} Progetto Arca</h3><b class="num">${eur(r2(f.arca))}</b></div>
+   <p class="small muted">Il 3 % del servizio prenotazioni di ${esc(meseNome(m))}, da bonificare a ${esc(ARCA.nome)}. Lo vedono anche pazienti, specialisti e Clinia nella pagina Progetto Arca.</p>
+   <label class="chk"><input type="checkbox" data-change="arcaDone" data-m="${m}" ${S.arca[m]?"checked":""}> Bonifico fatto</label>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="tab" data-v="fpmdoc">${ic("upload","sm")} Carica la ricevuta</button><button class="btn ghost sm" data-act="openPage" data-v="arca">Vedi la pagina pubblica</button></div>
+   <p class="tiny">C.F. ${ARCA.cf}. L’IBAN per le donazioni va preso dal sito ufficiale della fondazione.</p></div>
   <section class="card"><div class="row between"><h3>Movimenti</h3><span class="live"><i></i>aggiornati</span></div><p class="tiny" style="margin:4px 0 6px">Per la privacy dei pazienti vedi solo le iniziali e il servizio ricevuto.</p>
    ${f.mov.length?f.mov.slice(0,lim).map(x=>`<div class="mov"><span class="ini ${x.da==="clinia"?"w":x.tipo==="Abbonamento"?"az":""}">${x.ini?esc(x.ini):x.da==="clinia"?"CL":esc(initials(x.spec))}</span><span class="t"><b>${esc(x.tipo)}${x.demo?' <span class="tiny">(esempio)</span>':""}</b><small>${esc(x.svc)} · ${esc(x.spec)}</small><small>${x.pren&&x.at>nowStamp()?"pagata in anticipo · visita del ":""}${esc(fmtD(x.at.slice(0,10),{day:"numeric",month:"short"}))} alle ${x.at.slice(11)}</small></span><span class="amt">+ ${eur(x.netto)}<small>lordo ${eur(x.lordo)}</small></span></div>`).join("")
    :`<p class="muted small">Nessun movimento in questo mese.</p>`}
@@ -1345,7 +1365,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
    <label class="field"><span>Aliquota IRPEF marginale (dal tuo stipendio)</span><select data-change="fpmSet" data-k="aliquota" id="fs-al">${[[0.23,"23 %"],[0.35,"35 %"],[0.43,"43 %"]].map(([v,l])=>`<option value="${v}" ${S.fpm.aliquota===v?"selected":""}>${l}</option>`).join("")}</select></label>
    <label class="field"><span>Servizio di prenotazione (nuove prenotazioni)</span><select id="fs-fee" data-change="fpmSet" data-k="fee">${[7,9].map(v=>`<option value="${v}" ${APP_FEE===v?"selected":""}>${eur(v)} a prenotazione</option>`).join("")}</select></label></div>
   <div class="card stack" style="gap:8px"><h3>Promemoria</h3><ul class="blist">
-   <li>Le donazioni a Progetto Arca le fa Clinia con il 3 % del servizio: la ricevuta della fondazione intestala a chi dona.</li>
+   <li>Le donazioni a Progetto Arca le fai tu con bonifico: come donazione a un ente del Terzo settore puoi detrarre il 30 % nel 730 (art. 83 D.Lgs. 117/2017, da confermare con il CAF). Conserva la ricevuta della fondazione.</li>
    <li>I compensi per la licenza del software sono redditi da utilizzazione economica di opere dell’ingegno (art. 53, c. 2, lett. b, TUIR): niente partita IVA e niente IVA (art. 3, c. 4, lett. a, DPR 633/72).</li>
    <li>Clinia trattiene il 20 % sul ${S.fpm.under35?"60":"75"} % del compenso e a inizio anno ti manda la Certificazione Unica (CU).</li>
    <li>Nel 730 questi redditi vanno nel quadro D (redditi da opere dell’ingegno): conferma con il CAF.</li>
@@ -1366,10 +1386,9 @@ Compensi di ${meseNome(m)} per la licenza dei diritti di utilizzazione
 economica dell’opera dell’ingegno "Clinia App" (software):
  - licenza mensile${f.licN?"":" (non dovuta)"}           ${L(f.licN?lordoDaNetto(LICENZA.netto):0)}
  - quota abbonamenti specialisti (${f.abbN})      ${L(f.abbL)}
- - quota servizio prenotazioni (${f.prenN}), al netto
-   del 3 % donato a Progetto Arca             ${L(r2(f.prenL-f.arca))}
+ - quota servizio prenotazioni (${f.prenN})        ${L(f.prenL)}
 
-Compenso lordo                                ${L(f.lordo-f.arca)}
+Compenso lordo                                ${L(f.lordo)}
 Imponibile (${Math.round(f.quota*100)} %)                          ${L(r2(f.rit/0.2))}
 Ritenuta d’acconto 20 %                      -${L(f.rit).trim()}
 Netto (già accreditato in automatico)         ${L(f.netto)}
@@ -1785,7 +1804,7 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="fpmDoc")addFpmDocs([...e.target.files]);
   if(k==="fpmChk"){const m=e.target.dataset.m;S.fpm.ric[m]={...(S.fpm.ric[m]||{}),[e.target.dataset.k]:e.target.checked};save()}
   if(k==="fpmSet"){const key=e.target.dataset.k;if(key==="under35")S.fpm.under35=e.target.checked;else if(key==="aliquota")S.fpm.aliquota=+e.target.value;else if(key==="fee"){S.fpm.fee=+e.target.value;APP_FEE=S.fpm.fee}save();render()}
-  if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save()}
+  if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
   if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}
@@ -1844,6 +1863,8 @@ const DB={on:false,c:null,
     if(r.error)toast("Dati di fatturazione non salvati sul server: "+r.error.message)},
   async saveRoomEdit(id,e){if(!this.on)return;const{error}=await this.c.from("rooms").update({nome:e.name,tipo:e.type,tariffa_ora:e.tariff.ora,tariffa_mezza:e.tariff.mezza,tariffa_giornata:e.tariff.giornata}).eq("id",id);if(error)toast("Stanza non salvata sul server: "+error.message)},
   async saveIban(key,a){if(!this.on||key==="fpm")return;const{error}=await this.c.from("specialist_private").upsert({specialist_id:key,iban_intestatario:a.holder,iban_ultime4:a.last4,accrediti_attivi:true});if(error)toast("Conto non salvato sul server: "+error.message)},
+  async loadArca(){const{data,error}=await this.c.rpc("arca_storia");if(!error){UI.arcaRemote=data.map(x=>({m:x.mese.slice(0,7),importo:+x.importo,pren:x.prenotazioni,fatto:x.donata}));render()}},
+  async arcaFatto(m,v){if(!this.on)return;const{error}=await this.c.from("donazioni").update({donata:v,donata_il:v?today():null}).eq("mese",m+"-01");if(error)toast("Donazione non salvata sul server: "+error.message)},
   async update(table,id,patch){if(!this.on||!/^[0-9a-f-]{36}$/.test(id))return;const{error}=await this.c.from(table).update(patch).eq("id",id);if(error)toast("Modifica non salvata sul server: "+error.message)}};
 DB.init();
 

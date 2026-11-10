@@ -390,6 +390,33 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .pz summary{list-style:none;cursor:pointer}
 .pz summary::-webkit-details-marker{display:none}
 .pz[open] summary{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.av{position:relative;overflow:hidden}
+.av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.fpm-foot{display:flex;align-items:center;justify-content:center;gap:8px;margin:22px auto 12px;padding:6px 12px;border-radius:999px;font-size:.72rem;color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+.fpm-foot img{height:24px;width:auto}
+.fpm-foot:hover{color:var(--accent-2);background:var(--bg-2)}
+.fpm-splash{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:8px;font-size:.72rem;color:var(--ink-3);font-weight:600}
+.fpm-splash img{height:26px}
+.legal p{font-size:.9rem;color:var(--ink-2)}
+.legal b{color:var(--ink)}
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.flow div{padding:12px 10px;border-radius:var(--r-sm);background:var(--bg-2);border:1px solid var(--line);font-size:.78rem;color:var(--ink-2);display:flex;flex-direction:column;gap:4px}
+.flow b{font-size:.84rem;color:var(--ink)}
+.flow i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:800;font-size:.74rem}
+.ledger{display:grid;grid-template-columns:1fr auto;gap:10px 14px;font-size:.95rem}
+.ledger dt{color:var(--ink-2)}
+.ledger dt small{display:block;color:var(--ink-3);font-size:.76rem}
+.ledger dd{margin:0;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.big.neg{color:var(--danger)}
+.ledger .neg{color:var(--danger)}
+.ledger .tot{border-top:2px solid var(--line);padding-top:10px;font-size:1.1rem;color:var(--ink)}
+.big{font-size:2.3rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;color:var(--ink-2);display:flex;flex-direction:column;align-items:center;gap:10px;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop .btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pp-photo{width:112px;height:112px;border-radius:28px;font-size:2.4rem}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:380px){.fgrid{grid-template-columns:1fr}}
 .demo-note{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-sm);background:var(--warn-soft);color:var(--warn);font-size:.84rem;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -427,9 +454,17 @@ const ROOMS=[
 // Nel prototipo la password è verificata sul telefono tramite impronta SHA-256; nell'app pubblicata la verifica sarà sul server.
 const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"2cc96af4eb89484f59cdbb95ad48e80810d53f2863a7440d02e64e2fb1354a75"};
 // A chi vanno i pagamenti
-const PAYEES={rooms:"Clinia – Dott. Marco Morelli",sub:"Gestore dell’app Clinia"};
+const PAYEES={rooms:"Clinia – Dott. Marco Morelli",sub:"FPM WebDesignTech, gestore dell’app"};
+// Abbonamento mensile della struttura (pagato da Clinia, titolare Dott. Marco Morelli)
+const SUB_CLINICA={name:"Clinia Struttura",price:300,ufficiale:true,features:["App Clinia per tutti i pazienti e gli specialisti","Incasso degli affitti degli studi da 1 a 9","Area riservata del titolare: incassi, pazienti e occupazione","Assistenza e aggiornamenti dell’app"]};
+// Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
+const APP_FEE=7;
+// Database Supabase: incolla qui URL e chiave pubblica (anon) del progetto. Vuoti = versione di prova sul telefono.
+const SUPABASE={url:"",anonKey:""};
+// Dati legali per la pagina dei diritti
+const LEGAL={autore:"Francesco Paolo Morelli",marchio:"FPM WebDesignTech",anno:2026,piva:"[da inserire]",sede:"[da inserire]",pec:"[da inserire]"};
 // Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
-const SUB={name:"Clinia Specialisti",price:49,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
+const SUB={name:"Clinia Specialisti",price:49.9,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
 const TARIFFARIO={ufficiale:false,stanze:{ // € IVA inclusa (esempio)
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
@@ -474,6 +509,7 @@ const CHIPS=[["Fisioterapista","riabilitazione",["marco-morelli","feliciana-pell
  ["Plantari su misura","riabilitazione",["angelo-costantiello"]],["Personal trainer","riabilitazione",["rossella-conversano"]],
  ["Riabilitazione","riabilitazione",["marco-morelli","feliciana-pellegrino","francesca-trabace","rossella-conversano"]]];
 // Genere e visite pediatriche (dalle biografie: riabilitazione pediatrica, osteopatia pediatrica, ortopedia pediatrica)
+const BASE_DOC_IDS=DOCTORS.map(d=>d.id);
 const GENDER={"marco-morelli":"M","enrico-pierangeli":"M","feliciana-pellegrino":"F","michele-picciallo":"M","vincenzo-de-leo":"M","donato-panetta":"M","maria-alessandra-lassandro":"F","francesca-trabace":"F","angelo-costantiello":"M","rossella-conversano":"F"};
 const KIDS=["feliciana-pellegrino","francesca-trabace","donato-panetta"];
 const AREAS={all:"Tutti",chirurgia:"Chirurgia",medicina:"Medicina specialistica",riabilitazione:"Riabilitazione e movimento"};
@@ -488,8 +524,11 @@ const HORIZON=21;
 /* ===================== Stato ===================== */
 const KEY="clinia-app-v1";
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,sub:null,demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
+if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];
+S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -524,14 +563,14 @@ function roomCost(type,min){const t=TARIFFARIO.stanze[type],h=min/60;let c;
 
 /* Prenotazioni degli studi: turni di esempio + prenotazioni fatte nell'app */
 function allBookings(){
-  const out=[];const t0=today();
+  const out=[];const t0=today();if(DB.on)return S.rooms.slice();
   for(let k=-7;k<=HORIZON;k++){const ds=addDays(t0,k),wd=parseD(ds).getDay();
     for(const[id,days,a,b,r] of SCHEDULE){if(!days.includes(wd))continue;const bid=`seed-${id}-${ds}-${a}`;
       if(S.cancelled.includes(bid))continue;out.push({id:bid,doctorId:id,date:ds,start:a,end:b,roomId:r,seed:true})}}
   return out.concat(S.rooms)}
 const bookingsOn=(ds,f)=>allBookings().filter(b=>b.date===ds&&(!f||f(b)));
 /* Appuntamenti di esempio (altri pazienti), stabili per data e orario */
-function demoBusy(docId,ds){const base=services(docId)[0].dur,out=[];
+function demoBusy(docId,ds){if(DB.on)return[];const base=services(docId)[0].dur,out=[];
   for(const b of bookingsOn(ds,b=>b.doctorId===docId))for(let t=toMin(b.start);t+base<=toMin(b.end);t+=base)
     if(hash(docId+ds+t)%100<32)out.push({start:t,end:t+base,name:DEMO_NAMES[hash(ds+t+docId)%DEMO_NAMES.length],svc:services(docId)[hash(t+docId)%services(docId).length].name,roomId:b.roomId});
   return out}
@@ -579,14 +618,17 @@ function render(){
   const nc=app.querySelector(".content");if(nc)nc.scrollTop=top;
   const af=app.querySelector("[data-autofocus]");if(af)af.focus();
   const qi=app.querySelector("#q");if(qi&&qi.value)qi.dispatchEvent(new Event("input",{bubbles:true}));
+  app.querySelectorAll(".content,.pinwrap").forEach(c=>{if(!c.querySelector(".fpm-foot"))c.insertAdjacentHTML("beforeend",FPM_FOOT)});
 }
+const FPM_FOOT=`<button class="fpm-foot" data-act="openCopyright" aria-label="Copyright e note legali"><img src="img/fpm-logo-sm.png" alt="Logo FPM WebDesignTech">© ${LEGAL.anno} FPM WebDesignTech</button>`;
 function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
 function screenHTML(){
   if(UI.screen==="main"&&!logged())UI.screen="welcome";
   switch(UI.screen){
-    case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div></div>`;
+    case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div><div class="fpm-splash"><img src="img/fpm-logo-sm.png" alt="">FPM WebDesignTech</div></div>`;
     case "cookie":return cookieScreen();
     case "welcome":return welcomeScreen();
+    case "proprof":return proProfScreen(true);
     case "sub":return subScreen();
     case "auth":return authScreen();
     case "login":return loginScreen();
@@ -630,7 +672,9 @@ function authIllo(){return `<svg viewBox="0 0 260 220" style="width:240px;max-wi
 const addMonth=(ds,n=1)=>{const d=parseD(ds);d.setMonth(d.getMonth()+n);return dstr(d)};
 const isOwner=()=>!!(S.auth&&S.auth.owner);
 async function sha256(t){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
-const subActive=()=>isOwner()||!!S.sub&&(S.sub.status==="attivo"||(S.sub.status==="disdetto"&&S.sub.next>today()));
+const mySub=()=>S.auth&&S.subs?S.subs[S.auth.email]:null;
+const planFor=()=>isOwner()?SUB_CLINICA:SUB;
+const subActive=()=>!!mySub()&&(mySub().status==="attivo"||(mySub().status==="disdetto"&&mySub().next>today()));
 function welcomeScreen(){return `<div class="screen"><div class="content"><div class="pad stack" style="gap:18px;padding-top:44px">
   ${markSvg(52)}<h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
   <button class="rolecard" data-act="chooseRole" data-v="paziente"><span class="ri">${ic("user")}</span><span style="flex:1;min-width:0"><b>Sono un paziente</b><span class="muted small" style="display:block;margin:4px 0 10px">Prenota le visite, ricevi i promemoria, conserva referti ed esami.</span><span class="badge">Gratis</span></span>${ic("right")}</button>
@@ -654,23 +698,24 @@ function readCard(f,err){const num=f.num.value.replace(/\D/g,""),m=f.exp.value.r
   if(!m||+m[1]<1||+m[1]>12||new Date(2000+ +m[2],+m[1],0)<new Date()){err.textContent="Scadenza non valida o carta scaduta. Usa il formato MM/AA.";return null}
   if(!/^\d{3,4}$/.test(f.cvv.value)){err.textContent="Il CVV ha 3 o 4 cifre.";return null}
   return{id:uid(),brand:cardBrand(num),last4:num.slice(-4),exp:m[1].padStart(2,"0")+"/"+m[2],holder:f.holder.value.trim()}}
-function subScreen(){const renew=S.sub&&S.sub.status!=="attivo";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="logout" aria-label="Esci">${ic("x")}</button><span style="flex:1"></span></div>
+function subScreen(){const P=planFor(),own=isOwner(),renew=mySub()&&mySub().status!=="attivo";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="logout" aria-label="Esci">${ic("x")}</button><span style="flex:1"></span></div>
  <form class="screen" data-form="sub" novalidate><div class="content"><div class="pad stack" style="gap:18px">
-  <h1 class="h-xl">${renew?"Rinnova l’":""}<b>Abbonamento</b> specialisti</h1>
-  <p class="lead">Per ricevere prenotazioni dai pazienti nell’app serve un abbonamento mensile. Puoi disdirlo quando vuoi dal Profilo.</p>
-  <div class="plan"><div class="row between"><b>${SUB.name}</b><span class="badge">Mensile</span></div>
-   <div class="pprice"><b class="num">${eur(SUB.price)}</b><span>/ mese, IVA inclusa</span></div>${SUB.ufficiale?"":`<p class="tiny">Prezzo di esempio, da confermare.</p>`}
-   <ul class="blist">${SUB.features.map(f=>`<li>${f}</li>`).join("")}</ul>
-   <p class="tiny">L’abbonamento va a ${esc(PAYEES.sub)}. L’affitto degli studi si paga a parte a Clinia, al momento della prenotazione.</p></div>
-  <span class="label">Metodo di pagamento</span>${cardFields("sb")}
+  <h1 class="h-xl">${renew?"Rinnova l’":""}<b>Abbonamento</b> ${own?"della struttura":"specialisti"}</h1>
+  <p class="lead">${own?"Clinia paga un unico abbonamento mensile per usare l’app con tutti i pazienti e gli specialisti. Gli affitti degli studi e le visite dei tuoi pazienti li incassi tu.":"Per ricevere prenotazioni dai pazienti nell’app serve un abbonamento mensile. Puoi disdirlo quando vuoi dal Profilo."}</p>
+  ${own?"":`<div class="flow"><div><i>1</i><b>Abbonamento</b>${eur(SUB.price)} al mese all’app</div><div><i>2</i><b>Studi</b>paghi a Clinia gli studi che prenoti</div><div><i>3</i><b>Pazienti</b>ricevi il pagamento delle visite</div></div>`}
+  <div class="plan"><div class="row between"><b>${P.name}</b><span class="badge">Mensile</span></div>
+   <div class="pprice"><b class="num">${eur(P.price)}</b><span>/ mese</span></div>${P.ufficiale?"":`<p class="tiny">Prezzo da confermare.</p>`}
+   <ul class="blist">${P.features.map(f=>`<li>${f}</li>`).join("")}</ul>
+   <p class="tiny">L’abbonamento va a ${esc(PAYEES.sub)}.${own?"":` Con la stessa carta l’app addebita ${eur(APP_FEE)} per ogni visita che il paziente ti paga in struttura. L’affitto degli studi si paga a Clinia alla prenotazione.`}</p></div>
+  <span class="label">Carta di pagamento</span>${cardFields("sb")}
   <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: nessun addebito reale. Salviamo solo le ultime 4 cifre. Per provare usa 4242 4242 4242 4242.</span></div>
-  <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="sb-terms" name="terms" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Accetto il rinnovo automatico ogni mese a ${eur(SUB.price)}. Posso disdire in qualsiasi momento: l’abbonamento resta attivo fino alla fine del mese pagato.</span></label>
+  <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="sb-terms" name="terms" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Accetto il rinnovo automatico ogni mese a ${eur(P.price)}${own?"":` e l’addebito di ${eur(APP_FEE)} per ogni visita pagata in struttura`}. Posso disdire in qualsiasi momento: l’abbonamento resta attivo fino alla fine del mese pagato.</span></label>
   <p class="err" id="sb-err"></p></div></div>
-  <div class="actions"><button class="btn primary block" type="submit">Abbonati a ${eur(SUB.price)}/mese</button></div></form></div>`}
-function subscriptionPage(){const b=S.sub,c=b&&S.cards.find(x=>x.id===b.cardId);const act=b.status==="attivo";
+  <div class="actions"><button class="btn primary block" type="submit">Abbonati a ${eur(P.price)}/mese</button></div></form></div>`}
+function subscriptionPage(){const b=mySub(),c=b&&S.cards.find(x=>x.id===b.cardId);const act=b.status==="attivo";
   const charges=[];for(let d=b.start;d<=today();d=addMonth(d))charges.push(d);
   return `<div class="screen">${bar("Abbonamento")}<div class="content"><div class="pad stack" style="gap:18px">
-  <div class="plan"><div class="row between"><b>${SUB.name}</b><span class="badge ${act?"":"warn"}">${act?"Attivo":"Disdetto"}</span></div>
+  <div class="plan"><div class="row between"><b>${planFor().name}</b><span class="badge ${act?"":"warn"}">${act?"Attivo":"Disdetto"}</span></div>
    <div class="pprice"><b class="num">${eur(b.price)}</b><span>/ mese</span></div>
    <p class="muted small">${act?"Prossimo rinnovo: ":"Attivo fino al "}<b>${esc(fmtD(b.next,{day:"numeric",month:"long",year:"numeric"}))}</b></p>
    ${c?`<div class="row small">${ic("card","sm")}<span>${c.brand} •••• ${c.last4}</span></div>`:""}</div>
@@ -743,9 +788,49 @@ function healthScreen(){return `<div class="screen"><div class="topbar plain"><s
   <div class="check-list">${["Tratteremo i tuoi dati sanitari per inviarti promemoria e indicazioni prima delle visite.","Conserveremo in modo sicuro i documenti medici che carichi, così li avrai sempre a portata di mano.","Collegheremo al tuo account gli appuntamenti presi in clinica o al telefono."].map(t=>`<div><span class="cc">${ic("check")}</span><span>${t}</span></div>`).join("")}</div>
  </div></div>
  <div class="actions"><button class="btn primary block" data-act="health" data-v="yes">Consenti</button><button class="btn ghost block" data-act="health" data-v="limited">Conserva accesso limitato</button></div></div>`}
+const PIVA_OK=v=>{if(!/^\d{11}$/.test(v))return false;let t=0;for(let i=0;i<11;i++){let c=+v[i];if(i%2){c*=2;if(c>9)c-=9}t+=c}return t%10===0};
+function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u=S.user||{};
+  const tit=pp.titolo??((d.name.match(/^(Prof\.ssa|Prof\.|Dott\.ssa|Dott\.)/)||[""])[0]);
+  const parts=d.name.replace(/^(Prof\.ssa|Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ");
+  const v=(k,def)=>esc(pp[k]??def??"");
+  const f=(k,l,o={})=>`<label class="field"><span>${l}${o.req?"*":""}</span><input id="pp-${k}" name="${k}" value="${v(k,o.def)}" ${o.ac?`autocomplete="${o.ac}"`:""} ${o.type?`type="${o.type}"`:""} ${o.im?`inputmode="${o.im}"`:""} ${o.max?`maxlength="${o.max}"`:""} ${o.ph?`placeholder="${o.ph}"`:""} ${o.di?`data-input="${o.di}"`:""}></label>`;
+  const photo=UI.ppPhoto||docPhoto(id);const cv=UI.ppCv||pp.cv;
+  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button>`}<h2>Profilo professionale</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipProf">Dopo</button>`:'<span style="width:44px"></span>'}</div>
+  <form class="screen" data-form="proprof" novalidate><div class="content"><div class="pad stack" style="gap:16px">
+   <p class="muted small">Questi dati compaiono ai pazienti (foto, nome, specializzazione, esperienza, contatti social) e servono per le fatture (P.IVA, codice fiscale, PEC, codice destinatario). I campi si compilano da soli con i dati che hai già inserito e con il riempimento automatico del telefono.</p>
+   <span class="label">Foto</span>
+   <div class="drop" data-drop="photo"><span class="av pp-photo" id="pp-prev">${esc(initials(d.name))}${photo?`<img src="${photo}" alt="">`:""}</span>
+    <span class="small">Trascina qui la tua foto oppure</span>
+    <div class="btns"><label class="btn ghost sm" for="pp-cam">${ic("user","sm")} Scatta foto</label><label class="btn ghost sm" for="pp-up">${ic("upload","sm")} Carica dal dispositivo</label></div>
+    <input id="pp-cam" type="file" accept="image/*" capture="user" class="hidden" data-change="ppPhoto"><input id="pp-up" type="file" accept="image/*" class="hidden" data-change="ppPhoto"></div>
+   <span class="label">Dati personali</span>
+   <div class="fgrid"><label class="field"><span>Titolo</span><select id="pp-titolo" name="titolo" autocomplete="honorific-prefix">${["","Dott.","Dott.ssa","Prof.","Prof.ssa"].map(t=>`<option value="${t}" ${t===tit?"selected":""}>${t||"—"}</option>`).join("")}</select></label>
+    ${f("iscrizione","N. iscrizione albo",{ph:"es. Ordine di Matera n. 1234"})}</div>
+   <div class="fgrid">${f("nome","Nome",{req:1,ac:"given-name",def:pp.nome??(u.nome||parts.slice(0,-1).join(" "))})}${f("cognome","Cognome",{req:1,ac:"family-name",def:pp.cognome??(u.cognome||parts.slice(-1)[0])})}</div>
+   ${f("ruolo","Specializzazione",{req:1,ac:"organization-title",def:d.role})}
+   <label class="field"><span>Area</span><select id="pp-area" name="area">${Object.entries(AREAS).filter(([k])=>k!=="all").map(([k,l])=>`<option value="${k}" ${(pp.area||d.area)===k?"selected":""}>${l}</option>`).join("")}</select></label>
+   <span class="label">Contatti</span>
+   ${f("email","E-mail",{req:1,type:"email",ac:"email",def:S.auth&&S.auth.email})}
+   <div class="fgrid">${f("telefono","Telefono",{type:"tel",ac:"tel",def:u.tel?(u.pref||"+39")+" "+u.tel:""})}${f("pec","PEC (se ce l’hai)",{type:"email",ac:"off",ph:"nome@pec.it"})}</div>
+   <span class="label">Dati per le fatture</span>
+   <div class="fgrid">${f("piva","Partita IVA",{im:"numeric",max:11,ac:"off",di:"digits"})}${f("cf","Codice fiscale",{max:16,ac:"off",di:"upper"})}</div>
+   <div class="fgrid">${f("sdi","Codice destinatario SDI",{max:7,ac:"off",di:"upper",ph:"0000000"})}${f("cap","CAP",{im:"numeric",max:5,ac:"postal-code"})}</div>
+   ${f("indirizzo","Indirizzo di fatturazione",{ac:"street-address"})}${f("citta","Città",{ac:"address-level2",def:"Matera"})}
+   <span class="label">Web e social</span>
+   ${f("sito","Sito web",{type:"url",ac:"url",ph:"https://"})}
+   <div class="fgrid">${f("instagram","Instagram",{ph:"@nome"})}${f("facebook","Facebook",{ph:"facebook.com/…"})}</div>
+   ${f("linkedin","LinkedIn",{ph:"linkedin.com/in/…"})}
+   <span class="label">Esperienza</span>
+   <textarea id="pp-bio" name="bio" placeholder="Una riga per ogni punto: formazione, specializzazioni, esperienze">${esc((pp.bio||d.bio||[]).join("\n"))}</textarea>
+   <span class="label">Curriculum (PDF)</span>
+   <div class="drop" data-drop="cv">${ic("file")}<span id="pp-cvname" class="small">${cv?`<b>${esc(cv.name)}</b> · ${(cv.size/1024).toFixed(0)} KB`:"Trascina qui il curriculum in PDF oppure"}</span>
+    <label class="btn ghost sm" for="pp-cv">${ic("upload","sm")} Scegli il file</label><input id="pp-cv" type="file" accept="application/pdf,.pdf" class="hidden" data-change="ppCv"></div>
+   <p class="err" id="pp-err"></p></div></div>
+  <div class="actions"><button class="btn primary block" type="submit">Salva il profilo</button></div></form></div>`}
 function proPickScreen(){return `<div class="screen"><div class="content"><div class="pad stack">
   <h1 class="h-xl" style="margin-top:20px"><b>Chi sei</b> in Clinia?</h1><p class="lead">Collega il tuo account al tuo profilo di specialista. In produzione l’abbinamento sarà verificato dalla reception.</p>
-  ${DOCTORS.map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}"><span class="av sm">${initials(d.name)}</span><span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
+  ${DOCTORS.map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}">${docAv(d,"sm")}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
+  <button class="btn ghost block" data-act="newPro">${ic("plus","sm")} Non sono in elenco: crea il mio profilo</button>
  </div></div></div>`}
 function notifScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="notifs" data-v="no" aria-label="Chiudi">${ic("x")}</button></div>
  <div class="content"><div class="pad stack" style="gap:20px">
@@ -769,7 +854,7 @@ function tabHTML(){switch(UI.tab){
   case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();}}
 function needLogin(title,text){return `<div class="pad stack"><h1 class="h-sec">${title}</h1><div class="card center">${markSvg(44)}<h3>${text}</h3><p class="muted small">Accedi o crea un account in meno di un minuto.</p><button class="btn primary" data-act="openAuth">Accedi o registrati</button></div></div>`}
 function docCard(d){const n=nextAvail(d.id);return `<button class="doc" data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role).toLowerCase())}">
-  <span class="av">${initials(d.name)}</span><span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span>
+  ${docAv(d)}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span>
   ${d.rating?`<span class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni</span>`:""}
   ${n?`<span class="next">${ic("clock","sm")} ${cap(fmtD(n.date,{weekday:"short",day:"numeric",month:"short"}))}, ${n.time}</span>`:`<span class="tiny">Nessuna disponibilità nei prossimi giorni</span>`}</span>
   <span role="button" class="iconbtn" data-act="fav" data-id="${d.id}" aria-label="${S.favs.includes(d.id)?"Rimuovi dai preferiti":"Aggiungi ai preferiti"}">${heartFill(S.favs.includes(d.id))}</span></button>`}
@@ -791,7 +876,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "ricavi":return ricaviPage();case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -819,7 +904,7 @@ function searchPage(){const sq=UI.sq;const chips=CHIPS.map((c,i)=>[c,i]).filter(
    ${sq.mode==="studio"?`<div class="inline-field">${ic("pin")}<span class="muted">Clinia · Via La Martella 5/D, Matera</span></div>`:`<p class="muted small">Videoconsulti con gli specialisti di Clinia, direttamente dal telefono.</p>`}
    <span class="label">Suggerimenti</span>
    <div class="sugg">${chips.map(([c,i])=>`<button class="sg" data-act="spec" data-v="${i}" data-name="${esc((c[0]+" "+c[2].map(id=>doc(id).name).join(" ")).toLowerCase())}"><span class="sgi">${ic("user")}</span>${c[0]}</button>`).join("")}
-   ${DOCTORS.filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}"><span class="av sm round">${initials(d.name)}</span><span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
+   ${DOCTORS.filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}">${docAv(d,"sm round")}<span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
    <p class="muted hidden" id="noresults">Nessun risultato. Prova con un’altra parola.</p>
    <button class="btn ghost block" data-act="allResults">Vedi tutti gli specialisti ${ic("arrow","sm")}</button>
   </div></div></div>`}
@@ -835,7 +920,7 @@ function resultsPage(){const sq=UI.sq,f=UI.f,list=matchDocs(f,sq),nF=filterCount
    ${list.length?list.map(resultCard).join(""):`<div class="card center">${ic("search")}<h3>Nessuno specialista con questi filtri</h3><button class="btn ghost" data-act="clearFilters">Cancella i filtri</button></div>`}</div></div></div>`}
 function resultCard(d){const s=pickSvc(d.id,UI.sq,UI.f),n=firstFree(d.id,s);
   return `<article class="rcard">${s.online?`<span class="badge az" style="align-self:flex-start">${ic("video","sm")} Videoconsulto</span>`:""}
-  <button class="row" data-act="openDoc" data-id="${d.id}" style="text-align:left;width:100%;align-items:flex-start"><span class="av round" style="width:64px;height:64px">${initials(d.name)}</span><span style="flex:1;min-width:0"><b>${esc(d.name)}</b> <span title="Specialista di Clinia">${markSvg(12)}</span><span class="muted small" style="display:block">${esc(d.role)}</span>${d.rating?`<span class="small"><span class="stars">★★★★★</span> ${d.reviews} recensioni</span>`:""}</span></button>
+  <button class="row" data-act="openDoc" data-id="${d.id}" style="text-align:left;width:100%;align-items:flex-start">${docAv(d,"round","width:64px;height:64px")}<span style="flex:1;min-width:0"><b>${esc(d.name)}</b> <span title="Specialista di Clinia">${markSvg(12)}</span><span class="muted small" style="display:block">${esc(d.role)}</span>${d.rating?`<span class="small"><span class="stars">★★★★★</span> ${d.reviews} recensioni</span>`:""}</span></button>
   <div class="row between"><span class="row small" style="gap:8px;min-width:0">${ic(s.online?"video":"heartplus","sm")}<span>${esc(s.name)}</span></span><b class="num">${eur(s.price)}</b></div>
   <div class="row small" style="gap:8px">${ic("cal","sm")}<span>${n?"Prossimo appuntamento: "+relDay(n.date):"Nessuna disponibilità nelle prossime 3 settimane"}</span></div>
   ${n?`<div class="tchips">${n.slots.slice(0,4).map(x=>`<button class="tchip num" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}" data-v="${x.time}">${x.time}</button>`).join("")}<button class="tchip" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}">Altro ${ic("right","sm")}</button></div>`:""}</article>`}
@@ -854,7 +939,7 @@ function filtersPage(){const f=UI.fd;const radio=(k,v,l)=>`<label class="fopt"><
   </div></div><div class="actions"><button class="btn primary block" id="fcount" data-act="applyFilters">${countLabel()}</button></div></div>`}
 function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(allBookings().filter(b=>b.doctorId===id&&b.date>=today()).map(b=>b.roomId))];
   return `<div class="screen">${bar("Profilo",`<button class="iconbtn" data-act="fav" data-id="${id}" aria-label="Preferito">${heartFill(S.favs.includes(id))}</button>`)}
-  <div class="content"><div class="hero"><span class="av lg">${initials(d.name)}</span><h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
+  <div class="content"><div class="hero">${docAv(d,"lg")}<h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
    ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
   <div class="pad stack" style="gap:22px">
    <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${TARIFFARIO.ufficiale?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
@@ -869,7 +954,7 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
   if(!b.date||!days.find(x=>x.ds===b.date&&x.free)){const f=days.find(x=>x.free);b.date=f?f.ds:null;b.time=null}
   const slots=b.date?slotsFor(id,b.date,s.dur):[];const pick=slots.find(x=>x.time===b.time&&x.free);
   return `<div class="screen">${bar("Prenota")}<div class="content"><div class="pad stack" style="gap:22px">
-   <div class="row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>
+   <div class="row">${docAv(d,"sm")}<div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>
    <section class="stack" style="gap:10px"><span class="label">1 · Prestazione</span>${svc.map(x=>`<button class="opt ${x.i===b.svc?"on":""}" data-act="bSvc" data-v="${x.i}"><span class="radio"></span><span style="flex:1"><b>${esc(x.name)}</b><span class="tiny" style="display:block">${x.dur} min${x.online?" · videochiamata":""}</span></span><span class="price num">${eur(x.price)}</span></button>`).join("")}</section>
    <section class="stack" style="gap:10px"><span class="label">2 · Giorno</span><div class="days">${days.map(x=>{const dt=parseD(x.ds);return `<button class="day ${x.ds===b.date?"on":""}" data-act="bDay" data-v="${x.ds}" ${x.free?"":"disabled"}><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${x.free?x.free+" liberi":dt.toLocaleDateString("it-IT",{month:"short"})}</i></button>`}).join("")}</div></section>
    <section class="stack" style="gap:10px"><span class="label">3 · Orario${b.date?" · "+fmtD(b.date):""}</span>
@@ -879,7 +964,7 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
     ${S.cards.map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
     ${logged()?`<button class="link small" style="align-self:flex-start" data-act="openPage" data-v="payments">${ic("plus","sm")} Aggiungi una carta</button>`:""}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
-   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd><dt>Totale</dt><dd class="num">${eur(s.price)}</dd><dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">Puoi disdire gratis fino a 24 ore prima.</p>`:""}
+   ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd>${(b.pay||"clinic")==="clinic"?`<dt>Da pagare in struttura</dt><dd class="num">${eur(s.price)}</dd>`:`<dt>Visita</dt><dd class="num">${eur(s.price)}</dd><dt>Servizio di prenotazione</dt><dd class="num">${eur(APP_FEE)}</dd><dt>Totale con carta</dt><dd class="num">${eur(s.price+APP_FEE)}</dd>`}<dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">${(b.pay||"clinic")==="clinic"?"Paghi la visita direttamente allo specialista. Nessun costo di servizio per te.":`La visita va allo specialista, ${eur(APP_FEE)} sono il costo del servizio di prenotazione Clinia.`} Puoi disdire gratis fino a 24 ore prima.</p>`:""}
   </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
 function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
   <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
@@ -939,11 +1024,12 @@ function chatPage(k){const i=threadInfo(k),m=threadMsgs(k);const mine=isPro()?["
 function settingsBody(){const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
   const sw=(act,on,title,sub,icn)=>`<button class="li" data-act="${act}" role="switch" aria-checked="${!!on}">${ic(icn)}<span class="t">${title}<small>${sub}</small></span><span class="sw ${on?"on":""}"></span></button>`;
   return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}${S.auth.provider?" · accesso con "+(S.auth.provider==="apple"?"Apple":"Google"):""}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
-  ${pro?`<div class="card row"><span class="av sm">${initials(d.name)}</span><div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
+  ${pro?`<div class="card row">${docAv(d,"sm")}<div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
+  <div class="list"><button class="li" data-act="openCopyright">${ic("shield")}<span class="t">Copyright e note legali<small>© ${LEGAL.anno} FPM WebDesignTech</small></span>${ic("right","sm")}</button></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
   <button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`}
 
@@ -953,7 +1039,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items=pro&&isOwner()?[["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Incassi e occupazione studi"]]:pro?[["subscription","card","Abbonamento"+(S.sub?(S.sub.status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
+  const items=pro&&isOwner()?[["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento app · 300 €/mese"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Incassi e occupazione studi"]]:pro?[["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
     :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -989,7 +1075,7 @@ function paymentsPage(){const hist=S.appts.filter(a=>a.status!=="annullata").sor
     <p class="err" id="cc-err"></p><div class="demo-note">${ic("lock","sm")}<span>Versione di prova: salviamo solo le ultime 4 cifre e la scadenza, mai il numero completo né il CVV. Nell’app pubblicata la carta sarà gestita da un circuito di pagamento certificato e la clinica non vedrà il numero. Per provare usa 4242 4242 4242 4242.</span></div>
     <button class="btn primary block" type="submit">Salva la carta</button><button class="btn ghost block" type="button" data-act="addCard" data-v="0">Annulla</button></form>`
    :`<div style="display:flex;justify-content:center;margin-top:8px"><button class="btn ghost" style="background:var(--bg-2);border:0" data-act="addCard" data-v="1">${ic("plus","sm")} Aggiungi una nuova carta</button></div>`}</section>
-  <section class="card" style="margin:0 max(16px,env(safe-area-inset-left,0px))"><h3 style="margin-bottom:6px">Storico pagamenti</h3>${hist.length?hist.map(a=>`<div class="ccard"><span style="flex:1;min-width:0"><b>${esc(a.service)}</b><span class="tiny" style="display:block">${esc(fmtD(a.date,{day:"numeric",month:"short",year:"numeric"}))} · ${esc(doc(a.doctorId).name)}</span></span><span style="text-align:right"><b class="num">${eur(a.price)}</b><span class="tiny" style="display:block">${a.paid||(a.pay&&a.pay!=="clinic")?"Pagato · ":"Da pagare · "}${payLabel(a)}</span></span></div>`).join(""):`<p class="muted small">Le visite prenotate compariranno qui.</p>`}</section>
+  <section class="card" style="margin:0 max(16px,env(safe-area-inset-left,0px))"><h3 style="margin-bottom:6px">Storico pagamenti</h3>${hist.length?hist.map(a=>`<div class="ccard"><span style="flex:1;min-width:0"><b>${esc(a.service)}</b><span class="tiny" style="display:block">${esc(fmtD(a.date,{day:"numeric",month:"short",year:"numeric"}))} · ${esc(doc(a.doctorId).name)}</span></span><span style="text-align:right"><b class="num">${eur(a.price+(a.feeBy==="paziente"?a.fee||0:0))}</b><span class="tiny" style="display:block">${a.paid||(a.pay&&a.pay!=="clinic")?"Pagato · ":"Da pagare · "}${payLabel(a)}${a.feeBy==="paziente"?" · incl. "+eur(a.fee)+" servizio":""}</span></span></div>`).join(""):`<p class="muted small">Le visite prenotate compariranno qui.</p>`}</section>
   </div></div></div>`}
 const REQ_TYPES=["Certificato medico","Fattura o ricevuta","Copia del referto","Richiesta di essere richiamato","Altro"];
 function requestsPage(){return `<div class="screen">${bar("Richieste")}<div class="content"><div class="pad stack">
@@ -1012,8 +1098,33 @@ function proAppts(ds){const id=S.proId,price=n=>(services(id).find(s=>s.name===n
   for(const a of activeAppts().filter(a=>a.doctorId===id&&a.date===ds)){const card=!!(a.pay&&a.pay!=="clinic");
     out.push({key:"app|"+a.id,date:ds,time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,note:a.note,roomId:a.roomId,id:a.id,price:a.price,method:card?"carta":"struttura",paid:card||!!a.paid})}
   return out.sort((a,b)=>a.time.localeCompare(b.time))}
+const docPhoto=id=>S.docPhotos[id]||(BASE_DOC_IDS.includes(id)?`img/specialisti/${id}.jpg`:null);
+function docAv(d,cls="",style=""){const src=docPhoto(d.id);return `<span class="av ${cls}"${style?` style="${style}"`:""}>${esc(initials(d.name))}${src?`<img src="${src}" alt="" loading="lazy" onerror="this.remove()">`:""}</span>`}
 function payBadge(a){return a.paid?`<span class="badge">${ic("check","sm")} Pagato${a.method==="carta"?" · carta":""}</span>`:`<button class="btn ghost sm" data-act="markPaid" data-id="${esc(a.key)}" data-n="${esc(a.name)}">Segna pagato</button>`}
 function proAll(){const out=[];for(let k=-14;k<=HORIZON;k++){const ds=addDays(today(),k);if(OPEN[parseD(ds).getDay()])out.push(...proAppts(ds))}return out}
+function ricavi(m){const v=proAll().filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
+  const carta=sum(a=>a.paid&&a.method==="carta"),strutt=sum(a=>a.paid&&a.method==="struttura"),da=sum(a=>!a.paid);
+  const nStr=v.filter(a=>a.method==="struttura"&&(a.paid||a.date<today())).length,nCarta=v.filter(a=>a.method==="carta").length,comm=nStr*APP_FEE;
+  const studi=isOwner()?0:S.roomPayments.filter(p=>p.doctorId===S.proId&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0);
+  const affitti=isOwner()?S.roomPayments.filter(p=>dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0):0;
+  const abb=planFor().price;return{v,carta,strutt,da,nStr,nCarta,comm,studi,affitti,abb,netto:carta+strutt+affitti-comm-studi-abb}}
+const meseNome=m=>parseD(m+"-01").toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+function ricaviPage(){const m=UI.ricMese||today().slice(0,7),r=ricavi(m),own=isOwner();const prev=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()-1))).slice(0,7),next=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7);
+  return `<div class="screen">${bar("Ricavi")}<div class="content"><div class="pad stack" style="gap:18px">
+  <div class="row between"><button class="iconbtn" data-act="ricMese" data-v="${prev}" aria-label="Mese precedente">${ic("back")}</button><b style="text-transform:capitalize">${esc(meseNome(m))}</b><button class="iconbtn" data-act="ricMese" data-v="${next}" aria-label="Mese successivo">${ic("right")}</button></div>
+  <div class="card" style="text-align:center"><span class="label">Ricavato netto</span><div class="big ${r.netto<0?"neg":""}">${eur(Math.round(r.netto*100)/100)}</div><p class="tiny">Importi lordi, prima delle commissioni bancarie e delle tasse.</p></div>
+  ${own?"":`<div class="flow"><div><i>1</i><b>Abbonamento</b>all’app</div><div><i>2</i><b>Studi</b>a Clinia</div><div><i>3</i><b>Pazienti</b>pagano a te</div></div>`}
+  <dl class="card ledger">
+   <dt>Visite pagate con carta<small>${r.v.filter(a=>a.paid&&a.method==="carta").length} visite, accredito sul tuo conto</small></dt><dd>+ ${eur(r.carta)}</dd>
+   <dt>Visite pagate in struttura<small>segnate da te come pagate</small></dt><dd>+ ${eur(r.strutt)}</dd>
+   ${own?`<dt>Affitti degli studi<small>pagati dagli specialisti a Clinia</small></dt><dd>+ ${eur(r.affitti)}</dd>`:""}
+   <dt>Servizio app per visite in struttura<small>${r.nStr} × ${eur(APP_FEE)}, addebitati sulla carta dell’abbonamento</small></dt><dd class="neg">− ${eur(r.comm)}</dd>
+   ${own?"":`<dt>Studi pagati a Clinia</dt><dd class="neg">− ${eur(r.studi)}</dd>`}
+   <dt>Abbonamento app<small>${esc(planFor().name)}</small></dt><dd class="neg">− ${eur(r.abb)}</dd>
+   <dt class="tot">Netto</dt><dd class="tot">${eur(Math.round(r.netto*100)/100)}</dd></dl>
+  <div class="card stack" style="gap:6px"><b>Ancora da incassare: ${eur(r.da)}</b><p class="tiny">Visite del mese non ancora pagate. Le segni pagate dalla scheda Pazienti.</p></div>
+  <p class="tiny">Nelle ${r.nCarta} visite pagate con carta il servizio di ${eur(APP_FEE)} lo paga il paziente: non è a tuo carico.</p>
+  <button class="btn ghost block" data-act="tab" data-v="pazienti">Vai ai pazienti</button></div></div></div>`}
 function pazientiTab(){const all=proAll(),seg=UI.paySeg||"todo",sum=v=>v.reduce((t,a)=>t+a.price,0);
   const tot=sum(all),paid=sum(all.filter(a=>a.paid)),g={};all.forEach(a=>(g[a.name]=g[a.name]||[]).push(a));
   let list=Object.entries(g).map(([n,v])=>({n,v,tot:sum(v),due:sum(v.filter(a=>!a.paid)),demo:v.every(a=>a.demo)}));
@@ -1021,15 +1132,17 @@ function pazientiTab(){const all=proAll(),seg=UI.paySeg||"todo",sum=v=>v.reduce(
   list.sort((a,b)=>b.due-a.due||a.n.localeCompare(b.n));
   return `<div class="pad stack" style="gap:18px"><h1 class="ptitle">Pazienti</h1>
   <div class="stats"><div class="stat"><b>${eur(tot)}</b><span>Totale visite</span></div><div class="stat"><b>${eur(paid)}</b><span>Incassato</span></div><div class="stat"><b>${eur(tot-paid)}</b><span>Da incassare</span></div></div>
+  <button class="card row between" data-act="openPage" data-v="ricavi" style="text-align:left;width:100%"><span><span class="label">Ricavato di ${esc(meseNome(today().slice(0,7)))}</span><b style="display:block;font-size:1.4rem" class="num">${eur(Math.round(ricavi(today().slice(0,7)).netto*100)/100)}</b><span class="tiny">netto di abbonamento${isOwner()?"":", studi"} e servizio app</span></span>${ic("right")}</button>
   <p class="tiny">Visite delle ultime 2 settimane e delle prossime 3. Chi paga con la carta nell’app risulta pagato da solo; chi paga in struttura lo segni tu con “Segna pagato”.</p>
   <div class="seg seg3">${[["todo","Da pagare"],["paid","Pagati"],["all","Tutti"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="paySeg" data-v="${k}">${l}</button>`).join("")}</div>
   ${list.length?list.map(x=>`<details class="card pz" ${UI.openPz===x.n?"open":""}><summary class="row"><span class="av sm round">${esc(initials(x.n))}</span><span style="flex:1;min-width:0"><b>${esc(x.n)}</b>${x.demo?' <span class="tiny">(esempio)</span>':""}<span class="tiny" style="display:block">${x.v.length} ${x.v.length===1?"visita":"visite"} · totale ${eur(x.tot)}</span></span>${x.due?`<span class="badge warn">Da pagare ${eur(x.due)}</span>`:`<span class="badge">Pagato</span>`}</summary>
-   <div>${x.v.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(a=>`<div class="ap" style="padding:12px 0"><span class="t"><b>${cap(fmtD(a.date,{weekday:"short",day:"numeric",month:"short"}))} · <span class="num">${a.time}</span></b><small>${esc(a.svc)} · ${eur(a.price)} · ${a.method==="carta"?"carta nell’app":"in struttura"}</small></span>${payBadge(a)}</div>`).join("")}</div></details>`).join("")
+   <div>${x.v.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(a=>`<div class="ap" style="padding:12px 0"><span class="t"><b>${cap(fmtD(a.date,{weekday:"short",day:"numeric",month:"short"}))} · <span class="num">${a.time}</span></b><small>${esc(a.svc)} · ${eur(a.price)} · ${a.method==="carta"?"carta nell’app":"in struttura · "+eur(APP_FEE)+" a tuo carico"}</small></span>${payBadge(a)}</div>`).join("")}</div></details>`).join("")
    :`<div class="card center">${ic("check")}<h3>${seg==="todo"?"Nessun pagamento in sospeso":"Nessun paziente"}</h3></div>`}</div>`}
 function cliniaTab(){const m0=today().slice(0,7),pays=S.roomPayments,ds=firstOpen();
   const month=pays.filter(p=>dstr(new Date(p.at)).slice(0,7)===m0).reduce((t,p)=>t+p.amount-(p.refund||0),0);
   const docs=new Set(allBookings().filter(b=>b.date>=today()&&b.date<=addDays(today(),6)).map(b=>b.doctorId)).size;
   return `<div class="pad stack" style="gap:18px"><h1 class="ptitle">Clinia</h1><span class="badge" style="align-self:flex-start">${ic("lock","sm")} Area riservata del titolare</span>
+  <button class="card row between" data-act="openPage" data-v="ricavi" style="text-align:left;width:100%"><span><span class="label">Ricavato netto del mese</span><b style="display:block;font-size:1.4rem" class="num">${eur(Math.round(ricavi(m0).netto*100)/100)}</b><span class="tiny">visite dei tuoi pazienti + affitti degli studi − abbonamento app ${eur(SUB_CLINICA.price)}</span></span>${ic("right")}</button>
   <div class="stats"><div class="stat"><b>${eur(month)}</b><span>Incassi studi nel mese</span></div><div class="stat"><b>${bookingsOn(ds).length}</b><span>Turni ${ds===today()?"oggi":"il "+parseD(ds).getDate()}</span></div><div class="stat"><b>${docs}</b><span>Specialisti nei prossimi 7 giorni</span></div></div>
   <section class="card"><h3 style="margin-bottom:4px">Pagamenti degli studi</h3>${pays.length?pays.map(p=>`<div class="ccard"><span style="flex:1;min-width:0"><b>${esc(doc(p.doctorId).name)}</b><span class="tiny" style="display:block">${room(p.roomId).name} · ${p.dates.length} ${p.dates.length===1?"turno":"turni"} dal ${esc(fmtD(p.dates[0],{day:"numeric",month:"short"}))}, ${p.start}–${p.end} · ${esc(p.card)}</span></span><span style="text-align:right"><b class="num">${eur(p.amount)}</b><span style="display:block">${p.refund?`<span class="badge warn">Rimborso ${eur(p.refund)} da fare</span>`:`<span class="badge">Pagato</span>`}</span></span></div>`).join(""):`<p class="muted small">Quando uno specialista prenota e paga uno studio, il pagamento compare qui.</p>`}</section>
   <section class="stack" style="gap:10px"><h2 class="h-sec">Occupazione · ${esc(fmtD(ds))}</h2><div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Specialisti</span><span><i style="background:var(--accent)"></i>Tu</span></div>
@@ -1107,6 +1220,15 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
 /* ---------- Sheet e modali ---------- */
 function sheetHTML(){const s=UI.sheet;
   if(s.type==="room")return roomSheet();
+  if(s.type==="copyright")return `<div class="stack legal" style="gap:12px"><div style="display:grid;place-items:center"><img src="img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="height:120px;width:auto"></div>
+   <h2 style="font-size:1.25rem;font-weight:800;text-align:center">Copyright e note legali</h2>
+   <p style="text-align:center"><b>Clinia App</b> è progettata e sviluppata da <b>${esc(LEGAL.marchio)}</b> – ${esc(LEGAL.autore)}.<br><b>© ${LEGAL.anno} ${esc(LEGAL.marchio)}. Tutti i diritti riservati.</b></p>
+   <p>Il software, il codice sorgente, il database, la grafica, l’interfaccia, le illustrazioni, i testi e la struttura dell’app sono opere dell’ingegno protette dalla legge sul diritto d’autore (Legge 22 aprile 1941 n. 633, in particolare artt. 1, 2 e 64-bis e seguenti) e appartengono in via esclusiva a ${esc(LEGAL.marchio)}.</p>
+   <p>È vietata qualsiasi riproduzione, copia, modifica, decompilazione, distribuzione, rivendita o imitazione, totale o parziale, senza autorizzazione scritta del titolare dei diritti.</p>
+   <p><b>Ogni tentativo di plagio o di uso non autorizzato dell’app sarà perseguito ai sensi di legge</b>, in sede civile e penale (artt. 171, 171-bis e 171-ter L. 633/1941; art. 2598 c.c. sulla concorrenza sleale), con richiesta di risarcimento di tutti i danni.</p>
+   <p>Il nome, il marchio e il logo Clinia, le foto e i dati dei professionisti appartengono ai rispettivi titolari e sono usati con il loro consenso.</p>
+   <div class="card small" style="display:grid;gap:4px"><span><b>Titolare dei diritti:</b> ${esc(LEGAL.autore)} – ${esc(LEGAL.marchio)}</span><span><b>P.IVA:</b> ${esc(LEGAL.piva)}</span><span><b>Sede:</b> ${esc(LEGAL.sede)}</span><span><b>PEC:</b> ${esc(LEGAL.pec)}</span></div>
+   <button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
   if(s.type==="social"){const ap=s.v==="apple";return `<form class="stack" data-form="social" novalidate><div class="row" style="gap:10px">${ap?`<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--ink)"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.1zM13.9 5.2c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>`:`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`}<h2 style="font-size:1.2rem;font-weight:800">${ap?"Accedi con Apple":"Accedi con Google"}</h2></div>
    <p class="muted small">Clinia riceverà nome ed e-mail del tuo account ${ap?"Apple":"Google"}. ${UI.loginMode==="register"?"L’account Clinia viene creato subito, senza password.":"Se l’account non esiste ancora, lo creiamo subito."}</p>
    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Nome</span><input id="so-nome" name="nome" autocomplete="given-name"></label><label class="field"><span>Cognome</span><input id="so-cognome" name="cognome" autocomplete="family-name"></label></div>
@@ -1141,14 +1263,15 @@ function afterAuthFlow(){ // prossimo passo dell'onboarding
   if(!S.user||!S.user.tel)return go("phone");
   if(!S.health)return go("health");
   if(isPro()&&!S.proId)return go("pro-pick");
+  if(isPro()&&!(S.proProfile[S.proId]&&S.proProfile[S.proId].done)&&!UI.skipProf)return go("proprof");
   if(S.notif==null)return go("notifs");
   UI.screen="main";
   if(UI.pending){const p=UI.pending;UI.pending=null;UI.stack=p.stack;UI.book=p.book;UI.tab=p.tab;return doConfirmBook()}
   UI.stack=[];UI.tab=isPro()?"agenda":"home";if(!isPro()&&S.stats==null)UI.sheet={type:"stats"};render()}
 function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
   const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
-  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),status:"confermata",created:Date.now()};
-  S.appts.push(a);save();UI.stack=[{page:"done",id:a.id}];render();
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),fee:APP_FEE,feeBy:b.pay&&b.pay!=="clinic"?"paziente":"specialista",status:"confermata",created:Date.now()};
+  S.appts.push(a);save();DB.saveAppt(a);UI.stack=[{page:"done",id:a.id}];render();
   setTimeout(()=>notify("Prenotazione confermata",`${a.service} con ${doc(id).name}, ${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}.`,"Clinia"),900)}
 function keyPress(v){
   if(v==="del"){UI.buf=UI.buf.slice(0,-1);UI.pinErr="";return render()}
@@ -1172,9 +1295,9 @@ function sendOtp(){UI.otp=String(1000+Math.floor(Math.random()*9000));UI.otpExp=
 const ACT={
   cookie:d=>{S.cookie=d.v;save();go(logged()?"main":"welcome")},
   chooseRole:d=>{UI.authRole=d.v;go("auth")},
-  askCancelSub:()=>{UI.sheet={type:"confirm",title:"Disdire l’abbonamento?",text:`Resterai attivo fino al ${esc(fmtD(S.sub.next,{day:"numeric",month:"long"}))}. Dopo quella data i pazienti non potranno più prenotare con te dall’app.`,ok:"Disdici",act:"cancelSub",danger:true};render()},
-  cancelSub:()=>{S.sub.status="disdetto";save();UI.sheet=null;toast("Abbonamento disdetto")},
-  resumeSub:()=>{S.sub.status="attivo";save();toast("Abbonamento riattivato")},
+  askCancelSub:()=>{UI.sheet={type:"confirm",title:"Disdire l’abbonamento?",text:`Resterai attivo fino al ${esc(fmtD(mySub().next,{day:"numeric",month:"long"}))}. Dopo quella data i pazienti non potranno più prenotare con te dall’app.`,ok:"Disdici",act:"cancelSub",danger:true};render()},
+  cancelSub:()=>{mySub().status="disdetto";save();UI.sheet=null;toast("Abbonamento disdetto")},
+  resumeSub:()=>{mySub().status="attivo";save();toast("Abbonamento riattivato")},
   tab:d=>{UI.tab=d.v;UI.stack=[];render()},
   home:()=>{UI.stack=[];UI.tab="home";render()},
   goVisite:()=>{UI.stack=[];UI.tab="visite";UI.visitSeg="next";render()},
@@ -1208,6 +1331,11 @@ const ACT={
   delCard:d=>{S.cards=S.cards.filter(c=>c.id!==d.id);save();toast("Carta rimossa")},
   bFor:d=>{saveNote();UI.book.forId=d.v;render()},
   bPay:d=>{saveNote();UI.book.pay=d.v;render()},
+  openCopyright:()=>{UI.sheet={type:"copyright"};render()},
+  ricMese:d=>{UI.ricMese=d.v;render()},
+  skipProf:()=>{UI.skipProf=true;afterAuthFlow()},
+  newPro:()=>{const id="sp-"+uid(),u=S.user||{};const d={id,name:((u.nome||"")+" "+(u.cognome||"")).trim()||"Nuovo specialista",role:"Specialista",area:"medicina",bio:[]};
+    S.customDocs.push(d);DOCTORS.push(d);S.proId=id;save();afterAuthFlow()},
   openSearch:()=>{UI.sq={mode:"studio",q:"",spec:null};UI.f=defF();push({page:"search"})},
   mode:d=>{UI.sq.mode=d.v;render()},
   spec:d=>{UI.sq.spec=+d.v;UI.sq.q="";push({page:"results"})},
@@ -1236,7 +1364,7 @@ const ACT={
     if(isPro()){toast("Per prenotare una visita passa al profilo paziente.");return}doConfirmBook()},
   vseg:d=>{UI.visitSeg=d.v;render()},
   askCancel:d=>{const a=S.appts.find(x=>x.id===d.id);UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
-  cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";save();UI.sheet=null;toast("Visita disdetta")},
+  cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";save();DB.update("appointments",a.id,{stato:"annullata"});UI.sheet=null;toast("Visita disdetta")},
   closeSheet:()=>{UI.sheet=null;render()},
   delFile:d=>{S.files=S.files.filter(f=>f.id!==d.id);save();render()},
   openChat:d=>{const k=isPro()?d.id:d.id+"|me";if(!logged()){return ACT.openAuth()}push({page:"chat",id:k})},
@@ -1268,11 +1396,11 @@ const ACT={
   rpCard:d=>{UI.sheet.card=d.v;render()},
   rpBack:()=>{UI.sheet.step=null;render()},
   paySeg:d=>{UI.paySeg=d.v;render()},
-  markPaid:d=>{UI.openPz=d.n;if(d.id.startsWith("demo|"))S.demoPaid.push(d.id);else{const a=S.appts.find(x=>"app|"+x.id===d.id);if(a){a.paid=true;a.paidAt=Date.now();a.paidVia="struttura"}}save();toast(`Pagamento di ${d.n} segnato come ricevuto`)},
+  markPaid:d=>{UI.openPz=d.n;if(d.id.startsWith("demo|"))S.demoPaid.push(d.id);else{const a=S.appts.find(x=>"app|"+x.id===d.id);if(a){a.paid=true;a.paidAt=Date.now();a.paidVia="struttura";DB.update("appointments",a.id,{pagato:true})}}save();toast(`Pagamento di ${d.n} segnato come ricevuto`)},
   askCancelRoom:d=>{const b=allBookings().find(x=>x.id===d.id);const n=activeAppts().filter(a=>a.doctorId===S.proId&&a.date===b.date&&a.time>=b.start&&a.time<b.end).length;
     if(n){toast(`Ci sono ${n} visite prenotate in questo turno: spostale prima di annullarlo.`);return}
     UI.sheet={type:"confirm",title:"Annullare il turno?",text:`${room(b.roomId).name}, ${esc(fmtD(b.date))} ${b.start}–${b.end}. Lo studio tornerà disponibile per gli altri professionisti.${b.paid?` Clinia ti rimborserà ${eur(b.paid.amount)} sulla carta usata.`:""}`,ok:"Annulla turno",act:"cancelRoom",id:b.id,danger:true};render()},
-  cancelRoom:d=>{if(d.id.startsWith("seed-"))S.cancelled.push(d.id);else{const b=S.rooms.find(x=>x.id===d.id);if(b&&b.paid){const p=S.roomPayments.find(x=>x.id===b.paid.payment);if(p)p.refund=(p.refund||0)+b.paid.amount}S.rooms=S.rooms.filter(x=>x.id!==d.id)}save();UI.sheet=null;toast("Turno annullato")}
+  cancelRoom:d=>{if(d.id.startsWith("seed-"))S.cancelled.push(d.id);else{const b=S.rooms.find(x=>x.id===d.id);if(b&&b.paid){const p=S.roomPayments.find(x=>x.id===b.paid.payment);if(p)p.refund=(p.refund||0)+b.paid.amount}DB.update("room_bookings",d.id,{stato:"annullata"});S.rooms=S.rooms.filter(x=>x.id!==d.id)}save();UI.sheet=null;toast("Turno annullato")}
 };
 function saveNote(){const t=$("#bk-note");if(t&&UI.book)UI.book.note=t.value}
 
@@ -1286,6 +1414,9 @@ const FORMS={
     save();UI.sheet=null;toast(prov==="apple"?"Accesso con Apple riuscito":"Accesso con Google riuscito");afterAuthFlow()},
   login:f=>{const e=f.email.value.trim(),p=f.pw.value,err=$("#lg-err");
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){err.textContent="Inserisci un indirizzo e-mail valido.";return}
+    if(DB.on){if(p.length<8){err.textContent="La password deve avere almeno 8 caratteri.";return}
+      err.textContent="";DB.login(e,p,UI.loginMode==="register",UI.authRole).then(r=>{if(r.err){err.textContent=r.err;return}
+        S.auth={email:e,role:r.owner?"professionista":UI.authRole,owner:!!r.owner};if(r.owner)S.proId=OWNER.doctorId;save();afterAuthFlow()});return}
     if(e.toLowerCase()===OWNER.email){if(UI.loginMode==="register"){err.textContent="Questo indirizzo è riservato al titolare: usa Login.";return}
       err.textContent="";sha256("clinia-titolare:"+p).then(h=>{if(h!==OWNER.hash){err.textContent="Password errata per l’accesso riservato del titolare.";return}
         S.auth={email:OWNER.email,role:"professionista",owner:true};S.proId=OWNER.doctorId;save();toast("Accesso del titolare");afterAuthFlow()});return}
@@ -1302,7 +1433,7 @@ const FORMS={
     S.family.push({id:uid(),nome:v("nome"),cognome:v("cognome"),nascita:v("nascita"),rel:f.rel.value});save();toast(v("nome")+" aggiunto ai familiari")},
   card:f=>{const c=readCard(f,$("#cc-err"));if(!c)return;S.cards.push(c);save();UI.addCard=false;toast("Carta salvata")},
   sub:f=>{const err=$("#sb-err"),c=readCard(f,err);if(!c)return;if(!f.terms.checked){err.textContent="Per continuare accetta le condizioni dell’abbonamento.";return}
-    S.cards.push(c);S.sub={plan:SUB.name,price:SUB.price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};save();
+    S.cards.push(c);S.subs[S.auth.email]={plan:planFor().name,price:planFor().price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};save();
     notify("Abbonamento attivato",`${SUB.name}: ${eur(SUB.price)} addebitati su ${c.brand} •••• ${c.last4} (simulato).`,"Clinia");afterAuthFlow()},
   roompay:f=>{const sh=UI.sheet,r=room(sh.id),each=roomCost(r.type,sh.end-sh.start);let card;
     if(sh.card==="new"){card=readCard(f,$("#rp-err"));if(!card)return;S.cards.push(card)}else card=S.cards.find(c=>c.id===sh.card);
@@ -1311,6 +1442,22 @@ const FORMS={
     S.roomPayments.unshift({id:pid,doctorId:S.proId,roomId:r.id,dates:sh.plan.slice(),start:toT(sh.start),end:toT(sh.end),amount:tot,card:card.brand+" •••• "+card.last4,at:Date.now(),refund:0});
     save();UI.sheet=null;render();notify("Pagamento riuscito",`${eur(tot)} pagati a Clinia per ${r.name} con ${card.brand} •••• ${card.last4} (simulato).`,"Clinia")},
   request:f=>{S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
+  proprof:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#pp-err");err.textContent="";
+    const em=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if(!v("nome")||!v("cognome")||!v("ruolo"))return err.textContent="Inserisci nome, cognome e specializzazione.";
+    if(!em.test(v("email")))return err.textContent="Inserisci un’e-mail valida.";
+    if(v("pec")&&!em.test(v("pec")))return err.textContent="La PEC non è un indirizzo valido.";
+    if(v("piva")&&!PIVA_OK(v("piva")))return err.textContent="La partita IVA non è valida: controlla le 11 cifre.";
+    if(v("cf")&&!/^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/.test(v("cf"))&&!/^\d{11}$/.test(v("cf")))return err.textContent="Il codice fiscale non è valido.";
+    if(v("sdi")&&!/^[A-Z0-9]{7}$/.test(v("sdi")))return err.textContent="Il codice destinatario ha 7 caratteri.";
+    if(v("sito")&&!/^https?:\/\/\S+\.\S+/.test(v("sito")))return err.textContent="Il sito deve iniziare con https://";
+    const id=S.proId,bio=v("bio").split("\n").map(x=>x.trim()).filter(Boolean);
+    const data={};["titolo","iscrizione","nome","cognome","ruolo","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
+    S.proProfile[id]={...(S.proProfile[id]||{}),...data,bio,cv:UI.ppCv||(S.proProfile[id]||{}).cv,done:true};
+    if(UI.ppPhoto)S.docPhotos[id]=UI.ppPhoto;
+    S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio};applyOverrides();
+    UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
+    if(UI.screen==="proprof")afterAuthFlow();else{UI.stack.pop();render()}},
   search:f=>{UI.sq.q=f.querySelector("#q").value.trim();UI.sq.spec=null;push({page:"results"})},
   send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
     if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
@@ -1328,6 +1475,8 @@ app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)
   e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
 app.addEventListener("submit",e=>{e.preventDefault();const f=FORMS[e.target.dataset.form];if(f)f(e.target)});
 app.addEventListener("input",e=>{const k=e.target.dataset.input;
+  if(k==="digits")e.target.value=e.target.value.replace(/\D/g,"");
+  if(k==="upper")e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
   if(k==="exp"){const t=e.target,del=e.inputType&&e.inputType.startsWith("delete");let d=t.value.replace(/\D/g,"").slice(0,4);
     if(d.length===1&&+d>1)d="0"+d; // "5" diventa "05"
     t.value=d.length>2||(d.length===2&&!del)?d.slice(0,2)+"/"+d.slice(2):d}
@@ -1342,12 +1491,50 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="photo"){const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();
     img.onload=()=>{const z=256,c=document.createElement("canvas"),r=Math.max(z/img.width,z/img.height);c.width=c.height=z;c.getContext("2d").drawImage(img,(z-img.width*r)/2,(z-img.height*r)/2,img.width*r,img.height*r);
       S.photo=c.toDataURL("image/jpeg",.82);URL.revokeObjectURL(url);save();toast("Foto aggiornata")};img.onerror=()=>toast("Non riesco a leggere questa immagine. Prova con un JPG o PNG.");img.src=url}
+  if(k==="ppPhoto"&&e.target.files[0])ppSetPhoto(e.target.files[0]);
+  if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
   if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}
   if(k==="filt"){const fk=e.target.dataset.k,fd=UI.fd;
     if(fk==="svcs"){const v=e.target.value;fd.svcs=e.target.checked?[...fd.svcs,v]:fd.svcs.filter(x=>x!==v)}
     else if(fk==="kids")fd.kids=e.target.checked;else fd[fk]=e.target.value;
     const b=$("#fcount");if(b)b.textContent=countLabel()}});
+
+/* Profilo professionale: foto e curriculum (scatto, caricamento o trascinamento) */
+function ppSetPhoto(file){if(!file.type.startsWith("image/"))return toast("Scegli un’immagine (JPG o PNG).");const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{const z=400,c=document.createElement("canvas"),r=Math.max(z/img.width,z/img.height);c.width=c.height=z;c.getContext("2d").drawImage(img,(z-img.width*r)/2,(z-img.height*r)/2,img.width*r,img.height*r);
+    UI.ppPhoto=c.toDataURL("image/jpeg",.85);URL.revokeObjectURL(url);const pv=$("#pp-prev");if(pv){pv.querySelector("img")?.remove();pv.insertAdjacentHTML("beforeend",`<img src="${UI.ppPhoto}" alt="">`)}toast("Foto pronta: tocca Salva il profilo")};
+  img.onerror=()=>toast("Non riesco a leggere questa immagine.");img.src=url}
+function ppSetCv(file){if(!/pdf$/i.test(file.type)&&!/\.pdf$/i.test(file.name))return toast("Il curriculum deve essere un file PDF.");
+  if(file.size>10*1024*1024)return toast("Il PDF supera 10 MB.");UI.ppCv={name:file.name,size:file.size};const t=$("#pp-cvname");if(t)t.innerHTML=`<b>${esc(file.name)}</b> · ${(file.size/1024).toFixed(0)} KB`}
+app.addEventListener("dragover",e=>{const z=e.target.closest("[data-drop]");if(z){e.preventDefault();z.classList.add("over")}});
+app.addEventListener("dragleave",e=>{const z=e.target.closest("[data-drop]");if(z&&!z.contains(e.relatedTarget))z.classList.remove("over")});
+app.addEventListener("drop",e=>{const z=e.target.closest("[data-drop]");if(!z)return;e.preventDefault();z.classList.remove("over");const f=e.dataTransfer.files[0];if(!f)return;
+  if(z.dataset.drop==="photo")ppSetPhoto(f);else ppSetCv(f)});
+
+/* Database Supabase (attivo quando SUPABASE.url e SUPABASE.anonKey sono compilati) */
+const DB={on:false,c:null,
+  async init(){if(!SUPABASE.url||!SUPABASE.anonKey)return;
+    try{await new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});
+      this.c=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);this.on=true;
+      this.c.channel("clinia").on("postgres_changes",{event:"*",schema:"public",table:"room_bookings"},()=>this.pull())
+        .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},()=>this.pull()).subscribe();
+      const{data}=await this.c.auth.getSession();if(data.session)await this.pull()}catch(e){console.warn("Supabase non raggiungibile, uso i dati sul telefono",e);this.on=false}},
+  async login(email,pw,register,ruolo){const r=register?await this.c.auth.signUp({email,password:pw,options:{data:{ruolo:ruolo==="professionista"?"specialista":"paziente"}}})
+      :await this.c.auth.signInWithPassword({email,password:pw});
+    if(r.error)return{err:r.error.message};const{data:p}=await this.c.from("profiles").select("ruolo").eq("id",r.data.user.id).single();
+    await this.pull();return{owner:p&&p.ruolo==="titolare"}},
+  async pull(){if(!this.on)return;const dal=addDays(today(),-14);
+    const[r,a]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal)]);
+    if(!r.error)S.rooms=r.data.map(b=>({id:b.id,doctorId:b.specialist_id,date:b.giorno,start:b.inizio.slice(0,5),end:b.fine.slice(0,5),roomId:b.room_id,paid:+b.importo>0&&b.stato==="confermata"?{amount:+b.importo,payment:b.payment_id}:null,remote:true}));
+    if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="annullata"?"annullata":"confermata"}));
+    render()},
+  async saveAppt(a){if(!this.on)return;const{data:u}=await this.c.auth.getUser();
+    const{error}=await this.c.from("appointments").insert({id:a.id.length===36?a.id:undefined,specialist_id:a.doctorId,patient_id:u.user&&u.user.id,paziente_nome:a.patient,prestazione:a.service,giorno:a.date,ora:a.time,durata_min:a.dur,room_id:a.roomId,online:a.online,prezzo:a.price,
+      commissione_a_carico:a.feeBy,metodo_pagamento:a.feeBy==="paziente"?"carta":"struttura",stato:a.feeBy==="paziente"?"in_attesa_pagamento":"confermata",nota:a.note});
+    if(error)toast("Prenotazione non salvata sul server: "+error.message)},
+  async update(table,id,patch){if(!this.on||!/^[0-9a-f-]{36}$/.test(id))return;const{error}=await this.c.from(table).update(patch).eq("id",id);if(error)toast("Modifica non salvata sul server: "+error.message)}};
+DB.init();
 
 /* Avvio */
 render();

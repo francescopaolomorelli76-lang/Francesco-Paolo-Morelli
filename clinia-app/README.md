@@ -1,5 +1,7 @@
 # Clinia App (prototipo)
 
+© 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
+
 App per pazienti e professionisti di **Clinia – Via La Martella 5/D, Matera**.
 File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 
@@ -10,11 +12,14 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Lo specialista attiva l'abbonamento con la carta prima di entrare; può disdirlo o riattivarlo dal Profilo
 
 ## Titolare (Dott. Marco Morelli)
-- Accesso riservato e gratuito: login con e-mail `titolare@cliniamatera.it` e password consegnata a parte (nel codice c'è solo l'impronta SHA-256)
-- Nessun abbonamento, studi prenotati senza pagamento
+- Abbonamento della struttura 300 €/mese all'app
+- Accesso riservato: login con e-mail `titolare@cliniamatera.it` e password consegnata a parte (nel codice c'è solo l'impronta SHA-256)
+- Studi prenotati senza pagamento; incassa affitti degli studi e visite dei suoi pazienti
 - Scheda **Clinia**: incassi degli studi, rimborsi da fare, occupazione dei 9 studi
 
 ## Pazienti
+- Con carta: visita + 7 € di servizio; in struttura: solo la visita (i 7 € li paga lo specialista)
+- Foto reali dei 10 specialisti (dal sito Clinia)
 - Avvio con logo, consenso cookie, home "Ciao." con ricerca, specialità e specialisti
 - Ricerca In studio / Online con suggerimenti, risultati con orari prenotabili subito, mappa della sede
 - Filtri: date disponibili, modalità, prestazioni, area, visita i bambini, genere
@@ -27,6 +32,9 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Visite (prossime/passate/cancellate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
 
 ## Specialisti
+- Abbonamento 49,90 €/mese → paga gli studi a Clinia → riceve i pagamenti dei pazienti
+- Profilo professionale: foto (scatto, caricamento o trascinamento), CV in PDF trascinabile, contatti, PEC, P.IVA, codice fiscale, SDI, social; campi compilati in automatico
+- Sezione **Ricavi**: incassi con carta e in struttura, 7 € a carico per le visite in struttura, studi, abbonamento, netto
 - Lo studio si paga subito a Clinia con la carta (anche più settimane insieme); annullando un turno pagato si segna il rimborso
 - Scheda **Pazienti**: totale delle visite, incassato e da incassare; pagato con carta nell'app = pagato in automatico, pagato in struttura = "Segna pagato"
 
@@ -34,6 +42,10 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Agenda giornaliera con turni negli studi e visite prenotate
 - Prenotazione dei **9 studi (Studio 1–9)** con occupazione in tempo reale, ripetizione settimanale e costo calcolato
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
+
+## Database e pagamenti
+- `supabase/`: schema, dati iniziali, funzioni Stripe (vedi `supabase/README.md`)
+- `piano-economico.html`: pagamenti consigliati, cosa serve, fatture, stima dei guadagni
 
 ## Da completare
 - Accesso del titolare e pagamenti: verifica sul server e incasso reale (abbonamenti al gestore dell'app, studi a Clinia)

@@ -2,6 +2,12 @@
 
 © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
 
+## Progetto collegato
+- Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
+- Schema e dati iniziali installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
+- Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
+
 ## 1. Database
 1. Crea un progetto su supabase.com (regione **UE – Francoforte**).
 2. SQL Editor › incolla `schema.sql` › Run. Poi `seed.sql` › Run. Si possono rieseguire.

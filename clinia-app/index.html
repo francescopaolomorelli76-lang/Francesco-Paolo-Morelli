@@ -460,7 +460,9 @@ const SUB_CLINICA={name:"Clinia Struttura",price:300,ufficiale:true,features:["A
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
 const APP_FEE=7;
 // Database Supabase: incolla qui URL e chiave pubblica (anon) del progetto. Vuoti = versione di prova sul telefono.
-const SUPABASE={url:"",anonKey:""};
+const SUPABASE={url:"https://iuydwatobtrpzhotcfyd.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eWR3YXRvYnRycHpob3RjZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyODAwNDgsImV4cCI6MjEwOTg1NjA0OH0.T8HNEAJn5h-fEb6ZPEH-Xl838DXZk_j2sTm9B_bCYOA"};
+// Stripe: chiave pubblicabile (pk_...). Vuota = pagamenti con carta non ancora attivi quando il database è collegato.
+const STRIPE={publishableKey:""};
 // Dati legali per la pagina dei diritti
 const LEGAL={autore:"Francesco Paolo Morelli",marchio:"FPM WebDesignTech",anno:2026,piva:"[da inserire]",sede:"[da inserire]",pec:"[da inserire]"};
 // Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
@@ -961,7 +963,7 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
     ${b.date?`<div class="slots">${slots.map(x=>`<button class="slot num ${x.time===b.time?"on":""}" data-act="bTime" data-v="${x.time}" ${x.free?"":"disabled"} aria-label="${x.time}${x.free?"":" occupato"}">${x.time}</button>`).join("")}</div>`:`<p class="muted">Nessuna disponibilità nelle prossime tre settimane. Scrivi alla reception per una data.</p>`}</section>
    ${logged()&&S.family.length?`<section class="stack" style="gap:10px"><span class="label">Per chi è la visita</span>${persons().map(p=>`<button class="opt ${(b.forId||"me")===p.id?"on":""}" data-act="bFor" data-v="${p.id}"><span class="radio"></span>${pav(p)}<span style="flex:1"><b>${esc(p.nome+" "+p.cognome)}</b><span class="tiny" style="display:block">${esc(p.rel)}</span></span></button>`).join("")}</section>`:""}
    <section class="stack" style="gap:10px"><span class="label">Pagamento</span><button class="opt ${(b.pay||"clinic")==="clinic"?"on":""}" data-act="bPay" data-v="clinic"><span class="radio"></span><span style="flex:1"><b>In clinica</b><span class="tiny" style="display:block">Contanti, carta o bancomat il giorno della visita</span></span></button>
-    ${S.cards.map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
+    ${DB.on&&!STRIPE.publishableKey?`<p class="tiny">Il pagamento con carta nell’app si attiva quando colleghiamo Stripe. Per ora paghi in struttura.</p>`:""}${(DB.on&&!STRIPE.publishableKey?[]:S.cards).map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
     ${logged()?`<button class="link small" style="align-self:flex-start" data-act="openPage" data-v="payments">${ic("plus","sm")} Aggiungi una carta</button>`:""}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
    ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd>${(b.pay||"clinic")==="clinic"?`<dt>Da pagare in struttura</dt><dd class="num">${eur(s.price)}</dd>`:`<dt>Visita</dt><dd class="num">${eur(s.price)}</dd><dt>Servizio di prenotazione</dt><dd class="num">${eur(APP_FEE)}</dd><dt>Totale con carta</dt><dd class="num">${eur(s.price+APP_FEE)}</dd>`}<dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">${(b.pay||"clinic")==="clinic"?"Paghi la visita direttamente allo specialista. Nessun costo di servizio per te.":`La visita va allo specialista, ${eur(APP_FEE)} sono il costo del servizio di prenotazione Clinia.`} Puoi disdire gratis fino a 24 ore prima.</p>`:""}
@@ -1030,6 +1032,7 @@ function settingsBody(){const u=S.user,pro=isPro(),d=pro&&doc(S.proId);
   <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
   <div class="list"><button class="li" data-act="openCopyright">${ic("shield")}<span class="t">Copyright e note legali<small>© ${LEGAL.anno} FPM WebDesignTech</small></span>${ic("right","sm")}</button></div>
+  <div class="card row small">${ic("shield","sm")}<span>${DB.on?"Dati salvati sul database Clinia, aggiornati in tempo reale":"Versione di prova: i dati restano su questo telefono"}</span></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
   <button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`}
 
@@ -1385,11 +1388,13 @@ const ACT={
     let st=o;const busy=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).map(b=>[toMin(b.start),toMin(b.end)]).sort((a,b)=>a[0]-b[0]);
     for(const[a,b] of busy){if(st+60<=a)break;if(b>st)st=b}const nb=busy.find(x=>x[0]>=st);const en=Math.min(st+240,nb?nb[0]:c,c);
     UI.sheet={type:"room",id:r.id,start:Math.min(st,c-30),end:Math.max(en,Math.min(st,c-30)+30),repeat:false};render()},
-  confirmRoom:()=>{const sh=UI.sheet,r=room(sh.id),plan=[],skip=[];
+  confirmRoom:async()=>{const sh=UI.sheet,r=room(sh.id),plan=[],skip=[];
     for(let w=0;w<(sh.repeat?4:1);w++){const ds=addDays(UI.roomDay,7*w);
       const clash=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
       if(clash||!OPEN[parseD(ds).getDay()])skip.push(fmtD(ds,{day:"numeric",month:"short"}));else plan.push(ds)}
     if(!plan.length){UI.sheet=null;return toast("Nessuna prenotazione: lo studio è occupato")}
+    if(DB.on&&(isOwner()||!STRIPE.publishableKey)){const list=plan.map(ds=>({doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));UI.sheet=null;render();
+      await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
     if(isOwner()){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));save();UI.sheet=null;
       return toast(`${r.name} prenotato${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
@@ -1453,7 +1458,7 @@ const FORMS={
     if(v("sito")&&!/^https?:\/\/\S+\.\S+/.test(v("sito")))return err.textContent="Il sito deve iniziare con https://";
     const id=S.proId,bio=v("bio").split("\n").map(x=>x.trim()).filter(Boolean);
     const data={};["titolo","iscrizione","nome","cognome","ruolo","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
-    S.proProfile[id]={...(S.proProfile[id]||{}),...data,bio,cv:UI.ppCv||(S.proProfile[id]||{}).cv,done:true};
+    const isNew=id.startsWith("sp-")&&!(S.proProfile[id]&&S.proProfile[id].done);S.proProfile[id]={...(S.proProfile[id]||{}),...data,bio,cv:UI.ppCv||(S.proProfile[id]||{}).cv,done:true};DB.saveProfile(id,{...data,bio},isNew);
     if(UI.ppPhoto)S.docPhotos[id]=UI.ppPhoto;
     S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio};applyOverrides();
     UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
@@ -1516,13 +1521,17 @@ app.addEventListener("drop",e=>{const z=e.target.closest("[data-drop]");if(!z)re
 const DB={on:false,c:null,
   async init(){if(!SUPABASE.url||!SUPABASE.anonKey)return;
     try{await new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});
-      this.c=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);this.on=true;
+      this.c=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);
+      const t=await Promise.race([this.c.from("rooms").select("id").limit(1),new Promise(r=>setTimeout(()=>r({error:{message:"timeout"}}),6000))]);
+      if(t.error){console.warn("Supabase non raggiungibile da qui: versione di prova",t.error.message);return}
+      this.on=true;render();
       this.c.channel("clinia").on("postgres_changes",{event:"*",schema:"public",table:"room_bookings"},()=>this.pull())
         .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},()=>this.pull()).subscribe();
       const{data}=await this.c.auth.getSession();if(data.session)await this.pull()}catch(e){console.warn("Supabase non raggiungibile, uso i dati sul telefono",e);this.on=false}},
-  async login(email,pw,register,ruolo){const r=register?await this.c.auth.signUp({email,password:pw,options:{data:{ruolo:ruolo==="professionista"?"specialista":"paziente"}}})
+  async login(email,pw,register,ruolo){const r=register?await this.c.auth.signUp({email,password:pw,options:{emailRedirectTo:location.href.split("#")[0],data:{ruolo:ruolo==="professionista"?"specialista":"paziente"}}})
       :await this.c.auth.signInWithPassword({email,password:pw});
-    if(r.error)return{err:r.error.message};const{data:p}=await this.c.from("profiles").select("ruolo").eq("id",r.data.user.id).single();
+    if(r.error)return{err:/Invalid login/i.test(r.error.message)?"E-mail o password errate.":/already registered/i.test(r.error.message)?"Questa e-mail è già registrata: usa Login.":/Email not confirmed/i.test(r.error.message)?"Conferma prima l’e-mail: apri il messaggio che ti abbiamo mandato.":r.error.message};
+    if(!r.data.session)return{err:`Ti abbiamo mandato un’e-mail di conferma a ${email}. Aprila, poi torna qui e tocca Login.`};const{data:p}=await this.c.from("profiles").select("ruolo").eq("id",r.data.user.id).single();
     await this.pull();return{owner:p&&p.ruolo==="titolare"}},
   async pull(){if(!this.on)return;const dal=addDays(today(),-14);
     const[r,a]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal)]);
@@ -1533,6 +1542,15 @@ const DB={on:false,c:null,
     const{error}=await this.c.from("appointments").insert({id:a.id.length===36?a.id:undefined,specialist_id:a.doctorId,patient_id:u.user&&u.user.id,paziente_nome:a.patient,prestazione:a.service,giorno:a.date,ora:a.time,durata_min:a.dur,room_id:a.roomId,online:a.online,prezzo:a.price,
       commissione_a_carico:a.feeBy,metodo_pagamento:a.feeBy==="paziente"?"carta":"struttura",stato:a.feeBy==="paziente"?"in_attesa_pagamento":"confermata",nota:a.note});
     if(error)toast("Prenotazione non salvata sul server: "+error.message)},
+  async saveRooms(list,free){if(!this.on)return;
+    const{error}=await this.c.from("room_bookings").insert(list.map(b=>({specialist_id:b.doctorId,room_id:b.roomId,giorno:b.date,inizio:b.start,fine:b.end,stato:free?"confermata":"in_attesa_pagamento",gratuito:!!free,importo:roomCost(room(b.roomId).type,toMin(b.end)-toMin(b.start))})));
+    if(error)toast(error.code==="42501"?"Il tuo account non è ancora collegato al profilo di specialista: chiedi al titolare di abilitarlo.":/studio_libero|specialista_libero/.test(error.message)?"Lo studio è stato appena occupato da un altro specialista.":"Prenotazione non salvata: "+error.message);await this.pull()},
+  async saveProfile(id,d,isNew){if(!this.on)return;const{data:u}=await this.c.auth.getUser();if(!u.user)return;
+    const pub={id,user_id:u.user.id,titolo:d.titolo||null,nome_visualizzato:((d.titolo?d.titolo+" ":"")+d.nome+" "+d.cognome).trim(),ruolo:d.ruolo,area:d.area,bio:d.bio||[],sito:d.sito||null,instagram:d.instagram||null,facebook:d.facebook||null,linkedin:d.linkedin||null};
+    let r=isNew?await this.c.from("specialists").insert(pub):await this.c.from("specialists").update(pub).eq("id",id);
+    if(r.error)return toast("Profilo non salvato sul server: "+r.error.message);
+    r=await this.c.from("specialist_private").upsert({specialist_id:id,email:d.email,telefono:d.telefono||null,pec:d.pec||null,partita_iva:d.piva||null,codice_fiscale:d.cf||null,codice_sdi:d.sdi||null,iscrizione_albo:d.iscrizione||null,indirizzo_fatturazione:[d.indirizzo,d.cap,d.citta].filter(Boolean).join(", ")||null});
+    if(r.error)toast("Dati di fatturazione non salvati sul server: "+r.error.message)},
   async update(table,id,patch){if(!this.on||!/^[0-9a-f-]{36}$/.test(id))return;const{error}=await this.c.from(table).update(patch).eq("id",id);if(error)toast("Modifica non salvata sul server: "+error.message)}};
 DB.init();
 

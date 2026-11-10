@@ -14,6 +14,13 @@ Deno.serve(async (req) => {
   const k = (ora.getUTCFullYear() - ai) * 12 + (ora.getUTCMonth() + 1 - mi) + 1;
   if (k < 1 || k > s.licenzaMesi) return json({ esito: `nessun addebito: mese ${k} fuori dai ${s.licenzaMesi} mesi di licenza` });
 
+  // Se Clinia paga con bonifico o in contanti (ricevuta mensile), o ha già registrato il mese, niente addebito.
+  const { data: mt } = await admin.from("app_settings").select("valore").eq("chiave", "licenza_metodo").maybeSingle();
+  const metodo = String(mt?.valore?.metodo ?? "automatico");
+  if (metodo !== "automatico") return json({ esito: `nessun addebito: Clinia paga la licenza con ${metodo}` });
+  const { data: giaPagato } = await admin.from("fpm_pagamenti").select("metodo").eq("mese", `${mese}-01`).maybeSingle();
+  if (giaPagato) return json({ esito: `nessun addebito: ${mese} già pagato (${giaPagato.metodo})` });
+
   const { data: st } = await admin.from("app_settings").select("valore").eq("chiave", "clinica_stripe").maybeSingle();
   const customer = st?.valore?.customer as string | undefined;
   if (!customer) return json({ errore: "Clinia non ha ancora registrato carta o conto" }, 409);
@@ -32,5 +39,8 @@ Deno.serve(async (req) => {
   const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
   const r = await accreditaFpm({ tipo: "licenza", netto: s.licenzaNetto, conBeneficenza: false,
     sourceCharge: charge ?? undefined, chiave: `licenza-${mese}` });
+  await admin.from("fpm_pagamenti").upsert({ mese: `${mese}-01`, voce: "licenza", importo_netto: s.licenzaNetto,
+    metodo: "automatico", pagato_il: ora.toISOString().slice(0, 10), confermato_fpm: pi.status === "succeeded",
+    confermato_il: pi.status === "succeeded" ? ora.toISOString() : null, nota: `Stripe ${pi.id}` });
   return json({ rata: k, addebitato: s.licenzaNetto, ...r });
 });

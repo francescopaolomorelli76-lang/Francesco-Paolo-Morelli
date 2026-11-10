@@ -570,7 +570,7 @@ const HORIZON=21;
 /* ===================== Stato ===================== */
 const KEY="clinia-app-v1";
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.35,fee:7},payAcc:{},cliniaPay:null,arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.35,fee:7},payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
@@ -1226,8 +1226,16 @@ function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lor
     if(a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"paziente",demo:a.demo});
     else if(a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
   for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
-  const k=monthIndex(m);if(k>=1&&k<=LICENZA.mesi&&m+"-01 06:00"<=nowStamp())add({at:m+"-01 06:00",tipo:"Licenza Clinia App",ini:"",svc:`rata ${k} di ${LICENZA.mesi}, addebito automatico a Clinia`,spec:"Clinia",lordo:LICENZA.netto/(1-RIT()),netto:LICENZA.netto,da:"clinia"});
+  const k=monthIndex(m),pl=pagStato(m);if(k>=1&&k<=LICENZA.mesi&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Licenza Clinia App",ini:"",svc:(p=>`rata ${k} di ${LICENZA.mesi}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:LICENZA.netto/(1-RIT()),netto:LICENZA.netto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
+/* ---------- Voce "Pagato": licenza del mese da Clinia a FPM ---------- */
+const PAG_METODI={automatico:"Automatico (carta o conto)",bonifico:"Bonifico",contanti:"Contanti con ricevuta"};
+function pagStato(m){const k=monthIndex(m),dovuto=k>=1&&k<=LICENZA.mesi?LICENZA.netto:0,p=S.pag[m];
+  if(p)return{k,dovuto,pagato:true,...p};
+  if(dovuto&&S.licMetodo==="automatico"&&S.cliniaPay&&m+"-01 06:00"<=nowStamp())return{k,dovuto,pagato:true,metodo:"automatico",data:m+"-01",importo:dovuto,conf:true,auto:true};
+  return{k,dovuto,pagato:false,metodo:S.licMetodo,scaduto:dovuto&&m+"-01"<=today()}}
+function pagBadge(p){return !p.dovuto?`<span class="badge grey">Non dovuta</span>`:p.pagato?`<span class="badge">${ic("check","sm")} Pagato${p.conf?" · ricevuto":""}</span>`:`<span class="badge ${p.scaduto?"warn":"grey"}">Da pagare</span>`}
+function pagDesc(p){return p.pagato?`${eur(p.importo)} ${p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"in automatico"} il ${esc(fmtD(p.data,{day:"numeric",month:"long"}))}${p.nota?" · "+esc(p.nota):""}`:""}
 function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
     const own=d.id===OWNER.doctorId,nCard=v.filter(a=>a.method==="carta"&&a.paid).length,nCash=own?0:v.filter(a=>a.method==="struttura"&&(a.paid||a.date<today())).length;
     const affitti=S.roomPayments.filter(p=>p.doctorId===d.id&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0);
@@ -1288,9 +1296,20 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   <div class="card stack" style="gap:10px"><h3>Scadenze del mese</h3>
    <div class="row between small"><span>F24 entro il 16: ritenute su compensi FPM</span><b class="num">${eur(c.f24)}</b></div>
    <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
-  <div class="card stack" style="gap:10px"><h3>Pagamento automatico a FPM</h3>
-   ${S.cliniaPay?`<p class="small">${ic("check","sm")} Attivo con ${esc(S.cliniaPay.label)}. Il giorno 1 di ogni mese, per ${LICENZA.mesi} mesi, l’app addebita ${eur(LICENZA.netto)} e li accredita a FPM. La ritenuta (${eur(lordoDaNetto(LICENZA.netto)-LICENZA.netto)}) la versi tu con F24.</p><button class="btn ghost sm" data-act="cliniaPayEdit">Cambia metodo</button>`
-   :`<p class="small muted">Registra la carta o il conto di Clinia: il giorno 1 di ogni mese l’app paga in automatico ${eur(LICENZA.netto)} netti a FPM.</p><button class="btn primary block" data-act="cliniaPayEdit">${ic("card","sm")} Registra carta o conto</button>`}</div>
+  ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:S.licMetodo;return `<div class="card stack" style="gap:10px"><div class="row between"><h3>Pagamento licenza a FPM</h3>${pagBadge(p)}</div>
+   ${!p.dovuto?`<p class="small muted">${p.k>LICENZA.mesi?"La licenza è terminata dopo 12 mesi: niente da pagare.":"La licenza parte a "+esc(meseNome(LICENZA.inizio))+"."}</p>`
+   :p.pagato?`<p class="small">${ic("check","sm")} Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.</p><p class="tiny">${p.conf?"FPM ha confermato di averlo ricevuto.":"In attesa della conferma di FPM."} La ritenuta (${eur(r2(lordoDaNetto(LICENZA.netto)-LICENZA.netto))}) va comunque versata con F24 entro il 16 del mese dopo.</p>
+     <div class="row" style="gap:8px;flex-wrap:wrap">${p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta del mese</button>`:""}${!p.auto&&!p.conf?`<button class="btn ghost sm" data-act="pagAnnulla" data-v="${m}">Annulla</button>`:""}</div>`
+   :`<p class="small">Rata ${p.k} di ${LICENZA.mesi}: <b>${eur(p.dovuto)}</b> netti a FPM.</p>
+     <div class="seg" role="tablist">${Object.keys(PAG_METODI).map(k=>`<button class="${met===k?"on":""}" data-act="pagMetodo" data-v="${k}">${k==="automatico"?"Automatico":k==="bonifico"?"Bonifico":"Contanti"}</button>`).join("")}</div>
+     ${met==="automatico"?(S.cliniaPay?`<p class="small">${ic("check","sm")} Attivo con ${esc(S.cliniaPay.label)}: il giorno 1 l’app addebita ${eur(LICENZA.netto)} e li accredita a FPM.</p><button class="btn ghost sm" data-act="cliniaPayEdit">Cambia carta o conto</button>`
+       :`<p class="small muted">Registra la carta o il conto di Clinia: il giorno 1 di ogni mese l’app paga in automatico ${eur(LICENZA.netto)} netti a FPM.</p><button class="btn primary block" data-act="cliniaPayEdit">${ic("card","sm")} Registra carta o conto</button>`)
+     :`<form class="stack" data-form="pag" data-m="${m}" style="gap:10px" novalidate><div class="fgrid"><label class="field"><span>Data del pagamento</span><input id="pg-data" name="data" type="date" value="${today()}" max="${today()}"></label>
+       <label class="field"><span>Importo netto</span><input id="pg-imp" name="importo" inputmode="decimal" value="${String(p.dovuto).replace(".",",")}"></label></div>
+       <label class="field"><span>${met==="contanti"?"N. ricevuta firmata da FPM":"Riferimento del bonifico (CRO)"}</span><input id="pg-nota" name="nota" maxlength="60" placeholder="${met==="contanti"?"es. 2026/11":"facoltativo"}"></label>
+       <p class="tiny">${met==="contanti"?"In contanti: per ogni mese FPM firma la ricevuta (contratto di licenza con pagamento in contanti e ricevuta mensile). Conserva la ricevuta: senza bonifico è l’unica prova del pagamento. Il limite per i contanti (sotto 5.000 €) è rispettato.":"Con bonifico: causale “Licenza Clinia App ‒ "+esc(meseNome(m))+"”."} La ritenuta resta da versare con F24.</p>
+       <p class="err" id="pg-err"></p><button class="btn primary block" type="submit">${ic("check","sm")} Segna pagato</button></form>`}`}
+   </div>`})()}
   <button class="btn ghost block" data-act="cliSeg" data-v="spese">${ic("plus","sm")} Segna una spesa</button>
   <p class="tiny">Rendiconto gestionale indicativo, utile per il controllo del mese. Non sostituisce la contabilità del commercialista.${DB.on?"":" Nella versione di prova visite e pazienti sono di esempio."}</p></div>`}
 function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadRoomPhotos();
@@ -1326,11 +1345,15 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
   <div class="card" style="text-align:center"><span class="label">Incassato netto nel mese</span><div class="big">${eur(f.netto)}</div>
    <p class="tiny">${acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
   <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Specialisti abbonati${DB.on?"":" (esempio)"}</span></div><div class="stat"><b>${f.prenN}</b><span>Prenotazioni con servizio</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
-  <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti garantiti`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
+  <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
    <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)} netti</small></dt><dd>${eur(f.abbNet)}</dd>
    <dt>Servizio prenotazioni<small>${f.prenN} × ${eur(APP_FEE)} netti</small></dt><dd>${eur(f.prenNet)}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
   <p class="tiny">Importi netti garantiti: la ritenuta d’acconto (${eur(f.rit)} nel mese, su un lordo fiscale di ${eur(f.lordo)}) la aggiunge e la versa Clinia con F24.</p>
+  ${(()=>{const p=pagStato(m);return p.dovuto?`<div class="card stack" style="gap:10px"><div class="row between"><h3>Licenza da Clinia</h3>${pagBadge(p)}</div>
+   <p class="small">${p.pagato?`Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.`:`Rata ${p.k} di ${LICENZA.mesi}: ${eur(p.dovuto)} netti, non ancora segnati da Clinia${S.licMetodo!=="automatico"?" (paga "+(S.licMetodo==="contanti"?"in contanti":"con bonifico")+")":""}.`}</p>
+   ${p.pagato&&!p.auto?`<label class="chk"><input type="checkbox" data-change="pagConf" data-m="${m}" ${p.conf?"checked":""}> Confermo di aver ricevuto ${eur(p.importo)}${p.metodo==="contanti"?" e firmato la ricevuta":""}</label>`:""}
+   ${p.pagato&&p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta da firmare</button>`:""}</div>`:""})()}
   <div class="card stack" style="gap:10px"><div class="row between"><h3>${ic("heartplus","sm")} Progetto Arca</h3><b class="num">${eur(r2(f.arca))}</b></div>
    <p class="small muted">Il 3 % del servizio prenotazioni di ${esc(meseNome(m))}, da bonificare a ${esc(ARCA.nome)}. Lo vedono anche pazienti, specialisti e Clinia nella pagina Progetto Arca.</p>
    <label class="chk"><input type="checkbox" data-change="arcaDone" data-m="${m}" ${S.arca[m]?"checked":""}> Bonifico fatto</label>
@@ -1372,7 +1395,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
    <li>Marca da bollo da 2 € sulle ricevute sopra 77,47 €.</li>
    <li>Prima di firmare verifica il contratto di lavoro: esclusiva, eventuale autorizzazione del datore (obbligatoria se sei dipendente pubblico) e che l’app non sia stata creata con mezzi o nell’orario del lavoro.</li>
    <li>Conserva contratto, ricevute, bonifici e CU per almeno 5 anni.</li></ul></div>
-  <div class="card"><h3 style="margin-bottom:6px">Mesi dell’anno</h3>${ms.map(x=>{const st=S.fpm.ric[x.m]||{};return `<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}</span><b class="num">${eur(x.lordo)}</b><span class="badge ${st.pagata?"":"grey"}">${st.pagata?"Pagato":st.emessa?"Ricevuta emessa":x.lordo?"Da emettere":"—"}</span></div>`}).join("")}</div></div>`}
+  <div class="card"><h3 style="margin-bottom:6px">Mesi dell’anno</h3>${ms.map(x=>{const st=S.fpm.ric[x.m]||{},p=pagStato(x.m);return `<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${p.dovuto?(p.pagato?"Licenza pagata "+(p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"in automatico"):"Licenza da pagare"):""}</span></span><b class="num">${eur(x.lordo)}</b><span class="badge ${st.pagata||(p.dovuto&&p.pagato)?"":"grey"}">${(p.dovuto?p.pagato:st.pagata)?"Pagato":st.emessa?"Ricevuta emessa":x.lordo?"Da emettere":"—"}</span></div>`}).join("")}</div></div>`}
 function ricevutaText(m){const f=fpmMese(m),L=x=>("€ "+(+x).toFixed(2).replace(".",",")).padStart(12);return `RICEVUTA PER CESSIONE DI DIRITTI D’AUTORE
 N. ${m.replace("-","/")}                         Data: ${new Date().toLocaleDateString("it-IT")}
 
@@ -1391,7 +1414,10 @@ economica dell’opera dell’ingegno "Clinia App" (software):
 Compenso lordo                                ${L(f.lordo)}
 Imponibile (${Math.round(f.quota*100)} %)                          ${L(r2(f.rit/0.2))}
 Ritenuta d’acconto 20 %                      -${L(f.rit).trim()}
-Netto (già accreditato in automatico)         ${L(f.netto)}
+Netto a FPM                                   ${L(f.netto)}
+${(p=>p.dovuto?p.pagato?`di cui licenza ${L(p.importo).trim()} pagata ${p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"con addebito automatico"} il ${new Date(p.data).toLocaleDateString("it-IT")};
+${p.metodo==="contanti"?"il percipiente dichiara di averla ricevuta in contanti.":""}`:"licenza: da pagare":"")(pagStato(m))}
+Abbonamenti e servizio: già accreditati in automatico.
 
 Operazione esclusa dal campo IVA ai sensi dell’art. 3, comma 4,
 lett. a), DPR 633/1972.${f.bollo?"\nMarca da bollo da € 2,00 applicata sull’originale.":""}
@@ -1594,6 +1620,8 @@ const ACT={
   cliSeg:d=>{UI.cliSeg=d.v;render()},
   skipIban:()=>{UI.skipIban=true;afterAuthFlow()},
   movAll:()=>{UI.movAll=true;render()},
+  pagMetodo:d=>{S.licMetodo=d.v;save();DB.saveMetodo(d.v);render()},
+  pagAnnulla:d=>{if(!confirm("Annullare il pagamento segnato per "+meseNome(d.v)+"?"))return;delete S.pag[d.v];save();DB.delPag(d.v);toast("Pagamento annullato");render()},
   cliniaPayEdit:()=>{UI.sheet={type:"cliniaPay",mode:"carta"};render()},
   cpMode:d=>{UI.sheet.mode=d.v;render()},
   cliMese:d=>{UI.cliMese=d.v;render()},
@@ -1760,6 +1788,11 @@ const FORMS={
     if(!f.ok.checked)return err.textContent="Per continuare autorizza l’accredito automatico.";
     S.payAcc[accKey()]={holder:f.holder.value.trim(),last4:v.slice(-4),country:v.slice(0,2),at:Date.now()};save();DB.saveIban(accKey(),S.payAcc[accKey()]);toast("Conto salvato: gli accrediti arriveranno qui");
     if(UI.screen==="iban")afterAuthFlow();else{UI.stack.pop();render()}},
+  pag:f=>{const m=f.dataset.m,err=$("#pg-err"),data=f.data.value,imp=parseFloat(String(f.importo.value).replace(",","."));
+    if(!data||data>today())return err.textContent="Indica la data del pagamento (non nel futuro).";
+    if(!(imp>0))return err.textContent="Indica l’importo pagato.";
+    if(S.licMetodo==="contanti"&&imp>=5000)return err.textContent="Sopra il limite per i contanti: usa il bonifico.";
+    S.pag[m]={metodo:S.licMetodo,data,importo:r2(imp),nota:f.nota.value.trim(),conf:false,at:Date.now()};save();DB.savePag(m,S.pag[m]);toast("Segnato pagato: FPM lo vede subito");render()},
   cliniaPay:f=>{const err=$("#cp-err");let label;
     if(UI.sheet.mode==="carta"){const c=readCard(f,err);if(!c)return;label=c.brand+" •••• "+c.last4}
     else{const v=f.iban.value.replace(/\s/g,"").toUpperCase();if(!ibanOk(v))return err.textContent="L’IBAN non è valido.";if(!f.ok.checked)return err.textContent="Autorizza l’addebito SEPA per continuare.";label="conto ••••"+v.slice(-4)+" (SEPA)"}
@@ -1804,6 +1837,7 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="fpmDoc")addFpmDocs([...e.target.files]);
   if(k==="fpmChk"){const m=e.target.dataset.m;S.fpm.ric[m]={...(S.fpm.ric[m]||{}),[e.target.dataset.k]:e.target.checked};save()}
   if(k==="fpmSet"){const key=e.target.dataset.k;if(key==="under35")S.fpm.under35=e.target.checked;else if(key==="aliquota")S.fpm.aliquota=+e.target.value;else if(key==="fee"){S.fpm.fee=+e.target.value;APP_FEE=S.fpm.fee}save();render()}
+  if(k==="pagConf"){const m=e.target.dataset.m;if(S.pag[m]){S.pag[m].conf=e.target.checked;save();DB.confPag(m,e.target.checked);toast(e.target.checked?"Ricezione confermata: Clinia lo vede":"Conferma tolta")}render()}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
@@ -1836,7 +1870,8 @@ const DB={on:false,c:null,
       if(t.error){console.warn("Supabase non raggiungibile da qui: versione di prova",t.error.message);return}
       this.on=true;render();
       this.c.channel("clinia").on("postgres_changes",{event:"*",schema:"public",table:"room_bookings"},()=>this.pull())
-        .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},()=>this.pull()).subscribe();
+        .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},()=>this.pull())
+        .on("postgres_changes",{event:"*",schema:"public",table:"fpm_pagamenti"},()=>this.pullPag().then(render)).subscribe();
       const{data}=await this.c.auth.getSession();if(data.session)await this.pull()}catch(e){console.warn("Supabase non raggiungibile, uso i dati sul telefono",e);this.on=false}},
   async login(email,pw,register,ruolo){const r=register?await this.c.auth.signUp({email,password:pw,options:{emailRedirectTo:location.href.split("#")[0],data:{ruolo:ruolo==="professionista"?"specialista":"paziente"}}})
       :await this.c.auth.signInWithPassword({email,password:pw});
@@ -1847,6 +1882,7 @@ const DB={on:false,c:null,
     const[r,a]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal)]);
     if(!r.error)S.rooms=r.data.map(b=>({id:b.id,doctorId:b.specialist_id,date:b.giorno,start:b.inizio.slice(0,5),end:b.fine.slice(0,5),roomId:b.room_id,paid:+b.importo>0&&b.stato==="confermata"?{amount:+b.importo,payment:b.payment_id}:null,remote:true}));
     if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="annullata"?"annullata":"confermata"}));
+    if(S.auth&&(S.auth.owner||S.auth.fpm))await this.pullPag();
     render()},
   async saveAppt(a){if(!this.on)return;const{data:u}=await this.c.auth.getUser();
     const{error}=await this.c.from("appointments").insert({id:a.id.length===36?a.id:undefined,specialist_id:a.doctorId,patient_id:u.user&&u.user.id,paziente_nome:a.patient,prestazione:a.service,giorno:a.date,ora:a.time,durata_min:a.dur,room_id:a.roomId,online:a.online,prezzo:a.price,commissione_app:a.fee||APP_FEE,
@@ -1865,6 +1901,13 @@ const DB={on:false,c:null,
   async saveIban(key,a){if(!this.on||key==="fpm")return;const{error}=await this.c.from("specialist_private").upsert({specialist_id:key,iban_intestatario:a.holder,iban_ultime4:a.last4,accrediti_attivi:true});if(error)toast("Conto non salvato sul server: "+error.message)},
   async loadArca(){const{data,error}=await this.c.rpc("arca_storia");if(!error){UI.arcaRemote=data.map(x=>({m:x.mese.slice(0,7),importo:+x.importo,pren:x.prenotazioni,fatto:x.donata}));render()}},
   async arcaFatto(m,v){if(!this.on)return;const{error}=await this.c.from("donazioni").update({donata:v,donata_il:v?today():null}).eq("mese",m+"-01");if(error)toast("Donazione non salvata sul server: "+error.message)},
+  async savePag(m,p){if(!this.on)return;const{error}=await this.c.from("fpm_pagamenti").upsert({mese:m+"-01",importo_netto:p.importo,metodo:p.metodo,pagato_il:p.data,nota:p.nota||null});if(error)toast("Pagamento non salvato sul server: "+error.message)},
+  async delPag(m){if(!this.on)return;const{error}=await this.c.from("fpm_pagamenti").delete().eq("mese",m+"-01");if(error)toast("Annullamento non salvato sul server: "+error.message)},
+  async confPag(m,v){if(!this.on)return;const{error}=await this.c.from("fpm_pagamenti").update({confermato_fpm:v}).eq("mese",m+"-01");if(error)toast("Conferma non salvata sul server: "+error.message)},
+  async saveMetodo(v){if(!this.on)return;const{error}=await this.c.from("app_settings").upsert({chiave:"licenza_metodo",valore:{metodo:v}});if(error)toast("Metodo non salvato sul server: "+error.message)},
+  async pullPag(){const[p,mt]=await Promise.all([this.c.from("fpm_pagamenti").select("*"),this.c.from("app_settings").select("valore").eq("chiave","licenza_metodo").maybeSingle()]);
+    if(!p.error){S.pag={};for(const x of p.data)S.pag[x.mese.slice(0,7)]={metodo:x.metodo,data:x.pagato_il,importo:+x.importo_netto,nota:x.nota||"",conf:x.confermato_fpm}}
+    if(!mt.error&&mt.data)S.licMetodo=mt.data.valore.metodo||"automatico"},
   async update(table,id,patch){if(!this.on||!/^[0-9a-f-]{36}$/.test(id))return;const{error}=await this.c.from(table).update(patch).eq("id",id);if(error)toast("Modifica non salvata sul server: "+error.message)}};
 DB.init();
 

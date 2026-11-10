@@ -4,7 +4,7 @@
 
 ## Progetto collegato
 - Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
-- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql`, `migrazione-005-netti-fpm.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql`, `migrazione-005-netti-fpm.sql`, `migrazione-006-pagamenti-fpm.sql` (voce "Pagato" della licenza: automatico, bonifico o contanti con ricevuta) installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
 - Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
 - Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
 

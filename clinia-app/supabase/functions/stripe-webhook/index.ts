@@ -28,11 +28,11 @@ Deno.serve(async (req) => {
         const { data: a } = await admin.from("appointments")
           .update({ pagato: true, pagato_il: new Date().toISOString(), stato: "confermata" })
           .eq("id", m.appointment_id).select().single();
-        if (a) await admin.from("payments").upsert([
-          { tipo: "visita", importo: a.prezzo, beneficiario: "specialista", pagatore_user: a.patient_id,
+        if (a) await admin.from("payments").upsert([   // tutto incassato da Clinia
+          { tipo: "visita", importo: a.prezzo, beneficiario: "clinica", pagatore_user: a.patient_id,
             specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta", stato: "riuscito",
             stripe_payment_intent: pi.id },
-          { tipo: "commissione_app", importo: euro(pi.application_fee_amount ?? 700), beneficiario: "app",
+          { tipo: "servizio_paziente", importo: 7, beneficiario: "clinica",
             pagatore_user: a.patient_id, specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta",
             stato: "riuscito", stripe_payment_intent: pi.id + ":fee" },
         ], { onConflict: "stripe_payment_intent" });
@@ -60,7 +60,6 @@ Deno.serve(async (req) => {
       const inv = ev.data.object as Stripe.Invoice;
       if (!inv.subscription) break;
       const sub = await stripe.subscriptions.retrieve(inv.subscription as string);
-      const piano = sub.metadata.piano;
       await admin.from("subscriptions").update({
         stato: sub.cancel_at_period_end ? "disdetto" : "attivo",
         inizio: giorno(sub.start_date), prossimo_rinnovo: giorno(sub.current_period_end),
@@ -68,8 +67,8 @@ Deno.serve(async (req) => {
       for (const riga of inv.lines.data) {
         if (riga.type === "subscription") {
           await admin.from("payments").upsert({
-            tipo: piano === "clinica" ? "abbonamento_clinica" : "abbonamento_specialista", importo: euro(riga.amount),
-            beneficiario: "app", pagatore_user: sub.metadata.user_id, specialist_id: sub.metadata.specialist_id,
+            tipo: "abbonamento_specialista", importo: euro(riga.amount),
+            beneficiario: "clinica", pagatore_user: sub.metadata.user_id, specialist_id: sub.metadata.specialist_id,
             metodo: "carta", stato: "riuscito", stripe_payment_intent: `${inv.id}:${riga.id}`, stripe_invoice: inv.id,
           }, { onConflict: "stripe_payment_intent" });
         } else if (riga.metadata?.tipo === "commissioni_contanti") {

@@ -1,5 +1,5 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima, addebita 7 € allo specialista.
+// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima, Clinia addebita 7 € allo specialista.
 // Gli importi si aggiungono alla prossima fattura dell'abbonamento (una sola fattura e un solo
 // addebito al mese sulla stessa carta), così si pagano meno commissioni Stripe.
 // Pianificazione: Supabase › Database › Cron, ogni giorno alle 02:00, chiamata HTTP a questa funzione
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     }, { idempotencyKey: `comm-${sp}-${oggi}` });
     await admin.from("appointments").update({ commissione_addebitata: true }).in("id", lista.map((v) => v.id));
     await admin.from("payments").insert({
-      tipo: "commissione_app", importo: (COMMISSIONE_APP_CENT * lista.length) / 100, beneficiario: "app",
+      tipo: "servizio_specialista", importo: (COMMISSIONE_APP_CENT * lista.length) / 100, beneficiario: "clinica",
       specialist_id: sp, metodo: "addebito_mensile", stato: "in_attesa", stripe_payment_intent: `ii:${item.id}`,
     });
     esito[sp] = `${lista.length} visite, ${(COMMISSIONE_APP_CENT * lista.length) / 100} €`;

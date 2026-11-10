@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
 <style>
-/* Layout: documento a colonna unica (max 860px), sezioni in sequenza; il calcolatore dei guadagni è l'unico elemento interattivo. */
+/* Layout: documento a colonna unica (max 860px), sezioni in sequenza; il calcolatore dei compensi è l'unico elemento interattivo. */
 :root{
   --bg:#f6fafb; --paper:#ffffff; --ink:#0b2b38; --ink-2:#3d5a66; --ink-3:#6b8590; --line:#dbe8ee;
   --accent:#0e8f86; --accent-soft:#e1f4f3; --azure:#1a7fd0; --azure-soft:#e3f1fc; --warn:#a15c07; --warn-soft:#fdf2e3; --neg:#b42318;
@@ -26,6 +26,7 @@ section{display:flex;flex-direction:column;gap:14px}
 .muted{color:var(--ink-2)}.small{font-size:.88rem}.tiny{font-size:.78rem;color:var(--ink-3)}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px}
 .note{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 14px;font-size:.88rem;font-weight:600}
+.ok{background:var(--accent-soft);color:var(--accent);border-radius:12px;padding:12px 14px;font-size:.88rem;font-weight:600}
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
 table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
 th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
@@ -34,158 +35,175 @@ tr:last-child td{border-bottom:0}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.74rem;font-weight:800;background:var(--accent-soft);color:var(--accent)}
 .pill.az{background:var(--azure-soft);color:var(--azure)}.pill.w{background:var(--warn-soft);color:var(--warn)}
-.flows{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.flow{display:flex;flex-direction:column;gap:8px}
-.flow ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:.93rem}
-.flow b{color:var(--ink)}
-.need{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
-.need ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:.92rem;color:var(--ink-2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.grid ul,.grid ol{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:.92rem;color:var(--ink-2)}
+.grid b{color:var(--ink)}
+details.card summary{cursor:pointer;font-weight:800;list-style:none}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary::after{content:" ＋";color:var(--accent)}
+details.card[open] summary::after{content:" －"}
+.contract{font-size:.9rem;color:var(--ink-2);display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.contract b{color:var(--ink)}
 .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .calc label{display:flex;flex-direction:column;gap:6px;font-size:.84rem;font-weight:700;color:var(--ink-2)}
 .calc input,.calc select{font:inherit;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
 .calc input:focus-visible,.calc select:focus-visible{outline:3px solid var(--azure);outline-offset:1px}
-.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .res div{border-radius:12px;padding:14px;background:var(--bg);border:1px solid var(--line)}
-.res b{display:block;font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.res b{display:block;font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums}
 .res span{font-size:.78rem;color:var(--ink-3);font-weight:700}
 .res .hl{background:var(--accent-soft);border-color:var(--accent)}
 .res .hl b{color:var(--accent)}
 .sources a{color:var(--azure)}
-.foot{display:flex;align-items:center;gap:10px;color:var(--ink-3);font-size:.8rem;border-top:1px solid var(--line);padding-top:18px}
+.foot{color:var(--ink-3);font-size:.8rem;border-top:1px solid var(--line);padding-top:18px}
 </style>
 
 <main>
 <header style="display:flex;flex-direction:column;gap:10px">
   <span class="eyebrow">Clinia App · FPM WebDesignTech</span>
-  <h1>Pagamenti, fatture e guadagni</h1>
-  <p class="lead">Come incassare l’abbonamento degli specialisti, l’abbonamento di Clinia e i 7 € per visita, che cosa serve per accendere ogni servizio, quali documenti fiscali partono a ogni operazione e quanto può rendere l’app ogni mese.</p>
-  <p class="note">Le indicazioni fiscali sono un’impostazione di partenza da far confermare al tuo commercialista. Le commissioni di Stripe e PayPal vanno verificate sui listini ufficiali al momento dell’attivazione.</p>
+  <h1>Flussi, contratti e compensi</h1>
+  <p class="lead">Il modello in cui tutti gli incassi passano dalla P.IVA di Clinia e tu, autore del software, ricevi i compensi come diritti d’autore senza aprire la partita IVA: come funziona, cosa è già pronto, quali contratti servono e quanto ti resta.</p>
+  <p class="note">Le indicazioni fiscali e la bozza di contratto sono un punto di partenza: vanno confermate da un commercialista (o dal CAF) e da un avvocato prima della firma.</p>
 </header>
 
 <section>
-  <span class="eyebrow">I flussi di denaro</span>
-  <h2>Chi paga chi</h2>
-  <div class="flows">
-    <div class="card flow"><span class="pill">Paziente</span><ol>
-      <li>Paga la <b>visita allo specialista</b>, con carta nell’app o in struttura.</li>
-      <li>Se paga con carta paga anche <b>7 € all’app</b> (servizio di prenotazione).</li>
-      <li>Se paga in struttura non paga altro: i 7 € li paga lo specialista.</li></ol></div>
-    <div class="card flow"><span class="pill az">Specialista</span><ol>
-      <li>Paga l’<b>abbonamento all’app</b>: 49,90 € al mese.</li>
-      <li>Paga a <b>Clinia gli studi</b> che prenota, secondo il tariffario.</li>
-      <li><b>Riceve i soldi</b> delle visite; per ogni visita pagata in struttura l’app addebita 7 € sulla sua carta.</li></ol></div>
-    <div class="card flow"><span class="pill">Clinia · Dott. Marco Morelli</span><ol>
-      <li>Riceve gli <b>affitti degli studi</b> dagli specialisti.</li>
-      <li>Riceve le <b>visite dei suoi pazienti</b>.</li>
-      <li>Paga <b>un solo abbonamento all’app</b>: 300 € al mese.</li></ol></div>
-    <div class="card flow"><span class="pill w">Tu · FPM WebDesignTech</span><ol>
-      <li>49,90 € al mese da ogni specialista.</li>
-      <li>7 € per ogni visita prenotata nell’app.</li>
-      <li>300 € al mese da Clinia.</li></ol></div>
+  <span class="eyebrow">Modello economico</span>
+  <h2>Tutto passa da Clinia</h2>
+  <div class="grid">
+    <div class="card"><span class="pill">Paziente</span><ol>
+      <li>Paga a <b>Clinia</b> la visita + <b>7 €</b> di servizio, con carta nell’app.</li>
+      <li>Oppure paga in struttura: in quel caso i 7 € li paga lo specialista.</li></ol></div>
+    <div class="card"><span class="pill az">Specialista</span><ol>
+      <li>Paga a Clinia l’<b>abbonamento</b> di 49,90 € al mese.</li>
+      <li>Paga a Clinia l’<b>affitto delle stanze</b> che prenota.</li>
+      <li>Riceve da Clinia, con bonifico, le <b>visite incassate con carta</b>.</li></ol></div>
+    <div class="card"><span class="pill">Clinia · Dott. Marco Morelli</span><ol>
+      <li>Incassa tutto sulla sua P.IVA: visite, 7 €, abbonamenti, affitti.</li>
+      <li>Gira agli specialisti le loro visite.</li>
+      <li>Paga a te la licenza: <b>300 € al mese per 12 mesi</b>, poi una <b>royalty</b>.</li>
+      <li>Il suo profilo nell’app è gratuito.</li></ol></div>
+    <div class="card"><span class="pill w">Tu · autore del software</span><ol>
+      <li>Ricevi da Clinia il compenso per la <b>licenza dei diritti d’autore</b> sul software.</li>
+      <li>Niente partita IVA, niente IVA: ricevuta con ritenuta d’acconto del 20 %.</li></ol></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Stato dei lavori</span>
+  <h2>Cosa è già fatto</h2>
+  <div class="grid">
+    <div class="card"><h3>App</h3><ul>
+      <li>Tre ingressi: <b>Paziente</b>, <b>Specialista</b> e, ad accesso riservato, <b>Direzione Clinia</b> e <b>Area FPM</b>.</li>
+      <li>Sezione Clinia: rendiconto del mese (entrate, uscite, saldo), compensi da girare agli specialisti, stanze con nomi, tariffe, foto e vista 3D, spese con ricevuta.</li>
+      <li>Area FPM: compenso del mese con ritenuta, ricevuta precompilata, controlli, documenti in PDF, riepilogo fiscale annuale.</li></ul></div>
+    <div class="card"><h3>Database Supabase (collegato)</h3><ul>
+      <li>Progetto in Europa con tabelle, regole di accesso e tempo reale già installati e provati.</li>
+      <li>FPM vede solo totali, mai nomi o dati sanitari dei pazienti.</li>
+      <li>Nessuna doppia prenotazione possibile di stanze e visite.</li></ul></div>
+    <div class="card"><h3>Pagamenti</h3><ul>
+      <li>Funzioni Stripe pronte per un unico conto intestato a Clinia.</li>
+      <li>Da attivare: account Stripe di Clinia e app pubblicata su un indirizzo web.</li></ul></div>
   </div>
 </section>
 
 <section>
   <span class="eyebrow">Sistema di pagamento</span>
-  <h2>Consiglio: Stripe Connect</h2>
-  <p>È il modo più veloce per dividere ogni pagamento tra te, Clinia e lo specialista in automatico, con un solo sistema. Il tuo account Stripe è la piattaforma. Clinia e ogni specialista collegano il proprio conto (IBAN) con una procedura guidata dentro l’app.</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Operazione</th><th>Come funziona in Stripe</th><th>Dove arrivano i soldi</th></tr></thead>
-    <tbody>
-      <tr><td>Visita pagata con carta</td><td>Un solo pagamento di prezzo + 7 €. Stripe trattiene 7 € come <i>application fee</i> e gira il resto allo specialista.</td><td>Specialista: prezzo · Tu: 7 €</td></tr>
-      <tr><td>Visita pagata in struttura</td><td>L’app registra la visita; ogni notte somma 7 € per visita e li aggiunge alla fattura mensile dell’abbonamento dello specialista.</td><td>Tu: 7 € per visita, una volta al mese</td></tr>
-      <tr><td>Affitto degli studi</td><td>Pagamento dello specialista girato al conto collegato di Clinia.</td><td>Clinia</td></tr>
-      <tr><td>Abbonamenti 49,90 € e 300 €</td><td>Stripe Billing con rinnovo automatico mensile sulla carta salvata.</td><td>Tu</td></tr>
-    </tbody></table></div>
-  <div class="need">
-    <div class="card"><h3>Tipo di accredito</h3><ul>
-      <li>Bonifico SEPA automatico sull’IBAN di ciascuno: tuo, di Clinia e di ogni specialista.</li>
-      <li>Frequenza a scelta: giornaliera, settimanale o mensile. Il primo accredito di un account nuovo arriva di solito dopo qualche giorno lavorativo.</li>
-      <li>Commissione indicativa sulle carte europee: circa 1,5 % + 0,25 € a operazione (da verificare sul listino Stripe Italia).</li></ul></div>
-    <div class="card"><h3>E PayPal?</h3><ul>
-      <li>Commissione standard in Italia più alta: 3,40 % + quota fissa per i pagamenti commerciali nazionali.</li>
-      <li>Per dividere un pagamento tra più conti serve PayPal Commerce Platform, che richiede l’approvazione di PayPal come piattaforma: più lento da attivare.</li>
-      <li>Consiglio: Stripe come sistema principale; PayPal si può aggiungere come metodo di pagamento per i pazienti, se disponibile nel tuo account Stripe.</li></ul></div>
-    <div class="card"><h3>Apple e Google</h3><ul>
-      <li>Visite e studi sono servizi fisici: si pagano con Stripe, senza commissioni degli store.</li>
-      <li>Gli abbonamenti dell’app sono servizi digitali: su iPhone Apple può chiedere l’acquisto in-app o, in UE, un link al sito con commissione ridotta. Va deciso prima della pubblicazione.</li></ul></div>
+  <h2>Consiglio: un solo conto Stripe di Clinia</h2>
+  <p>Con tutto incassato da Clinia non serve Stripe Connect: basta un account Stripe normale intestato alla P.IVA della clinica. È più rapido da attivare e costa meno. L’accredito arriva con bonifico SEPA automatico sull’IBAN di Clinia; i compensi agli specialisti e a te partono da Clinia con bonifico (l’app tiene il conto di quanto spetta a ciascuno).</p>
+  <div class="grid">
+    <div class="card"><h3>Stripe (Clinia)</h3><ul>
+      <li>Carte, Apple Pay, Google Pay; commissione indicativa sulle carte europee 1,5 % + 0,25 € (da verificare sul listino).</li>
+      <li>Abbonamenti degli specialisti con rinnovo automatico; i 7 € delle visite in struttura si aggiungono alla fattura mensile.</li></ul></div>
+    <div class="card"><h3>PayPal (facoltativo)</h3><ul>
+      <li>Commissione standard in Italia più alta: 3,40 % + quota fissa.</li>
+      <li>Non serve PayPal Commerce Platform: basta un conto PayPal Business di Clinia, eventualmente aggiunto come metodo per i pazienti.</li></ul></div>
+    <div class="card"><h3>Gli specialisti</h3><ul>
+      <li>Serve un <b>mandato all’incasso</b>: Clinia incassa per conto dello specialista e gli gira la somma.</li>
+      <li>La fattura sanitaria della visita al paziente la emette sempre lo specialista.</li></ul></div>
   </div>
 </section>
 
 <section>
-  <span class="eyebrow">Per accendere i servizi</span>
-  <h2>Cosa mi serve</h2>
-  <div class="need">
-    <div class="card"><h3>Supabase (database in tempo reale)</h3><ul>
-      <li>Crea un progetto su supabase.com, regione UE (Francoforte), piano Pro consigliato per i dati sanitari.</li>
-      <li>Mandami <b>Project URL</b> e <b>chiave anon (pubblica)</b>: li inserisco nell’app.</li>
-      <li>La <b>chiave service_role</b> non mandarmela in chat: la inserisci tu nei segreti di Supabase.</li>
-      <li>Poi esegui <code>schema.sql</code> e <code>seed.sql</code> dall’SQL Editor (sono già pronti e provati).</li></ul></div>
-    <div class="card"><h3>Stripe (pagamenti)</h3><ul>
-      <li>Account Stripe a nome di FPM WebDesignTech: P.IVA, IBAN, documento.</li>
-      <li>Attiva <b>Connect</b> (account Express) e crea due prezzi ricorrenti: 49,90 € e 300 € al mese.</li>
-      <li>Clinia collega il suo conto: dati del Dott. Morelli o della società, IBAN.</li>
-      <li>Chiave pubblicabile per l’app; chiave segreta e segreto del webhook nei segreti di Supabase.</li></ul></div>
-    <div class="card"><h3>Codice di verifica WhatsApp / SMS</h3><ul>
-      <li>Più veloce: <b>Twilio Verify</b> (WhatsApp con SMS di riserva), già integrabile con l’accesso di Supabase.</li>
-      <li>In alternativa: account WhatsApp Business di Clinia sulla piattaforma Meta, con il messaggio di verifica approvato.</li></ul></div>
-    <div class="card"><h3>Accesso con Google e Apple</h3><ul>
-      <li>Apple Developer Program (99 $ l’anno): serve anche per pubblicare su iPhone.</li>
-      <li>Google Cloud: ID client OAuth. Entrambi si attivano dal pannello Autenticazione di Supabase.</li></ul></div>
-    <div class="card"><h3>Fatture elettroniche</h3><ul>
-      <li>Un servizio con API per il Sistema di Interscambio (per esempio Fatture in Cloud o Aruba): emette in automatico le tue fatture mensili.</li>
-      <li>Per gli specialisti sanitari: credenziali del Sistema Tessera Sanitaria per inviare le spese dei pazienti.</li></ul></div>
-    <div class="card"><h3>Dati da te</h3><ul>
-      <li>P.IVA, sede e PEC di FPM WebDesignTech per la pagina del copyright.</li>
-      <li>Regime fiscale (forfettario o ordinario) e se 49,90 €, 300 € e 7 € sono IVA inclusa.</li>
-      <li>Tariffario ufficiale e tipologia dei 9 studi.</li></ul></div>
-  </div>
-</section>
-
-<section>
-  <span class="eyebrow">Fisco in Italia</span>
-  <h2>Fatture e documenti per ogni operazione</h2>
+  <span class="eyebrow">La tua posizione</span>
+  <h2>Compensi senza partita IVA</h2>
   <div class="tbl"><table>
-    <thead><tr><th>Operazione</th><th>Chi emette</th><th>A chi</th><th>Documento e IVA</th></tr></thead>
+    <thead><tr><th>Voce</th><th>Come funziona</th></tr></thead>
     <tbody>
-      <tr><td>Visita sanitaria (medico, fisioterapista, osteopata…)</td><td>Specialista</td><td>Paziente</td><td>Fattura sanitaria esente IVA (art. 10 n. 18 DPR 633/72), marca da bollo 2 € sopra 77,47 €, invio dei dati al Sistema Tessera Sanitaria. Per i pazienti persone fisiche niente fattura elettronica SdI (verificare la proroga per il 2026). Il pagamento con carta permette al paziente la detrazione del 19 %.</td></tr>
-      <tr><td>Prestazione non sanitaria (es. personal trainer)</td><td>Professionista</td><td>Cliente</td><td>Fattura o ricevuta con IVA 22 %, oppure senza IVA se in regime forfettario.</td></tr>
-      <tr><td>7 € pagati dal paziente con carta</td><td>Tu</td><td>Paziente</td><td>Servizio elettronico a un privato: in genere fattura solo se richiesta, con registrazione dei corrispettivi. IVA 22 % compresa nei 7 € se sei in regime ordinario. Da confermare.</td></tr>
-      <tr><td>7 € per visite pagate in struttura</td><td>Tu</td><td>Specialista</td><td>Fattura elettronica SdI, una al mese insieme all’abbonamento (fattura differita riepilogativa).</td></tr>
-      <tr><td>Abbonamento 49,90 € al mese</td><td>Tu</td><td>Specialista</td><td>Fattura elettronica SdI mensile, IVA 22 % (ordinario) o senza IVA (forfettario, con bollo 2 € se la fattura supera 77,47 €).</td></tr>
-      <tr><td>Abbonamento 300 € al mese</td><td>Tu</td><td>Clinia</td><td>Fattura elettronica SdI mensile, come sopra.</td></tr>
-      <tr><td>Affitto degli studi</td><td>Clinia</td><td>Specialista</td><td>Fattura elettronica SdI, di norma IVA 22 % per studio attrezzato con servizi.</td></tr>
-      <tr><td>Commissioni Stripe</td><td>Stripe</td><td>Tu, Clinia, specialisti</td><td>Le emette Stripe a ciascun titolare di conto; vanno registrate dal commercialista.</td></tr>
+      <tr><td>Tipo di reddito</td><td>Utilizzazione economica di un’opera dell’ingegno da parte dell’autore (art. 53, c. 2, lett. b, TUIR). Il software è un’opera protetta (L. 633/1941, artt. 2 e 64-bis).</td></tr>
+      <tr><td>IVA</td><td>Esclusa (art. 3, c. 4, lett. a, DPR 633/72): non serve la partita IVA. Marca da bollo da 2 € sulla ricevuta sopra 77,47 €.</td></tr>
+      <tr><td>Tasse</td><td>Si tassa il 75 % del compenso (60 % se hai meno di 35 anni). Clinia trattiene il 20 % su quella parte come ritenuta d’acconto, la versa e ti manda la Certificazione Unica.</td></tr>
+      <tr><td>Dichiarazione</td><td>Il reddito si somma allo stipendio nel 730 (quadro D): si paga la differenza tra la tua aliquota IRPEF e la ritenuta già subita.</td></tr>
+      <tr><td>Contributi</td><td>Di norma i diritti d’autore dell’autore non pagano contributi INPS: da confermare.</td></tr>
+      <tr><td>Attenzione</td><td>Il compenso deve pagare la <b>licenza del software</b>. Se fai lavori continuativi per Clinia (assistenza, gestione tecnica) quella parte può diventare attività di lavoro autonomo: tienila separata e occasionale (sotto i 5.000 € l’anno niente contributi), oppure valuta in futuro la partita IVA forfettaria.</td></tr>
+      <tr><td>Datore di lavoro</td><td>Verifica il tuo contratto: esclusiva, autorizzazione per incarichi esterni (obbligatoria se sei dipendente pubblico, art. 53 D.Lgs. 165/2001) e che l’app sia nata fuori dall’orario e senza mezzi del lavoro: altrimenti i diritti potrebbero spettare al datore (art. 12-bis L. 633/1941).</td></tr>
     </tbody></table></div>
-  <p class="tiny">L’app ha già nel database la tabella delle fatture (emittente, destinatario, imponibile, IVA, natura, bollo, canale SdI o Sistema TS) per generarle in automatico quando colleghiamo il servizio di fatturazione.</p>
 </section>
 
 <section>
-  <span class="eyebrow">Stima a campione</span>
-  <h2>Quanto guadagni al mese</h2>
-  <p class="muted">Ipotesi: 9 specialisti abbonati più Clinia, prezzo medio della visita 60 €, 60 % delle visite pagate con carta. Commissioni Stripe stimate a 1,5 % + 0,25 € (sull’intero pagamento della visita, perché con Connect le paga la piattaforma), Connect circa 2 € al mese per conto attivo, costi fissi circa 46 € al mese (Supabase, Apple, messaggi di verifica, fatturazione).</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Scenario</th><th class="n">Visite al mese</th><th class="n">Abbonamenti</th><th class="n">7 € a visita</th><th class="n">Incasso lordo</th><th class="n">Costi</th><th class="n">Prima delle tasse</th></tr></thead>
-    <tbody id="scen"></tbody></table></div>
+  <span class="eyebrow">Contratti</span>
+  <h2>Cosa firmare</h2>
+  <div class="grid">
+    <div class="card"><h3>1. Licenza del software</h3><p class="small muted">Tu e Clinia. Il contratto principale: compenso fisso per 12 mesi, poi royalty. Bozza qui sotto.</p></div>
+    <div class="card"><h3>2. Specialista e Clinia</h3><p class="small muted">Abbonamento all’app, affitto delle stanze con tariffario, mandato all’incasso delle visite, addebito di 7 € per le visite in struttura, tempi del bonifico mensile.</p></div>
+    <div class="card"><h3>3. Privacy (GDPR)</h3><p class="small muted">Clinia titolare del trattamento; specialisti titolari per i dati clinici dei loro pazienti; tu responsabile del trattamento (art. 28) per la manutenzione; fornitori Supabase, Stripe, Twilio nominati come sub-responsabili; valutazione d’impatto per i dati sanitari.</p></div>
+    <div class="card"><h3>4. Termini per i pazienti</h3><p class="small muted">Condizioni del servizio di prenotazione da 7 €, disdetta e rimborsi, informativa privacy e consenso ai dati sanitari.</p></div>
+  </div>
+  <details class="card"><summary>Bozza: contratto di licenza d’uso del software “Clinia App”</summary>
+    <div class="contract">
+      <p><b>Parti.</b> Francesco Paolo Morelli (“Autore”), C.F. […], e Clinia del Dott. Marco Morelli (“Licenziatario”), P.IVA […], con sede in Via La Martella 5/D, Matera.</p>
+      <p><b>1. Oggetto.</b> L’Autore, unico autore e titolare dei diritti d’autore sul software “Clinia App” (app, database e funzioni server), concede al Licenziatario la licenza d’uso non esclusiva e non trasferibile dei diritti di utilizzazione economica per l’attività della clinica di Matera. La titolarità dei diritti resta all’Autore.</p>
+      <p><b>2. Corrispettivo fisso.</b> Per i primi 12 mesi dalla consegna il Licenziatario corrisponde 300 € lordi al mese, entro il giorno 10 del mese successivo, con bonifico, a fronte di ricevuta per cessione di diritti d’autore.</p>
+      <p><b>3. Royalty.</b> Dal 13° mese il Licenziatario corrisponde il […] % degli incassi generati dall’app per abbonamenti degli specialisti e servizio di prenotazione da 7 €, calcolati sul riepilogo mensile dell’app, che il Licenziatario rende consultabile all’Autore in forma aggregata.</p>
+      <p><b>4. Ritenuta.</b> Il Licenziatario opera la ritenuta d’acconto del 20 % sul 75 % (60 % se l’Autore ha meno di 35 anni) del compenso e rilascia la Certificazione Unica.</p>
+      <p><b>5. Divieti.</b> Vietati copia, modifica, decompilazione, cessione o sublicenza a terzi, uso per altre strutture senza consenso scritto dell’Autore.</p>
+      <p><b>6. Manutenzione.</b> Eventuali interventi straordinari dell’Autore sono pattuiti a parte, di volta in volta, come prestazioni occasionali.</p>
+      <p><b>7. Dati personali.</b> Il Licenziatario è titolare del trattamento; l’Autore è nominato responsabile del trattamento con atto separato (art. 28 GDPR) e accede solo ai dati strettamente necessari.</p>
+      <p><b>8. Durata e recesso.</b> 12 mesi, poi rinnovo annuale tacito; recesso con 90 giorni di preavviso. In caso di cessazione il Licenziatario cessa l’uso e può esportare i propri dati.</p>
+      <p><b>9. Garanzie.</b> L’Autore dichiara che il software è opera originale, creata fuori dal proprio rapporto di lavoro dipendente e senza mezzi del datore di lavoro.</p>
+      <p><b>10. Foro competente.</b> Matera.</p>
+      <p class="tiny">Bozza da far rivedere a un avvocato prima della firma.</p>
+    </div></details>
+</section>
 
+<section>
+  <span class="eyebrow">Stima dei tuoi compensi</span>
+  <h2>Primo anno e dopo</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Periodo</th><th class="n">Lordo / mese</th><th class="n">Ritenuta</th><th class="n">Bonifico netto</th><th class="n">Netto dopo il 730 (aliquota 35 %)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Mesi 1–12</b> · licenza</td><td class="n">300 €</td><td class="n">45 €</td><td class="n">255 €</td><td class="n">221 €</td></tr>
+      <tr><td><b>Anno 1</b> · totale</td><td class="n">3.600 €</td><td class="n">540 €</td><td class="n">3.060 €</td><td class="n">2.655 €</td></tr>
+    </tbody></table></div>
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
-    <h3>Calcola il tuo scenario</h3>
+    <h3>Calcola la royalty dal 13° mese</h3>
+    <p class="tiny">Base della royalty: abbonamenti degli specialisti + servizio da 7 € per ogni visita.</p>
     <form class="calc" id="calc" onsubmit="return false">
       <label for="c-sp">Specialisti abbonati<input id="c-sp" type="number" min="0" value="9"></label>
-      <label for="c-vis">Visite al mese per professionista<input id="c-vis" type="number" min="0" value="40"></label>
-      <label for="c-prof">Professionisti che ricevono (con Marco)<input id="c-prof" type="number" min="0" value="10"></label>
-      <label for="c-card">% visite pagate con carta<input id="c-card" type="number" min="0" max="100" value="60"></label>
-      <label for="c-prezzo">Prezzo medio visita (€)<input id="c-prezzo" type="number" min="0" value="60"></label>
-      <label for="c-reg">Regime fiscale<select id="c-reg"><option value="forf15">Forfettario 15 %</option><option value="forf5">Forfettario 5 % (start-up)</option><option value="ord">Ordinario (prezzi IVA inclusa)</option></select></label>
+      <label for="c-vis">Visite al mese (totale)<input id="c-vis" type="number" min="0" value="400"></label>
+      <label for="c-roy">Royalty concordata %<input id="c-roy" type="number" min="0" max="100" value="20"></label>
+      <label for="c-u35">Età<select id="c-u35"><option value="0">35 anni o più</option><option value="1">Meno di 35 anni</option></select></label>
+      <label for="c-al">Aliquota IRPEF (dallo stipendio)<select id="c-al"><option value="0.23">23 %</option><option value="0.35" selected>35 %</option><option value="0.43">43 %</option></select></label>
     </form>
     <div class="res" id="res"></div>
-    <p class="tiny" id="res-note"></p>
+    <p class="tiny">Stima indicativa: non include addizionali regionali e comunali. Falla confermare dal commercialista o dal CAF.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Prossimi collegamenti</span>
+  <h2>In ordine, prima i gratuiti</h2>
+  <div class="grid">
+    <div class="card"><span class="pill">Fatto</span><h3 style="margin-top:6px">Supabase</h3><p class="small muted">Database collegato, piano gratuito.</p></div>
+    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Netlify</h3><p class="small muted">Pubblica l’app su un indirizzo web: serve perché database e conferma e-mail funzionino davvero.</p></div>
+    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Accesso con Google</h3><p class="small muted">ID client OAuth su Google Cloud.</p></div>
+    <div class="card"><span class="pill az">Gratis da aprire</span><h3 style="margin-top:6px">Stripe di Clinia</h3><p class="small muted">Si paga solo la commissione sui pagamenti; si parte in modalità test.</p></div>
+    <div class="card"><span class="pill w">A pagamento</span><h3 style="margin-top:6px">Apple, WhatsApp/SMS, fatture</h3><p class="small muted">Apple Developer 99 $ l’anno, Twilio per i codici, servizio di fatturazione elettronica per Clinia.</p></div>
   </div>
 </section>
 
 <section class="sources small">
-  <span class="eyebrow">Fonti consultate</span>
-  <p>Tariffe PayPal per commercianti in Italia: <a href="https://www.paypal.com/it/webapps/mpp/merchant-fees" target="_blank" rel="noopener">paypal.com/it/webapps/mpp/merchant-fees</a>. Aggiornamenti dei prezzi Stripe nello SEE: <a href="https://support.stripe.com/questions/pricing-updates-for-businesses-based-in-the-european-economic-area-(eea)" target="_blank" rel="noopener">support.stripe.com</a>; IVA sulle commissioni Stripe in Italia: <a href="https://support.stripe.com/questions/taxes-on-stripe-fees-for-italy-based-businesses" target="_blank" rel="noopener">support.stripe.com</a>. Regole Apple in UE: <a href="https://www.macrumors.com/2025/06/26/app-store-eu-rule-change-dma" target="_blank" rel="noopener">MacRumors</a>, <a href="https://thenextweb.com/news/apple-eu-app-store-fees-dma-core-technology-commission" target="_blank" rel="noopener">The Next Web</a>.</p>
+  <span class="eyebrow">Fonti</span>
+  <p>Tariffe PayPal per commercianti in Italia: <a href="https://www.paypal.com/it/webapps/mpp/merchant-fees" target="_blank" rel="noopener">paypal.com</a>. Prezzi Stripe nello SEE: <a href="https://support.stripe.com/questions/pricing-updates-for-businesses-based-in-the-european-economic-area-(eea)" target="_blank" rel="noopener">support.stripe.com</a>. Riferimenti normativi citati: TUIR artt. 53-54, DPR 600/1973 art. 25, DPR 633/1972 art. 3, L. 633/1941, D.Lgs. 165/2001 art. 53, Regolamento UE 2016/679.</p>
 </section>
 
 <footer class="foot">© 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.</footer>
@@ -193,23 +211,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 <script>
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
-// Stessa formula per tabella e calcolatore
-function stima({sp,vis,prof,card,prezzo,reg}){
-  const visite=vis*prof,nCard=Math.round(visite*card/100),nCash=visite-nCard;
-  const abb=sp*49.9+300,fee=visite*7,lordo=abb+fee;
-  const stripe=sp*(0.015*49.9+0.25)+0.015*nCash*7+(0.015*300+0.25)+nCard*(0.015*(prezzo+7)+0.25);
-  const connect=(sp+1)*2,fissi=46,costi=stripe+connect+fissi,netto=lordo-costi;
-  let tasse,nota;
-  if(reg==="ord"){const iva=lordo-lordo/1.22;tasse=iva;nota="In regime ordinario con prezzi IVA inclusa, l’IVA da versare è circa "+eur(iva)+"; IRPEF e contributi dipendono dal tuo reddito complessivo.";}
-  else{const al=reg==="forf5"?0.05:0.15,imp=lordo*0.67;tasse=imp*al+imp*0.2607;nota="Forfettario (coefficiente 67 % per servizi informatici): imposta "+(al*100)+" % e contributi INPS gestione separata 26,07 % sul 67 % dell’incasso. Limite di ricavi: 85.000 € l’anno.";}
-  return{visite,abb,fee,lordo,costi,netto,tasse,dopo:netto-(reg==="ord"?tasse:tasse),nota};
-}
-const scen=[["Prudente",20],["Medio",40],["Ottimista",70]];
-document.getElementById("scen").innerHTML=scen.map(([n,v])=>{const r=stima({sp:9,vis:v,prof:10,card:60,prezzo:60,reg:"forf15"});
-  return `<tr><td><b>${n}</b></td><td class="n">${r.visite}</td><td class="n">${eur(r.abb)}</td><td class="n">${eur(r.fee)}</td><td class="n">${eur(r.lordo)}</td><td class="n">− ${eur(r.costi)}</td><td class="n"><b>${eur(r.netto)}</b></td></tr>`}).join("");
 function calc(){const g=id=>+document.getElementById(id).value||0;
-  const r=stima({sp:g("c-sp"),vis:g("c-vis"),prof:g("c-prof"),card:Math.min(100,g("c-card")),prezzo:g("c-prezzo"),reg:document.getElementById("c-reg").value});
-  document.getElementById("res").innerHTML=`<div><span>Incasso lordo al mese</span><b>${eur(r.lordo)}</b></div><div><span>di cui abbonamenti</span><b>${eur(r.abb)}</b></div><div><span>di cui 7 € × ${r.visite} visite</span><b>${eur(r.fee)}</b></div><div><span>Commissioni e costi</span><b>− ${eur(r.costi)}</b></div><div><span>Prima delle tasse</span><b>${eur(r.netto)}</b></div><div class="hl"><span>Indicativo dopo tasse/IVA</span><b>${eur(r.dopo)}</b></div>`;
-  document.getElementById("res-note").textContent=r.nota+" Stima indicativa: falla confermare dal commercialista.";}
+  const base=g("c-sp")*49.9+g("c-vis")*7,lordo=base*Math.min(100,g("c-roy"))/100,quota=document.getElementById("c-u35").value==="1"?0.6:0.75;
+  const imp=lordo*quota,rit=imp*0.2,netto=lordo-rit,irpef=imp*(+document.getElementById("c-al").value),dopo=lordo-irpef;
+  document.getElementById("res").innerHTML=`<div><span>Base della royalty al mese</span><b>${eur(base)}</b></div><div><span>Royalty lorda al mese</span><b>${eur(lordo)}</b></div><div><span>Bonifico netto (dopo ritenuta)</span><b>${eur(netto)}</b></div><div class="hl"><span>Netto dopo il 730, al mese</span><b>${eur(dopo)}</b></div><div><span>Netto in un anno</span><b>${eur(dopo*12)}</b></div>`}
 document.getElementById("calc").addEventListener("input",calc);calc();
 </script>

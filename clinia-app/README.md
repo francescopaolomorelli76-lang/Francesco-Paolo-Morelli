@@ -11,8 +11,15 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Verifica del telefono con codice a 4 cifre via **WhatsApp** o **SMS** (scade dopo 10 minuti, nuovo invio dopo 30 secondi)
 - Lo specialista attiva l'abbonamento con la carta prima di entrare; può disdirlo o riattivarlo dal Profilo
 
+## Modello economico
+- Tutti gli incassi (visite + 7 €, abbonamenti 49,90 €, affitti) vanno a Clinia (P.IVA della struttura)
+- Clinia gira agli specialisti le visite incassate con carta e paga a FPM la licenza (300 €/mese per 12 mesi, poi royalty)
+
+## Accessi
+- Paziente, Specialista, **Direzione Clinia** (riservato), **Area FPM** (riservato: `fpm@fpmwebdesigntech.it`, password consegnata a parte)
+
 ## Titolare (Dott. Marco Morelli)
-- Abbonamento della struttura 300 €/mese all'app
+- Profilo gratuito; sezione **Clinia**: rendiconto (entrate, uscite, saldo), compensi da girare agli specialisti, stanze (nomi, tariffe, foto, vista 3D), spese con ricevuta
 - Accesso riservato: login con e-mail `titolare@cliniamatera.it` e password consegnata a parte (nel codice c'è solo l'impronta SHA-256)
 - Studi prenotati senza pagamento; incassa affitti degli studi e visite dei suoi pazienti
 - Scheda **Clinia**: incassi degli studi, rimborsi da fare, occupazione dei 9 studi
@@ -42,6 +49,9 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Agenda giornaliera con turni negli studi e visite prenotate
 - Prenotazione dei **9 studi (Studio 1–9)** con occupazione in tempo reale, ripetizione settimanale e costo calcolato
 - Tariffe: tariffario studi e prezzi delle proprie prestazioni (modificabili)
+
+## Area FPM
+- Compenso del mese con ritenuta d'acconto, ricevuta per diritti d'autore precompilata, controlli, documenti PDF, riepilogo fiscale annuale
 
 ## Database e pagamenti
 - `supabase/`: schema, dati iniziali, funzioni Stripe (vedi `supabase/README.md`)

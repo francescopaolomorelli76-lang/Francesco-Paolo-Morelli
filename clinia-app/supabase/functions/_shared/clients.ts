@@ -1,7 +1,8 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-// Client condivisi dalle Edge Functions. Le chiavi segrete stanno SOLO nei segreti di Supabase:
-//   supabase secrets set STRIPE_SECRET_KEY=sk_live_… STRIPE_WEBHOOK_SECRET=whsec_… \
-//     STRIPE_PRICE_SPECIALISTA=price_… STRIPE_PRICE_CLINICA=price_… CLINICA_STRIPE_ACCOUNT=acct_…
+// Client condivisi dalle Edge Functions. Il conto Stripe è quello di CLINIA (P.IVA della struttura).
+// Le chiavi segrete stanno SOLO nei segreti di Supabase:
+//   supabase secrets set STRIPE_SECRET_KEY=sk_… STRIPE_WEBHOOK_SECRET=whsec_… \
+//     STRIPE_PRICE_SPECIALISTA=price_… CRON_SECRET=…
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -29,7 +30,7 @@ export class Errore extends Error {
   constructor(public status: number, msg: string) { super(msg); }
 }
 
-export const COMMISSIONE_APP_CENT = 700; // 7 € per ogni operazione
+export const COMMISSIONE_APP_CENT = 700; // servizio di prenotazione: 7 € per ogni visita, incassati da Clinia
 export const cent = (euro: number | string) => Math.round(Number(euro) * 100);
 
 export const cors = {

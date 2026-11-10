@@ -48,7 +48,7 @@ $$;
 
 create or replace function public.sono_titolare() returns boolean
 language sql stable security definer set search_path = public as $$
-  select coalesce((select ruolo in ('titolare','admin') from public.profiles where id = auth.uid()), false)
+  select coalesce((select ruolo = 'titolare' from public.profiles where id = auth.uid()), false)
 $$;
 
 -- Crea il profilo alla registrazione (il ruolo arriva dai metadati: paziente o specialista).

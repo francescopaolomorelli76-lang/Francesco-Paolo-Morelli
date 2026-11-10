@@ -1,7 +1,7 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima, addebita il servizio (7 € o 9 € a visita)
+// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima, addebita il servizio (9 € a visita)
 // sulla carta dello specialista, in un unico addebito al giorno, e accredita subito la quota a FPM
-// (meno 3 % a Progetto Arca e ritenuta). Pianificazione: Supabase › Cron, ogni giorno alle 02:00,
+// (9 € netti; ritenuta a carico di Clinia; il 3 % per Progetto Arca lo bonifica FPM). Pianificazione: Supabase › Cron, ogni giorno alle 02:00,
 // con l'header Authorization: Bearer <CRON_SECRET>.
 import { accreditaFpm, admin, cent, json, stripe } from "../_shared/clients.ts";
 
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       }, { idempotencyKey: `serv-cash-${sp}-${oggi}` });
       const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
       await admin.from("appointments").update({ commissione_addebitata: true }).in("id", lista.map((v) => v.id));
-      for (const v of lista) await accreditaFpm({ tipo: "servizio_specialista", lordo: Number(v.commissione_app),
+      for (const v of lista) await accreditaFpm({ tipo: "servizio_specialista", netto: Number(v.commissione_app),
         conBeneficenza: true, sourceCharge: charge ?? undefined, appointment_id: v.id, specialist_id: sp, chiave: `cash-${v.id}` });
       esito[sp] = `${lista.length} visite, ${totale} €`;
     } catch (e) {

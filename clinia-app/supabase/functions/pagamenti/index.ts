@@ -2,9 +2,9 @@
 // Crea i pagamenti sul conto Stripe di CLINIA. Le divisioni (specialista, FPM, Progetto Arca)
 // avvengono in automatico nel webhook appena il pagamento è riuscito.
 //
-//  tipo "visita"        paziente → prezzo + servizio (7 € o 9 €)
+//  tipo "visita"        paziente → prezzo + servizio 9 €
 //  tipo "studio"        specialista → affitto delle stanze (resta a Clinia)
-//  tipo "abbonamento"   specialista → 49,90 €/mese
+//  tipo "abbonamento"   specialista → 50 €/mese (prezzo Stripe STRIPE_PRICE_SPECIALISTA)
 //  tipo "carta"         salva la carta dello specialista (servizio delle visite in struttura)
 //  tipo "carta_clinica" salva la carta o il conto SEPA di Clinia (licenza mensile a FPM)
 //  tipo "conto"         collega il conto (IBAN) dello specialista o di FPM per gli accrediti
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
         expand: ["latest_invoice.payment_intent"],
         metadata: { user_id: user.id, specialist_id: sp.id, piano: "specialista" },
       });
-      await admin.from("subscriptions").upsert({ user_id: user.id, piano: "specialista", prezzo_mensile: 49.9,
+      await admin.from("subscriptions").upsert({ user_id: user.id, piano: "specialista", prezzo_mensile: 50,
         stato: "in_attesa", stripe_subscription_id: sub.id }, { onConflict: "stripe_subscription_id" });
       const inv: any = sub.latest_invoice;
       return json({ client_secret: inv?.payment_intent?.client_secret, subscription: sub.id });

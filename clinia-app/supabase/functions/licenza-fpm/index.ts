@@ -29,9 +29,8 @@ Deno.serve(async (req) => {
   if (pi.status !== "succeeded" && pi.status !== "processing")
     return json({ errore: `Addebito non riuscito (${pi.status})` }, 402);
 
-  const lordo = Math.round((s.licenzaNetto / (1 - s.ritenuta)) * 100) / 100;   // 300 netti → 352,94 lordi
   const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
-  const r = await accreditaFpm({ tipo: "licenza", lordo, conBeneficenza: false, nettoFisso: s.licenzaNetto,
+  const r = await accreditaFpm({ tipo: "licenza", netto: s.licenzaNetto, conBeneficenza: false,
     sourceCharge: charge ?? undefined, chiave: `licenza-${mese}` });
   return json({ rata: k, addebitato: s.licenzaNetto, ...r });
 });

@@ -4,7 +4,7 @@
 
 ## Progetto collegato
 - Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
-- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql`, `migrazione-005-netti-fpm.sql` installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
 - Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
 - Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
 
@@ -41,8 +41,11 @@ supabase functions deploy stripe-webhook --no-verify-jwt
 supabase functions deploy commissioni-contanti --no-verify-jwt
 supabase functions deploy licenza-fpm --no-verify-jwt
 ```
-- `pagamenti`: visite (prezzo + servizio 7/9 €), stanze, abbonamento 49,90 €, carte salvate (specialista e Clinia), collegamento dei conti per gli accrediti.
+- `pagamenti`: visite (prezzo + servizio 9 €), stanze, abbonamento 50 € (crea in Stripe il prezzo ricorrente da 50 €), carte salvate (specialista e Clinia), collegamento dei conti per gli accrediti.
 - `stripe-webhook`: appena un pagamento riesce divide subito: visita allo specialista, servizio a FPM (meno 3 % Progetto Arca e ritenuta), abbonamento a FPM, stanze a Clinia.
 - `commissioni-contanti` (cron ogni notte): addebita il servizio delle visite pagate in struttura e accredita FPM.
 - `licenza-fpm` (cron `0 6 1 * *`): per 12 mesi addebita a Clinia 300 € e li accredita netti a FPM.
 - Ogni accredito a FPM è in `fpm_transfers` (tempo reale). Il 3 % per Progetto Arca non viene trattenuto: è in `donazioni`, FPM lo bonifica e lo segna; tutti gli utenti vedono la storia con `arca_storia()`.
+
+## Importi netti per FPM
+Servizio 9 €, abbonamento 50 €, licenza 300 € (12 mesi) arrivano a FPM per intero. La ritenuta d'acconto (lordo = netto / 0,85) è a carico di Clinia e si versa con F24: la funzione registra lordo, ritenuta e netto in `fpm_transfers`.

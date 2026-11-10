@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
           pagatore_user: a.patient_id, specialist_id: a.specialist_id, appointment_id: a.id, metodo: "carta",
           stato: conto ? "riuscito" : "in_attesa", stripe_payment_intent: pi.id }, { onConflict: "stripe_payment_intent" });
         // 2) servizio di prenotazione a FPM (ritenuta trattenuta da Clinia; il 3 % per Progetto Arca lo bonifica FPM)
-        await accreditaFpm({ tipo: "servizio_paziente", lordo: Number(a.commissione_app), conBeneficenza: true,
+        await accreditaFpm({ tipo: "servizio_paziente", netto: Number(a.commissione_app), conBeneficenza: true,
           sourceCharge: charge, appointment_id: a.id, specialist_id: a.specialist_id, chiave: `serv-${a.id}` });
       }
       if (m.tipo === "studio") {
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         beneficiario: "app", pagatore_user: sub.metadata.user_id, specialist_id: sub.metadata.specialist_id,
         metodo: "carta", stato: "riuscito", stripe_payment_intent: `inv:${inv.id}`, stripe_invoice: inv.id },
         { onConflict: "stripe_payment_intent" });
-      if (inv.amount_paid > 0) await accreditaFpm({ tipo: "abbonamento", lordo: euro(inv.amount_paid), conBeneficenza: false,
+      if (inv.amount_paid > 0) await accreditaFpm({ tipo: "abbonamento", netto: euro(inv.amount_paid), conBeneficenza: false,
         sourceCharge: charge ?? undefined, specialist_id: sub.metadata.specialist_id, chiave: `abb-${inv.id}` });
       break;
     }

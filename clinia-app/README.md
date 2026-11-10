@@ -12,9 +12,9 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Lo specialista attiva l'abbonamento con la carta prima di entrare; può disdirlo o riattivarlo dal Profilo
 
 ## Modello economico (accrediti in tempo reale)
-- Visita con carta: prezzo subito allo specialista; servizio 7 € (o 9 €) a FPM al netto della ritenuta; FPM bonifica ogni mese il 3 % a Progetto Arca
+- Visita con carta: prezzo subito allo specialista; servizio 9 € NETTI a FPM (ritenuta a carico di Clinia); FPM bonifica ogni mese il 3 % a Progetto Arca
 - Pagina **Progetto Arca** (storia e donazioni mese per mese) visibile a pazienti, specialisti, Clinia e FPM
-- Abbonamenti 49,90 € a FPM al netto della ritenuta; affitti delle stanze a Clinia
+- Abbonamenti 50 € NETTI a FPM (ritenuta a carico di Clinia); affitti delle stanze a Clinia
 - Primi 12 mesi: 300 € NETTI al mese a FPM con addebito automatico a Clinia il giorno 1 (Clinia versa la ritenuta con F24)
 - Specialisti e FPM inseriscono l'IBAN per gli accrediti; area FPM Tech con movimenti, iniziali dei pazienti e specialisti abbonati
 
@@ -42,7 +42,7 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Visite (prossime/passate/cancellate, disdetta), I miei file, Messaggi (specialisti e reception), Profilo
 
 ## Specialisti
-- Abbonamento 49,90 €/mese → paga gli studi a Clinia → riceve i pagamenti dei pazienti
+- Abbonamento 50 €/mese → paga gli studi a Clinia → riceve i pagamenti dei pazienti
 - Profilo professionale: foto (scatto, caricamento o trascinamento), CV in PDF trascinabile, contatti, PEC, P.IVA, codice fiscale, SDI, social; campi compilati in automatico
 - Sezione **Ricavi**: incassi con carta e in struttura, 7 € a carico per le visite in struttura, studi, abbonamento, netto
 - Lo studio si paga subito a Clinia con la carta (anche più settimane insieme); annullando un turno pagato si segna il rimborso

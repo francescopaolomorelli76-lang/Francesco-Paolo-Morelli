@@ -502,7 +502,7 @@ const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",p
 // Accesso riservato FPM (password verificata tramite impronta SHA-256; nell'app pubblicata la verifica è sul server)
 const FPM={email:"fpm@fpmwebdesigntech.it",hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
-let APP_FEE=7; // servizio di prenotazione: 7 € o 9 €, si imposta nell’area FPM
+let APP_FEE=9; // servizio di prenotazione: 9 € NETTI per FPM (la ritenuta la aggiunge Clinia)
 // Database Supabase: incolla qui URL e chiave pubblica (anon) del progetto. Vuoti = versione di prova sul telefono.
 const SUPABASE={url:"https://iuydwatobtrpzhotcfyd.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eWR3YXRvYnRycHpob3RjZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyODAwNDgsImV4cCI6MjEwOTg1NjA0OH0.T8HNEAJn5h-fEb6ZPEH-Xl838DXZk_j2sTm9B_bCYOA"};
 // Stripe: chiave pubblicabile (pk_...). Vuota = pagamenti con carta non ancora attivi quando il database è collegato.
@@ -510,7 +510,7 @@ const STRIPE={publishableKey:""};
 // Dati legali per la pagina dei diritti
 const LEGAL={autore:"Francesco Paolo Morelli",marchio:"FPM WebDesignTech",anno:2026,piva:"[da inserire]",sede:"[da inserire]",pec:"[da inserire]"};
 // Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
-const SUB={name:"Clinia Specialisti",price:49.9,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
+const SUB={name:"Clinia Specialisti",price:50,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
 const TARIFFARIO={ufficiale:false,stanze:{ // € IVA inclusa (esempio)
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
@@ -574,7 +574,7 @@ const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:n
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=(S.fpm&&S.fpm.fee)||7;S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=9;if(S.fpm)S.fpm.fee=9;S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -1221,12 +1221,12 @@ const otherDocs=()=>DOCTORS.filter(d=>d.id!==OWNER.doctorId);
 const quotaImp=()=>S.fpm.under35?0.6:0.75,RIT=()=>0.2*quotaImp(),lordoDaNetto=n=>r2(n/(1-RIT()));
 const iniz=n=>String(n||"").replace(/\(.*?\)/g,"").split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+".").join("");
 const nowStamp=()=>today()+" "+toT(nowMin());
-function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?x.lordo*ARCA.pct:0,rit=x.netto!=null?x.lordo-x.netto:x.lordo*RIT();mov.push({...x,arca,rit,netto:x.netto!=null?x.netto:x.lordo-rit})};
+function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lordo)*ARCA.pct:0,rit=x.netto!=null?x.lordo-x.netto:x.lordo*RIT();mov.push({...x,arca,rit,netto:x.netto!=null?x.netto:x.lordo-rit})};
   for(const d of DOCTORS){const own=d.id===OWNER.doctorId;for(const a of proAllOf(d.id).filter(a=>a.date.startsWith(m))){
-    if(a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE,da:"paziente",demo:a.demo});
-    else if(a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE,da:"specialista",demo:a.demo})}}
-  for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price,da:"specialista",demo:!DB.on})}
-  const k=monthIndex(m);if(k>=1&&k<=LICENZA.mesi&&m+"-01 06:00"<=nowStamp())add({at:m+"-01 06:00",tipo:"Licenza Clinia App",ini:"",svc:`rata ${k} di ${LICENZA.mesi}, addebito automatico a Clinia`,spec:"Clinia",lordo:lordoDaNetto(LICENZA.netto),netto:LICENZA.netto,da:"clinia"});
+    if(a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"paziente",demo:a.demo});
+    else if(a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
+  for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
+  const k=monthIndex(m);if(k>=1&&k<=LICENZA.mesi&&m+"-01 06:00"<=nowStamp())add({at:m+"-01 06:00",tipo:"Licenza Clinia App",ini:"",svc:`rata ${k} di ${LICENZA.mesi}, addebito automatico a Clinia`,spec:"Clinia",lordo:LICENZA.netto/(1-RIT()),netto:LICENZA.netto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
 function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
     const own=d.id===OWNER.doctorId,nCard=v.filter(a=>a.method==="carta"&&a.paid).length,nCash=own?0:v.filter(a=>a.method==="struttura"&&(a.paid||a.date<today())).length;
@@ -1279,8 +1279,8 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <dt>Abbonamenti specialisti<small>${c.rows.filter(r=>!r.own).length} × ${eur(SUB.price)}${DB.on?"":" (esempio)"}, girati a FPM</small></dt><dd>+ ${eur(r2(c.abb))}</dd>
    <dt>Servizio prenotazioni<small>${eur(APP_FEE)} a prenotazione, girato a FPM</small></dt><dd>+ ${eur(r2(c.feePaz+c.feeSpec))}</dd>
    <dt style="grid-column:1/-1;margin-top:8px"><span class="label">Uscite</span></dt>
-   <dt>Girato in automatico a FPM<small>abbonamenti e servizio, al netto della ritenuta</small></dt><dd class="neg">− ${eur(c.girato)}</dd>
-   <dt>Ritenute trattenute a FPM<small>da versare con F24</small></dt><dd class="neg">− ${eur(c.ritPass)}</dd>
+   <dt>Girato in automatico a FPM<small>abbonamenti e servizio, netti per FPM</small></dt><dd class="neg">− ${eur(c.girato)}</dd>
+   <dt>Ritenute sui compensi FPM<small>a carico di Clinia, da versare con F24</small></dt><dd class="neg">− ${eur(c.ritPass)}</dd>
    <dt>Licenza Clinia App<small>${c.lic?`${eur(LICENZA.netto)} netti a FPM + ${eur(c.licRit)} di ritenuta · rata ${c.k} di ${LICENZA.mesi}`:c.k>LICENZA.mesi?"terminata dopo 12 mesi":"prima dell’avvio"}</small></dt><dd class="neg">− ${eur(c.licLordo)}</dd>
    <dt>Commissioni di pagamento<small>stima 1,5 % + 0,25 € a operazione</small></dt><dd class="neg">− ${eur(c.commissioni)}</dd>
    <dt>Spese aggiuntive<small>${S.expenses.filter(e=>e.date.startsWith(m)).length} voci segnate da te</small></dt><dd class="neg">− ${eur(r2(c.spese))}</dd>
@@ -1319,7 +1319,7 @@ function fpmMese(m){const mov=fpmMovimenti(m),sum=(f,k)=>r2(mov.filter(f).reduce
   const lic=mov.filter(x=>x.da==="clinia"),abb=mov.filter(x=>x.tipo==="Abbonamento"),pren=mov.filter(x=>x.pren);
   const lordo=sum(all,"lordo"),rit=sum(all,"rit"),arca=sum(all,"arca"),netto=sum(all,"netto"),imp=r2(rit/0.2);
   return{mov,k:monthIndex(m),lordo,rit,arca,netto,imp,quota:quotaImp(),bollo:lordo>77.47?2:0,
-    licN:sum(x=>x.da==="clinia","netto"),abbN:abb.length,abbL:sum(x=>x.tipo==="Abbonamento","lordo"),prenN:pren.length,prenL:sum(x=>x.pren,"lordo"),
+    licN:sum(x=>x.da==="clinia","netto"),abbNet:sum(x=>x.tipo==="Abbonamento","netto"),prenNet:sum(x=>x.pren,"netto"),abbN:abb.length,abbL:sum(x=>x.tipo==="Abbonamento","lordo"),prenN:pren.length,prenL:sum(x=>x.pren,"lordo"),
     nSpec:otherDocs().length}}
 function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.ric[m]||{},acc=S.payAcc.fpm,lim=UI.movAll?f.mov.length:15;
   return `<div class="pad stack" style="gap:16px"><div class="row between"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">FPM Tech</h1></div><span class="live"><i></i>Tempo reale</span></div>${meseNav("fpmMese",m)}
@@ -1327,10 +1327,10 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
    <p class="tiny">${acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
   <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Specialisti abbonati${DB.on?"":" (esempio)"}</span></div><div class="stat"><b>${f.prenN}</b><span>Prenotazioni con servizio</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
   <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti garantiti`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
-   <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)}</small></dt><dd>${eur(f.abbL)}</dd>
-   <dt>Servizio prenotazioni<small>${f.prenN} × ${eur(APP_FEE)}</small></dt><dd>${eur(f.prenL)}</dd>
-   <dt>Ritenute d’acconto<small>trattenute e versate da Clinia con F24</small></dt><dd class="neg">− ${eur(r2(f.rit-(f.licN?lordoDaNetto(LICENZA.netto)-LICENZA.netto:0)))}</dd>
+   <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)} netti</small></dt><dd>${eur(f.abbNet)}</dd>
+   <dt>Servizio prenotazioni<small>${f.prenN} × ${eur(APP_FEE)} netti</small></dt><dd>${eur(f.prenNet)}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
+  <p class="tiny">Importi netti garantiti: la ritenuta d’acconto (${eur(f.rit)} nel mese, su un lordo fiscale di ${eur(f.lordo)}) la aggiunge e la versa Clinia con F24.</p>
   <div class="card stack" style="gap:10px"><div class="row between"><h3>${ic("heartplus","sm")} Progetto Arca</h3><b class="num">${eur(r2(f.arca))}</b></div>
    <p class="small muted">Il 3 % del servizio prenotazioni di ${esc(meseNome(m))}, da bonificare a ${esc(ARCA.nome)}. Lo vedono anche pazienti, specialisti e Clinia nella pagina Progetto Arca.</p>
    <label class="chk"><input type="checkbox" data-change="arcaDone" data-m="${m}" ${S.arca[m]?"checked":""}> Bonifico fatto</label>
@@ -1363,7 +1363,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
   <div class="card stack" style="gap:10px"><h3>Impostazioni</h3>
    <label class="chk"><input type="checkbox" data-change="fpmSet" data-k="under35" ${S.fpm.under35?"checked":""}> Ho meno di 35 anni (deduzione forfettaria del 40 %)</label>
    <label class="field"><span>Aliquota IRPEF marginale (dal tuo stipendio)</span><select data-change="fpmSet" data-k="aliquota" id="fs-al">${[[0.23,"23 %"],[0.35,"35 %"],[0.43,"43 %"]].map(([v,l])=>`<option value="${v}" ${S.fpm.aliquota===v?"selected":""}>${l}</option>`).join("")}</select></label>
-   <label class="field"><span>Servizio di prenotazione (nuove prenotazioni)</span><select id="fs-fee" data-change="fpmSet" data-k="fee">${[7,9].map(v=>`<option value="${v}" ${APP_FEE===v?"selected":""}>${eur(v)} a prenotazione</option>`).join("")}</select></label></div>
+   <p class="small">Importi netti per te: <b>${eur(APP_FEE)}</b> a prenotazione, <b>${eur(SUB.price)}</b> ad abbonamento, <b>${eur(LICENZA.netto)}</b> di licenza nei primi ${LICENZA.mesi} mesi. La ritenuta la aggiunge Clinia.</p></div>
   <div class="card stack" style="gap:8px"><h3>Promemoria</h3><ul class="blist">
    <li>Le donazioni a Progetto Arca le fai tu con bonifico: come donazione a un ente del Terzo settore puoi detrarre il 30 % nel 730 (art. 83 D.Lgs. 117/2017, da confermare con il CAF). Conserva la ricevuta della fondazione.</li>
    <li>I compensi per la licenza del software sono redditi da utilizzazione economica di opere dell’ingegno (art. 53, c. 2, lett. b, TUIR): niente partita IVA e niente IVA (art. 3, c. 4, lett. a, DPR 633/72).</li>

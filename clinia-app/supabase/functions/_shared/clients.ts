@@ -39,27 +39,30 @@ export async function impostazioni() {
   const m = Object.fromEntries((data ?? []).map((r: any) => [r.chiave, r.valore]));
   const rit = m.ritenuta_fpm ?? { aliquota: 0.2, quota_imponibile: 0.75 };
   return {
-    servizio: Number(m.servizio_app?.importo ?? 7),
+    servizio: Number(m.servizio_app?.importo ?? 9),
     beneficenzaPct: Number(m.servizio_app?.beneficenza_pct ?? 0.03),
     licenzaNetto: Number(m.licenza?.netto ?? 300),
+    abbonamento: Number(m.abbonamento_specialista?.importo ?? 50),
     licenzaMesi: Number(m.licenza?.mesi ?? 12),
     licenzaInizio: String(m.licenza?.inizio ?? "2026-11-01"),
     ritenuta: Number(rit.aliquota) * Number(rit.quota_imponibile),   // 0,15 (0,12 se FPM ha meno di 35 anni)
   };
 }
 
-// Accredito immediato a FPM (conto collegato) di una quota lorda, al netto della sola ritenuta
-// (resta nel saldo di Clinia, che la versa con F24). Il 3 % per Progetto Arca NON viene trattenuto:
-// lo si registra nella tabella donazioni e FPM lo bonifica alla fondazione ogni mese.
+// Accredito immediato a FPM (conto collegato). Gli importi sono NETTI GARANTITI:
+// 9 € a prenotazione, 50 € ad abbonamento, 300 € di licenza. La ritenuta d'acconto si calcola sul lordo
+// fiscale (netto / (1 − 15 %)) ed è a carico di Clinia, che la versa con F24.
+// Il 3 % per Progetto Arca NON viene trattenuto: si registra in "donazioni" e FPM lo bonifica ogni mese.
 export async function accreditaFpm(o: {
   tipo: "servizio_paziente" | "servizio_specialista" | "abbonamento" | "licenza";
-  lordo: number; conBeneficenza: boolean; nettoFisso?: number;
+  netto: number; conBeneficenza: boolean;
   sourceCharge?: string; appointment_id?: string; specialist_id?: string; chiave: string;
 }) {
   const s = await impostazioni();
-  const beneficenza = o.conBeneficenza ? r2(o.lordo * s.beneficenzaPct) : 0;
-  const netto = o.nettoFisso ?? r2(o.lordo * (1 - s.ritenuta));
-  const ritenuta = r2(o.lordo - netto);
+  const netto = r2(o.netto);
+  const lordo = r2(netto / (1 - s.ritenuta));
+  const ritenuta = r2(lordo - netto);
+  const beneficenza = o.conBeneficenza ? r2(netto * s.beneficenzaPct) : 0;
   const conto = Deno.env.get("FPM_STRIPE_ACCOUNT");
   let trId: string | null = null, stato = "in_attesa";
   if (conto) {
@@ -72,7 +75,7 @@ export async function accreditaFpm(o: {
   }
   await admin.from("fpm_transfers").upsert({
     tipo: o.tipo, appointment_id: o.appointment_id ?? null, specialist_id: o.specialist_id ?? null,
-    lordo: o.lordo, beneficenza, ritenuta, netto, stripe_transfer_id: trId ?? `attesa:${o.chiave}`, stato,
+    lordo, beneficenza, ritenuta, netto, stripe_transfer_id: trId ?? `attesa:${o.chiave}`, stato,
   }, { onConflict: "stripe_transfer_id" });
   if (beneficenza) {   // quota del mese che FPM bonificherà a Progetto Arca
     const mese = new Date().toISOString().slice(0, 7) + "-01";

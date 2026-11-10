@@ -417,6 +417,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .pp-photo{width:112px;height:112px;border-radius:28px;font-size:2.4rem}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:380px){.fgrid{grid-template-columns:1fr}}
+.gal{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.gal img{flex:0 0 72%;max-width:320px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;scroll-snap-align:start}
 .r3dthumb{position:relative;display:block}.r3dthumb img{display:block;width:100%;height:150px;object-fit:cover}
 .r3dcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;background:linear-gradient(transparent,rgba(8,30,38,.78));color:#fff;display:flex;flex-direction:column}.r3dcap small{opacity:.9}
 .r3dbadge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92);color:#0b2b38;font-weight:800;font-size:.75rem;padding:4px 9px;border-radius:999px}
@@ -484,7 +485,7 @@ const ROOM_TYPES={
   compatto:{label:"Studio compatto",desc:"Consulenze riservate e incontri individuali"}};
 // 9 studi numerati da 1 a 9 (la tipologia di ciascuno è da confermare)
 const ROOMS=[
-  {id:"s1",name:"Studio 1",type:"standard"},{id:"s2",name:"Studio 2",type:"standard"},{id:"s3",name:"Studio 3",type:"standard"},
+  {id:"s1",name:"Studio 1",type:"standard",foto:"img/stanze/studio1.jpg",arco:150,attr:["ecografo"]},{id:"s2",name:"Studio 2",type:"standard"},{id:"s3",name:"Studio 3",type:"standard"},
   {id:"s4",name:"Studio 4",type:"ampio"},{id:"s5",name:"Studio 5",type:"compatto"},{id:"s6",name:"Studio 6",type:"compatto"},
   {id:"s7",name:"Studio 7",type:"standard"},{id:"s8",name:"Studio 8",type:"standard"},{id:"s9",name:"Studio 9",type:"standard"}];
 // Accesso riservato del titolare, Dott. Marco Morelli: gratuito, senza abbonamento, studi senza pagamento.
@@ -677,7 +678,7 @@ function render(){
   const af=app.querySelector("[data-autofocus]");if(af)af.focus();
   const qi=app.querySelector("#q");if(qi&&qi.value)qi.dispatchEvent(new Event("input",{bubbles:true}));
   app.querySelectorAll(".content,.pinwrap").forEach(c=>{if(!c.querySelector(".fpm-foot"))c.insertAdjacentHTML("beforeend",FPM_FOOT)});
-  const r3=app.querySelector("#r3d");if(r3)start3D(r3);
+  const r3=app.querySelector("#r3d");if(r3)start3D(r3);const a3=app.querySelector("#a3d");if(a3)startModel(a3);
 }
 const FPM_FOOT=`<button class="fpm-foot" data-act="openCopyright" aria-label="Copyright e note legali"><img src="img/fpm-logo-sm.png" alt="Logo FPM WebDesignTech">© ${LEGAL.anno} FPM WebDesignTech</button>`;
 function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
@@ -686,7 +687,7 @@ function screenHTML(){
   switch(UI.screen){
     case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div><div class="fpm-splash"><img src="img/fpm-logo-sm.png" alt="">FPM WebDesignTech</div></div>`;
     case "cookie":return cookieScreen();
-    case "welcome":{const t=UI.stack[UI.stack.length-1];return t&&t.page==="room3d"?room3dPage(t.id):welcomeScreen()}
+    case "welcome":{const t=UI.stack[UI.stack.length-1];return t&&t.page==="room3d"?room3dPage(t.id):t&&t.page==="attr3d"?attr3dPage(t.id):welcomeScreen()}
     case "proprof":return proProfScreen(true);
     case "iban":return ibanScreen(true);
     case "sub":return subScreen();
@@ -957,7 +958,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1274,14 +1275,26 @@ function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)
   ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
 const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",arco:165,desc:"Ingresso e sala d’attesa di Clinia"}};
 const spazio3d=id=>SPAZI[id];
+const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stanza:"s1",desc:"Ecografo su carrello con monitor, schermo touch e tre sonde. Disponibile per le prenotazioni dello Studio 1.",
+  sonde:[["Convex C2-5","addome, pelvi, ostetricia"],["Lineare LA3-16AD","tiroide, mammella, muscoli e tendini, vasi"],["Phased array PN2-4","cuore e torace"]],
+  foto:["img/attrezzature/ecografo-1.jpg","img/attrezzature/ecografo-2.jpg","img/attrezzature/ecografo-3.jpg","img/attrezzature/ecografo-4.jpg"]}};
+const attrDi=r=>(r&&r.attr||[]).map(k=>({k,...ATTREZZATURE[k]}));
+function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.sonde.length} sonde · tocca per vederlo in 3D</small></span><span class="r3dbadge" style="position:static">3D</span></button>`).join("")}</section>`:""}
+function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza);return `<div class="screen">${bar(esc(a.breve)+" in 3D")}<div class="content"><div class="pad stack" style="gap:14px">
+  <div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
+  <p class="tiny">Modello 3D ricostruito dalle foto: trascina per girarlo, pizzica o usa la rotella per avvicinarti.</p>
+  <div><h2 style="font-size:1.25rem;font-weight:800">${esc(a.nome)}</h2><p class="small muted">${esc(a.desc)}</p></div>
+  <section class="card"><h3 style="margin-bottom:6px">Sonde</h3>${a.sonde.map(([n,u])=>`<div class="svc"><div class="t"><b>${esc(n)}</b><span class="tiny">${esc(u)}</span></div></div>`).join("")}<p class="tiny" style="margin-top:6px">Usi indicativi, da confermare con la direzione.</p></section>
+  <section class="stack" style="gap:8px"><h3 class="h-sec" style="font-size:1.1rem">Foto</h3><div class="gal">${a.foto.map((f,i)=>`<img src="${f}" alt="${esc(a.breve)}, foto ${i+1}" loading="lazy">`).join("")}</div></section>
+  <button class="btn ghost block" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Si trova in ${esc(r.name)} · vedi la stanza in 3D</button></div></div></div>`}
 function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">${bar(esc(sp.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
   <p class="tiny">Vista panoramica: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti.</p>
   <p class="small"><b>${esc(sp.name)}</b> · ${esc(sp.desc)} · ${esc(CLINIC.address)}</p></div></div></div>`;
   const r=room(id);return `<div class="screen">${bar(esc(r.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
-  <p class="tiny">Vista ricostruita dalle foto delle pareti caricate dalla direzione: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti. Con una sola foto panoramica la vista è a 360°.</p>
-  <p class="small"><b>${esc(r.name)}</b> · ${ROOM_TYPES[r.type].label} · ${eur(roomTariff(r).ora)} l’ora</p></div></div></div>`}
+  <p class="tiny">Vista ricostruita dalle foto della stanza: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti.</p>
+  <p class="small"><b>${esc(r.name)}</b> · ${ROOM_TYPES[r.type].label} · ${eur(roomTariff(r).ora)} l’ora</p>${attrCards(r)}</div></div></div>`}
 function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7);
   const head=`<div class="pad stack" style="gap:16px"><div class="row between"><h1 class="ptitle">Clinia</h1><span class="badge">${ic("lock","sm")} Direzione</span></div>
   <div class="seg seg4">${[["rend","Rendiconto"],["spec","Specialisti"],["stanze","Stanze"],["spese","Spese"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="cliSeg" data-v="${k}">${l}</button>`).join("")}</div>`;
@@ -1330,7 +1343,7 @@ function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadR
     <label class="field"><span>Tipologia</span><select id="rt-${r.id}" name="type">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?"selected":""}>${v.label}</option>`).join("")}</select></label></div>
    <div class="rfields"><label>1 ora €<input id="ro-${r.id}" name="ora" inputmode="decimal" value="${t.ora}"></label><label>4 ore €<input id="rm-${r.id}" name="mezza" inputmode="decimal" value="${t.mezza}"></label><label>Giornata €<input id="rg-${r.id}" name="giornata" inputmode="decimal" value="${t.giornata}"></label></div>
    ${f.length?`<div class="thumbs">${f.map((src,i)=>`<div><img src="${src}" alt="Foto ${i+1} di ${esc(r.name)}"><button type="button" data-act="delRoomPhoto" data-id="${r.id}" data-v="${i}" aria-label="Elimina foto">${ic("x")}</button></div>`).join("")}</div>`:""}
-   <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
+   <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length||r.foto?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
    <p class="err" id="re-${r.id}"></p><button class="btn primary sm" type="submit">Salva ${esc(r.name)}</button></form>`}).join("")}
   ${TARIFFARIO.ufficiale?"":`<p class="tiny">Le tariffe iniziali sono di esempio: inserisci quelle ufficiali e salva ogni stanza.</p>`}`}
 const EXP_CAT=["Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
@@ -1463,7 +1476,7 @@ function stanzeTab(){if(!UI.roomDay||!OPEN[parseD(UI.roomDay).getDay()])UI.roomD
   return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1><p class="muted small">${esc(CLINIC.hoursText)}</p>
   ${dayStrip(ds,"roomDay",x=>{const f=ROOMS.filter(r=>freeMinutes(x,r)>=60).length;return f+" liberi"})}
   <div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Occupato</span><span><i style="background:var(--accent)"></i>Tuo</span></div>
-  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name}</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p></div><span class="price num small">${eur(roomTariff(r).ora)}/h</span></div>
+  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name}</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p>${r.foto||r.attr?`<p style="margin-top:4px">${r.foto?`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button> `:""}${attrDi(r).map(a=>`<button class="badge az" data-act="attr3d" data-id="${a.k}">${esc(a.breve)}</button>`).join(" ")}</p>`:""}</div><span class="price num small">${eur(roomTariff(r).ora)}/h</span></div>
    ${timeline(ds,r)}<div class="row between"><span class="tiny">${fm>0?"Libero per "+(fm/60).toLocaleString("it-IT")+" h":"Completo"}</span><button class="btn primary sm" data-act="openRoom" data-id="${r.id}" ${fm>=30?"":"disabled"}>Prenota</button></div></div>`}).join("")}
   <h2 class="h-sec" style="margin-top:8px">I tuoi turni</h2>
   ${my.length?`<div class="list">${my.map(b=>{const r=room(b.roomId);const cost=roomCost(r.id,toMin(b.end)-toMin(b.start));
@@ -1646,6 +1659,7 @@ const ACT={
   fpmRicevuta:d=>{UI.sheet={type:"ricevuta",m:d.v};render()},
   copyRicevuta:()=>{const t=ricevutaText(UI.sheet.m);navigator.clipboard.writeText(t).then(()=>toast("Ricevuta copiata"),()=>toast("Seleziona il testo e copialo"))},
   room3d:d=>push({page:"room3d",id:d.id}),
+  attr3d:d=>push({page:"attr3d",id:d.id}),
   delRoomPhoto:async d=>{const l=(await IDB.get("room:"+d.id))||[];l.splice(+d.v,1);await IDB.set("room:"+d.id,l);UI.roomPhotos[d.id]=l;render()},
   openCopyright:()=>{UI.sheet={type:"copyright"};render()},
   ricMese:d=>{UI.ricMese=d.v;render()},
@@ -1934,15 +1948,16 @@ async function addRoomPhotos(id,files){files=files.filter(f=>f.type.startsWith("
 async function addFpmDocs(files){if(!files.length)return;const cat=($("#fd-cat")||{}).value||"Altro";for(const f of files){if(f.size>15*1024*1024){toast(f.name+" supera 15 MB");continue}
   const id=uid();if(await IDB.set("fpm:"+id,{name:f.name,blob:f}))S.fpm.docs.push({id,name:f.name,size:f.size,cat,at:Date.now()})}save();toast(files.length>1?"Documenti caricati":"Documento caricato");render()}
 let v3d=null;
-async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+id))||[],photos=own.length?own:spazio3d(id)?[spazio3d(id).foto]:[],hint=el.querySelector(".hint");
+const loadThree=()=>window.THREE?Promise.resolve():new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});
+async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+id))||[],dflt=spazio3d(id)||room(id),photos=own.length?own:dflt&&dflt.foto?[dflt.foto]:[],hint=el.querySelector(".hint");
   if(!photos.length){hint.textContent="La direzione non ha ancora caricato foto di questa stanza.";return}
-  try{if(!window.THREE)await new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)})}catch(e){hint.textContent="Non riesco a caricare il motore 3D. Controlla la connessione.";return}
+  try{await loadThree()}catch(e){hint.textContent="Non riesco a caricare il motore 3D. Controlla la connessione.";return}
   if(!el.isConnected)return;const T=window.THREE,W=el.clientWidth,H=el.clientHeight;
   let ren;try{ren=new T.WebGLRenderer({antialias:true})}catch(e){hint.textContent="Questo dispositivo non supporta la grafica 3D.";return}
   ren.setPixelRatio(Math.min(2,devicePixelRatio||1));ren.setSize(W,H);el.insertBefore(ren.domElement,hint);
   const scene=new T.Scene(),cam=new T.PerspectiveCamera(75,W/H,0.05,100);
   const load=src=>new Promise(ok=>new T.TextureLoader().load(src,t=>{t.minFilter=T.LinearFilter;ok(t)}));
-  const first=await load(photos[0]),asp=first.image.width/first.image.height,arcoFisso=!own.length&&spazio3d(id)?spazio3d(id).arco:0;
+  const first=await load(photos[0]),asp=first.image.width/first.image.height,arcoFisso=!own.length&&dflt&&dflt.arco||0;
   let arc=0,vHalf=80;
   if(photos.length===1&&(asp>=1.9||arcoFisso)){/* panoramica: cilindro con l’arco coperto dalla foto (circa 60° in verticale) */
     arc=arcoFisso||Math.min(360,asp*60);const R=5,th=T.MathUtils.degToRad(arc),Hc=th*R/asp;vHalf=T.MathUtils.radToDeg(Math.atan(Hc/2/R));
@@ -1968,6 +1983,71 @@ async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+i
   hint.textContent="Trascina per guardarti intorno";
   const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle){lon+=0.06*dir;const L=lonMax();if(L<1e9&&Math.abs(lon)>=L)dir=-dir}clamp();const phi=T.MathUtils.degToRad(90-lat),th=T.MathUtils.degToRad(lon);
     cam.lookAt(Math.sin(phi)*Math.cos(th),Math.cos(phi),Math.sin(phi)*Math.sin(th));ren.render(scene,cam);requestAnimationFrame(tick)};tick()}
+
+/* ---------- Modello 3D dell’ecografo (Samsung HS40, Studio 1) ricostruito dalle foto ---------- */
+async function startModel(el){const hint=el.querySelector(".hint");
+  try{await loadThree()}catch(e){hint.textContent="Non riesco a caricare il motore 3D. Controlla la connessione.";return}
+  if(!el.isConnected)return;const T=window.THREE,W=el.clientWidth,H=el.clientHeight;
+  let ren;try{ren=new T.WebGLRenderer({antialias:true})}catch(e){hint.textContent="Questo dispositivo non supporta la grafica 3D.";return}
+  ren.setPixelRatio(Math.min(2,devicePixelRatio||1));ren.setSize(W,H);ren.outputEncoding=T.sRGBEncoding;el.insertBefore(ren.domElement,hint);
+  const scene=new T.Scene();scene.background=new T.Color(0xeef2f3);const cam=new T.PerspectiveCamera(38,W/H,0.05,50);
+  scene.add(new T.HemisphereLight(0xffffff,0x8a8f94,0.85));const sun=new T.DirectionalLight(0xffffff,0.75);sun.position.set(1.6,3,2.2);scene.add(sun);const fill=new T.DirectionalLight(0xdfe9ff,0.35);fill.position.set(-2,1.5,-1);scene.add(fill);
+  const M=(c,r=.45,m=0,e)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m,emissive:e||0x000000}),
+    bianco=M(0xf2f3f1,.42),nero=M(0x1c1e21,.55),grigio=M(0x9ca3a8,.5),scuro=M(0x3a3f45,.4),schermo=M(0x2c333a,.18,0,0x0b1218),acciaio=M(0xc9ced2,.25,.8);
+  const g=new T.Group();scene.add(g);
+  const add=(geo,mat,x,y,z,rx=0,ry=0,rz=0,par=g)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);par.add(m);return m};
+  const rr=(w,d,r)=>{const sh=new T.Shape(),x=-w/2,y=-d/2;sh.moveTo(x+r,y);sh.lineTo(x+w-r,y);sh.quadraticCurveTo(x+w,y,x+w,y+r);sh.lineTo(x+w,y+d-r);sh.quadraticCurveTo(x+w,y+d,x+w-r,y+d);sh.lineTo(x+r,y+d);sh.quadraticCurveTo(x,y+d,x,y+d-r);sh.lineTo(x,y+r);sh.quadraticCurveTo(x,y,x+r,y);return sh};
+  const slab=(w,d,h,r,bev=.012)=>{const geo=new T.ExtrudeGeometry(rr(w,d,r),{depth:h,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:3,curveSegments:10});geo.rotateX(-Math.PI/2);geo.translate(0,-h/2,0);return geo};
+  const label=(txt,w,h,col="#1c1e21",bg=null,font="700 64px Arial")=>{const c=document.createElement("canvas");c.width=512;c.height=Math.round(512*h/w);const x=c.getContext("2d");if(bg){x.fillStyle=bg;x.fillRect(0,0,c.width,c.height)}x.fillStyle=col;x.font=font;x.textAlign="center";x.textBaseline="middle";x.fillText(txt,c.width/2,c.height/2);const t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;return new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:t,transparent:!bg}))};
+  // base a X con 4 ruote
+  for(const a of [0.62,-0.62]){add(new T.BoxGeometry(0.66,0.05,0.08),nero,0,0.13,0,0,a,0)}
+  for(const [x,z] of [[0.26,0.19],[-0.26,0.19],[0.26,-0.19],[-0.26,-0.19]]){add(new T.BoxGeometry(0.05,0.07,0.06),nero,x,0.1,z);
+    add(new T.CylinderGeometry(0.058,0.058,0.045,28),bianco,x,0.058,z,0,0,Math.PI/2);add(new T.CylinderGeometry(0.03,0.03,0.05,20),grigio,x,0.058,z,0,0,Math.PI/2)}
+  // colonna con connettori delle sonde
+  add(slab(0.28,0.30,0.6,0.06),bianco,0,0.46,-0.02);
+  for(const sx of [0.145,-0.145])add(new T.BoxGeometry(0.012,0.42,0.17),nero,sx,0.5,-0.02);
+  for(const y of [0.33,0.41,0.49]){add(new T.BoxGeometry(0.17,0.055,0.05),bianco,0.0,y,0.15);add(new T.BoxGeometry(0.17,0.012,0.052),grigio,0.0,y-0.03,0.15)}
+  const sam=label("SAMSUNG",0.2,0.04,"#2b2f33");sam.position.set(0.147,0.62,-0.02);sam.rotation.y=Math.PI/2;g.add(sam);
+  add(new T.CylinderGeometry(0.035,0.04,0.08,20),nero,0,0.8,-0.04);
+  // console: piano bianco con bordo scuro, maniglie, trackball, manopole e tasti
+  add(slab(0.68,0.47,0.012,0.11,0.006),nero,0,0.835,0.01);
+  add(slab(0.66,0.45,0.04,0.1),bianco,0,0.865,0.01);
+  const top=0.898;
+  for(const x of [-0.18,0.18]){add(slab(0.2,0.035,0.004,0.017,0.002),nero,x,top,0.19)}
+  add(new T.TorusGeometry(0.045,0.011,14,36),nero,0,top+0.004,0.04,Math.PI/2);add(new T.SphereGeometry(0.036,28,18),M(0xf7f7f5,.2),0,top-0.004,0.04);
+  add(slab(0.2,0.035,0.006,0.017,0.003),bianco,0,top+0.002,-0.012);
+  for(const [x,z] of [[-0.095,0.04],[0.095,0.04],[-0.07,0.1],[0.07,0.1]])add(slab(0.055,0.04,0.006,0.012,0.003),bianco,x,top+0.002,z);
+  for(const x of [-0.11,-0.04,0.04,0.11])add(new T.CylinderGeometry(0.017,0.019,0.03,24),scuro,x,top+0.015,-0.06);
+  for(const [x,z] of [[-0.2,-0.02],[-0.15,0.06],[-0.24,0.06],[-0.19,0.11],[0.17,-0.03],[0.22,0.03],[0.16,0.08],[0.24,0.1],[0.13,-0.07],[-0.13,-0.07]])add(new T.CylinderGeometry(0.012,0.012,0.008,18),M(0xfafafa,.35),x,top+0.004,z);
+  add(slab(0.06,0.024,0.006,0.011,0.003),M(0x6c7280,.4),0.19,top+0.003,0.07);
+  // schermo touch con manopole
+  add(new T.BoxGeometry(0.4,0.035,0.07),nero,0,top+0.01,-0.13);
+  for(let i=0;i<5;i++)add(new T.CylinderGeometry(0.013,0.014,0.03,18),nero,-0.14+i*0.07,top+0.035,-0.105);
+  const ts=new T.Group();ts.position.set(0,top+0.03,-0.15);ts.rotation.x=-0.35;g.add(ts);
+  add(new T.BoxGeometry(0.36,0.25,0.018),nero,0,0.125,0,0,0,0,ts);add(new T.PlaneGeometry(0.33,0.215),M(0x8f989f,.15,0,0x161b20),0,0.13,0.0095,0,0,0,ts);
+  const hs=label("HS40",0.06,0.022,"#e9ecef","#1c1e21","700 150px Arial");hs.position.set(0.2,top+0.03,-0.1);hs.rotation.x=-Math.PI/2;g.add(hs);
+  // porta sonde e sonde
+  const cup=(x,z)=>{add(new T.CylinderGeometry(0.035,0.03,0.07,20,1,true),bianco,x,top-0.01,z);add(new T.CircleGeometry(0.033,20),nero,x,top+0.024,z,-Math.PI/2)};
+  const probe=(x,z,rz,w,h)=>{const p=new T.Group();p.position.set(x,top+0.02,z);p.rotation.z=rz;g.add(p);add(new T.CylinderGeometry(0.016,0.02,0.11,18),bianco,0,0.03,0,0,0,0,p);add(new T.BoxGeometry(w,h,0.032),M(0xe9ebe8,.35),0,0.1,0,0,0,0,p);add(new T.BoxGeometry(w*0.92,0.008,0.028),grigio,0,0.1+h/2,0,0,0,0,p)};
+  cup(-0.29,-0.12);probe(-0.29,-0.12,0.35,0.045,0.04);cup(0.27,-0.13);probe(0.27,-0.13,-0.2,0.07,0.045);cup(0.27,-0.04);probe(0.27,-0.04,-0.1,0.03,0.06);
+  add(new T.CylinderGeometry(0.032,0.032,0.15,24),bianco,0.3,top+0.06,-0.2);add(new T.CylinderGeometry(0.012,0.016,0.03,16),M(0xd8232a,.4),0.3,top+0.15,-0.2);
+  const gel=label("gel",0.05,0.02,"#1f3c88");gel.position.set(0.3,top+0.06,-0.167);g.add(gel);
+  // braccio e monitor
+  add(new T.BoxGeometry(0.1,0.05,0.06),nero,0,top+0.02,-0.25);add(new T.CylinderGeometry(0.022,0.022,0.32,18),acciaio,0,top+0.19,-0.26);add(new T.BoxGeometry(0.12,0.04,0.08),nero,0,top+0.35,-0.26);
+  const mon=new T.Group();mon.position.set(0,top+0.52,-0.25);mon.rotation.x=-0.05;g.add(mon);
+  add(new T.BoxGeometry(0.54,0.34,0.035),nero,0,0,0,0,0,0,mon);add(new T.BoxGeometry(0.5,0.3,0.03),bianco,0,0,-0.025,0,0,0,mon);add(new T.PlaneGeometry(0.5,0.3),schermo,0,0,0.018,0,0,0,mon);
+  // pavimento
+  const fl=add(new T.CircleGeometry(1.1,64),M(0x4a4e52,.85),0,0,0,-Math.PI/2);const gr=new T.GridHelper(2.2,6,0x5b6065,0x5b6065);gr.position.y=0.002;scene.add(gr);
+  // controlli: trascina per girare, pizzica per avvicinare
+  let yaw=0.6,pit=0.3,dist=2.5,drag=null,idle=true,pinch=0;const tgt=new T.Vector3(0,0.8,0);
+  el.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,yaw,pit};idle=false;el.setPointerCapture(e.pointerId);hint.style.display="none"};
+  el.onpointermove=e=>{if(!drag)return;yaw=drag.yaw-(e.clientX-drag.x)*0.01;pit=Math.max(0.02,Math.min(1.25,drag.pit+(e.clientY-drag.y)*0.006))};
+  el.onpointerup=el.onpointercancel=()=>drag=null;
+  el.onwheel=e=>{e.preventDefault();dist=Math.max(0.9,Math.min(3.2,dist+e.deltaY*0.002))};
+  el.ontouchmove=e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinch)dist=Math.max(0.9,Math.min(3.2,dist-(d-pinch)*0.006));pinch=d}};
+  el.ontouchend=()=>pinch=0;hint.textContent="Trascina per girare l’ecografo";
+  const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle)yaw+=0.004;
+    cam.position.set(tgt.x+dist*Math.cos(pit)*Math.sin(yaw),tgt.y+dist*Math.sin(pit),tgt.z+dist*Math.cos(pit)*Math.cos(yaw));cam.lookAt(tgt);ren.render(scene,cam);requestAnimationFrame(tick)};tick()}
 
 /* Avvio */
 render();

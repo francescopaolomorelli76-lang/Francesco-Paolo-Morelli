@@ -487,7 +487,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
      con il tariffario ufficiale quando sarà disponibile.
    - Numerazione e tipologia degli studi: da confermare con la clinica.
    ===================================================================== */
-const CLINIC={name:"Clinia",ragione:"Clinia Srl",payoff:"Il centro per professionisti e specialisti",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 329 397 5297",email:"info@cliniamatera.it",pec:"clinia@pec.it",
+const CLINIC={name:"Clinia",ragione:"Clinia Srl",payoff:"Il centro per professionisti e specialisti",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 392 994 8545",email:"info@cliniamatera.it",pec:"clinia@pec.it",
   hoursText:"Studi prenotabili: lun–ven 8:00–20:00 · sab 8:00–13:00"};
 const OPEN={1:[480,1200],2:[480,1200],3:[480,1200],4:[480,1200],5:[480,1200],6:[480,780]}; // minuti dalla mezzanotte; domenica chiuso
 const ROOM_TYPES={
@@ -502,9 +502,9 @@ const ROOMS=[
   {id:"s2",name:"Studio 2",type:"standard",mq:15,foto:"img/stanze/studio2.jpg",arco:110,
    desc:"Spazio pratico e riservato, attrezzato con scrivania, sedie, lettino e lavandino. Ideale per attività cliniche e specialistiche, climatizzato e pronto all’uso.",
    dot:["Scrivania e sedie","Lettino","Lavandino","Sgabello medico","Climatizzato"]},
-  {id:"s3",name:"Studio 3",type:"standard",mq:15,foto:"img/stanze/studio3.jpg",arco:140,
+  {id:"s3",name:"Studio 3",type:"standard",mq:15,foto:"img/stanze/studio3.jpg",arco:140,attr:["tecar"],
    desc:"Studio confortevole e ben organizzato, con scrivania, sedie, lettino e lavandino. Adatto a visite mediche e attività di consulenza. Climatizzato.",
-   dot:["Scrivania e sedie","Lettino elettrico","Lavandino","Appendiabiti","Climatizzato"]},
+   dot:["Scrivania e sedie","Lettino elettrico","Lavandino","Tecar","Appendiabiti","Climatizzato"]},
   {id:"s4",name:"Studio 4",type:"ampio",mq:20,foto:"img/stanze/studio4.jpg",arco:125,
    desc:"Ambiente luminoso, ampio e climatizzato, progettato per garantire massima flessibilità d’uso: attività cliniche e riabilitative, ma anche formazione, piccoli workshop, incontri professionali e sessioni dimostrative.",
    dot:["Parete a specchio","Palle da fitness e palle mediche","Kettlebell e manubri","Bilanciere con dischi","Elastici e rulli","Finestra","Climatizzato"]},
@@ -542,10 +542,14 @@ const LEGAL={autore:"Francesco Paolo Morelli",marchio:"FPM WebDesignTech",anno:2
 // Abbonamento mensile per gli specialisti (prezzo di ESEMPIO, da confermare)
 const SUB={name:"Clinia Specialisti",price:50,ufficiale:false,features:["Profilo visibile ai pazienti nell’app Clinia","Prenotazioni online con agenda sempre aggiornata","Prenotazione degli studi da 1 a 9 in tempo reale","Messaggi con pazienti e reception","Promemoria automatici ai pazienti","Disdetta in qualsiasi momento"]};
 // Tariffario ufficiale degli studi (Clinia Srl): contratto mensile, prezzi IVA esclusa
-const TARIFFE_MESE={iva:0.22,soluzioni:{A:{nome:"Soluzione A",desc:"Mese, mezza giornata"},B:{nome:"Soluzione B",desc:"Mese, giornata intera"}},
+const TARIFFE_MESE={iva:0.22,soluzioni:{A:{nome:"Soluzione A",desc:"Mese, mezza giornata: 4 ore al giorno, mattina o pomeriggio a scelta"},B:{nome:"Soluzione B",desc:"Mese, giornata intera"}},
   mq:{12:{A:1200,B:2000},15:{A:1400,B:2500},20:{A:1700,B:3000}}};
+// Uso a ore (risposte della direzione, 10/11/2026): una tantum 40 € + IVA l’ora; pacchetti prepagati [ore, € l’ora + IVA]
+const TARIFFE_ORE={ora:40,pacchetti:[[10,35],[20,30],[30,25],[40,20],[50,15]]};
+// Lavoro a percentuale: Clinia fattura allo specialista l’utilizzo dello studio come percentuale della prestazione
+const PERC_BASE=null; // studi senza macchinari: percentuale da concordare con la direzione
 const PREZZI_PRESTAZIONI_UFFICIALI=false; // i prezzi delle visite li imposta ogni specialista
-const TARIFFARIO={ufficiale:false,stanze:{ // uso occasionale a ore: tariffe indicative, da confermare con Clinia
+const TARIFFARIO={ufficiale:true,stanze:{ // (storico) le tariffe a ore ora sono TARIFFE_ORE
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
  {id:"marco-morelli",name:"Dott. Marco Morelli",role:"Fisioterapista",area:"riabilitazione",rating:"5,0",reviews:23,
@@ -606,7 +610,7 @@ const HORIZON=21;
 const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
 try{localStorage.removeItem("clinia-app-v1")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7},payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0},modalita:{},pacchetti:[],oreUsate:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
@@ -641,10 +645,9 @@ const services=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],d
 const logged=()=>!!(S.auth&&S.user&&S.user.tel);
 const isPro=()=>S.auth&&S.auth.role==="professionista";
 const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
-const roomTariff=r=>(S.roomEdits[r.id]&&S.roomEdits[r.id].tariff)||TARIFFARIO.stanze[r.type];
+const roomTariff=r=>{const e=S.roomEdits[r.id]&&S.roomEdits[r.id].tariff;return{ora:e&&e.ora!=null&&e.mezza==null?e.ora:TARIFFE_ORE.ora}};
 function applyRoomEdits(){for(const r of ROOMS){const e=S.roomEdits[r.id];if(e){if(e.name)r.name=e.name;if(e.type)r.type=e.type}}}
-function roomCost(k,min){const r=ROOMS.find(x=>x.id===k),t=r?roomTariff(r):TARIFFARIO.stanze[k],h=min/60;let c;
-  if(h>=8)c=t.giornata;else if(h>=4)c=Math.min(t.mezza+(h-4)*t.ora,t.giornata);else c=Math.min(h*t.ora,t.mezza);return Math.round(c*100)/100}
+function roomCost(k,min){const r=ROOMS.find(x=>x.id===k);return r2((r?roomTariff(r).ora:TARIFFE_ORE.ora)*min/60)} // IVA esclusa
 
 /* Prenotazioni degli studi: turni di esempio + prenotazioni fatte nell'app */
 function allBookings(){
@@ -1059,7 +1062,7 @@ function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(al
   <div class="content"><div class="hero">${docAv(d,"lg")}<h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
    ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
   <div class="pad stack" style="gap:22px">
-   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${PREZZI_PRESTAZIONI_UFFICIALI?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
+   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${S.prices[id]?`<p class="tiny">Prezzi decisi dallo specialista.</p>`:`<p class="tiny">Prezzi di esempio: ogni specialista decide liberamente i suoi.</p>`}
     ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min${s.online?" · online":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
     <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px"><button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="reception">${ic("door","sm")} Reception · vedi in 3D</button>${rs.map(r=>`<button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="${r}">${ic("door","sm")} ${esc(room(r).name)} · vedi in 3D</button>`).join("")}</p></div></div></section>
@@ -1159,7 +1162,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:stanze","door","I miei turni negli studi"]]
+  const items=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1225,9 +1228,11 @@ function proAll(){const out=[];for(let k=-14;k<=HORIZON;k++){const ds=addDays(to
 function ricavi(m){const v=proAll().filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
   const carta=sum(a=>a.paid&&a.method==="carta"),strutt=sum(a=>a.paid&&a.method==="struttura"),da=sum(a=>!a.paid);
   const nStr=v.filter(a=>a.method==="struttura"&&(a.paid||a.date<today())).length,nCarta=v.filter(a=>a.method==="carta").length,comm=nStr*APP_FEE;
-  const studi=isOwner()?0:S.roomPayments.filter(p=>p.doctorId===S.proId&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0);
+  const pacch=isOwner()?0:(S.pacchetti||[]).filter(p=>p.docId===S.proId&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.base,0);
+  const perc=isOwner()||modalita(S.proId)!=="percentuale"?0:r2(v.filter(a=>a.paid&&a.roomId&&percStudio(a.roomId)!=null).reduce((t,a)=>t+a.price*percStudio(a.roomId),0));
+  const studi=isOwner()?0:S.roomPayments.filter(p=>p.doctorId===S.proId&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0)+pacch+perc;
   const affitti=isOwner()?S.roomPayments.filter(p=>dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0):0;
-  const abb=isOwner()?0:SUB.price;return{v,carta,strutt,da,nStr,nCarta,comm,studi,affitti,abb,netto:carta+strutt+affitti-comm-studi-abb}}
+  const abb=isOwner()?0:SUB.price;return{v,carta,strutt,da,nStr,nCarta,comm,studi,pacch,perc,affitti,abb,netto:carta+strutt+affitti-comm-studi-abb}}
 const meseNome=m=>parseD(m+"-01").toLocaleDateString("it-IT",{month:"long",year:"numeric"});
 function ricaviPage(){const m=UI.ricMese||today().slice(0,7),r=ricavi(m),own=isOwner();const prev=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()-1))).slice(0,7),next=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7);
   return `<div class="screen">${bar("Ricavi")}<div class="content"><div class="pad stack" style="gap:18px">
@@ -1239,7 +1244,7 @@ function ricaviPage(){const m=UI.ricMese||today().slice(0,7),r=ricavi(m),own=isO
    <dt>Visite pagate in struttura<small>segnate da te come pagate</small></dt><dd>+ ${eur(r.strutt)}</dd>
    ${own?`<dt>Affitti degli studi<small>pagati dagli specialisti a Clinia</small></dt><dd>+ ${eur(r.affitti)}</dd>`:""}
    <dt>Servizio app per visite in struttura<small>${r.nStr} × ${eur(APP_FEE)}, addebitati sulla carta dell’abbonamento</small></dt><dd class="neg">− ${eur(r.comm)}</dd>
-   ${own?"":`<dt>Studi pagati a Clinia</dt><dd class="neg">− ${eur(r.studi)}</dd>`}
+   ${own?"":`<dt>Studi a Clinia<small>${modalita(S.proId)==="percentuale"?"a percentuale ("+eur(r.perc)+")":"affitto e pacchetti"}, IVA esclusa</small></dt><dd class="neg">− ${eur(r2(r.studi))}</dd>`}
    ${own?"":`<dt>Abbonamento Clinia App<small>${esc(SUB.name)}, pagato a Clinia</small></dt><dd class="neg">− ${eur(r.abb)}</dd>`}
    <dt class="tot">Netto</dt><dd class="tot">${eur(Math.round(r.netto*100)/100)}</dd></dl>
   <div class="card stack" style="gap:6px"><b>Ancora da incassare: ${eur(r.da)}</b><p class="tiny">Visite del mese non ancora pagate. Le segni pagate dalla scheda Pazienti.</p></div>
@@ -1281,17 +1286,19 @@ function pagDesc(p){return p.pagato?`${eur(p.importo)} ${p.metodo==="contanti"?"
 function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
     const own=d.id===OWNER.doctorId,nCard=v.filter(a=>a.method==="carta"&&a.paid).length,nCash=own?0:v.filter(a=>a.method==="struttura"&&(a.paid||a.date<today())).length;
     const affitti=S.roomPayments.filter(p=>p.doctorId===d.id&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0);
-    return{d,own,visite:v.length,carta:sum(a=>a.paid&&a.method==="carta"),strutt:sum(a=>a.paid&&a.method==="struttura"),nCard,nCash,affitti,abb:own?0:SUB.price,iban:S.payAcc[d.id]}});
+    const pacch=(S.pacchetti||[]).filter(p=>p.docId===d.id&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.base,0);
+    const perc=!own&&modalita(d.id)==="percentuale"?r2(v.filter(a=>a.paid&&a.roomId&&percStudio(a.roomId)!=null).reduce((t,a)=>t+a.price*percStudio(a.roomId),0)):0;
+    return{d,own,pacch,perc,visite:v.length,carta:sum(a=>a.paid&&a.method==="carta"),strutt:sum(a=>a.paid&&a.method==="struttura"),nCard,nCash,affitti,abb:own?0:SUB.price,iban:S.payAcc[d.id]}});
   const tot=k=>rows.reduce((t,r)=>t+r[k],0),own=rows.find(r=>r.own)||{carta:0,strutt:0};
   const mov=fpmMovimenti(m),sm=f=>r2(mov.filter(f).reduce((t,x)=>t+x[f.k||"lordo"],0));
-  const feePaz=tot("nCard")*APP_FEE,feeSpec=tot("nCash")*APP_FEE,abb=tot("abb"),affitti=tot("affitti");
+  const feePaz=tot("nCard")*APP_FEE,feeSpec=tot("nCash")*APP_FEE,abb=tot("abb"),affitti=tot("affitti"),pacch=r2(tot("pacch")),perc=r2(tot("perc"));
   const passaggio=r2(feePaz+feeSpec+abb),arca=r2(mov.reduce((t,x)=>t+x.arca,0)),girato=r2(mov.filter(x=>x.da!=="clinia").reduce((t,x)=>t+x.netto,0)),ritPass=r2(mov.filter(x=>x.da!=="clinia").reduce((t,x)=>t+x.rit,0));
   const k=monthIndex(m),lic=k>=1&&k<=LICENZA.mesi,licLordo=lic?lordoDaNetto(LICENZA.netto):0,licRit=lic?r2(licLordo-LICENZA.netto):0;
   const visiteOwn=r2(own.carta+own.strutt),visiteSpecCarta=r2(rows.filter(r=>!r.own).reduce((t,r)=>t+r.carta,0));
   const commissioni=r2(rows.reduce((t,r)=>t+r.nCard*(0.015*APP_FEE+0.25),0)+0.015*(visiteSpecCarta+own.carta)+rows.filter(r=>!r.own).length*(0.015*SUB.price+0.25)+(lic?0.015*LICENZA.netto+0.25:0));
   const spese=S.expenses.filter(e=>e.date.startsWith(m)).reduce((t,e)=>t+e.amount,0);
-  const entrate=r2(visiteOwn+affitti+passaggio),uscite=r2(girato+ritPass+licLordo+commissioni+spese);
-  return{rows,feePaz,feeSpec,abb,affitti,passaggio,arca,girato,ritPass,lic,licLordo,licRit,k,visiteOwn,visiteSpecCarta,commissioni,spese,entrate,uscite,saldo:r2(entrate-uscite),f24:r2(ritPass+licRit)}}
+  const entrate=r2(visiteOwn+affitti+pacch+perc+passaggio),uscite=r2(girato+ritPass+licLordo+commissioni+spese);
+  return{rows,feePaz,feeSpec,abb,affitti,pacch,perc,passaggio,arca,girato,ritPass,lic,licLordo,licRit,k,visiteOwn,visiteSpecCarta,commissioni,spese,entrate,uscite,saldo:r2(entrate-uscite),f24:r2(ritPass+licRit)}}
 const monthIndex=m=>{const[a,b]=LICENZA.inizio.split("-").map(Number),[c,d]=m.split("-").map(Number);return (c-a)*12+(d-b)+1};
 const r2=n=>Math.round(n*100)/100;
 function meseNav(act,m){const pm=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()-1))).slice(0,7),nm=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7);
@@ -1311,16 +1318,29 @@ function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)
   ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
 const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",arco:165,desc:"Ingresso e sala d’attesa di Clinia"}};
 const spazio3d=id=>SPAZI[id];
-const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stanza:"s1",desc:"Ecografo su carrello con monitor, schermo touch e tre sonde. Disponibile per le prenotazioni dello Studio 1.",
+const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stanza:"s1",perc:0.5,modello:true,desc:"Ecografo su carrello con monitor, schermo touch e tre sonde. Disponibile per le prenotazioni dello Studio 1.",
   sonde:[["Convex C2-5","addome, pelvi, ostetricia"],["Lineare LA3-16AD","tiroide, mammella, muscoli e tendini, vasi"],["Phased array PN2-4","cuore e torace"]],
-  foto:["img/attrezzature/ecografo-1.jpg","img/attrezzature/ecografo-2.jpg","img/attrezzature/ecografo-3.jpg","img/attrezzature/ecografo-4.jpg"]}};
+  foto:["img/attrezzature/ecografo-1.jpg","img/attrezzature/ecografo-2.jpg","img/attrezzature/ecografo-3.jpg","img/attrezzature/ecografo-4.jpg"]},
+  tecar:{nome:"Tecar",breve:"Tecar",stanza:"s3",perc:0.3,desc:"Apparecchio per tecarterapia su carrello, accanto al lettino elettrico dello Studio 3.",sonde:[],foto:["img/attrezzature/tecar-1.jpg"]}};
+const percStudio=id=>{const r=room(id),l=attrDi(r).map(a=>a.perc).filter(x=>x!=null);return l.length?Math.max(...l):PERC_BASE};
+const modalita=id=>(S.modalita&&S.modalita[id])||"fitto";
+const oreResidue=id=>r2((S.pacchetti||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0)-(S.oreUsate||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0));
+const IVA=0.22,ivaDi=x=>r2(x*IVA);
 const attrDi=r=>(r&&r.attr||[]).map(k=>({k,...ATTREZZATURE[k]}));
-function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.sonde.length} sonde · tocca per vederlo in 3D</small></span><span class="r3dbadge" style="position:static">3D</span></button>`).join("")}</section>`:""}
+function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.modello?a.sonde.length+" sonde · tocca per vederlo in 3D":"Tocca per i dettagli"}${a.perc!=null?" · a percentuale: "+Math.round(a.perc*100)+" % della prestazione":""}</small></span>${a.modello?`<span class="r3dbadge" style="position:static">3D</span>`:ic("right","sm")}</button>`).join("")}</section>`:""}
 const eurM=x=>String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,".")+" €";
 const conIva=x=>Math.round(x*(1+TARIFFE_MESE.iva)*100)/100;
 function tariffeMeseHTML(sel){const l=sel?ROOMS.filter(r=>r.mq===sel.mq):ROOMS;return `<div style="overflow-x:auto"><table class="tar"><thead><tr><th>${sel?"Contratto":"Studio"}</th><th>Mezza giornata<br><span class="tiny">Soluzione A</span></th><th>Giornata intera<br><span class="tiny">Soluzione B</span></th></tr></thead><tbody>
   ${(sel?[sel]:l).map(r=>{const t=TARIFFE_MESE.mq[r.mq];return `<tr><td><b>${sel?"Al mese":esc(r.name)}</b><br><span class="tiny">${r.mq} mq · ${ROOM_TYPES[r.type].label}</span></td><td>${eurM(t.A)}</td><td>${eurM(t.B)}</td></tr>`}).join("")}</tbody></table></div>
   <p class="tiny" style="margin-top:6px">Prezzi al mese, IVA esclusa (+22 %). Esempio: ${eurM(TARIFFE_MESE.mq[15].A)} + IVA = ${eurM(conIva(TARIFFE_MESE.mq[15].A))}.</p>`}
+function tariffeOreHTML(buy){return `<div class="ccard"><span style="flex:1"><b>Una tantum</b><span class="tiny" style="display:block">Pagate a prenotazione</span></span><b class="num">${eurM(TARIFFE_ORE.ora)} l’ora</b></div>
+  ${TARIFFE_ORE.pacchetti.map(([o,pr])=>`<div class="ccard"><span style="flex:1"><b>Pacchetto ${o} ore</b><span class="tiny" style="display:block">${eurM(pr)} l’ora · totale ${eurM(o*pr)} + IVA</span></span>${buy?`<button class="btn ghost sm" data-act="buyPack" data-v="${o}">Acquista</button>`:`<b class="num">${eurM(pr)} l’ora</b>`}</div>`).join("")}
+  <p class="tiny" style="margin-top:6px">Prezzi IVA esclusa (+22 %). Le ore dei pacchetti prepagati si usano per le prenotazioni degli studi.</p>`}
+function percHTML(){return `<p class="small">In alternativa all’affitto, lo specialista può lavorare <b>a percentuale</b>: lo studio si prenota senza pagare e Clinia trattiene una parte della prestazione.</p>
+  <div class="ccard"><span style="flex:1"><b>Studio 1 con ecografo</b></span><b class="num">50 %</b></div><div class="ccard"><span style="flex:1"><b>Studio 3 con Tecar</b></span><b class="num">30 %</b></div>
+  <div class="ccard"><span style="flex:1"><b>Altri studi</b></span><span class="small muted">${PERC_BASE!=null?Math.round(PERC_BASE*100)+" %":"da concordare"}</span></div>
+  <p class="tiny" style="margin-top:6px">Percentuali della prestazione, + IVA. La scelta tra affitto e percentuale è dello specialista.</p>`}
+const FATTURE_TXT="Lo specialista fattura sempre al paziente. Clinia fattura allo specialista l’utilizzo dello studio: affitto, ore o percentuale, sempre + IVA.";
 const SERVIZI_INCLUSI=[["Ambienti e struttura",["Studi moderni, accoglienti, già allestiti e pronti all’uso","Sala d’attesa confortevole con reception dedicata","Servizi igienici distinti per professionisti e pazienti"]],
   ["Servizi inclusi",["Pulizia e igienizzazione periodica","Cura degli studi e delle aree condivise","Connessione internet e Wi-Fi ad alta velocità"]],
   ["Visibilità e promozione",["Profilo del professionista nel sito web ufficiale del centro","Visibilità sui canali social istituzionali e nelle brochure","Promozione coordinata del centro con attività pubblicitarie mirate"]],
@@ -1331,7 +1351,10 @@ function offertaPage(){const mail=`mailto:${CLINIC.email}?subject=${encodeURICom
   return `<div class="screen">${bar("Offerta per i professionisti")}<div class="content"><div class="pad stack" style="gap:18px">
   <div><img src="img/clinia-logo.svg" alt="Clinia" style="width:130px;height:auto"><p class="payoff">${esc(CLINIC.payoff)}</p></div>
   <p class="muted">Studi già allestiti e pronti all’uso, con servizi inclusi e senza oneri gestionali. Scegli lo studio e la formula mensile.</p>
-  <section class="card"><h3 style="margin-bottom:8px">Tariffe mensili</h3>${tariffeMeseHTML()}</section>
+  <section class="card"><h3 style="margin-bottom:2px">Affitto mensile</h3><p class="tiny" style="margin-bottom:8px">La formula consigliata: lo studio è tuo ogni giorno, mezza giornata (4 ore, mattina o pomeriggio a scelta) o giornata intera.</p>${tariffeMeseHTML()}</section>
+  <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti prepagati</h3>${tariffeOreHTML(false)}</section>
+  <section class="card"><h3 style="margin-bottom:8px">Oppure a percentuale</h3>${percHTML()}</section>
+  <div class="demo-note">${ic("file","sm")}<span>${FATTURE_TXT}</span></div>
   ${SERVIZI_INCLUSI.map(([t,l])=>`<section class="card"><h3 style="margin-bottom:6px">${esc(t)}</h3><ul class="blist">${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`).join("")}
   <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Gli studi</h3>${ROOMS.map(r=>`<button class="card row" data-act="room3d" data-id="${r.id}" style="width:100%;text-align:left;gap:12px;padding:10px"><img src="${r.foto}" alt="" style="width:76px;height:56px;object-fit:cover;border-radius:10px"><span style="flex:1;min-width:0"><b>${esc(r.name)} · ${r.mq} mq</b><small class="tiny" style="display:block">${esc(ROOM_TYPES[r.type].label)} · vedi in 3D</small></span>${ic("right","sm")}</button>`).join("")}</section>
   <a class="btn primary block" href="${mail}">${ic("mail","sm")} Richiedi uno studio</a>
@@ -1349,12 +1372,13 @@ function chiSiamoPage(){const V=[["Accoglienza","Un ambiente sereno e confortevo
    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${ROOMS.map(r=>`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} ${esc(r.name)} · ${r.mq} mq</button>`).join("")}</div></section>
   <button class="btn ghost block" data-act="openPage" data-v="offerta">Sei un professionista? Scopri l’offerta ${ic("arrow","sm")}</button>
   ${contattiHTML()}</div></div></div>`}
-function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza);return `<div class="screen">${bar(esc(a.breve)+" in 3D")}<div class="content"><div class="pad stack" style="gap:14px">
-  <div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
-  <p class="tiny">Modello 3D ricostruito dalle foto: trascina per girarlo, pizzica o usa la rotella per avvicinarti.</p>
+function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza);return `<div class="screen">${bar(esc(a.breve)+(a.modello?" in 3D":""))}<div class="content"><div class="pad stack" style="gap:14px">
+  ${a.modello?`<div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
+  <p class="tiny">Modello 3D ricostruito dalle foto: trascina per girarlo, pizzica o usa la rotella per avvicinarti.</p>`:`<img src="${a.foto[0]}" alt="${esc(a.nome)}" style="width:100%;max-height:420px;object-fit:cover;border-radius:var(--r)">`}
   <div><h2 style="font-size:1.25rem;font-weight:800">${esc(a.nome)}</h2><p class="small muted">${esc(a.desc)}</p></div>
-  <section class="card"><h3 style="margin-bottom:6px">Sonde</h3>${a.sonde.map(([n,u])=>`<div class="svc"><div class="t"><b>${esc(n)}</b><span class="tiny">${esc(u)}</span></div></div>`).join("")}<p class="tiny" style="margin-top:6px">Usi indicativi, da confermare con la direzione.</p></section>
-  <section class="stack" style="gap:8px"><h3 class="h-sec" style="font-size:1.1rem">Foto</h3><div class="gal">${a.foto.map((f,i)=>`<img src="${f}" alt="${esc(a.breve)}, foto ${i+1}" loading="lazy">`).join("")}</div></section>
+  ${a.perc!=null?`<div class="card row" style="gap:12px;background:var(--gold-soft);border-color:var(--gold)"><b style="font-size:1.4rem;color:var(--gold);white-space:nowrap">${Math.round(a.perc*100)} %</b><span class="small">Chi lavora a percentuale e usa ${a.breve==="Ecografo"?"l’ecografo":"la Tecar"} versa a Clinia il ${Math.round(a.perc*100)} % della prestazione, come utilizzo dello studio (+ IVA).</span></div>`:""}
+  ${a.sonde.length?`<section class="card"><h3 style="margin-bottom:6px">Sonde</h3>${a.sonde.map(([n,u])=>`<div class="svc"><div class="t"><b>${esc(n)}</b><span class="tiny">${esc(u)}</span></div></div>`).join("")}<p class="tiny" style="margin-top:6px">Usi indicativi, da confermare con la direzione.</p></section>`:""}
+  ${a.foto.length>1?`<section class="stack" style="gap:8px"><h3 class="h-sec" style="font-size:1.1rem">Foto</h3><div class="gal">${a.foto.map((f,i)=>`<img src="${f}" alt="${esc(a.breve)}, foto ${i+1}" loading="lazy">`).join("")}</div></section>`:""}
   <button class="btn ghost block" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Si trova in ${esc(r.name)} · vedi la stanza in 3D</button></div></div></div>`}
 function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">${bar(esc(sp.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
@@ -1378,7 +1402,9 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   <div class="card" style="text-align:center"><span class="label">Saldo di Clinia nel mese</span><div class="big ${c.saldo<0?"neg":""}">${eur(c.saldo)}</div><p class="tiny">Entrate ${eur(c.entrate)} − uscite ${eur(c.uscite)}</p></div>
   <dl class="card ledger"><dt style="grid-column:1/-1"><span class="label">Entrate</span></dt>
    <dt>Visite dei tuoi pazienti<small>Dott. Marco Morelli, carta e struttura</small></dt><dd>+ ${eur(c.visiteOwn)}</dd>
-   <dt>Affitti delle stanze</dt><dd>+ ${eur(r2(c.affitti))}</dd>
+   <dt>Affitti degli studi<small>prenotazioni a ore, IVA esclusa</small></dt><dd>+ ${eur(r2(c.affitti))}</dd>
+   <dt>Pacchetti ore prepagati<small>IVA esclusa</small></dt><dd>+ ${eur(c.pacch)}</dd>
+   <dt>Utilizzo studi a percentuale<small>stima su visite pagate: Studio 1 con ecografo 50 %, Studio 3 con Tecar 30 %</small></dt><dd>+ ${eur(c.perc)}</dd>
    <dt>Abbonamenti specialisti<small>${c.rows.filter(r=>!r.own).length} × ${eur(SUB.price)}${DB.on?"":" (esempio)"}, girati a FPM</small></dt><dd>+ ${eur(r2(c.abb))}</dd>
    <dt>Servizio prenotazioni<small>${eur(APP_FEE)} a prenotazione, girato a FPM</small></dt><dd>+ ${eur(r2(c.feePaz+c.feeSpec))}</dd>
    <dt style="grid-column:1/-1;margin-top:8px"><span class="label">Uscite</span></dt>
@@ -1408,15 +1434,15 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   <button class="btn ghost block" data-act="cliSeg" data-v="spese">${ic("plus","sm")} Segna una spesa</button>
   <p class="tiny">Rendiconto gestionale indicativo, utile per il controllo del mese. Non sostituisce la contabilità del commercialista.${DB.on?"":" Nella versione di prova visite e pazienti sono di esempio."}</p></div>`}
 function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadRoomPhotos();
-  return `<p class="muted small">I contratti mensili seguono il tariffario ufficiale (per metratura, IVA esclusa). Qui modifichi nomi, tipologia e tariffe per l’uso occasionale a ore, e le foto per la vista 3D.</p>
+  return `<p class="muted small">I contratti mensili seguono il tariffario ufficiale (per metratura, IVA esclusa). Qui modifichi nomi, tipologia, tariffa oraria (oggi 40 € + IVA) e le foto per la vista 3D. I pacchetti prepagati sono uguali per tutti gli studi.</p>
   ${ROOMS.map(r=>{const t=roomTariff(r),f=ph[r.id]||[];return `<form class="card stack" data-form="room" data-id="${r.id}" style="gap:10px" novalidate>
    <div class="fgrid"><label class="field"><span>Nome della stanza</span><input id="rn-${r.id}" name="name" value="${esc(r.name)}" maxlength="40"></label>
     <label class="field"><span>Tipologia</span><select id="rt-${r.id}" name="type">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?"selected":""}>${v.label}</option>`).join("")}</select></label></div>
-   <div class="rfields"><label>1 ora €<input id="ro-${r.id}" name="ora" inputmode="decimal" value="${t.ora}"></label><label>4 ore €<input id="rm-${r.id}" name="mezza" inputmode="decimal" value="${t.mezza}"></label><label>Giornata €<input id="rg-${r.id}" name="giornata" inputmode="decimal" value="${t.giornata}"></label></div>
+   <div class="rfields"><label>Tariffa oraria € + IVA<input id="ro-${r.id}" name="ora" inputmode="decimal" value="${t.ora}"></label></div>
    ${f.length?`<div class="thumbs">${f.map((src,i)=>`<div><img src="${src}" alt="Foto ${i+1} di ${esc(r.name)}"><button type="button" data-act="delRoomPhoto" data-id="${r.id}" data-v="${i}" aria-label="Elimina foto">${ic("x")}</button></div>`).join("")}</div>`:""}
    <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length||r.foto?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
    <p class="err" id="re-${r.id}"></p><button class="btn primary sm" type="submit">Salva ${esc(r.name)}</button></form>`}).join("")}
-  <p class="tiny">Le tariffe a ore iniziali sono indicative: confermale o modificale e salva ogni studio.</p>`}
+  <p class="tiny">Tutti i prezzi sono IVA esclusa.</p>`}
 const EXP_CAT=["Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
 function cliniaSpese(m){const list=S.expenses.filter(e=>e.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)),tot=list.reduce((t,e)=>t+e.amount,0);
   return `<form class="card stack" data-form="expense" novalidate style="gap:10px"><h3>Nuova spesa</h3>
@@ -1482,6 +1508,11 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
    <label class="chk"><input type="checkbox" data-change="fpmSet" data-k="under35" ${S.fpm.under35?"checked":""}> Ho meno di 35 anni (deduzione forfettaria del 40 %)</label>
    <label class="field"><span>Aliquota IRPEF marginale (dal tuo stipendio)</span><select data-change="fpmSet" data-k="aliquota" id="fs-al">${[[0.23,"23 % (reddito fino a 28.000 €)"],[0.33,"33 % (da 28.000 a 50.000 €)"],[0.43,"43 % (oltre 50.000 €)"]].map(([v,l])=>`<option value="${v}" ${S.fpm.aliquota===v?"selected":""}>${l}</option>`).join("")}</select></label>
    <p class="small">Importi netti per te: <b>${eur(APP_FEE)}</b> a prenotazione, <b>${eur(SUB.price)}</b> ad abbonamento, <b>${eur(LICENZA.netto)}</b> di licenza nei primi ${LICENZA.mesi} mesi. La ritenuta la aggiunge Clinia.</p></div>
+  ${(()=>{const MAX=5164.57,v=Math.min(S.fpm.fondo||0,MAX),al=S.fpm.aliquota,ris=r2(v*(al+0.02));return `<div class="card stack" style="gap:10px"><h3>Fondo pensione: quanto risparmi</h3>
+   <p class="small muted">Quello che versi in un fondo pensione si scala dal reddito, fino a ${eur(MAX)} l’anno: paghi meno IRPEF e i soldi restano tuoi per la pensione.</p>
+   <label class="field"><span>Versamento all’anno (€)</span><input id="fs-fondo" type="number" min="0" step="50" inputmode="decimal" value="${S.fpm.fondo||""}" placeholder="es. 1200" data-change="fpmSet" data-k="fondo"></label>
+   <div class="stats"><div class="stat"><b>${eur(v)}</b><span>Deducibile</span></div><div class="stat"><b>${eur(ris)}</b><span>Tasse in meno all’anno (stima)</span></div><div class="stat"><b>${eur(r2(v-ris))}</b><span>Costo reale</span></div></div>
+   <p class="tiny">Stima con aliquota ${Math.round(al*100)} % più circa 2 % di addizionali. ${S.fpm.fondo>MAX?"Oltre "+eur(MAX)+" il versamento non si deduce. ":""}Il fondo lo scegli tu (aperto, di categoria o PIP): confrontane i costi con il CAF o la banca.</p></div>`})()}
   <div class="card stack" style="gap:8px"><h3>Promemoria</h3><ul class="blist">
    <li>Le donazioni a Progetto Arca le fai tu con bonifico: come donazione a un ente del Terzo settore puoi detrarre il 30 % nel 730 (art. 83 D.Lgs. 117/2017, da confermare con il CAF). Conserva la ricevuta della fondazione.</li>
    <li>I compensi per la licenza del software sono redditi da utilizzazione economica di opere dell’ingegno (art. 53, c. 2, lett. b, TUIR): niente partita IVA e niente IVA (art. 3, c. 4, lett. a, DPR 633/72).</li>
@@ -1545,10 +1576,10 @@ function freeMinutes(ds,r){const[o,c]=OPEN[parseD(ds).getDay()];return(c-o)-book
 function stanzeTab(){if(!UI.roomDay||!OPEN[parseD(UI.roomDay).getDay()])UI.roomDay=firstOpen();const ds=UI.roomDay;
   const my=S.rooms.filter(b=>b.doctorId===S.proId&&b.date>=today()).concat(allBookings().filter(b=>b.seed&&b.doctorId===S.proId&&b.date>=today()&&b.date<=addDays(today(),6))).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
   return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1><p class="muted small">${esc(CLINIC.hoursText)}</p>
-  <button class="card row" data-act="openPage" data-v="offerta" style="width:100%;text-align:left;gap:12px;background:var(--gold-soft);border-color:var(--gold)"><span style="flex:1"><b class="small" style="display:block">Contratto mensile</b><span class="tiny">Mezza giornata da ${eurM(TARIFFE_MESE.mq[12].A)} al mese + IVA · servizi inclusi</span></span>${ic("right","sm")}</button>
+  <button class="card row" data-act="openPage" data-v="offerta" style="width:100%;text-align:left;gap:12px;background:var(--gold-soft);border-color:var(--gold)"><span style="flex:1"><b class="small" style="display:block">Contratto mensile</b><span class="tiny">Da ${eurM(TARIFFE_MESE.mq[12].A)} al mese + IVA · a ore ${eurM(TARIFFE_ORE.ora)} + IVA · pacchetti da ${eurM(TARIFFE_ORE.pacchetti[4][1])} l’ora</span></span>${ic("right","sm")}</button>
   ${dayStrip(ds,"roomDay",x=>{const f=ROOMS.filter(r=>freeMinutes(x,r)>=60).length;return f+" liberi"})}
   <div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Occupato</span><span><i style="background:var(--accent)"></i>Tuo</span></div>
-  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name} · ${r.mq} mq</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p>${r.foto||r.attr?`<p style="margin-top:4px">${r.foto?`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button> `:""}${attrDi(r).map(a=>`<button class="badge az" data-act="attr3d" data-id="${a.k}">${esc(a.breve)}</button>`).join(" ")}</p>`:""}</div><span class="price num small">${eur(roomTariff(r).ora)}/h</span></div>
+  ${ROOMS.map(r=>{const fm=freeMinutes(ds,r);const t=TARIFFARIO.stanze[r.type];return `<div class="card room"><div class="row between"><div style="min-width:0"><b>${r.name} · ${r.mq} mq</b><p class="tiny">${ROOM_TYPES[r.type].label} · ${ROOM_TYPES[r.type].desc}</p>${r.foto||r.attr?`<p style="margin-top:4px">${r.foto?`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button> `:""}${attrDi(r).map(a=>`<button class="badge az" data-act="attr3d" data-id="${a.k}">${esc(a.breve)}</button>`).join(" ")}</p>`:""}</div><span class="price num small">${modalita(S.proId)==="percentuale"&&!isOwner()?(percStudio(r.id)!=null?Math.round(percStudio(r.id)*100)+" %":"% da concordare"):eur(roomTariff(r).ora)+"/h + IVA"}</span></div>
    ${timeline(ds,r)}<div class="row between"><span class="tiny">${fm>0?"Libero per "+(fm/60).toLocaleString("it-IT")+" h":"Completo"}</span><button class="btn primary sm" data-act="openRoom" data-id="${r.id}" ${fm>=30?"":"disabled"}>Prenota</button></div></div>`}).join("")}
   <h2 class="h-sec" style="margin-top:8px">I tuoi turni</h2>
   ${my.length?`<div class="list">${my.map(b=>{const r=room(b.roomId);const cost=roomCost(r.id,toMin(b.end)-toMin(b.start));
@@ -1563,28 +1594,34 @@ function roomSheet(){if(UI.sheet.step==="pay")return roomPaySheet();const sh=UI.
    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Dalle</span><select id="rs-start" data-change="roomTime" data-k="start">${opts(o,c-30,s)}</select></label><label class="field"><span>Alle</span><select id="rs-end" data-change="roomTime" data-k="end">${opts(o+30,c,e)}</select></label></div>
    <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="rs-rep" type="checkbox" ${sh.repeat?"checked":""} data-change="roomRepeat" style="width:20px;height:20px;accent-color:var(--accent)"><span class="t">Ripeti ogni settimana<small>Per le prossime 4 settimane, dove lo studio è libero</small></span></label>
    ${conflict?`<p class="err">Lo studio è già occupato in parte di questa fascia.</p>`:mine?`<p class="err">Hai già un altro studio prenotato in questa fascia.</p>`:e<=s?`<p class="err">L’orario di fine deve essere dopo l’inizio.</p>`:""}
-   <dl class="card sum"><dt>Durata</dt><dd class="num">${e>s?((e-s)/60).toLocaleString("it-IT")+" h":"—"}</dd><dt>Tariffa</dt><dd class="num">${e>s?eur(cost):"—"}${sh.repeat?" × settimana":""}</dd></dl>
-   <p class="tiny">Uso occasionale a ore: tariffa indicativa, da confermare con Clinia.</p>
-   <button class="btn primary block" data-act="confirmRoom" ${ok?"":"disabled"}>${isOwner()?"Prenota (gratis per il titolare)":"Continua al pagamento"}</button></div>`}
-function roomPaySheet(){const sh=UI.sheet,r=room(sh.id),each=roomCost(r.id,sh.end-sh.start),tot=Math.round(each*sh.plan.length*100)/100;
+   <dl class="card sum"><dt>Durata</dt><dd class="num">${e>s?((e-s)/60).toLocaleString("it-IT")+" h":"—"}</dd><dt>${modalita(S.proId)==="percentuale"&&!isOwner()?"A percentuale":"Tariffa"}</dt><dd class="num">${modalita(S.proId)==="percentuale"&&!isOwner()?(percStudio(r.id)!=null?Math.round(percStudio(r.id)*100)+" % della prestazione":"% da concordare"):(e>s?eur(cost)+" + IVA":"—")+(sh.repeat?" × settimana":"")}</dd></dl>
+   ${oreResidue(S.proId)>0&&!isOwner()&&modalita(S.proId)!=="percentuale"?`<p class="tiny">Hai ${String(oreResidue(S.proId)).replace(".",",")} ore prepagate: si usano per prime.</p>`:""}
+   <button class="btn primary block" data-act="confirmRoom" ${ok?"":"disabled"}>${isOwner()?"Prenota (gratis per il titolare)":modalita(S.proId)==="percentuale"?"Prenota a percentuale":"Continua al pagamento"}</button></div>`}
+function roomPayCalc(sh,r){const ore=r2((sh.end-sh.start)/60*sh.plan.length),cred=Math.min(ore,Math.max(0,oreResidue(S.proId))),each=roomCost(r.id,sh.end-sh.start),base=r2(roomTariff(r).ora*(ore-cred)),iva=ivaDi(base);return{ore,cred,each,base,iva,tot:r2(base+iva)}}
+function roomPaySheet(){const sh=UI.sheet,r=room(sh.id),c=roomPayCalc(sh,r),tot=c.tot;
   return `<form class="stack" data-form="roompay" novalidate><div><h2 style="font-size:1.25rem;font-weight:800">Pagamento a Clinia</h2><p class="muted small">${r.name} · <span class="num">${toT(sh.start)}–${toT(sh.end)}</span></p></div>
-  <dl class="card sum">${sh.plan.map(ds=>`<dt>${esc(cap(fmtD(ds,{weekday:"short",day:"numeric",month:"short"})))}</dt><dd class="num">${eur(each)}</dd>`).join("")}<dt>Totale</dt><dd class="num" style="font-size:1.2rem">${eur(tot)}</dd></dl>
+  <dl class="card sum">${sh.plan.map(ds=>`<dt>${esc(cap(fmtD(ds,{weekday:"short",day:"numeric",month:"short"})))}</dt><dd class="num">${eur(c.each)}</dd>`).join("")}
+   ${c.cred?`<dt>Ore dal tuo pacchetto</dt><dd class="num">− ${String(c.cred).replace(".",",")} h</dd>`:""}<dt>Imponibile</dt><dd class="num">${eur(c.base)}</dd><dt>IVA 22 %</dt><dd class="num">${eur(c.iva)}</dd><dt>Totale</dt><dd class="num" style="font-size:1.2rem">${eur(tot)}</dd></dl>
   ${sh.skip.length?`<p class="tiny">Non incluso perché lo studio è occupato: ${esc(sh.skip.join(", "))}.</p>`:""}
-  <p class="small">Il pagamento va a <b>${esc(PAYEES.rooms)}</b>.</p>
-  <span class="label">Carta di pagamento</span>
+  <p class="small">Il pagamento va a <b>${esc(PAYEES.rooms)}</b>, che ti emette fattura per l’utilizzo dello studio.</p>
+  ${tot>0?`<span class="label">Carta di pagamento</span>
   ${S.cards.map(c=>`<button type="button" class="opt ${sh.card===c.id?"on":""}" data-act="rpCard" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">scade ${c.exp}</span></span></button>`).join("")}
   <button type="button" class="opt ${sh.card==="new"?"on":""}" data-act="rpCard" data-v="new"><span class="radio"></span><span style="flex:1"><b>Usa un’altra carta</b></span></button>
   ${sh.card==="new"?cardFields("rp"):""}
   <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: nessun addebito reale. Per provare usa 4242 4242 4242 4242.</span></div>
-  <p class="err" id="rp-err"></p><button class="btn primary block" type="submit">Paga ${eur(tot)} e prenota</button><button class="btn ghost block" type="button" data-act="rpBack">Indietro</button></form>`}
+  <p class="err" id="rp-err"></p>`:""}<button class="btn primary block" type="submit">${tot>0?"Paga "+eur(tot)+" e prenota":"Prenota con le ore del pacchetto"}</button><button class="btn ghost block" type="button" data-act="rpBack">Indietro</button></form>`}
 
 /* ---------- Professionista: tariffe ---------- */
+function modalitaCard(){if(isOwner())return "";const m=modalita(S.proId);return `<section class="card stack" style="gap:10px"><h3>Come lavori in Clinia</h3>
+  <div class="seg"><button class="${m==="fitto"?"on":""}" data-act="setModalita" data-v="fitto">Affitto studio</button><button class="${m==="percentuale"?"on":""}" data-act="setModalita" data-v="percentuale">A percentuale</button></div>
+  ${m==="fitto"?`<p class="small muted">Paghi lo studio: affitto mensile, a ore o con un pacchetto prepagato.</p>`:percHTML()}
+  <p class="tiny">${FATTURE_TXT}</p></section>`}
+function pacchettoStato(){if(isOwner())return "";const o=oreResidue(S.proId);return o>0?`<div class="card row" style="gap:10px;background:var(--accent-soft);border-color:var(--accent);margin-bottom:10px">${ic("clock","sm")}<span class="small">Ti restano <b>${String(o).replace(".",",")} ore</b> prepagate.</span></div>`:""}
 function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack" style="gap:20px"><h1 class="h-sec" style="font-size:1.6rem">Tariffe</h1>
-  <section class="card"><h3 style="margin-bottom:8px">Studi: contratto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
-  <section class="card"><h3 style="margin-bottom:4px">Uso occasionale a ore</h3><p class="tiny" style="margin-bottom:8px">Tariffe indicative, da confermare con Clinia.</p><div style="overflow-x:auto"><table class="tar"><thead><tr><th>Studio</th><th>1 ora</th><th>4 ore</th><th>Giornata</th></tr></thead><tbody>
-   ${ROOMS.map(r=>{const t=roomTariff(r);return `<tr><td><b>${esc(r.name)}</b><br><span class="tiny">${ROOM_TYPES[r.type].label}</span></td><td>${eur(t.ora)}</td><td>${eur(t.mezza)}</td><td>${eur(t.giornata)}</td></tr>`}).join("")}</tbody></table></div>
-   <p class="tiny" style="margin-top:8px">Oltre le 4 ore si aggiunge la tariffa oraria fino al massimo della giornata.</p></section>
-  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">I pazienti vedono questi prezzi quando prenotano.</p>
+  ${modalitaCard()}
+  <section class="card"><h3 style="margin-bottom:8px">Studi: affitto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
+  <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti</h3>${pacchettoStato()}${tariffeOreHTML(!isOwner())}</section>
+  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">Il prezzo delle visite lo decidi tu: i pazienti lo vedono quando prenotano. La fattura al paziente la emetti tu.</p>
    <div class="svc-edit tiny"><span>Prestazione</span><span>Minuti</span><span>Prezzo €</span></div>
    ${svc.map(s=>`<div class="svc-edit"><span class="small" style="font-weight:700">${esc(s.name)}</span><input value="${s.dur}" disabled aria-label="Durata ${esc(s.name)}"><input id="pr-${s.i}" name="p${s.i}" inputmode="decimal" value="${s.price}" aria-label="Prezzo ${esc(s.name)}"></div>`).join("")}
    <button class="btn primary block" type="submit">Salva prezzi</button></form></div>`}
@@ -1704,6 +1741,10 @@ const ACT={
   pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
   installApp:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
+  setModalita:d=>{S.modalita[S.proId]=d.v;save();toast(d.v==="percentuale"?"Lavori a percentuale: gli studi si prenotano senza pagare":"Lavori ad affitto dello studio");render()},
+  buyPack:d=>{const o=+d.v,pr=(TARIFFE_ORE.pacchetti.find(x=>x[0]===o)||[])[1];if(!pr)return;const base=o*pr,iva=ivaDi(base);
+    if(!confirm(`Acquistare il pacchetto da ${o} ore a ${pr} € l’ora?\nImponibile ${base} € + IVA ${String(iva).replace(".",",")} € = ${String(r2(base+iva)).replace(".",",")} €.\n(Versione di prova: pagamento simulato)`))return;
+    S.pacchetti.push({id:uid(),docId:S.proId,ore:o,prezzoOra:pr,base,iva,at:Date.now()});save();toast(`Pacchetto da ${o} ore acquistato`);render()},
   hideBanner:()=>{S.hideBanner=true;save();render()},
   openPage:d=>{if(d.v.startsWith("tab:")){UI.tab=d.v.slice(4);UI.stack=[];return render()}if(d.v==="payments")UI.addCard=false;saveNote();push({page:d.v})},
   pickPerson:()=>{UI.sheet={type:"persons"};render()},
@@ -1793,10 +1834,11 @@ const ACT={
       const clash=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
       if(clash||!OPEN[parseD(ds).getDay()])skip.push(fmtD(ds,{day:"numeric",month:"short"}));else plan.push(ds)}
     if(!plan.length){UI.sheet=null;return toast("Nessuna prenotazione: lo studio è occupato")}
+    const perc=!isOwner()&&modalita(S.proId)==="percentuale";
     if(DB.on&&(isOwner()||!STRIPE.publishableKey)){const list=plan.map(ds=>({doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));UI.sheet=null;render();
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
-    if(isOwner()){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));save();UI.sheet=null;
-      return toast(`${r.name} prenotato${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
+    if(isOwner()||perc){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
+      return toast(`${r.name} prenotato${perc?" a percentuale":""}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
   rpCard:d=>{UI.sheet.card=d.v;render()},
   rpBack:()=>{UI.sheet.step=null;render()},
@@ -1847,12 +1889,14 @@ const FORMS={
   sub:f=>{const err=$("#sb-err"),c=readCard(f,err);if(!c)return;if(!f.terms.checked){err.textContent="Per continuare accetta le condizioni dell’abbonamento.";return}
     S.cards.push(c);S.subs[S.auth.email]={plan:planFor().name,price:planFor().price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};save();
     notify("Abbonamento attivato",`${SUB.name}: ${eur(SUB.price)} addebitati su ${c.brand} •••• ${c.last4} (simulato).`,"Clinia");afterAuthFlow()},
-  roompay:f=>{const sh=UI.sheet,r=room(sh.id),each=roomCost(r.id,sh.end-sh.start);let card;
-    if(sh.card==="new"){card=readCard(f,$("#rp-err"));if(!card)return;S.cards.push(card)}else card=S.cards.find(c=>c.id===sh.card);
-    const pid=uid(),tot=Math.round(each*sh.plan.length*100)/100;
-    sh.plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,paid:{amount:each,payment:pid}}));
-    S.roomPayments.unshift({id:pid,doctorId:S.proId,roomId:r.id,dates:sh.plan.slice(),start:toT(sh.start),end:toT(sh.end),amount:tot,card:card.brand+" •••• "+card.last4,at:Date.now(),refund:0});
-    save();UI.sheet=null;render();notify("Pagamento riuscito",`${eur(tot)} pagati a Clinia per ${r.name} con ${card.brand} •••• ${card.last4} (simulato).`,"Clinia")},
+  roompay:f=>{const sh=UI.sheet,r=room(sh.id),c=roomPayCalc(sh,r);let card=null;
+    if(c.tot>0){if(sh.card==="new"){card=readCard(f,$("#rp-err"));if(!card)return;S.cards.push(card)}else card=S.cards.find(x=>x.id===sh.card)}
+    const pid=uid(),per=sh.plan.length?r2(c.base/sh.plan.length):0;
+    sh.plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,paid:{amount:per,payment:pid}}));
+    if(c.cred>0)S.oreUsate.push({docId:S.proId,ore:c.cred,at:Date.now(),roomId:r.id,payment:pid});
+    if(c.base>0)S.roomPayments.unshift({id:pid,doctorId:S.proId,roomId:r.id,dates:sh.plan.slice(),start:toT(sh.start),end:toT(sh.end),amount:c.base,iva:c.iva,card:card.brand+" •••• "+card.last4,at:Date.now(),refund:0});
+    save();UI.sheet=null;render();
+    notify(c.base>0?"Pagamento riuscito":"Studio prenotato",c.base>0?`${eur(c.tot)} (IVA inclusa) pagati a Clinia per ${r.name} con ${card.brand} •••• ${card.last4} (simulato).`:`${r.name} prenotato con ${String(c.cred).replace(".",",")} ${c.cred===1?"ora":"ore"} del tuo pacchetto.`,"Clinia")},
   request:f=>{setTimeout(()=>f.reset());S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
   proprof:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#pp-err");err.textContent="";
     const em=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -1870,12 +1914,10 @@ const FORMS={
     S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio};applyOverrides();
     UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
     if(UI.screen==="proprof")afterAuthFlow();else{UI.stack.pop();render()}},
-  room:f=>{const id=f.dataset.id,n=k=>parseFloat(String(f[k].value).replace(",",".")),err=$("#re-"+id);
-    const name=f.name.value.trim(),t={ora:n("ora"),mezza:n("mezza"),giornata:n("giornata")};
-    if(!name)return err.textContent="Dai un nome alla stanza.";
-    if([t.ora,t.mezza,t.giornata].some(v=>isNaN(v)||v<0))return err.textContent="Le tariffe devono essere numeri, per esempio 15 o 15,50.";
-    if(t.mezza<t.ora||t.giornata<t.mezza)return err.textContent="Controlla le tariffe: 4 ore costano almeno quanto 1 ora e la giornata almeno quanto 4 ore.";
-    S.roomEdits[id]={name,type:f.type.value,tariff:t};applyRoomEdits();save();DB.saveRoomEdit(id,S.roomEdits[id]);toast(name+" salvata")},
+  room:f=>{const id=f.dataset.id,err=$("#re-"+id),ora=parseFloat(String(f.ora.value).replace(",","."));
+    const name=f.name.value.trim();if(!name)return err.textContent="Dai un nome allo studio.";
+    if(isNaN(ora)||ora<0)return err.textContent="La tariffa deve essere un numero, per esempio 40 o 40,50.";
+    S.roomEdits[id]={name,type:f.type.value,tariff:{ora}};applyRoomEdits();save();DB.saveRoomEdit(id,{name,type:f.type.value,tariff:{ora,mezza:ora*4,giornata:ora*8}});toast(name+" salvato")},
   expense:f=>{const err=$("#ex-err"),a=parseFloat(String(f.amount.value).replace(",","."));
     if(!f.desc.value.trim())return err.textContent="Scrivi una descrizione.";if(isNaN(a)||a<=0)return err.textContent="Inserisci un importo valido.";if(!f.date.value)return err.textContent="Scegli la data.";
     const id=uid(),file=UI.expFile||null;S.expenses.push({id,date:f.date.value,desc:f.desc.value.trim(),cat:f.cat.value,amount:r2(a),file:file?{name:file.name,size:file.size}:null});
@@ -1934,7 +1976,7 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="expFile"&&e.target.files[0]){UI.expFile=e.target.files[0];const t=$("#ex-file");if(t)t.innerHTML="<b>"+esc(UI.expFile.name)+"</b> allegata"}
   if(k==="fpmDoc")addFpmDocs([...e.target.files]);
   if(k==="fpmChk"){const m=e.target.dataset.m;S.fpm.ric[m]={...(S.fpm.ric[m]||{}),[e.target.dataset.k]:e.target.checked};save()}
-  if(k==="fpmSet"){const key=e.target.dataset.k;if(key==="under35")S.fpm.under35=e.target.checked;else if(key==="aliquota")S.fpm.aliquota=+e.target.value;else if(key==="fee"){S.fpm.fee=+e.target.value;APP_FEE=S.fpm.fee}save();render()}
+  if(k==="fpmSet"){const key=e.target.dataset.k;if(key==="under35")S.fpm.under35=e.target.checked;else if(key==="aliquota")S.fpm.aliquota=+e.target.value;else if(key==="fondo")S.fpm.fondo=Math.max(0,parseFloat(String(e.target.value).replace(",","."))||0);else if(key==="fee"){S.fpm.fee=+e.target.value;APP_FEE=S.fpm.fee}save();render()}
   if(k==="pagConf"){const m=e.target.dataset.m;if(S.pag[m]){S.pag[m].conf=e.target.checked;save();DB.confPag(m,e.target.checked);toast(e.target.checked?"Ricezione confermata: Clinia lo vede":"Conferma tolta")}render()}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);

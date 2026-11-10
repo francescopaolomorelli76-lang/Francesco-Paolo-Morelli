@@ -1272,7 +1272,7 @@ function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)
    <p class="tiny">${esc(ARCA.nome)} · ${esc(ARCA.sede)} · C.F. ${ARCA.cf}</p></section>
   <section class="card"><h3 style="margin-bottom:6px">Donazioni mese per mese</h3>${st.map(x=>`<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${x.pren} prenotazioni</span></span><b class="num">${eur(x.importo)}</b><span class="badge ${x.fatto?"":"grey"}">${x.fatto?"Bonificato":"In arrivo"}</span></div>`).join("")}</section>
   ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
-const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",desc:"Ingresso e sala d’attesa di Clinia"}};
+const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",arco:165,desc:"Ingresso e sala d’attesa di Clinia"}};
 const spazio3d=id=>SPAZI[id];
 function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">${bar(esc(sp.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
@@ -1942,10 +1942,10 @@ async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+i
   ren.setPixelRatio(Math.min(2,devicePixelRatio||1));ren.setSize(W,H);el.insertBefore(ren.domElement,hint);
   const scene=new T.Scene(),cam=new T.PerspectiveCamera(75,W/H,0.05,100);
   const load=src=>new Promise(ok=>new T.TextureLoader().load(src,t=>{t.minFilter=T.LinearFilter;ok(t)}));
-  const first=await load(photos[0]),asp=first.image.width/first.image.height;
+  const first=await load(photos[0]),asp=first.image.width/first.image.height,arcoFisso=!own.length&&spazio3d(id)?spazio3d(id).arco:0;
   let arc=0,vHalf=80;
-  if(photos.length===1&&asp>=1.9){/* panoramica: cilindro con l’arco coperto dalla foto (circa 60° in verticale) */
-    arc=Math.min(360,asp*60);const R=5,th=T.MathUtils.degToRad(arc),Hc=th*R/asp;vHalf=T.MathUtils.radToDeg(Math.atan(Hc/2/R));
+  if(photos.length===1&&(asp>=1.9||arcoFisso)){/* panoramica: cilindro con l’arco coperto dalla foto (circa 60° in verticale) */
+    arc=arcoFisso||Math.min(360,asp*60);const R=5,th=T.MathUtils.degToRad(arc),Hc=th*R/asp;vHalf=T.MathUtils.radToDeg(Math.atan(Hc/2/R));
     const g=new T.CylinderGeometry(R,R,Hc,128,1,true,-Math.PI/2-th/2,th);g.scale(-1,1,1);scene.add(new T.Mesh(g,new T.MeshBasicMaterial({map:first,side:T.DoubleSide})));
     const cv=document.createElement("canvas");cv.width=64;cv.height=32;const cx=cv.getContext("2d");cx.drawImage(first.image,0,0,64,32);
     const avg=y=>{const d=cx.getImageData(0,y,64,1).data;let r=0,g2=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g2+=d[i+1];b+=d[i+2]}const n=d.length/4;return new T.Color(r/n/255,g2/n/255,b/n/255)};

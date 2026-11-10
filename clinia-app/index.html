@@ -417,6 +417,9 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .pp-photo{width:112px;height:112px;border-radius:28px;font-size:2.4rem}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:380px){.fgrid{grid-template-columns:1fr}}
+.r3dthumb{position:relative;display:block}.r3dthumb img{display:block;width:100%;height:150px;object-fit:cover}
+.r3dcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;background:linear-gradient(transparent,rgba(8,30,38,.78));color:#fff;display:flex;flex-direction:column}.r3dcap small{opacity:.9}
+.r3dbadge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.92);color:#0b2b38;font-weight:800;font-size:.75rem;padding:4px 9px;border-radius:999px}
 .r3d{position:relative;height:min(62vh,520px);border-radius:var(--r);overflow:hidden;background:#0b2b38;touch-action:none;cursor:grab}
 .r3d canvas{display:block;width:100%;height:100%}
 .r3d .hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:.78rem;font-weight:600;padding:6px 12px;border-radius:999px;pointer-events:none;white-space:nowrap}
@@ -683,7 +686,7 @@ function screenHTML(){
   switch(UI.screen){
     case "splash":return `<div class="screen splash"><svg viewBox="0 0 60 70"><use href="#mark"/></svg><div class="spinner" role="status" aria-label="Caricamento"></div><div class="fpm-splash"><img src="img/fpm-logo-sm.png" alt="">FPM WebDesignTech</div></div>`;
     case "cookie":return cookieScreen();
-    case "welcome":return welcomeScreen();
+    case "welcome":{const t=UI.stack[UI.stack.length-1];return t&&t.page==="room3d"?room3dPage(t.id):welcomeScreen()}
     case "proprof":return proProfScreen(true);
     case "iban":return ibanScreen(true);
     case "sub":return subScreen();
@@ -737,6 +740,7 @@ function welcomeScreen(){return `<div class="screen"><div class="content"><div c
   ${markSvg(52)}<h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
   <button class="rolecard" data-act="chooseRole" data-v="paziente"><span class="ri">${ic("user")}</span><span style="flex:1;min-width:0"><b>Sono un paziente</b><span class="muted small" style="display:block;margin:4px 0 10px">Prenota le visite, ricevi i promemoria, conserva referti ed esami.</span><span class="badge">Gratis</span></span>${ic("right")}</button>
   <button class="rolecard" data-act="chooseRole" data-v="professionista"><span class="ri az">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b>Sono uno specialista</b><span class="muted small" style="display:block;margin:4px 0 10px">Agenda, prenotazione degli studi, pazienti, messaggi e pagamenti.</span><span class="badge az">Abbonamento mensile · ${eur(SUB.price)}/mese</span></span>${ic("right")}</button>
+  <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
   <div class="stack" style="gap:6px;margin-top:6px"><span class="label" style="text-align:center">Accesso riservato</span><div class="reserved"><button data-act="chooseRole" data-v="titolare">${ic("lock","sm")} Direzione Clinia</button><button data-act="chooseRole" data-v="fpm">${ic("lock","sm")} Area FPM</button></div></div>
   <p class="tiny" style="text-align:center;margin-top:10px">Clinia · ${esc(CLINIC.address)}</p></div></div></div>`}
 function authScreen(){const r=UI.authRole,pro=r==="professionista";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="authClose" aria-label="Indietro">${ic("back")}</button><span style="flex:1"></span></div>
@@ -939,6 +943,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
   <button class="searchbox" data-act="openSearch">${ic("search")}<span class="muted">Cerca specialisti e prestazioni</span></button>
   ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${DOCTORS.length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
   <button class="card row" data-act="openPage" data-v="arca" style="text-align:left;width:100%;gap:12px;background:var(--accent-soft);border-color:var(--accent)"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--accent-2);display:grid;place-items:center">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Ogni prenotazione aiuta Progetto Arca</b><span class="tiny">Il 3 % del servizio va a chi vive in strada. Scopri la storia</span></span>${ic("right","sm")}</button>
+  <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
   <div class="chips">${CHIPS.map((c,i)=>`<button class="chip" data-act="chip" data-v="${i}"><span class="dot a-${c[1]}"></span>${c[0]}</button>`).join("")}</div>
   ${na?`<section class="stack" style="gap:10px"><h2 class="h-sec">La tua prossima visita</h2>${visitCard(na,true)}</section>`:""}
   ${logged()?"":`<section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Configura il tuo account</h2>
@@ -1021,7 +1026,7 @@ function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(al
    <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${TARIFFARIO.ufficiale?"":`<p class="tiny">Prezzi indicativi, in attesa del tariffario ufficiale.</p>`}
     ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min${s.online?" · online":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
-    <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px">${rs.map(r=>`<button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="${r}">${ic("door","sm")} ${esc(room(r).name)} · vedi in 3D</button>`).join("")}</p></div></div></section>
+    <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="small" style="margin-top:6px"><button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="reception">${ic("door","sm")} Reception · vedi in 3D</button>${rs.map(r=>`<button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="${r}">${ic("door","sm")} ${esc(room(r).name)} · vedi in 3D</button>`).join("")}</p></div></div></section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Esperienza</h3><ul class="blist">${d.bio.map(b=>`<li>${esc(b)}</li>`).join("")}</ul></section>
    <button class="btn ghost block" data-act="openChat" data-id="${id}">${ic("chat","sm")} Scrivi allo specialista</button>
   </div></div><div class="actions"><button class="btn primary block" data-act="bookSvc" data-id="${id}" data-v="0">Prenota una visita</button></div></div>`}
@@ -1105,7 +1110,7 @@ function settingsBody(){if(isFpm())return `<div class="pad stack" style="gap:16p
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
-  <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p></div></div>
+  <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p><button class="btn ghost sm" data-act="room3d" data-id="reception">${ic("door","sm")} Reception in 3D</button></div></div>
   <div class="list"><button class="li" data-act="openCopyright">${ic("shield")}<span class="t">Copyright e note legali<small>© ${LEGAL.anno} FPM WebDesignTech</small></span>${ic("right","sm")}</button></div>
   <div class="card row small">${ic("shield","sm")}<span>${DB.on?"Dati salvati sul database Clinia, aggiornati in tempo reale":"Versione di prova: i dati restano su questo telefono"}</span></div>
   <div class="stack" style="gap:8px"><span class="label">Versione di prova</span><div class="list"><button class="li" data-act="switchRole">${ic("swap")}<span class="t">Passa a ${pro?"paziente":"professionista"}<small>Per provare entrambi i lati dell’app sullo stesso telefono</small></span>${ic("right","sm")}</button><button class="li" data-act="askReset">${ic("refresh")}<span class="t">Ripristina dati di prova<small>Cancella account, visite e prenotazioni salvate qui</small></span></button></div></div>
@@ -1267,7 +1272,13 @@ function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)
    <p class="tiny">${esc(ARCA.nome)} · ${esc(ARCA.sede)} · C.F. ${ARCA.cf}</p></section>
   <section class="card"><h3 style="margin-bottom:6px">Donazioni mese per mese</h3>${st.map(x=>`<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${x.pren} prenotazioni</span></span><b class="num">${eur(x.importo)}</b><span class="badge ${x.fatto?"":"grey"}">${x.fatto?"Bonificato":"In arrivo"}</span></div>`).join("")}</section>
   ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
-function room3dPage(id){const r=room(id);return `<div class="screen">${bar(esc(r.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
+const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",desc:"Ingresso e sala d’attesa di Clinia"}};
+const spazio3d=id=>SPAZI[id];
+function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">${bar(esc(sp.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
+  <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
+  <p class="tiny">Vista panoramica: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti.</p>
+  <p class="small"><b>${esc(sp.name)}</b> · ${esc(sp.desc)} · ${esc(CLINIC.address)}</p></div></div></div>`;
+  const r=room(id);return `<div class="screen">${bar(esc(r.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
   <p class="tiny">Vista ricostruita dalle foto delle pareti caricate dalla direzione: trascina per guardarti intorno, pizzica o usa la rotella per avvicinarti. Con una sola foto panoramica la vista è a 360°.</p>
   <p class="small"><b>${esc(r.name)}</b> · ${ROOM_TYPES[r.type].label} · ${eur(roomTariff(r).ora)} l’ora</p></div></div></div>`}
@@ -1319,7 +1330,7 @@ function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadR
     <label class="field"><span>Tipologia</span><select id="rt-${r.id}" name="type">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?"selected":""}>${v.label}</option>`).join("")}</select></label></div>
    <div class="rfields"><label>1 ora €<input id="ro-${r.id}" name="ora" inputmode="decimal" value="${t.ora}"></label><label>4 ore €<input id="rm-${r.id}" name="mezza" inputmode="decimal" value="${t.mezza}"></label><label>Giornata €<input id="rg-${r.id}" name="giornata" inputmode="decimal" value="${t.giornata}"></label></div>
    ${f.length?`<div class="thumbs">${f.map((src,i)=>`<div><img src="${src}" alt="Foto ${i+1} di ${esc(r.name)}"><button type="button" data-act="delRoomPhoto" data-id="${r.id}" data-v="${i}" aria-label="Elimina foto">${ic("x")}</button></div>`).join("")}</div>`:""}
-   <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui le foto delle pareti (fino a 6) oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
+   <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
    <p class="err" id="re-${r.id}"></p><button class="btn primary sm" type="submit">Salva ${esc(r.name)}</button></form>`}).join("")}
   ${TARIFFARIO.ufficiale?"":`<p class="tiny">Le tariffe iniziali sono di esempio: inserisci quelle ufficiali e salva ogni stanza.</p>`}`}
 const EXP_CAT=["Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
@@ -1916,14 +1927,14 @@ const IDB={db:null,async open(){if(this.db)return this.db;this.db=await new Prom
   async get(k){try{const db=await this.open();return await new Promise(ok=>{const q=db.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(undefined)})}catch(e){return undefined}},
   async set(k,v){try{const db=await this.open();await new Promise((ok,ko)=>{const t=db.transaction("kv","readwrite");v==null?t.objectStore("kv").delete(k):t.objectStore("kv").put(v,k);t.oncomplete=ok;t.onerror=()=>ko(t.error)});return true}catch(e){toast("Spazio esaurito sul telefono: file non salvato");return false}}};
 async function loadRoomPhotos(){UI.roomPhotosLoaded=true;UI.roomPhotos={};for(const r of ROOMS)UI.roomPhotos[r.id]=(await IDB.get("room:"+r.id))||[];render()}
-const shrink=(file,max=1400)=>new Promise((ok,ko)=>{const u=URL.createObjectURL(file),img=new Image();img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",.8))};img.onerror=()=>ko(new Error("immagine"));img.src=u});
+const shrink=(file,max=1400)=>new Promise((ok,ko)=>{const u=URL.createObjectURL(file),img=new Image();img.onload=()=>{const k=Math.min(1,(img.width/img.height>=1.9?Math.max(max,4096):max)/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",.8))};img.onerror=()=>ko(new Error("immagine"));img.src=u});
 async function addRoomPhotos(id,files){files=files.filter(f=>f.type.startsWith("image/"));if(!files.length)return toast("Scegli delle foto (JPG o PNG).");
   const l=(await IDB.get("room:"+id))||[];for(const f of files){if(l.length>=6){toast("Massimo 6 foto per stanza");break}try{l.push(await shrink(f,/pano/i.test(f.name)?4096:1400))}catch(e){toast("Non riesco a leggere "+f.name)}}
   if(await IDB.set("room:"+id,l)){UI.roomPhotos=UI.roomPhotos||{};UI.roomPhotos[id]=l;toast("Foto salvate: ora puoi vedere la stanza in 3D");render()}}
 async function addFpmDocs(files){if(!files.length)return;const cat=($("#fd-cat")||{}).value||"Altro";for(const f of files){if(f.size>15*1024*1024){toast(f.name+" supera 15 MB");continue}
   const id=uid();if(await IDB.set("fpm:"+id,{name:f.name,blob:f}))S.fpm.docs.push({id,name:f.name,size:f.size,cat,at:Date.now()})}save();toast(files.length>1?"Documenti caricati":"Documento caricato");render()}
 let v3d=null;
-async function start3D(el){const id=el.dataset.room,photos=(await IDB.get("room:"+id))||[],hint=el.querySelector(".hint");
+async function start3D(el){const id=el.dataset.room,own=(await IDB.get("room:"+id))||[],photos=own.length?own:spazio3d(id)?[spazio3d(id).foto]:[],hint=el.querySelector(".hint");
   if(!photos.length){hint.textContent="La direzione non ha ancora caricato foto di questa stanza.";return}
   try{if(!window.THREE)await new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)})}catch(e){hint.textContent="Non riesco a caricare il motore 3D. Controlla la connessione.";return}
   if(!el.isConnected)return;const T=window.THREE,W=el.clientWidth,H=el.clientHeight;
@@ -1932,20 +1943,30 @@ async function start3D(el){const id=el.dataset.room,photos=(await IDB.get("room:
   const scene=new T.Scene(),cam=new T.PerspectiveCamera(75,W/H,0.05,100);
   const load=src=>new Promise(ok=>new T.TextureLoader().load(src,t=>{t.minFilter=T.LinearFilter;ok(t)}));
   const first=await load(photos[0]),asp=first.image.width/first.image.height;
-  if(photos.length===1&&asp>=1.9){const g=new T.SphereGeometry(10,64,40);g.scale(-1,1,1);scene.add(new T.Mesh(g,new T.MeshBasicMaterial({map:first})))}
+  let arc=0,vHalf=80;
+  if(photos.length===1&&asp>=1.9){/* panoramica: cilindro con l’arco coperto dalla foto (circa 60° in verticale) */
+    arc=Math.min(360,asp*60);const R=5,th=T.MathUtils.degToRad(arc),Hc=th*R/asp;vHalf=T.MathUtils.radToDeg(Math.atan(Hc/2/R));
+    const g=new T.CylinderGeometry(R,R,Hc,128,1,true,-Math.PI/2-th/2,th);g.scale(-1,1,1);scene.add(new T.Mesh(g,new T.MeshBasicMaterial({map:first,side:T.DoubleSide})));
+    const cv=document.createElement("canvas");cv.width=64;cv.height=32;const cx=cv.getContext("2d");cx.drawImage(first.image,0,0,64,32);
+    const avg=y=>{const d=cx.getImageData(0,y,64,1).data;let r=0,g2=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g2+=d[i+1];b+=d[i+2]}const n=d.length/4;return new T.Color(r/n/255,g2/n/255,b/n/255)};
+    const disc=(y,c)=>{const m=new T.Mesh(new T.CircleGeometry(R,96),new T.MeshBasicMaterial({color:c,side:T.DoubleSide}));m.rotation.x=Math.PI/2;m.position.y=y;scene.add(m)};
+    disc(-Hc/2,avg(31));disc(Hc/2,avg(0));if(arc<360)scene.add(new T.Mesh(new T.CylinderGeometry(R*1.001,R*1.001,Hc,64,1,true,-Math.PI/2-(2*Math.PI-th)/2,2*Math.PI-th),new T.MeshBasicMaterial({color:avg(16),side:T.DoubleSide})));
+    cam.fov=Math.min(70,2*vHalf-2);cam.updateProjectionMatrix()}
   else{const tex=[first];for(let i=1;i<photos.length;i++)tex.push(await load(photos[i]));
     const wall=i=>{const t=tex[i%tex.length].clone();t.needsUpdate=true;t.wrapS=T.RepeatWrapping;t.repeat.x=-1;return new T.MeshBasicMaterial({map:t,side:T.BackSide})};
     const plain=c=>new T.MeshBasicMaterial({color:c,side:T.BackSide});
     scene.add(new T.Mesh(new T.BoxGeometry(6,3,6),[wall(1),wall(3),plain(0xf4f6f6),plain(0xc9b8a4),wall(2),wall(0)]))}
-  let lon=0,lat=0,drag=null,idle=true,pinch=0;
+  let lon=0,lat=0,drag=null,idle=true,pinch=0,dir=1;
+  const camH=()=>T.MathUtils.radToDeg(Math.atan(Math.tan(T.MathUtils.degToRad(cam.fov/2))*cam.aspect)),lonMax=()=>arc&&arc<360?Math.max(0,arc/2-camH()):1e9,latMax=()=>Math.max(0,Math.min(80,vHalf-cam.fov/2));
+  const clamp=()=>{const L=lonMax(),A=latMax();lon=Math.max(-L,Math.min(L,lon));lat=Math.max(-A,Math.min(A,lat))};
   el.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,lon,lat};idle=false;el.setPointerCapture(e.pointerId);hint.style.display="none"};
-  el.onpointermove=e=>{if(!drag)return;lon=drag.lon-(e.clientX-drag.x)*0.25;lat=Math.max(-80,Math.min(80,drag.lat+(e.clientY-drag.y)*0.25))};
+  el.onpointermove=e=>{if(!drag)return;lon=drag.lon-(e.clientX-drag.x)*0.25;lat=drag.lat+(e.clientY-drag.y)*0.25;clamp()};
   el.onpointerup=el.onpointercancel=()=>drag=null;
-  el.onwheel=e=>{e.preventDefault();cam.fov=Math.max(35,Math.min(95,cam.fov+e.deltaY*0.04));cam.updateProjectionMatrix()};
-  el.ontouchmove=e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinch){cam.fov=Math.max(35,Math.min(95,cam.fov-(d-pinch)*0.1));cam.updateProjectionMatrix()}pinch=d}};
+  el.onwheel=e=>{e.preventDefault();cam.fov=Math.max(35,Math.min(arc?2*vHalf-2:95,cam.fov+e.deltaY*0.04));cam.updateProjectionMatrix()};
+  el.ontouchmove=e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinch){cam.fov=Math.max(35,Math.min(arc?2*vHalf-2:95,cam.fov-(d-pinch)*0.1));cam.updateProjectionMatrix()}pinch=d}};
   el.ontouchend=()=>pinch=0;
   hint.textContent="Trascina per guardarti intorno";
-  const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle)lon+=0.06;const phi=T.MathUtils.degToRad(90-lat),th=T.MathUtils.degToRad(lon);
+  const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle){lon+=0.06*dir;const L=lonMax();if(L<1e9&&Math.abs(lon)>=L)dir=-dir}clamp();const phi=T.MathUtils.degToRad(90-lat),th=T.MathUtils.degToRad(lon);
     cam.lookAt(Math.sin(phi)*Math.cos(th),Math.cos(phi),Math.sin(phi)*Math.sin(th));ren.render(scene,cam);requestAnimationFrame(tick)};tick()}
 
 /* Avvio */

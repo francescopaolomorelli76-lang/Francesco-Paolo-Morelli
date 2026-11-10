@@ -1,6 +1,13 @@
 <title>Clinia App</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#2b4a64">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/icone/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="img/clinia-mark.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Clinia">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&family=Lora:wght@500;600;700&display=swap">
@@ -591,11 +598,13 @@ const SCHEDULE=[["marco-morelli",[1,2,3,4,5],"09:00","13:00","s4"],["feliciana-p
  ["enrico-pierangeli",[2],"15:00","19:00","s1"],["michele-picciallo",[1,4],"15:00","19:00","s2"],["vincenzo-de-leo",[3],"09:00","13:00","s1"],
  ["donato-panetta",[2,5],"09:00","13:00","s2"],["maria-alessandra-lassandro",[1,3],"15:00","19:00","s3"],["francesca-trabace",[2,4],"09:00","13:00","s5"],
  ["angelo-costantiello",[6],"09:00","13:00","s6"],["angelo-costantiello",[3],"15:00","19:00","s6"],["rossella-conversano",[2,4],"16:00","20:00","s4"]];
-const DEMO_NAMES=["Anna R.","Giuseppe L.","Maria T.","Vito D.","Rosa C.","Nicola P.","Carmela S.","Antonio M.","Lucia F.","Domenico G."];
+// Pazienti di esempio: nomi volutamente finti, solo per la versione di prova
+const DEMO_NAMES=["Mario Prova","Laura Esempio","Paolo Demo","Giulia Prova","Luca Esempio","Sara Demo","Andrea Prova","Elena Esempio","Franco Demo","Chiara Prova"];
 const HORIZON=21;
 
 /* ===================== Stato ===================== */
-const KEY="clinia-app-v1";
+const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
+try{localStorage.removeItem("clinia-app-v1")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
   rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7},payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
@@ -1135,6 +1144,7 @@ function settingsBody(){if(isFpm())return `<div class="pad stack" style="gap:16p
   return `<div class="pad stack" style="gap:20px"><div class="row"><span class="av lg round" style="width:72px;height:72px;font-size:1.6rem">${esc(initials(u.nome+" "+u.cognome))}</span><div style="min-width:0"><h1 style="font-size:1.35rem;font-weight:800">${esc(u.nome+" "+u.cognome)}</h1><p class="muted small">${esc(S.auth.email)}${S.auth.provider?" · accesso con "+(S.auth.provider==="apple"?"Apple":"Google"):""}</p><span class="badge ${pro?"az":""}" style="margin-top:6px">${pro?"Professionista":"Paziente"}</span></div></div>
   ${pro?`<div class="card row">${docAv(d,"sm")}<div style="min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div></div>`:""}
   <div class="stack" style="gap:8px"><span class="label">Dati personali</span><div class="list"><div class="li">${ic("phone")}<span class="t">Telefono<small>${esc(u.pref+" "+u.tel)}</small></span></div><div class="li">${ic("cal")}<span class="t">Data di nascita<small>${esc(fmtD(u.nascita,{day:"numeric",month:"long",year:"numeric"}))}</small></span></div></div></div>
+  ${installCard()}
   <div class="stack" style="gap:8px"><span class="label">Sicurezza</span><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura dell’app</small></span>${ic("right","sm")}</button>${sw("toggleFace",S.faceid,"Face ID / impronta","Sblocca l’app senza PIN (simulato nella versione web)","face")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Notifiche e privacy</span><div class="list">${sw("toggleNotif",S.notif,"Notifiche","Promemoria e messaggi","bell")}${sw("toggleHealth",S.health==="yes","Consenso dati sanitari","Promemoria e documenti medici","shield")}${sw("toggleCookie",S.cookie==="all","Cookie di analisi","Solo i necessari se disattivato","eye")}${sw("toggleStats",S.stats===true,"Statistiche anonime","Aiutano a migliorare l’app, senza dati sanitari","refresh")}</div></div>
   <div class="stack" style="gap:8px"><span class="label">Clinia</span><div class="card stack" style="gap:8px"><p class="row" style="align-items:flex-start">${ic("pin","sm")}<span>${esc(CLINIC.address)}</span></p><p class="row">${ic("phone","sm")}<span class="num" style="user-select:all">${esc(CLINIC.phone)}</span></p><p class="row">${ic("mail","sm")}<span style="user-select:all">${esc(CLINIC.email)}</span></p><p class="tiny">${esc(CLINIC.hoursText)}</p><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="openPage" data-v="chisiamo">Chi siamo</button><button class="btn ghost sm" data-act="room3d" data-id="reception">${ic("door","sm")} Reception in 3D</button></div><p class="tiny">${esc(CLINIC.ragione)} · PEC ${esc(CLINIC.pec)}</p></div></div>
@@ -1693,6 +1703,7 @@ const ACT={
   health:d=>{S.health=d.v;save();afterAuthFlow()},
   pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
+  installApp:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
   hideBanner:()=>{S.hideBanner=true;save();render()},
   openPage:d=>{if(d.v.startsWith("tab:")){UI.tab=d.v.slice(4);UI.stack=[];return render()}if(d.v==="payments")UI.addCard=false;saveNote();push({page:d.v})},
   pickPerson:()=>{UI.sheet={type:"persons"};render()},
@@ -2111,6 +2122,15 @@ async function startModel(el){const hint=el.querySelector(".hint");
   const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle)yaw+=0.004;
     cam.position.set(tgt.x+dist*Math.cos(pit)*Math.sin(yaw),tgt.y+dist*Math.sin(pit),tgt.z+dist*Math.cos(pit)*Math.cos(yaw));cam.lookAt(tgt);ren.render(scene,cam);requestAnimationFrame(tick)};tick()}
 
+/* ---------- App installabile (PWA) ---------- */
+const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+let installEvt=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;render()});
+try{if("serviceWorker" in navigator&&location.protocol==="https:"&&window.top===window)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+function installCard(){if(standalone())return "";const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  return `<div class="card stack" style="gap:8px"><div class="row" style="gap:10px">${markSvg(24)}<b>Installa Clinia sul telefono</b></div>
+  ${installEvt?`<p class="small muted">Aggiungi Clinia alla schermata Home: si apre a schermo intero, come un’app.</p><button class="btn primary block sm" data-act="installApp">Installa</button>`
+  :ios?`<ol class="small" style="padding-left:20px;margin:0"><li>Apri questa pagina con <b>Safari</b>.</li><li>Tocca il tasto <b>Condividi</b> (il quadrato con la freccia in su).</li><li>Scegli <b>Aggiungi alla schermata Home</b>, poi <b>Aggiungi</b>.</li></ol>`
+  :`<p class="small muted">Dal menu del browser (⋮) scegli <b>Installa app</b> o <b>Aggiungi a schermata Home</b>.</p>`}</div>`}
 /* Avvio */
 render();
 setTimeout(()=>{if(!S.cookie)return go("cookie");if(S.pin&&logged()&&(!isPro()||subActive())){go("lock");if(S.faceid)ACT.faceUnlock();return}if(S.auth)return afterAuthFlow();go("welcome")},1200);

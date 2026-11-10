@@ -73,22 +73,5 @@ insert into public.services (specialist_id,nome,durata_min,prezzo,online,ordine)
   ('rossella-conversano','Seduta di personal training',60,40,false,0),
   ('rossella-conversano','Valutazione motoria funzionale',45,35,false,1);
 
--- Turni fissi di esempio negli studi per le prossime 3 settimane (da sostituire con quelli reali).
-insert into public.room_bookings (specialist_id,room_id,giorno,inizio,fine,stato,gratuito,turno_fisso)
-select s.sp, s.room, d::date, s.inizio::time, s.fine::time, 'confermata', s.sp='marco-morelli', true
-from (values
-  ('marco-morelli','s4','09:00','13:00',array['1','2','3','4','5']::text[]),
-  ('feliciana-pellegrino','s4','14:00','19:00',array['1','3','5']::text[]),
-  ('enrico-pierangeli','s1','15:00','19:00',array['2']::text[]),
-  ('michele-picciallo','s2','15:00','19:00',array['1','4']::text[]),
-  ('vincenzo-de-leo','s1','09:00','13:00',array['3']::text[]),
-  ('donato-panetta','s2','09:00','13:00',array['2','5']::text[]),
-  ('maria-alessandra-lassandro','s3','15:00','19:00',array['1','3']::text[]),
-  ('francesca-trabace','s5','09:00','13:00',array['2','4']::text[]),
-  ('angelo-costantiello','s6','09:00','13:00',array['6']::text[]),
-  ('angelo-costantiello','s6','15:00','19:00',array['3']::text[]),
-  ('rossella-conversano','s4','16:00','20:00',array['2','4']::text[])
-) as s(sp,room,inizio,fine,giorni)
-cross join generate_series(current_date, current_date + 21, interval '1 day') d
-where extract(dow from d)::text = any(s.giorni)
-on conflict do nothing;
+-- Nessun turno o appuntamento di esempio: i dati di prova sono stati azzerati il 10/11/2026.
+-- Gli specialisti prenotano gli studi dall'app.

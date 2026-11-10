@@ -1,6 +1,6 @@
 // Clinia App · service worker: l'app si apre anche con rete debole.
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-const CACHE = "clinia-v2";
+const CACHE = "clinia-v3";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./img/clinia-logo.svg", "./img/clinia-mark.svg",
   "./img/icone/apple-touch-icon.png", "./img/icone/icon-192.png", "./img/fpm-logo-sm.png", "./img/reception.jpg"];
 
@@ -15,6 +15,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   // Dati, accessi e pagamenti sempre dalla rete: mai dalla cache
   if (/supabase\.co|stripe\.com|api\./.test(url.host)) return;
+  // Video: lasciati al browser (richieste a pezzi, non vanno in cache)
+  if (/\.(mp4|mov|webm)$/i.test(url.pathname)) return;
   // Pagine: prima la rete (versione aggiornata), poi la copia salvata
   if (req.mode === "navigate") {
     e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put("./index.html", c)); return r; })

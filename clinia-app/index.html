@@ -425,6 +425,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .pp-photo{width:112px;height:112px;border-radius:28px;font-size:2.4rem}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:380px){.fgrid{grid-template-columns:1fr}}
+.avideo{display:block;width:100%;max-height:70vh;aspect-ratio:9/16;object-fit:cover;border-radius:var(--r);background:#0b2b38}
 .gal{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.gal img{flex:0 0 72%;max-width:320px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;scroll-snap-align:start}
 .quote{font-family:var(--f-display);font-size:1.15rem;line-height:1.45;color:var(--azure);border-left:3px solid var(--gold);padding:4px 0 4px 14px;margin:0}
 .valori{display:grid;gap:10px}.valori .card b{color:var(--accent);font-size:1rem}
@@ -1318,7 +1319,7 @@ function arcaPage(){const st=arcaStoria(),tot=r2(st.reduce((t,x)=>t+x.importo,0)
   ${DB.on?"":`<p class="tiny">Nella versione di prova le cifre sono calcolate sulle prenotazioni di esempio.</p>`}</div></div></div>`}
 const SPAZI={reception:{name:"Reception",foto:"img/reception.jpg",arco:165,desc:"Ingresso e sala d’attesa di Clinia"}};
 const spazio3d=id=>SPAZI[id];
-const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stanza:"s1",perc:0.5,modello:true,desc:"Ecografo su carrello con monitor, schermo touch e tre sonde. Disponibile per le prenotazioni dello Studio 1.",
+const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stanza:"s1",perc:0.5,modello:true,video:"video/ecografo.mp4",poster:"img/attrezzature/ecografo-video.jpg",desc:"Ecografo su carrello con monitor, schermo touch e tre sonde. Disponibile per le prenotazioni dello Studio 1.",
   sonde:[["Convex C2-5","addome, pelvi, ostetricia"],["Lineare LA3-16AD","tiroide, mammella, muscoli e tendini, vasi"],["Phased array PN2-4","cuore e torace"]],
   foto:["img/attrezzature/ecografo-1.jpg","img/attrezzature/ecografo-2.jpg","img/attrezzature/ecografo-3.jpg","img/attrezzature/ecografo-4.jpg"]},
   tecar:{nome:"Tecar",breve:"Tecar",stanza:"s3",perc:0.3,desc:"Apparecchio per tecarterapia su carrello, accanto al lettino elettrico dello Studio 3.",sonde:[],foto:["img/attrezzature/tecar-1.jpg"]}};
@@ -1327,7 +1328,7 @@ const modalita=id=>(S.modalita&&S.modalita[id])||"fitto";
 const oreResidue=id=>r2((S.pacchetti||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0)-(S.oreUsate||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0));
 const IVA=0.22,ivaDi=x=>r2(x*IVA);
 const attrDi=r=>(r&&r.attr||[]).map(k=>({k,...ATTREZZATURE[k]}));
-function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.modello?a.sonde.length+" sonde · tocca per vederlo in 3D":"Tocca per i dettagli"}${a.perc!=null?" · a percentuale: "+Math.round(a.perc*100)+" % della prestazione":""}</small></span>${a.modello?`<span class="r3dbadge" style="position:static">3D</span>`:ic("right","sm")}</button>`).join("")}</section>`:""}
+function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.poster||a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.video?a.sonde.length+" sonde · video e 3D":a.modello?a.sonde.length+" sonde · tocca per vederlo in 3D":"Tocca per i dettagli"}${a.perc!=null?" · a percentuale: "+Math.round(a.perc*100)+" % della prestazione":""}</small></span>${a.video?`<span class="r3dbadge" style="position:static">▶</span>`:a.modello?`<span class="r3dbadge" style="position:static">3D</span>`:ic("right","sm")}</button>`).join("")}</section>`:""}
 const eurM=x=>String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g,".")+" €";
 const conIva=x=>Math.round(x*(1+TARIFFE_MESE.iva)*100)/100;
 function tariffeMeseHTML(sel){const l=sel?ROOMS.filter(r=>r.mq===sel.mq):ROOMS;return `<div style="overflow-x:auto"><table class="tar"><thead><tr><th>${sel?"Contratto":"Studio"}</th><th>Mezza giornata<br><span class="tiny">Soluzione A</span></th><th>Giornata intera<br><span class="tiny">Soluzione B</span></th></tr></thead><tbody>
@@ -1372,13 +1373,14 @@ function chiSiamoPage(){const V=[["Accoglienza","Un ambiente sereno e confortevo
    <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${ROOMS.map(r=>`<button class="badge grey" data-act="room3d" data-id="${r.id}">${ic("door","sm")} ${esc(r.name)} · ${r.mq} mq</button>`).join("")}</div></section>
   <button class="btn ghost block" data-act="openPage" data-v="offerta">Sei un professionista? Scopri l’offerta ${ic("arrow","sm")}</button>
   ${contattiHTML()}</div></div></div>`}
-function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza);return `<div class="screen">${bar(esc(a.breve)+(a.modello?" in 3D":""))}<div class="content"><div class="pad stack" style="gap:14px">
-  ${a.modello?`<div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
+function attr3dPage(k){const a=ATTREZZATURE[k],r=room(a.stanza),vis=a.video&&UI.attrView!=="3d"?"video":a.modello?"3d":"foto";return `<div class="screen">${bar(esc(a.breve))}<div class="content"><div class="pad stack" style="gap:14px">
+  ${a.video&&a.modello?`<div class="seg"><button class="${vis==="video"?"on":""}" data-act="attrView" data-v="video">Video</button><button class="${vis==="3d"?"on":""}" data-act="attrView" data-v="3d">Modello 3D</button></div>`:""}
+  ${vis==="video"?`<video class="avideo" src="${a.video}" poster="${a.poster||""}" autoplay muted loop playsinline controls preload="metadata" aria-label="Video: ${esc(a.nome)} nello ${esc(r.name)}"></video>`:vis==="3d"?`<div class="r3d" id="a3d" data-attr="${k}"><span class="hint">Caricamento del modello 3D…</span></div>
   <p class="tiny">Modello 3D ricostruito dalle foto: trascina per girarlo, pizzica o usa la rotella per avvicinarti.</p>`:`<img src="${a.foto[0]}" alt="${esc(a.nome)}" style="width:100%;max-height:420px;object-fit:cover;border-radius:var(--r)">`}
   <div><h2 style="font-size:1.25rem;font-weight:800">${esc(a.nome)}</h2><p class="small muted">${esc(a.desc)}</p></div>
   ${a.perc!=null?`<div class="card row" style="gap:12px;background:var(--gold-soft);border-color:var(--gold)"><b style="font-size:1.4rem;color:var(--gold);white-space:nowrap">${Math.round(a.perc*100)} %</b><span class="small">Chi lavora a percentuale e usa ${a.breve==="Ecografo"?"l’ecografo":"la Tecar"} versa a Clinia il ${Math.round(a.perc*100)} % della prestazione, come utilizzo dello studio (+ IVA).</span></div>`:""}
   ${a.sonde.length?`<section class="card"><h3 style="margin-bottom:6px">Sonde</h3>${a.sonde.map(([n,u])=>`<div class="svc"><div class="t"><b>${esc(n)}</b><span class="tiny">${esc(u)}</span></div></div>`).join("")}<p class="tiny" style="margin-top:6px">Usi indicativi, da confermare con la direzione.</p></section>`:""}
-  ${a.foto.length>1?`<section class="stack" style="gap:8px"><h3 class="h-sec" style="font-size:1.1rem">Foto</h3><div class="gal">${a.foto.map((f,i)=>`<img src="${f}" alt="${esc(a.breve)}, foto ${i+1}" loading="lazy">`).join("")}</div></section>`:""}
+  ${a.foto.length>1&&!a.video?`<section class="stack" style="gap:8px"><h3 class="h-sec" style="font-size:1.1rem">Foto</h3><div class="gal">${a.foto.map((f,i)=>`<img src="${f}" alt="${esc(a.breve)}, foto ${i+1}" loading="lazy">`).join("")}</div></section>`:""}
   <button class="btn ghost block" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Si trova in ${esc(r.name)} · vedi la stanza in 3D</button></div></div></div>`}
 function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">${bar(esc(sp.name)+" in 3D")}<div class="content"><div class="pad stack" style="gap:12px">
   <div class="r3d" id="r3d" data-room="${id}"><span class="hint">Caricamento della vista 3D…</span></div>
@@ -1773,7 +1775,8 @@ const ACT={
   fpmRicevuta:d=>{UI.sheet={type:"ricevuta",m:d.v};render()},
   copyRicevuta:()=>{const t=ricevutaText(UI.sheet.m);navigator.clipboard.writeText(t).then(()=>toast("Ricevuta copiata"),()=>toast("Seleziona il testo e copialo"))},
   room3d:d=>push({page:"room3d",id:d.id}),
-  attr3d:d=>push({page:"attr3d",id:d.id}),
+  attr3d:d=>{UI.attrView="video";push({page:"attr3d",id:d.id})},
+  attrView:d=>{UI.attrView=d.v;render()},
   delRoomPhoto:async d=>{const l=(await IDB.get("room:"+d.id))||[];l.splice(+d.v,1);await IDB.set("room:"+d.id,l);UI.roomPhotos[d.id]=l;render()},
   openCopyright:()=>{UI.sheet={type:"copyright"};render()},
   ricMese:d=>{UI.ricMese=d.v;render()},

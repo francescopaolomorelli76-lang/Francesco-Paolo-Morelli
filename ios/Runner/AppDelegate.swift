@@ -29,6 +29,9 @@ import Vision
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "LiveSpeechPlugin") {
       LiveSpeechPlugin.register(with: registrar)
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "AudioRoutePlugin") {
+      AudioRoutePlugin.register(with: registrar)
+    }
   }
 }
 
@@ -307,7 +310,8 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       result(["available": rec?.isAvailable ?? false, "onDevice": rec?.supportsOnDeviceRecognition ?? false])
     case "start":
       do {
-        try start(locale: args["locale"] as? String, path: args["path"] as? String)
+        try start(locale: args["locale"] as? String, path: args["path"] as? String,
+                  headsetMic: (args["input"] as? String) == "headset")
         result(true)
       } catch {
         cancel()
@@ -366,11 +370,17 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     return ["mic": mic, "speech": speech]
   }
 
-  private func start(locale: String?, path: String?) throws {
+  private func start(locale: String?, path: String?, headsetMic: Bool) throws {
     cancel()
     let session = AVAudioSession.sharedInstance()
-    try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+    // Microfono: per chi indossa le cuffie (pulsante IO) quello delle cuffie/AirPods,
+    // per l'interlocutore (pulsante LUI/LEI) quello del telefono.
+    let options: AVAudioSession.CategoryOptions = headsetMic
+      ? [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP]
+      : [.defaultToSpeaker, .allowBluetoothA2DP]
+    try session.setCategory(.playAndRecord, mode: .default, options: options)
     try session.setActive(true, options: .notifyOthersOnDeactivation)
+    AudioRoutePlugin.preferInput(headset: headsetMic)
     lastText = ""
     peakDb = -160
 
@@ -475,6 +485,75 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     if let done = waiter {
       waiter = nil
       done(lastText)
+    }
+  }
+}
+
+/// Dove va l'audio quando sono collegate cuffie o AirPods.
+/// - "speaker": altoparlante del telefono (la traduzione per l'interlocutore)
+/// - "headphones": cuffie se collegate, altrimenti altoparlante (la traduzione per me)
+class AudioRoutePlugin: NSObject, FlutterPlugin {
+  static func register(with registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: "manga_vox/audio_route", binaryMessenger: registrar.messenger())
+    registrar.addMethodCallDelegate(AudioRoutePlugin(), channel: channel)
+  }
+
+  private static let headsetPorts: [AVAudioSession.Port] = [
+    .headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE, .usbAudio, .headsetMic,
+  ]
+
+  /// true se sono collegate cuffie (con filo o Bluetooth).
+  static func headphonesConnected() -> Bool {
+    let s = AVAudioSession.sharedInstance()
+    if s.currentRoute.outputs.contains(where: { headsetPorts.contains($0.portType) }) { return true }
+    if s.currentRoute.inputs.contains(where: { headsetPorts.contains($0.portType) }) { return true }
+    return (s.availableInputs ?? []).contains(where: { [.bluetoothHFP, .headsetMic, .usbAudio].contains($0.portType) })
+  }
+
+  static func headphonesName() -> String {
+    let s = AVAudioSession.sharedInstance()
+    let all = s.currentRoute.outputs + (s.availableInputs ?? [])
+    return all.first(where: { headsetPorts.contains($0.portType) })?.portName ?? ""
+  }
+
+  /// Sceglie il microfono: quello delle cuffie oppure quello del telefono.
+  static func preferInput(headset: Bool) {
+    let s = AVAudioSession.sharedInstance()
+    guard let inputs = s.availableInputs else { return }
+    if headset {
+      if let mic = inputs.first(where: { [.bluetoothHFP, .headsetMic, .usbAudio].contains($0.portType) }) {
+        try? s.setPreferredInput(mic)
+      }
+    } else if let mic = inputs.first(where: { $0.portType == .builtInMic }) {
+      try? s.setPreferredInput(mic)
+    }
+  }
+
+  func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let s = AVAudioSession.sharedInstance()
+    switch call.method {
+    case "status":
+      result(["headphones": AudioRoutePlugin.headphonesConnected(), "name": AudioRoutePlugin.headphonesName()])
+    case "toSpeaker":
+      do {
+        try s.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+        try s.setActive(true)
+        try s.overrideOutputAudioPort(.speaker)
+        result(true)
+      } catch {
+        result(false)
+      }
+    case "toHeadphones":
+      do {
+        try? s.overrideOutputAudioPort(.none)
+        try s.setCategory(.playback, mode: .default, options: [.duckOthers])
+        try s.setActive(true)
+        result(true)
+      } catch {
+        result(false)
+      }
+    default:
+      result(FlutterMethodNotImplemented)
     }
   }
 }

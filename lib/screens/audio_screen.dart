@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:volume_controller/volume_controller.dart';
 
 import '../languages.dart';
+import '../services/audio_route.dart';
 import '../services/langs.dart';
 import '../services/live_speech.dart';
 import '../services/pitch.dart';
@@ -35,6 +36,7 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
   String? _testResult;
   late Lang _voiceLang = widget.mine;
   List<TtsVoice>? _voices;
+  (bool, String)? _headset;
 
   static const _sample = {
     Lang.it: 'Ciao! Mi senti bene?',
@@ -85,6 +87,79 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
       final p = await _live.permissions();
       if (mounted) setState(() => _perm = p);
     } catch (_) {}
+    final h = await AudioRoute.status();
+    if (mounted) setState(() => _headset = h);
+  }
+
+  Widget _headsetPanel() {
+    final h = _headset;
+    final connected = h?.$1 ?? false;
+    final name = (h?.$2 ?? '').isEmpty ? 'Cuffie' : h!.$2;
+    return ComicPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                connected ? Icons.headphones : Icons.headset_off,
+                size: 28,
+                color: connected ? const Color(0xFF2A9D3F) : MC.black,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  connected ? '$name collegate' : 'Nessuna cuffia collegata',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Aggiorna',
+                onPressed: _refresh,
+                icon: const Icon(Icons.refresh, color: MC.black),
+              ),
+            ],
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            activeThumbColor: MC.red,
+            title: const Text('Modalità cuffie', style: TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: const Text(
+              'Con AirPods o cuffie: col pulsante IO parli nelle cuffie e la traduzione esce dall\'altoparlante '
+              'per l\'altra persona; col pulsante LUI/LEI l\'altro parla al telefono e tu senti la traduzione in cuffia.',
+            ),
+            value: AudioRoute.enabled,
+            onChanged: (v) => setState(() => AudioRoute.setEnabled(v)),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ComicButton(
+                label: 'PROVA ALTOPARLANTE',
+                icon: Icons.speaker_phone,
+                size: 15,
+                onTap: () => _speech.speak(
+                  _sample[widget.mine] ?? widget.mine.label,
+                  widget.mine,
+                  force: true,
+                  hearer: Hearer.partner,
+                ),
+              ),
+              ComicButton(
+                label: 'PROVA CUFFIE',
+                icon: Icons.headphones,
+                color: MC.cyan,
+                size: 15,
+                onTap: () => _speech.speak(_sample[widget.mine] ?? widget.mine.label, widget.mine, force: true),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadVoices() async {
@@ -220,6 +295,11 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // ───── Cuffie
+            _section('🎧 CUFFIE'),
+            _headsetPanel(),
             const SizedBox(height: 20),
 
             // ───── Volume

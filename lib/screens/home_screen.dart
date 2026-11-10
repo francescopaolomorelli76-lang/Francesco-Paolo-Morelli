@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import '../languages.dart';
+import '../services/audio_route.dart';
 import '../services/lang_detect.dart';
 import '../services/langs.dart';
 import '../services/live_speech.dart';
@@ -347,7 +348,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final lang = side == Side.me ? _mine : _partner; // null = da riconoscere
     bool ok;
     try {
-      ok = await _live.start(lang);
+      // IO: microfono delle cuffie (se collegate); LUI/LEI: microfono del telefono.
+      ok = await _live.start(lang, headsetMic: side == Side.me && AudioRoute.enabled);
     } catch (e) {
       ok = false;
     }
@@ -447,7 +449,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _state = PushState.idle;
         _liveTranslation = '';
       });
-      await _speech.speak(out, to, gender: gender);
+      // La mia frase tradotta la sente l'altro (altoparlante); la sua la sento io (cuffie).
+      await _speech.speak(out, to, gender: gender, hearer: side == Side.me ? Hearer.partner : Hearer.me);
     } on MissingLanguage catch (e) {
       if (mounted) _missing(e);
     } catch (e) {
@@ -931,7 +934,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
               child: GestureDetector(
-                onTap: () => _speech.speak(m.translated, m.to, gender: m.gender, force: true),
+                onTap: () => _speech.speak(
+                  m.translated,
+                  m.to,
+                  gender: m.gender,
+                  force: true,
+                  hearer: m.side == Side.me ? Hearer.partner : Hearer.me,
+                ),
                 child: SpeechBubble(
                   color: fromMe ? MC.yellow : MC.cyan,
                   tailLeft: !fromMe,

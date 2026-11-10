@@ -105,7 +105,7 @@ class LiveSpeech {
   // ───────────── registrazione ─────────────
 
   /// Inizia ad ascoltare. [lang] null = lingua sconosciuta (solo registrazione).
-  Future<bool> start(Lang? lang) async {
+  Future<bool> start(Lang? lang, {bool headsetMic = false}) async {
     partial.value = '';
     level.value = 0;
     _peakDb = -160;
@@ -115,7 +115,11 @@ class LiveSpeech {
       var p = await permissions();
       if (!p.ok) p = await request();
       if (!p.ok) return false;
-      await _ch.invokeMethod('start', {'locale': lang?.locale, 'path': _path});
+      await _ch.invokeMethod('start', {
+        'locale': lang?.locale,
+        'path': _path,
+        'input': headsetMic ? 'headset' : 'builtin',
+      });
       _started = DateTime.now();
       return true;
     }

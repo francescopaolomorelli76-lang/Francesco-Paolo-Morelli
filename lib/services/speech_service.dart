@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:whisper_ggml/whisper_ggml.dart';
 
 import '../languages.dart';
+import 'audio_route.dart';
 import 'lang_detect.dart';
 import 'pitch.dart';
 import 'prefs.dart';
@@ -246,20 +247,22 @@ class SpeechService {
 
   /// Legge [text] in [lang]. [gender] = genere di chi ha parlato (se noto):
   /// con "uomo/donna automatico" la traduzione usa una voce dello stesso genere.
-  Future<void> speak(String text, Lang lang, {VoiceGender? gender, TtsVoice? voice, bool force = false}) async {
+  Future<void> speak(
+    String text,
+    Lang lang, {
+    VoiceGender? gender,
+    TtsVoice? voice,
+    bool force = false,
+    Hearer hearer = Hearer.me,
+  }) async {
     if (text.trim().isEmpty || (!speakAloud && !force)) return;
     final g = (autoGender ? gender : null) ?? defaultGender;
     final v = voice ?? await pickVoice(lang, g);
     await _tts.stop();
-    if (Platform.isIOS) {
-      // Modalità "riproduzione": volume pieno e altoparlante (la modalità
-      // registrazione dell'iPhone abbassa il volume). Il microfono la
-      // reimposta da solo quando si preme di nuovo un pulsante.
-      await _tts.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [
-        IosTextToSpeechAudioCategoryOptions.duckOthers,
-      ], IosTextToSpeechAudioMode.defaultMode);
-      await _tts.setSharedInstance(true);
-    }
+    // Uscita audio: per l'interlocutore l'altoparlante del telefono, per me le
+    // cuffie se collegate (altrimenti l'altoparlante), sempre a volume pieno.
+    // Il microfono reimposta da solo l'audio quando si preme un pulsante.
+    await AudioRoute.prepareFor(hearer);
     await _tts.setLanguage(lang.locale);
     if (v != null) {
       try {

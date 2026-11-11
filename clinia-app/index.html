@@ -973,14 +973,18 @@ function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u
   <div class="actions"><button class="btn primary block" type="submit">Salva il profilo</button></div></form></div>`}
 function ibanOk(v){v=(v||"").replace(/\s/g,"").toUpperCase();if(!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(v))return false;if(v.startsWith("IT")&&v.length!==27)return false;
   const r=(v.slice(4)+v.slice(0,4)).replace(/[A-Z]/g,c=>c.charCodeAt(0)-55);let m=0;for(const ch of r)m=(m*10+ +ch)%97;return m===1}
-const accKey=()=>isFpm()?"fpm":S.proId;
-function ibanScreen(onb){const a=S.payAcc[accKey()]||{},u=S.user||{},fpm=isFpm();
-  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button>`}<h2>Conto per gli accrediti</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipIban">Dopo</button>`:'<span style="width:44px"></span>'}</div>
+const accKey=()=>isFpm()?"fpm":isOwner()?"clinia":S.proId;
+const fpmIban=()=>(S.payAcc.fpm&&S.payAcc.fpm.iban)||(S.fpm.anag||{}).iban||"";
+const ACC_TIPI={iban:["Conto corrente","IBAN per bonifico istantaneo"],carta:["Carta con IBAN","es. PostePay Evolution, carte conto"],paypal:["PayPal","indirizzo e-mail del conto PayPal"]};
+const accDesc=a=>!a?"":a.tipo==="paypal"?"PayPal · "+a.email:(a.tipo==="carta"?"Carta con IBAN":"IBAN")+" ••••"+a.last4;
+function ibanScreen(onb){const a=S.payAcc[accKey()]||{},u=S.user||{},fpm=isFpm(),cli=isOwner(),tipo=UI.ibTipo||a.tipo||"iban";
+  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button>`}<h2>${fpm||cli?"Come ricevi i pagamenti":"Conto per gli accrediti"}</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipIban">Dopo</button>`:'<span style="width:44px"></span>'}</div>
   <form class="screen" data-form="iban" novalidate><div class="content"><div class="pad stack" style="gap:16px">
-   <p class="lead">${fpm?"Qui arrivano in automatico la licenza di Clinia, gli abbonamenti degli specialisti e il servizio di prenotazione, al netto della ritenuta.":"Qui ricevi i pagamenti delle tue visite: in automatico quelle pagate con carta nell’app, e i bonifici dei pazienti che preferiscono pagarti così (dai loro questo IBAN). Contanti e POS li incassi in sede."}</p>
-   ${a.last4?`<div class="ok-note card row small">${ic("check","sm")}<span>Conto attivo: <b>${esc(a.holder)}</b> · IBAN ••••${esc(a.last4)}</span></div>`:""}
-   <label class="field"><span>Intestatario del conto*</span><input id="ib-holder" name="holder" autocomplete="name" value="${esc(a.holder||((u.nome||"")+" "+(u.cognome||"")).trim())}"></label>
-   <label class="field"><span>IBAN*</span><input id="ib-iban" name="iban" autocomplete="off" inputmode="text" maxlength="34" placeholder="IT60 X054 2811 1010 0000 0123 456" data-input="iban"></label>
+   <p class="lead">${cli?"Qui Clinia riceve i pagamenti degli specialisti: studi a ore, pacchetti ore e affitti. Con la carta in app arrivano in automatico; chi preferisce paga con bonifico istantaneo su questo conto.":fpm?"Qui arrivano in automatico la licenza di Clinia, gli abbonamenti degli specialisti e il servizio di prenotazione, al netto della ritenuta.":"Qui ricevi i pagamenti delle tue visite: in automatico quelle pagate con carta nell’app, e i bonifici dei pazienti che preferiscono pagarti così (dai loro questo IBAN). Contanti e POS li incassi in sede."}</p>
+   ${a.last4||a.email?`<div class="ok-note card row small">${ic("check","sm")}<span>Attivo: <b>${esc(a.holder||"")}</b> · ${esc(accDesc(a))}</span></div>`:""}
+   ${fpm||cli?`<div class="seg seg3">${Object.entries(ACC_TIPI).map(([k,[l]])=>`<button type="button" class="${tipo===k?"on":""}" data-act="ibTipo" data-v="${k}">${l}</button>`).join("")}</div><p class="tiny">${esc(ACC_TIPI[tipo][1])}. ${tipo==="iban"?"Il bonifico istantaneo arriva in pochi secondi, anche nei festivi.":tipo==="carta"?"Le carte con IBAN ricevono i bonifici come un conto: inserisci l’IBAN della carta (lo trovi nell’app della carta), non il numero sui 16 cifre.":"Con PayPal chi paga sostiene una commissione (circa 3 % per i pagamenti di servizi): meglio l’IBAN per gli importi mensili."}</p>`:""}
+   <label class="field"><span>Intestatario del conto*</span><input id="ib-holder" name="holder" autocomplete="name" value="${esc(a.holder||(cli?CLINIC.ragione:fpm?LEGAL.autore:((u.nome||"")+" "+(u.cognome||"")).trim()))}"></label>
+   ${tipo==="paypal"&&(fpm||cli)?`<label class="field"><span>E-mail PayPal*</span><input id="ib-mail" name="email" type="email" autocomplete="email" value="${esc(a.email||"")}"></label><input type="hidden" name="iban" value="">`:`<label class="field"><span>${tipo==="carta"?"IBAN della carta*":"IBAN*"}</span><input id="ib-iban" name="iban" autocomplete="off" inputmode="text" maxlength="34" placeholder="IT60 X054 2811 1010 0000 0123 456" data-input="iban"></label>`}
    <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="ib-ok" name="ok" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Autorizzo l’accredito automatico${fpm?" dei compensi":" delle visite pagate con carta e ricevo qui i bonifici dei pazienti"} su questo conto. Al primo accredito Stripe mi chiederà un documento per verificare la mia identità.</span></label>
    <div class="demo-note">${ic("lock","sm")}<span>Salviamo solo intestatario e ultime 4 cifre. Il conto completo lo custodisce il circuito di pagamento (Stripe).</span></div>
    <p class="err" id="ib-err"></p></div></div>
@@ -1206,7 +1210,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
+  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1487,7 +1491,7 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
   ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:metodoLic(),ex=extraFPM(m),tot=r2((p.dovuto||0)+ex.tot),A=S.fpm.anag||{};return `<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Pagamento licenza a FPM":"Pagamento mensile a FPM"}</h3>${pagBadge(p)}</div>
    ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Licenza<small>${p.dovuto?"rata "+p.k+" di "+LICENZA.mesi:"non dovuta"}</small></dt><dd>${eur(p.dovuto||0)}</dd><dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd><dt>Servizio prenotazioni<small>9 € a visita, incassati da Clinia</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
-   <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${A.iban?`: <b>${esc(A.intestatario||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(A.iban)}</span>`:"."} Causale: “Licenza Clinia App e quote ${esc(meseNome(m))}”.</p>`:""}
+   <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${fpmIban()?`: <b>${esc((S.payAcc.fpm||{}).holder||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(fpmIban())}</span>`:S.payAcc.fpm&&S.payAcc.fpm.tipo==="paypal"?`, oppure con PayPal a <b>${esc(S.payAcc.fpm.email)}</b>`:"."} Causale: “Licenza Clinia App e quote ${esc(meseNome(m))}”.</p>`:""}
    ${!p.dovuto?`<p class="small muted">${p.k>LICENZA.mesi?"La licenza è terminata dopo 12 mesi: niente da pagare.":"La licenza parte a "+esc(meseNome(LICENZA.inizio))+"."}</p>`
    :p.pagato?`<p class="small">${ic("check","sm")} Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.</p><p class="tiny">${p.conf?"FPM ha confermato di averlo ricevuto.":"In attesa della conferma di FPM."} La ritenuta (${eur(r2(lordoDaNetto(LICENZA.netto)-LICENZA.netto))}) va comunque versata con F24 entro il 16 del mese dopo.</p>
      <div class="row" style="gap:8px;flex-wrap:wrap">${p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta del mese</button>`:""}${!p.auto&&!p.conf?`<button class="btn ghost sm" data-act="pagAnnulla" data-v="${m}">Annulla</button>`:""}</div>`
@@ -1534,7 +1538,7 @@ function fpmMese(m){const mov=fpmMovimenti(m),sum=(f,k)=>r2(mov.filter(f).reduce
 function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.ric[m]||{},acc=S.payAcc.fpm,lim=UI.movAll?f.mov.length:15;
   return `<div class="pad stack" style="gap:16px"><div class="row between"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">FPM Tech</h1></div><span class="live"><i></i>Tempo reale</span></div>${meseNav("fpmMese",m)}
   <div class="card" style="text-align:center"><span class="label">Incassato netto nel mese</span><div class="big">${eur(f.netto)}</div>
-   <p class="tiny">${!stripeAttivo()?`Versato da Clinia con bonifico mensile${(S.fpm.anag||{}).iban?" su IBAN ••••"+esc(S.fpm.anag.iban.replace(/\s/g,"").slice(-4)):""}`:acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
+   <p class="tiny">${!stripeAttivo()?`Versato da Clinia con bonifico mensile${S.payAcc.fpm?" · "+esc(accDesc(S.payAcc.fpm)):""}`:acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
   <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Specialisti abbonati${DB.on?"":" (esempio)"}</span></div><div class="stat"><b>${f.prenN}</b><span>Prenotazioni con servizio</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
   <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
    <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)} netti</small></dt><dd>${eur(f.abbNet)}</dd>
@@ -1542,7 +1546,7 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
   <p class="tiny">Importi netti garantiti: la ritenuta d’acconto (${eur(f.rit)} nel mese, su un lordo fiscale di ${eur(f.lordo)}) la aggiunge e la versa Clinia con F24.</p>
   ${(()=>{const p=pagStato(m),ex=extraFPM(m);return p.dovuto||ex.tot?`<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Licenza da Clinia":"Bonifico mensile da Clinia"}</h3>${pagBadge(p)}</div>
-   ${stripeAttivo()?"":`<p class="small">Da ricevere: <b>${eur(r2((p.dovuto||0)+ex.tot))}</b> netti (licenza ${eur(p.dovuto||0)} + abbonamenti ${eur(ex.abb)} + servizio ${eur(ex.serv)}).${(S.fpm.anag||{}).iban?"":` <button class="link" data-act="fpmRicevuta" data-v="${m}">Inserisci il tuo IBAN</button> perché Clinia lo veda.`}</p>`}
+   ${stripeAttivo()?"":`<p class="small">Da ricevere: <b>${eur(r2((p.dovuto||0)+ex.tot))}</b> netti (licenza ${eur(p.dovuto||0)} + abbonamenti ${eur(ex.abb)} + servizio ${eur(ex.serv)}).${fpmIban()||S.payAcc.fpm?"":` <button class="link" data-act="openPage" data-v="ibanpage">Indica come ricevere i pagamenti</button> perché Clinia lo veda.`}</p>`}
    <p class="small">${p.pagato?`Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.`:`Rata ${p.k} di ${LICENZA.mesi}: ${eur(p.dovuto)} netti, non ancora segnati da Clinia${S.licMetodo!=="automatico"?" (paga "+(S.licMetodo==="contanti"?"in contanti":"con bonifico")+")":""}.`}</p>
    ${p.pagato&&!p.auto?`<label class="chk"><input type="checkbox" data-change="pagConf" data-m="${m}" ${p.conf?"checked":""}> Confermo di aver ricevuto ${eur(p.importo)}${p.metodo==="contanti"?" e firmato la ricevuta":""}</label>`:""}
    ${p.pagato&&p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta da firmare</button>`:""}</div>`:""})()}
@@ -1639,7 +1643,7 @@ async function ricevutaPDF(m,oggi){await loadPdf();const{jsPDF}=window.jspdf,doc
   // pagamento e note
   y+=4;const p=r.p,met={bonifico:"bonifico bancario",contanti:"contanti",automatico:"addebito automatico"}[p.metodo]||p.metodo;
   doc.setFont("helvetica","bold");doc.setFontSize(9);col(teal);doc.text("PAGAMENTO",L,y);y+=5;doc.setFont("helvetica","normal");col(ink);
-  doc.text(p.pagato?`Ricevuto il ${new Date(p.data).toLocaleDateString("it-IT")} con ${met}${p.nota?" (rif. "+p.nota+")":""}.`:`Da corrispondere con ${met||"bonifico bancario"}${A.iban?" sull’IBAN "+A.iban:""}.`,L,y);y+=10;
+  doc.text(p.pagato?`Ricevuto il ${new Date(p.data).toLocaleDateString("it-IT")} con ${met}${p.nota?" (rif. "+p.nota+")":""}.`:`Da corrispondere con ${met||"bonifico bancario"}${fpmIban()?" sull’IBAN "+fpmIban():""}.`,L,y);y+=10;
   doc.setFont("helvetica","bold");col(teal);doc.text("NOTE",L,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(8.5);col([60,72,84]);
   ["Operazione esclusa dal campo di applicazione dell’IVA ai sensi dell’art. 3, comma 4, lett. a), DPR 633/1972.",
    "Ritenuta d’acconto operata dal committente ai sensi dell’art. 25 DPR 600/1973, da versare con modello F24 entro il 16 del mese successivo al pagamento.",
@@ -1834,7 +1838,7 @@ function modalHTML(){const m=UI.modal;
 function go(screen){UI.screen=screen;UI.buf="";UI.pinErr="";UI.shake=false;render()}
 function push(p){UI.stack.push(p);render()}
 function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossimo passo dell'onboarding
-  if(isFpm()){if(!S.pin)return go("pin-create");UI.screen="main";UI.stack=[];UI.tab="fpm";return render()}
+  if(isFpm()){if(!S.pin)return go("pin-create");if(!S.payAcc.fpm&&!UI.skipIban)return go("iban");UI.screen="main";UI.stack=[];UI.tab="fpm";return render()}
   if(isPro()&&!subActive())return go("sub");
   if(!S.pin)return go("pin-create");
   if(!S.user||!S.user.tel)return go("phone");
@@ -1842,6 +1846,7 @@ function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossi
   if(isPro()&&!S.proId)return go("pro-pick");
   if(isPro()&&!(S.proProfile[S.proId]&&S.proProfile[S.proId].done)&&!UI.skipProf)return go("proprof");
   if(isPro()&&!isOwner()&&!S.payAcc[S.proId]&&!UI.skipIban)return go("iban");
+  if(isOwner()&&!S.payAcc.clinia&&!UI.skipIban)return go("iban");
   if(S.notif==null)return go("notifs");
   UI.screen="main";
   if(UI.pending){const p=UI.pending;UI.pending=null;UI.stack=p.stack;UI.book=p.book;UI.tab=p.tab;return doConfirmBook()}
@@ -1932,6 +1937,7 @@ const ACT={
   bFor:d=>{saveNote();UI.book.forId=d.v;render()},
   bPay:d=>{saveNote();UI.book.pay=d.v;render()},
   cliSeg:d=>{UI.cliSeg=d.v;render()},
+  ibTipo:d=>{UI.ibTipo=d.v;render()},
   skipIban:()=>{UI.skipIban=true;afterAuthFlow()},
   movAll:()=>{UI.movAll=true;render()},
   pagMetodo:d=>{S.licMetodo=d.v;save();DB.saveMetodo(d.v);render()},
@@ -2110,11 +2116,14 @@ const FORMS={
     if(!f.desc.value.trim())return err.textContent="Scrivi una descrizione.";if(isNaN(a)||a<=0)return err.textContent="Inserisci un importo valido.";if(!f.date.value)return err.textContent="Scegli la data.";
     const id=uid(),file=UI.expFile||null;S.expenses.push({id,date:f.date.value,desc:f.desc.value.trim(),cat:f.cat.value,amount:r2(a),file:file?{name:file.name,size:file.size}:null});
     if(file)IDB.set("exp:"+id,{name:file.name,blob:file});UI.expFile=null;f.reset();save();toast("Spesa aggiunta");render()},
-  iban:f=>{const err=$("#ib-err"),v=f.iban.value.replace(/\s/g,"").toUpperCase();
+  iban:f=>{const err=$("#ib-err"),v=f.iban.value.replace(/\s/g,"").toUpperCase(),k=accKey(),tipo=(isFpm()||isOwner())?(UI.ibTipo||(S.payAcc[k]||{}).tipo||"iban"):"iban";
     if(!f.holder.value.trim())return err.textContent="Scrivi l’intestatario del conto.";
+    if(tipo==="paypal"){const em=(f.email.value||"").trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="Scrivi l’e-mail del conto PayPal.";if(!f.ok.checked)return err.textContent="Per continuare conferma il conto.";
+      S.payAcc[k]={tipo,holder:f.holder.value.trim(),email:em,at:Date.now()};save();toast("PayPal salvato: i pagamenti arriveranno qui");UI.ibTipo=null;if(UI.screen==="iban")afterAuthFlow();else{UI.stack.pop();render()}return}
     if(!ibanOk(v))return err.textContent="L’IBAN non è valido: controlla le lettere e le cifre.";
     if(!f.ok.checked)return err.textContent="Per continuare autorizza l’accredito automatico.";
-    S.payAcc[accKey()]={holder:f.holder.value.trim(),last4:v.slice(-4),country:v.slice(0,2),at:Date.now()};save();DB.saveIban(accKey(),S.payAcc[accKey()]);toast("Conto salvato: gli accrediti arriveranno qui");
+    S.payAcc[k]={tipo,holder:f.holder.value.trim(),last4:v.slice(-4),country:v.slice(0,2),at:Date.now(),...(k==="fpm"||k==="clinia"?{iban:v.replace(/(.{4})/g,"$1 ").trim()}:{})};
+    if(k==="fpm")S.fpm.anag={...S.fpm.anag,iban:v};UI.ibTipo=null;save();DB.saveIban(k,S.payAcc[k]);toast("Conto salvato: i pagamenti arriveranno qui");
     if(UI.screen==="iban")afterAuthFlow();else{UI.stack.pop();render()}},
   pag:f=>{const m=f.dataset.m,err=$("#pg-err"),data=f.data.value,imp=parseFloat(String(f.importo.value).replace(",","."));
     if(!data||data>today())return err.textContent="Indica la data del pagamento (non nel futuro).";

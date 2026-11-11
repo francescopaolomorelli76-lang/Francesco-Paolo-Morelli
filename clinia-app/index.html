@@ -1950,7 +1950,9 @@ const ACT={
   ricevutaPdf:async d=>{try{const{blob,nome}=await ricevutaPDF(d.v);
     if(d.k==="archivia"){const id=uid(),f=new File([blob],nome,{type:"application/pdf"});if(await IDB.set("fpm:"+id,{name:nome,blob:f})){S.fpm.docs.push({id,name:nome,size:blob.size,cat:"Ricevuta compenso",at:Date.now()});S.fpm.ric[d.v]={...(S.fpm.ric[d.v]||{}),emessa:true,archiviata:true};save();toast("Ricevuta salvata in Documenti");render()}return}
     const file=new File([blob],nome,{type:"application/pdf"});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome})}else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+    const dl=window.claude&&window.claude.use?await window.claude.use("downloads").catch(()=>null):null;
+    if(dl){try{await dl.save({filename:nome,data:blob});toast("Ricevuta salvata")}catch(e){if(e&&e.code!=="declined")toast("Download non disponibile qui: usa “Crea e salva in Documenti”")}}
+    else if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome})}else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
     S.fpm.ric[d.v]={...(S.fpm.ric[d.v]||{}),emessa:true};save();render()}catch(e){if(e&&e.name!=="AbortError")toast("PDF non creato: "+(e.message||e))}},
   copyRicevuta:()=>{const t=ricevutaText(UI.sheet.m);navigator.clipboard.writeText(t).then(()=>toast("Ricevuta copiata"),()=>toast("Seleziona il testo e copialo"))},
   room3d:d=>push({page:"room3d",id:d.id}),

@@ -553,8 +553,9 @@ const TARIFFE_ORE={ora:40,pacchetti:[[10,35],[20,30],[30,25],[40,20],[50,15]]};
 const PERC_BASE=null; // studi senza macchinari: percentuale da concordare con la direzione
 const PREZZI_PRESTAZIONI_UFFICIALI=false;
 // Appuntamenti inseriti dallo specialista in Agenda (paziente contattato per telefono o di persona):
-// servizio di prenotazione a FPM per questi appuntamenti (0 = nessun addebito; da decidere)
-const SERVIZIO_AGENDA=0; // i prezzi delle visite li imposta ogni specialista
+// anche qui il servizio di prenotazione (9 €): lo specialista lo aggiunge al suo prezzo (es. 130 € → 139 €)
+// e l'app lo addebita sulla sua carta registrata quando la visita è pagata (contanti o POS in sede)
+const servizioAgenda=()=>APP_FEE; // i prezzi delle visite li imposta ogni specialista
 const TARIFFARIO={ufficiale:true,stanze:{ // (storico) le tariffe a ore ora sono TARIFFE_ORE
   standard:{ora:15,mezza:50,giornata:90},ampio:{ora:20,mezza:65,giornata:120},compatto:{ora:12,mezza:40,giornata:75}}};
 const DOCTORS=[
@@ -1314,7 +1315,7 @@ const nowStamp=()=>today()+" "+toT(nowMin());
 function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lordo)*ARCA.pct:0,rit=x.netto!=null?x.lordo-x.netto:x.lordo*RIT();mov.push({...x,arca,rit,netto:x.netto!=null?x.netto:x.lordo-rit})};
   for(const d of DOCTORS){const own=d.id===OWNER.doctorId;for(const a of proAllOf(d.id).filter(a=>a.date.startsWith(m))){
     if(a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"paziente",demo:a.demo});
-    else if(a.method==="struttura"&&!own&&(a.origine!=="agenda"||SERVIZIO_AGENDA>0)&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
+    else if(a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:a.origine==="agenda"?"Appuntamento in Agenda":"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
   for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
   const k=monthIndex(m),pl=pagStato(m);if(k>=1&&k<=LICENZA.mesi&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Licenza Clinia App",ini:"",svc:(p=>`rata ${k} di ${LICENZA.mesi}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:LICENZA.netto/(1-RIT()),netto:LICENZA.netto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
@@ -1615,7 +1616,7 @@ function agendaTab(){const d=doc(S.proId);if(!UI.proDay||!OPEN[parseD(UI.proDay)
   <h2 class="h-sec">${cap(fmtD(ds))}</h2>
   ${mine.length?mine.map(b=>{const r=room(b.roomId);const aps=proAppts(ds).filter(a=>a.time>=b.start&&a.time<b.end);
    return `<div class="shift"><div class="shift-h">${ic("door","sm")}<span style="flex:1">${r.name} · ${ROOM_TYPES[r.type].label}</span><span class="num">${b.start}–${b.end}</span></div>
-   ${aps.length?aps.map(a=>`<div class="ap"><span class="tm">${a.time}</span><span class="t"><b>${esc(a.name)}</b>${a.demo?' <span class="tiny">(esempio)</span>':""}<small>${esc(a.svc)} · ${eur(a.price)}${a.note?" · “"+esc(a.note)+"”":""}</small></span>${statoAzioni(a)}</div>`).join(""):`<div class="ap free"><span class="tm">—</span><span class="t">Nessuna visita prenotata in questo turno</span></div>`}</div>`}).join("")
+   ${aps.length?aps.map(a=>`<div class="ap"><span class="tm">${a.time}</span><span class="t"><b>${esc(a.name)}</b>${a.demo?' <span class="tiny">(esempio)</span>':""}<small>${esc(a.svc)} · ${a.origine==="agenda"?"da incassare "+eur(a.price+servizioAgenda()):eur(a.price)}${a.note?" · “"+esc(a.note)+"”":""}</small></span>${statoAzioni(a)}</div>`).join(""):`<div class="ap free"><span class="tm">—</span><span class="t">Nessuna visita prenotata in questo turno</span></div>`}</div>`}).join("")
   :`<div class="card center">${ic("door")}<h3>Nessuno studio prenotato</h3><p class="muted small">Prenota uno studio per aprire le tue disponibilità ai pazienti.</p><button class="btn primary" data-act="tab" data-v="stanze">Prenota uno studio</button></div>`}</div>`}
 function firstOpen(){for(let k=0;k<14;k++){const ds=addDays(today(),k);if(OPEN[parseD(ds).getDay()])return ds}return today()}
 
@@ -1675,7 +1676,7 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
   ${modalitaCard()}
   <section class="card"><h3 style="margin-bottom:8px">Studi: affitto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
   <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti</h3>${pacchettoStato()}${tariffeOreHTML(!isOwner())}</section>
-  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">Il prezzo delle visite lo decidi tu: i pazienti lo vedono quando prenotano. La fattura al paziente la emetti tu.</p>
+  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">Il prezzo delle visite lo decidi tu: i pazienti lo vedono quando prenotano. La fattura al paziente la emetti tu. Per i pazienti che ti chiamano e che scrivi in Agenda chiedi il prezzo più ${eur(APP_FEE)} (es. 130 € → 139 €): il servizio viene addebitato sulla tua carta.</p>
    <div class="svc-edit tiny"><span>Prestazione</span><span>Minuti</span><span>Prezzo €</span></div>
    ${svc.map(s=>`<div class="svc-edit"><span class="small" style="font-weight:700">${esc(s.name)}</span><input value="${s.dur}" disabled aria-label="Durata ${esc(s.name)}"><input id="pr-${s.i}" name="p${s.i}" inputmode="decimal" value="${s.price}" aria-label="Prezzo ${esc(s.name)}"></div>`).join("")}
    <button class="btn primary block" type="submit">Salva prezzi</button></form></div>`}
@@ -1716,6 +1717,7 @@ function sheetHTML(){const s=UI.sheet;
     <div class="fgrid"><label class="field"><span>Paziente (nome e cognome)</span><input id="aa-nome" name="nome" maxlength="60" autocomplete="off" value="${esc(s.nome||"")}"></label>
      <label class="field"><span>Telefono (facoltativo)</span><input id="aa-tel" name="tel" inputmode="tel" maxlength="20" value="${esc(s.tel||"")}"></label></div>
     <label class="field"><span>Prestazione</span><select id="aa-svc" data-change="aaSvc">${svc.map(x=>`<option value="${x.i}" ${x.i===(s.svc||0)?"selected":""}>${esc(x.name)} · ${x.dur} min · ${eur(x.price)}</option>`).join("")}</select></label>
+    <div class="card row" style="gap:10px;background:var(--gold-soft);border-color:var(--gold)">${ic("euro","sm")}<span class="small">Da chiedere al paziente: <b>${eur(sv.price+servizioAgenda())}</b> (${eur(sv.price)} tuoi + ${eur(servizioAgenda())} di servizio, addebitati sulla tua carta quando segni la visita pagata).</span></div>
     <span class="label">Giorno</span><div class="days">${gg.map(d=>{const dt=parseD(d);return `<button type="button" class="day ${d===ds?"on":""}" data-act="aaDay" data-v="${d}"><small>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{month:"short"})}</i></button>`}).join("")}</div>
     <span class="label">Orario · ${esc(bookingsOn(ds,b=>b.doctorId===S.proId).map(b=>room(b.roomId).name+" "+b.start+"–"+b.end).join(" · "))}</span>
     <div class="slots">${sl.length?sl.map(x=>{const occ=x.free?null:occupanteSlot(S.proId,ds,toMin(x.time),sv.dur);return `<button type="button" class="slot ${s.time===x.time?"on":""}" data-act="aaTime" data-v="${x.time}" ${x.free?"":"disabled"} title="${occ?esc(occ):""}">${x.time}${occ?`<small style="display:block;font-size:.66rem;opacity:.85">${esc(occ.split(" ")[0])}</small>`:""}</button>`}).join(""):`<p class="small muted">Nessun orario utile in questo turno per ${esc(sv.name)}.</p>`}</div>
@@ -1928,7 +1930,7 @@ const ACT={
   rpCard:d=>{UI.sheet.card=d.v;render()},
   rpBack:()=>{UI.sheet.step=null;render()},
   paySeg:d=>{UI.paySeg=d.v;render()},
-  markPaid:d=>{UI.openPz=d.n;if(d.id.startsWith("demo|"))S.demoPaid.push(d.id);else{const a=S.appts.find(x=>"app|"+x.id===d.id);if(a){a.paid=true;a.paidAt=Date.now();a.paidVia="struttura";DB.update("appointments",a.id,{pagato:true})}}save();toast(`Pagamento di ${d.n} segnato come ricevuto`)},
+  markPaid:d=>{UI.openPz=d.n;if(d.id.startsWith("demo|"))S.demoPaid.push(d.id);else{const a=S.appts.find(x=>"app|"+x.id===d.id);if(a){a.paid=true;a.paidAt=Date.now();a.paidVia="struttura";DB.update("appointments",a.id,{pagato:true})}}save();const ag=(S.appts.find(x=>"app|"+x.id===d.id)||{}).origine==="agenda";toast(`Pagamento di ${d.n} segnato come ricevuto${isOwner()?"":` · ${eur(APP_FEE)} di servizio addebitati stanotte sulla tua carta`}`)},
   askCancelRoom:d=>{const b=allBookings().find(x=>x.id===d.id);const n=activeAppts().filter(a=>a.doctorId===S.proId&&a.date===b.date&&a.time>=b.start&&a.time<b.end).length;
     if(n){toast(`Ci sono ${n} visite prenotate in questo turno: spostale prima di annullarlo.`);return}
     UI.sheet={type:"confirm",title:"Annullare il turno?",text:`${room(b.roomId).name}, ${esc(fmtD(b.date))} ${b.start}–${b.end}. Lo studio tornerà disponibile per gli altri professionisti.${b.paid?` Clinia ti rimborserà ${eur(b.paid.amount)} sulla carta usata.`:""}`,ok:"Annulla turno",act:"cancelRoom",id:b.id,danger:true};render()},
@@ -2024,7 +2026,7 @@ const FORMS={
     const slot=slotsFor(S.proId,ds,svc.dur).find(x=>x.time===sh.time);
     if(!slot)return err.textContent="Questo orario è fuori dagli studi che hai prenotato.";
     if(!slot.free){const o=occupanteSlot(S.proId,ds,toMin(sh.time),svc.dur);return err.textContent=`Alle ${sh.time} c’è già ${o||"un altro paziente"}: scegli un altro orario o un altro giorno.`}
-    const a={id:uid(),doctorId:S.proId,date:ds,time:sh.time,dur:svc.dur,service:svc.name,price:svc.price,roomId:slot.roomId,online:false,note:"",patient:nome,tel:f.tel.value.trim(),forId:"agenda",pay:"clinic",paid:false,fee:SERVIZIO_AGENDA,feeBy:"specialista",status:"confermata",origine:"agenda",created:Date.now()};
+    const a={id:uid(),doctorId:S.proId,date:ds,time:sh.time,dur:svc.dur,service:svc.name,price:svc.price,roomId:slot.roomId,online:false,note:"",patient:nome,tel:f.tel.value.trim(),forId:"agenda",pay:"clinic",paid:false,fee:servizioAgenda(),feeBy:"specialista",status:"confermata",origine:"agenda",created:Date.now()};
     S.appts.push(a);save();DB.saveAgenda(a);UI.sheet=null;UI.proDay=ds;render();toast(`${nome} fissato ${fmtD(ds,{weekday:"short",day:"numeric",month:"short"})} alle ${sh.time} · ${room(slot.roomId).name}`)},
   cliniaPay:f=>{const err=$("#cp-err");let label;
     if(UI.sheet.mode==="carta"){const c=readCard(f,err);if(!c)return;label=c.brand+" •••• "+c.last4}

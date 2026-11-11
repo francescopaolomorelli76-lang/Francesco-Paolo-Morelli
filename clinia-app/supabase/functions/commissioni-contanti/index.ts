@@ -1,5 +1,5 @@
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima, addebita il servizio (9 € a visita)
+// Ogni notte: per le visite pagate IN STRUTTURA del giorno prima (prenotate in app o scritte dallo specialista in Agenda), addebita il servizio (9 € a visita)
 // sulla carta dello specialista, in un unico addebito al giorno, e accredita subito la quota a FPM
 // (9 € netti; ritenuta a carico di Clinia; il 3 % per Progetto Arca lo bonifica FPM). Pianificazione: Supabase › Cron, ogni giorno alle 02:00,
 // con l'header Authorization: Bearer <CRON_SECRET>.
@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   const oggi = new Date().toISOString().slice(0, 10);
   const { data: visite, error } = await admin.from("appointments")
     .select("id, specialist_id, commissione_app, specialists(is_titolare, specialist_private(stripe_customer_id, stripe_payment_method))")
-    .eq("metodo_pagamento", "struttura").eq("commissione_addebitata", false).neq("stato", "annullata").lt("giorno", oggi);
+    .eq("metodo_pagamento", "struttura").eq("commissione_addebitata", false)
+    .in("stato", ["confermata", "conclusa"]).gt("commissione_app", 0).lt("giorno", oggi);   // anche gli appuntamenti scritti in Agenda
   if (error) return json({ errore: error.message }, 500);
 
   const per = new Map<string, any[]>();

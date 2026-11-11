@@ -530,7 +530,7 @@ const PAYEES={rooms:"Clinia Srl",sub:"Clinia Srl",visite:"Clinia, che gira il co
 // Compenso a FPM WebDesignTech (autore del software), pagato da Clinia:
 // 300 € al mese per i primi 12 mesi (licenza e fornitura dell'app), poi una royalty da concordare sugli incassi.
 // Primi 12 mesi: 300 € NETTI al mese a FPM (Clinia aggiunge la ritenuta d'acconto). Poi solo abbonamenti e servizio prenotazioni.
-const LICENZA={netto:300,mesi:12,inizio:"2026-11"};
+const LICENZA={netto:300,mesi:12,inizio:"2026-12"}; // l'app parte a dicembre 2026
 // Beneficenza: il 3 % del servizio di prenotazione va a Progetto Arca (IBAN da prendere dal sito ufficiale della fondazione)
 const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",pct:0.03,
   storia:[["1994","Nasce a Milano per dare aiuto concreto a chi vive in grave povertà ed emarginazione. Il primo intervento è un centro di accoglienza residenziale per persone senza dimora con problemi di dipendenza."],
@@ -625,7 +625,7 @@ const HORIZON=21;
 const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
 try{localStorage.removeItem("clinia-app-v1")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
@@ -1333,8 +1333,13 @@ function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lor
 const PAG_METODI={automatico:"Automatico (carta o conto)",bonifico:"Bonifico",contanti:"Contanti con ricevuta"};
 function pagStato(m){const k=monthIndex(m),dovuto=k>=1&&k<=LICENZA.mesi?LICENZA.netto:0,p=S.pag[m];
   if(p)return{k,dovuto,pagato:true,...p};
-  if(dovuto&&S.licMetodo==="automatico"&&S.cliniaPay&&m+"-01 06:00"<=nowStamp())return{k,dovuto,pagato:true,metodo:"automatico",data:m+"-01",importo:dovuto,conf:true,auto:true};
-  return{k,dovuto,pagato:false,metodo:S.licMetodo,scaduto:dovuto&&m+"-01"<=today()}}
+  if(dovuto&&stripeAttivo()&&S.licMetodo==="automatico"&&S.cliniaPay&&m+"-01 06:00"<=nowStamp())return{k,dovuto,pagato:true,metodo:"automatico",data:m+"-01",importo:dovuto,conf:true,auto:true};
+  return{k,dovuto,pagato:false,metodo:metodoLic(),scaduto:dovuto&&m+"-01"<=today()}}
+const metodoLic=()=>!stripeAttivo()&&S.licMetodo==="automatico"?"bonifico":S.licMetodo;
+// Finché Stripe non è attivo, abbonamenti e servizio li incassa Clinia e li versa a FPM con lo stesso bonifico mensile
+const stripeAttivo=()=>!MODALITA_PROVA&&!!STRIPE.publishableKey;
+function extraFPM(m){if(stripeAttivo())return{abb:0,serv:0,tot:0};const mov=fpmMovimenti(m).filter(x=>x.da!=="clinia");
+  const abb=r2(mov.filter(x=>x.tipo==="Abbonamento").reduce((t,x)=>t+x.netto,0)),serv=r2(mov.filter(x=>x.pren).reduce((t,x)=>t+x.netto,0));return{abb,serv,tot:r2(abb+serv)}}
 function pagBadge(p){return !p.dovuto?`<span class="badge grey">Non dovuta</span>`:p.pagato?`<span class="badge">${ic("check","sm")} Pagato${p.conf?" · ricevuto":""}</span>`:`<span class="badge ${p.scaduto?"warn":"grey"}">Da pagare</span>`}
 function pagDesc(p){return p.pagato?`${eur(p.importo)} ${p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"in automatico"} il ${esc(fmtD(p.data,{day:"numeric",month:"long"}))}${p.nota?" · "+esc(p.nota):""}`:""}
 function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
@@ -1480,16 +1485,18 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   <div class="card stack" style="gap:10px"><h3>Scadenze del mese</h3>
    <div class="row between small"><span>F24 entro il 16: ritenute su compensi FPM</span><b class="num">${eur(c.f24)}</b></div>
    <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
-  ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:S.licMetodo;return `<div class="card stack" style="gap:10px"><div class="row between"><h3>Pagamento licenza a FPM</h3>${pagBadge(p)}</div>
+  ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:metodoLic(),ex=extraFPM(m),tot=r2((p.dovuto||0)+ex.tot),A=S.fpm.anag||{};return `<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Pagamento licenza a FPM":"Pagamento mensile a FPM"}</h3>${pagBadge(p)}</div>
+   ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Licenza<small>${p.dovuto?"rata "+p.k+" di "+LICENZA.mesi:"non dovuta"}</small></dt><dd>${eur(p.dovuto||0)}</dd><dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd><dt>Servizio prenotazioni<small>9 € a visita, incassati da Clinia</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
+   <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${A.iban?`: <b>${esc(A.intestatario||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(A.iban)}</span>`:"."} Causale: “Licenza Clinia App e quote ${esc(meseNome(m))}”.</p>`:""}
    ${!p.dovuto?`<p class="small muted">${p.k>LICENZA.mesi?"La licenza è terminata dopo 12 mesi: niente da pagare.":"La licenza parte a "+esc(meseNome(LICENZA.inizio))+"."}</p>`
    :p.pagato?`<p class="small">${ic("check","sm")} Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.</p><p class="tiny">${p.conf?"FPM ha confermato di averlo ricevuto.":"In attesa della conferma di FPM."} La ritenuta (${eur(r2(lordoDaNetto(LICENZA.netto)-LICENZA.netto))}) va comunque versata con F24 entro il 16 del mese dopo.</p>
      <div class="row" style="gap:8px;flex-wrap:wrap">${p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta del mese</button>`:""}${!p.auto&&!p.conf?`<button class="btn ghost sm" data-act="pagAnnulla" data-v="${m}">Annulla</button>`:""}</div>`
    :`<p class="small">Rata ${p.k} di ${LICENZA.mesi}: <b>${eur(p.dovuto)}</b> netti a FPM.</p>
-     <div class="seg" role="tablist">${Object.keys(PAG_METODI).map(k=>`<button class="${met===k?"on":""}" data-act="pagMetodo" data-v="${k}">${k==="automatico"?"Automatico":k==="bonifico"?"Bonifico":"Contanti"}</button>`).join("")}</div>
+     <div class="seg" role="tablist">${Object.keys(PAG_METODI).filter(k=>k!=="automatico"||stripeAttivo()).map(k=>`<button class="${met===k?"on":""}" data-act="pagMetodo" data-v="${k}">${k==="automatico"?"Automatico":k==="bonifico"?"Bonifico":"Contanti"}</button>`).join("")}</div>
      ${met==="automatico"?(S.cliniaPay?`<p class="small">${ic("check","sm")} Attivo con ${esc(S.cliniaPay.label)}: il giorno 1 l’app addebita ${eur(LICENZA.netto)} e li accredita a FPM.</p><button class="btn ghost sm" data-act="cliniaPayEdit">Cambia carta o conto</button>`
        :`<p class="small muted">Registra la carta o il conto di Clinia: il giorno 1 di ogni mese l’app paga in automatico ${eur(LICENZA.netto)} netti a FPM.</p><button class="btn primary block" data-act="cliniaPayEdit">${ic("card","sm")} Registra carta o conto</button>`)
      :`<form class="stack" data-form="pag" data-m="${m}" style="gap:10px" novalidate><div class="fgrid"><label class="field"><span>Data del pagamento</span><input id="pg-data" name="data" type="date" value="${today()}" max="${today()}"></label>
-       <label class="field"><span>Importo netto</span><input id="pg-imp" name="importo" inputmode="decimal" value="${String(p.dovuto).replace(".",",")}"></label></div>
+       <label class="field"><span>Importo netto</span><input id="pg-imp" name="importo" inputmode="decimal" value="${String(stripeAttivo()?p.dovuto:tot).replace(".",",")}"></label></div>
        <label class="field"><span>${met==="contanti"?"N. ricevuta firmata da FPM":"Riferimento del bonifico (CRO)"}</span><input id="pg-nota" name="nota" maxlength="60" placeholder="${met==="contanti"?"es. 2026/11":"facoltativo"}"></label>
        <p class="tiny">${met==="contanti"?"In contanti: per ogni mese FPM firma la ricevuta (contratto di licenza con pagamento in contanti e ricevuta mensile). Conserva la ricevuta: senza bonifico è l’unica prova del pagamento. Il limite per i contanti (sotto 5.000 €) è rispettato.":"Con bonifico: causale “Licenza Clinia App ‒ "+esc(meseNome(m))+"”."} La ritenuta resta da versare con F24.</p>
        <p class="err" id="pg-err"></p><button class="btn primary block" type="submit">${ic("check","sm")} Segna pagato</button></form>`}`}
@@ -1527,14 +1534,15 @@ function fpmMese(m){const mov=fpmMovimenti(m),sum=(f,k)=>r2(mov.filter(f).reduce
 function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.ric[m]||{},acc=S.payAcc.fpm,lim=UI.movAll?f.mov.length:15;
   return `<div class="pad stack" style="gap:16px"><div class="row between"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">FPM Tech</h1></div><span class="live"><i></i>Tempo reale</span></div>${meseNav("fpmMese",m)}
   <div class="card" style="text-align:center"><span class="label">Incassato netto nel mese</span><div class="big">${eur(f.netto)}</div>
-   <p class="tiny">${acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
+   <p class="tiny">${!stripeAttivo()?`Versato da Clinia con bonifico mensile${(S.fpm.anag||{}).iban?" su IBAN ••••"+esc(S.fpm.anag.iban.replace(/\s/g,"").slice(-4)):""}`:acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
   <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Specialisti abbonati${DB.on?"":" (esempio)"}</span></div><div class="stat"><b>${f.prenN}</b><span>Prenotazioni con servizio</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
   <dl class="card ledger"><dt>Licenza Clinia App<small>${f.k>=1&&f.k<=LICENZA.mesi?`rata ${f.k} di ${LICENZA.mesi}, ${eur(LICENZA.netto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:"terminata: dal 13° mese solo abbonamenti e servizio"}</small></dt><dd>${eur(f.licN)}</dd>
    <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)} netti</small></dt><dd>${eur(f.abbNet)}</dd>
    <dt>Servizio prenotazioni<small>${f.prenN} × ${eur(APP_FEE)} netti</small></dt><dd>${eur(f.prenNet)}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
   <p class="tiny">Importi netti garantiti: la ritenuta d’acconto (${eur(f.rit)} nel mese, su un lordo fiscale di ${eur(f.lordo)}) la aggiunge e la versa Clinia con F24.</p>
-  ${(()=>{const p=pagStato(m);return p.dovuto?`<div class="card stack" style="gap:10px"><div class="row between"><h3>Licenza da Clinia</h3>${pagBadge(p)}</div>
+  ${(()=>{const p=pagStato(m),ex=extraFPM(m);return p.dovuto||ex.tot?`<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Licenza da Clinia":"Bonifico mensile da Clinia"}</h3>${pagBadge(p)}</div>
+   ${stripeAttivo()?"":`<p class="small">Da ricevere: <b>${eur(r2((p.dovuto||0)+ex.tot))}</b> netti (licenza ${eur(p.dovuto||0)} + abbonamenti ${eur(ex.abb)} + servizio ${eur(ex.serv)}).${(S.fpm.anag||{}).iban?"":` <button class="link" data-act="fpmRicevuta" data-v="${m}">Inserisci il tuo IBAN</button> perché Clinia lo veda.`}</p>`}
    <p class="small">${p.pagato?`Rata ${p.k} di ${LICENZA.mesi}: ${pagDesc(p)}.`:`Rata ${p.k} di ${LICENZA.mesi}: ${eur(p.dovuto)} netti, non ancora segnati da Clinia${S.licMetodo!=="automatico"?" (paga "+(S.licMetodo==="contanti"?"in contanti":"con bonifico")+")":""}.`}</p>
    ${p.pagato&&!p.auto?`<label class="chk"><input type="checkbox" data-change="pagConf" data-m="${m}" ${p.conf?"checked":""}> Confermo di aver ricevuto ${eur(p.importo)}${p.metodo==="contanti"?" e firmato la ricevuta":""}</label>`:""}
    ${p.pagato&&p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta da firmare</button>`:""}</div>`:""})()}
@@ -1585,6 +1593,65 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
    <li>Prima di firmare verifica il contratto di lavoro: esclusiva, eventuale autorizzazione del datore (obbligatoria se sei dipendente pubblico) e che l’app non sia stata creata con mezzi o nell’orario del lavoro.</li>
    <li>Conserva contratto, ricevute, bonifici e CU per almeno 5 anni.</li></ul></div>
   <div class="card"><h3 style="margin-bottom:6px">Mesi dell’anno</h3>${ms.map(x=>{const st=S.fpm.ric[x.m]||{},p=pagStato(x.m);return `<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${p.dovuto?(p.pagato?"Licenza pagata "+(p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"in automatico"):"Licenza da pagare"):""}</span></span><b class="num">${eur(x.lordo)}</b><span class="badge ${st.pagata||(p.dovuto&&p.pagato)?"":"grey"}">${(p.dovuto?p.pagato:st.pagata)?"Pagato":st.emessa?"Ricevuta emessa":x.lordo?"Da emettere":"—"}</span></div>`}).join("")}</div></div>`}
+/* ---------- Ricevuta mensile FPM in PDF ---------- */
+function ricevutaDati(m){const f=fpmMese(m),p=pagStato(m),q=quotaImp(),rr=n=>Math.round(n*100)/100;
+  const righe=[];if(p.dovuto)righe.push([`Licenza d’uso mensile di “Clinia App” – rata ${p.k} di ${LICENZA.mesi}`,"1",rr(lordoDaNetto(LICENZA.netto))]);
+  if(f.abbN)righe.push(["Quota su abbonamenti degli specialisti",String(f.abbN),rr(f.abbL)]);
+  if(f.prenN)righe.push(["Quota sul servizio di prenotazione delle visite",String(f.prenN),rr(f.prenL)]);
+  const lordo=rr(righe.reduce((t,x)=>t+x[2],0)),imp=rr(lordo*q),rit=rr(imp*0.2),netto=rr(lordo-rit);
+  return{righe,lordo,imp,rit,netto,quota:q,bollo:lordo>77.47,p,num:m.replace("-","/")}}
+let jsPDFp=null;const loadPdf=()=>window.jspdf?Promise.resolve():jsPDFp||(jsPDFp=new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=ok;sc.onerror=()=>{jsPDFp=null;ko(new Error("serve la connessione a internet"))};document.head.appendChild(sc)}));
+const imgData=src=>new Promise(ok=>{const i=new Image();i.onload=()=>{try{const c=document.createElement("canvas");c.width=i.naturalWidth;c.height=i.naturalHeight;c.getContext("2d").drawImage(i,0,0);ok({d:c.toDataURL("image/png"),w:i.naturalWidth,h:i.naturalHeight})}catch(e){ok(null)}};i.onerror=()=>ok(null);i.src=src});
+async function ricevutaPDF(m,oggi){await loadPdf();const{jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"}),r=ricevutaDati(m),A=S.fpm.anag||{};
+  const W=210,L=18,R=W-18,eu=n=>(n<0?"- ":"")+Math.abs(n).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+  const data=oggi||new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const navy=[43,74,100],teal=[44,94,102],gold=[163,130,88],grey=[110,120,130],ink=[28,49,68];
+  const col=(c,f="text")=>f==="fill"?doc.setFillColor(...c):f==="draw"?doc.setDrawColor(...c):doc.setTextColor(...c);
+  // intestazione
+  col(navy,"fill");doc.rect(0,0,W,4,"F");
+  const logo=await imgData("img/fpm-logo.png");if(logo){const h=24,w=h*logo.w/logo.h;doc.addImage(logo.d,"PNG",L,10,w,h)}
+  const x0=logo?L+24*logo.w/logo.h+5:L;doc.setFont("helvetica","bold");doc.setFontSize(15);col(ink);doc.text("FPM WebDesignTech",x0,18);
+  doc.setFont("helvetica","normal");doc.setFontSize(9.5);col(grey);doc.text("di "+LEGAL.autore+" · autore del software Clinia App",x0,23.5);
+  doc.setFontSize(9);doc.text("Opera dell’ingegno – licenza d’uso",x0,28.5);
+  doc.setFont("helvetica","bold");doc.setFontSize(10);col(teal);doc.text("RICEVUTA N. "+r.num,R,17,{align:"right"});
+  doc.setFont("helvetica","normal");col(ink);doc.text("Data: "+data,R,23,{align:"right"});doc.text("Periodo: "+meseNome(m),R,28.5,{align:"right"});
+  col(gold,"draw");doc.setLineWidth(.6);doc.line(L,38,R,38);
+  // titolo
+  doc.setFont("helvetica","bold");doc.setFontSize(13);col(navy);doc.text("Ricevuta per compenso da diritti d’autore",L,48);
+  doc.setFont("helvetica","normal");doc.setFontSize(9);col(grey);doc.text("Utilizzazione economica dell’opera dell’ingegno “Clinia App” (software) – art. 53, comma 2, lett. b), TUIR",L,53.5);
+  // riquadri
+  const box=(x,y,w,h,tit,rows)=>{col([226,231,236],"draw");doc.setLineWidth(.3);doc.roundedRect(x,y,w,h,2,2);doc.setFont("helvetica","bold");doc.setFontSize(8);col(teal);doc.text(tit,x+4,y+6);
+    let yy=y+12;rows.forEach(([b,t])=>{doc.setFont("helvetica",b?"bold":"normal");doc.setFontSize(b?10:9);col(b?ink:[60,72,84]);doc.splitTextToSize(t,w-8).forEach(l=>{doc.text(l,x+4,yy);yy+=4.6})})};
+  const bw=(R-L-6)/2;
+  box(L,60,bw,36,"PERCIPIENTE",[[1,LEGAL.autore],[0,"C.F. "+(A.cf||"________________")],[0,A.indirizzo||"Indirizzo: ______________________________"]]);
+  box(L+bw+6,60,bw,36,"COMMITTENTE (sostituto d’imposta)",[[1,CLINIC.ragione],[0,CLINIC.address],[0,"P.IVA "+(A.pivaClinia||"___________")+" · PEC "+CLINIC.pec]]);
+  // tabella
+  let y=106;col(navy,"fill");doc.rect(L,y,R-L,8,"F");doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.text("Descrizione",L+3,y+5.4);doc.text("Q.tà",R-48,y+5.4,{align:"right"});doc.text("Importo lordo",R-3,y+5.4,{align:"right"});y+=8;
+  doc.setFont("helvetica","normal");col(ink);
+  (r.righe.length?r.righe:[["Nessun compenso nel periodo","",0]]).forEach(([d,q,v],i)=>{if(i%2){col([245,245,245],"fill");doc.rect(L,y,R-L,9,"F")}col(ink);
+    doc.text(doc.splitTextToSize(d,R-L-60)[0],L+3,y+6);doc.text(q,R-48,y+6,{align:"right"});doc.text(eu(v),R-3,y+6,{align:"right"});y+=9});
+  col([226,231,236],"draw");doc.line(L,y,R,y);y+=8;
+  // totali
+  const tot=(lab,v,b,c)=>{doc.setFont("helvetica",b?"bold":"normal");doc.setFontSize(b?11:9.5);col(c||ink);doc.text(lab,R-62,y,{align:"right"});doc.text(eu(v),R-3,y,{align:"right"});y+=b?8:6.5};
+  tot("Compenso lordo",r.lordo);tot(`Imponibile (${Math.round(r.quota*100)} % del lordo)`,r.imp,false,grey);tot("Ritenuta d’acconto 20 % sull’imponibile",-r.rit);
+  col(teal,"draw");doc.setLineWidth(.5);doc.line(R-95,y-3,R,y-3);y+=2;tot("Netto corrisposto",r.netto,true,navy);
+  // pagamento e note
+  y+=4;const p=r.p,met={bonifico:"bonifico bancario",contanti:"contanti",automatico:"addebito automatico"}[p.metodo]||p.metodo;
+  doc.setFont("helvetica","bold");doc.setFontSize(9);col(teal);doc.text("PAGAMENTO",L,y);y+=5;doc.setFont("helvetica","normal");col(ink);
+  doc.text(p.pagato?`Ricevuto il ${new Date(p.data).toLocaleDateString("it-IT")} con ${met}${p.nota?" (rif. "+p.nota+")":""}.`:`Da corrispondere con ${met||"bonifico bancario"}${A.iban?" sull’IBAN "+A.iban:""}.`,L,y);y+=10;
+  doc.setFont("helvetica","bold");col(teal);doc.text("NOTE",L,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(8.5);col([60,72,84]);
+  ["Operazione esclusa dal campo di applicazione dell’IVA ai sensi dell’art. 3, comma 4, lett. a), DPR 633/1972.",
+   "Ritenuta d’acconto operata dal committente ai sensi dell’art. 25 DPR 600/1973, da versare con modello F24 entro il 16 del mese successivo al pagamento.",
+   r.bollo?"Imposta di bollo di 2,00 € assolta sull’originale (importo superiore a 77,47 €).":"Importo non superiore a 77,47 €: imposta di bollo non dovuta.",
+   "Il percipiente dichiara di essere autore dell’opera e titolare dei diritti di utilizzazione economica concessi in licenza."].forEach(t=>{doc.splitTextToSize("• "+t,R-L).forEach(l=>{doc.text(l,L,y);y+=4.3});y+=1});
+  // firma
+  y=Math.max(y+12,238);if(r.bollo){col(gold,"draw");doc.setLineDashPattern([1.2,1],0);doc.rect(L,y-6,22,26);doc.setLineDashPattern([],0);doc.setFontSize(7);col(gold);doc.text("marca da",L+11,y+5,{align:"center"});doc.text("bollo 2 €",L+11,y+9,{align:"center"})}
+  doc.setFontSize(9);col(grey);doc.text("Firma del percipiente",R-60,y);col([150,160,170],"draw");doc.setLineWidth(.3);doc.line(R-60,y+14,R,y+14);
+  doc.setFontSize(8.5);col(ink);doc.text(LEGAL.autore,R-60,y+19);
+  // piè di pagina
+  col(navy,"fill");doc.rect(0,287,W,10,"F");doc.setFontSize(7.5);doc.setTextColor(255,255,255);doc.text("© "+LEGAL.anno+" FPM WebDesignTech – "+LEGAL.autore+" · Ricevuta generata con Clinia App",W/2,293,{align:"center"});
+  const nome=`Ricevuta_${r.num.replace("/","-")}_FPM_Clinia.pdf`;return{blob:doc.output("blob"),nome,doc}}
 function ricevutaText(m){const f=fpmMese(m),L=x=>("€ "+(+x).toFixed(2).replace(".",",")).padStart(12);return `RICEVUTA PER CESSIONE DI DIRITTI D’AUTORE
 N. ${m.replace("-","/")}                         Data: ${new Date().toLocaleDateString("it-IT")}
 
@@ -1700,7 +1767,18 @@ function sheetHTML(){const s=UI.sheet;
    ${s.mode==="carta"?cardFields("cp"):`<label class="field"><span>Intestatario</span><input id="cp-holder" name="holder" value="Clinia Srl"></label><label class="field"><span>IBAN di Clinia</span><input id="cp-iban" name="iban" maxlength="34" data-input="iban" placeholder="IT.."></label><label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="cp-ok" name="ok" type="checkbox" style="width:22px;height:22px;accent-color:var(--accent)"><span class="t small">Autorizzo l’addebito diretto SEPA mensile su questo conto.</span></label>`}
    <div class="demo-note">${ic("lock","sm")}<span>Versione di prova: nessun addebito reale.</span></div>
    <p class="err" id="cp-err"></p><button class="btn primary block" type="submit">Attiva il pagamento automatico</button><button class="btn ghost block" type="button" data-act="closeSheet">Annulla</button></form>`;
-  if(s.type==="ricevuta")return `<div class="stack" style="gap:12px"><h2 style="font-size:1.2rem;font-weight:800">Ricevuta di ${esc(meseNome(s.m))}</h2><p class="muted small">Completa i dati tra parentesi quadre, firma e consegnala a Clinia. Poi caricala in Documenti.</p><div class="rcpt">${esc(ricevutaText(s.m))}</div><button class="btn primary block" data-act="copyRicevuta">Copia il testo</button><button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
+  if(s.type==="ricevuta"){const A=S.fpm.anag||{},r=ricevutaDati(s.m);return `<div class="stack" style="gap:12px"><h2 style="font-size:1.2rem;font-weight:800">Ricevuta di ${esc(meseNome(s.m))}</h2>
+   <p class="muted small">Ricevuta per compenso da diritti d’autore (licenza del software Clinia App). Completa i dati una volta sola: restano salvati su questo telefono.</p>
+   <dl class="card ledger" style="margin:0"><dt>Compenso lordo</dt><dd>${eur(r.lordo)}</dd><dt>Ritenuta d’acconto<small>20 % sul ${Math.round(r.quota*100)} %</small></dt><dd class="neg">− ${eur(r.rit)}</dd><dt class="tot">Netto</dt><dd class="tot">${eur(r.netto)}</dd></dl>
+   <form class="stack" data-form="anag" style="gap:10px" novalidate><span class="label">Dati per la ricevuta</span>
+    <label class="field"><span>Codice fiscale</span><input id="an-cf" name="cf" maxlength="16" autocapitalize="characters" value="${esc(A.cf||"")}"></label>
+    <label class="field"><span>Indirizzo di residenza</span><input id="an-ind" name="indirizzo" maxlength="80" placeholder="Via…, n. – CAP Città (Prov.)" value="${esc(A.indirizzo||"")}"></label>
+    <label class="field"><span>IBAN per i bonifici di Clinia</span><input id="an-iban" name="iban" maxlength="34" autocapitalize="characters" value="${esc(A.iban||"")}"></label>
+    <label class="field"><span>Partita IVA di Clinia Srl</span><input id="an-piva" name="piva" inputmode="numeric" maxlength="11" value="${esc(A.pivaClinia||"")}"></label>
+    <button class="btn ghost block" type="submit">Salva i dati</button></form>
+   <button class="btn primary block" data-act="ricevutaPdf" data-v="${s.m}">${ic("file","sm")} Crea il PDF della ricevuta</button>
+   <button class="btn ghost block" data-act="ricevutaPdf" data-v="${s.m}" data-k="archivia">${ic("upload","sm")} Crea e salva in Documenti</button>
+   <p class="tiny">Stampala, applica la marca da bollo da 2 € se il lordo supera 77,47 €, firmala e consegnala a Clinia (o mandala firmata via PEC).</p></div>`}
   if(s.type==="file")return `<div class="stack" style="gap:12px"><h2 style="font-size:1.1rem;font-weight:800;overflow:hidden;text-overflow:ellipsis">${esc(s.name)}</h2>${s.pdf?`<p class="muted small">Anteprima del PDF:</p><a class="btn primary block" href="${s.url}" target="_blank" rel="noopener">Apri il PDF</a>`:`<img src="${s.url}" alt="${esc(s.name)}" style="border-radius:12px">`}<button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
   if(s.type==="copyright")return `<div class="stack legal" style="gap:12px"><div style="display:grid;place-items:center"><img src="img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="height:120px;width:auto"></div>
    <h2 style="font-size:1.25rem;font-weight:800;text-align:center">Copyright e note legali</h2>
@@ -1869,6 +1947,11 @@ const ACT={
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
   fpmRicevuta:d=>{UI.sheet={type:"ricevuta",m:d.v};render()},
+  ricevutaPdf:async d=>{try{const{blob,nome}=await ricevutaPDF(d.v);
+    if(d.k==="archivia"){const id=uid(),f=new File([blob],nome,{type:"application/pdf"});if(await IDB.set("fpm:"+id,{name:nome,blob:f})){S.fpm.docs.push({id,name:nome,size:blob.size,cat:"Ricevuta compenso",at:Date.now()});S.fpm.ric[d.v]={...(S.fpm.ric[d.v]||{}),emessa:true,archiviata:true};save();toast("Ricevuta salvata in Documenti");render()}return}
+    const file=new File([blob],nome,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome})}else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+    S.fpm.ric[d.v]={...(S.fpm.ric[d.v]||{}),emessa:true};save();render()}catch(e){if(e&&e.name!=="AbortError")toast("PDF non creato: "+(e.message||e))}},
   copyRicevuta:()=>{const t=ricevutaText(UI.sheet.m);navigator.clipboard.writeText(t).then(()=>toast("Ricevuta copiata"),()=>toast("Seleziona il testo e copialo"))},
   room3d:d=>push({page:"room3d",id:d.id}),
   attr3d:d=>{UI.attrView="video";push({page:"attr3d",id:d.id})},
@@ -2043,6 +2126,9 @@ const FORMS={
     if(!slot.free){const o=occupanteSlot(S.proId,ds,toMin(sh.time),svc.dur);return err.textContent=`Alle ${sh.time} c’è già ${o||"un altro paziente"}: scegli un altro orario o un altro giorno.`}
     const a={id:uid(),doctorId:S.proId,date:ds,time:sh.time,dur:svc.dur,service:svc.name,price:svc.price,roomId:slot.roomId,online:false,note:"",patient:nome,tel:f.tel.value.trim(),forId:"agenda",pay:"clinic",paid:false,fee:servizioAgenda(),feeBy:"specialista",status:"confermata",origine:"agenda",created:Date.now()};
     S.appts.push(a);save();DB.saveAgenda(a);UI.sheet=null;UI.proDay=ds;render();toast(`${nome} fissato ${fmtD(ds,{weekday:"short",day:"numeric",month:"short"})} alle ${sh.time} · ${room(slot.roomId).name}`)},
+  anag:f=>{const v=k=>f[k].value.trim(),cf=v("cf").toUpperCase(),iban=v("iban").toUpperCase().replace(/\s+/g," ");
+    if(cf&&!/^[A-Z0-9]{16}$/.test(cf))return toast("Il codice fiscale ha 16 caratteri");if(iban&&!ibanOk(iban))return toast("Controlla l’IBAN");
+    S.fpm.anag={...S.fpm.anag,cf,indirizzo:v("indirizzo"),iban,pivaClinia:v("piva")};save();toast("Dati salvati");render()},
   cliniaPay:f=>{const err=$("#cp-err");let label;
     if(UI.sheet.mode==="carta"){const c=readCard(f,err);if(!c)return;label=c.brand+" •••• "+c.last4}
     else{const v=f.iban.value.replace(/\s/g,"").toUpperCase();if(!ibanOk(v))return err.textContent="L’IBAN non è valido.";if(!f.ok.checked)return err.textContent="Autorizza l’addebito SEPA per continuare.";label="conto ••••"+v.slice(-4)+" (SEPA)"}

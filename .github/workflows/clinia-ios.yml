@@ -15,13 +15,19 @@ concurrency:
 
 jobs:
   ios:
-    runs-on: macos-15
+    runs-on: macos-14   # macos-15 resta in coda da ore: si usa il gruppo di Mac macOS 14 con Xcode 16
     timeout-minutes: 40
     defaults:
       run:
         working-directory: clinia-app/native
     steps:
       - uses: actions/checkout@v4
+
+      - name: Xcode 16
+        working-directory: .
+        run: |
+          X=$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1); echo "Uso $X"
+          sudo xcode-select -s "$X" && xcodebuild -version
 
       - uses: actions/setup-node@v4
         with:

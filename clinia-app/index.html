@@ -433,6 +433,9 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .valori{display:grid;gap:10px}.valori .card b{color:var(--accent);font-size:1rem}
 .notifban{width:100%;text-align:left;gap:12px;border-color:var(--accent);background:var(--accent-soft)}
 a.btn{text-decoration:none;color:inherit}a.btn.primary{color:var(--on-accent)}a.link{text-decoration:none}
+.backbtn{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 16px 0 12px;border-radius:999px;background:#1f8a4c;color:#fff;font-weight:800;font-size:.95rem;flex:none;box-shadow:0 2px 8px -2px rgba(31,138,76,.5)}
+.backbtn:active{transform:scale(.96);background:#17703d}.backbtn .ic{stroke:#fff}
+.sheetback{margin:0 0 10px}
 .payoff{font-family:var(--f-display);font-size:.95rem;color:var(--ink-2);margin-top:6px}
 .r3dthumb{position:relative;display:block}.r3dthumb img{display:block;width:100%;height:150px;object-fit:cover}
 .r3dcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;background:linear-gradient(transparent,rgba(8,30,38,.78));color:#fff;display:flex;flex-direction:column}.r3dcap small{opacity:.9}
@@ -754,7 +757,7 @@ function screenHTML(){
   }
 }
 function overlayHTML(){let h="";
-  if(UI.sheet)h+=`<div class="shade" data-act="closeSheet"><div class="sheet" data-stop>${'<div class="grab"></div>'+sheetHTML()}</div></div>`;
+  if(UI.sheet)h+=`<div class="shade" data-act="closeSheet"><div class="sheet" data-stop>${'<div class="grab"></div><button class="backbtn sheetback" data-act="closeSheet" aria-label="Chiudi e torna indietro">'+ic("back","sm")+'<span>Indietro</span></button>'+sheetHTML()}</div></div>`;
   if(UI.modal)h+=`<div class="shade mid">${modalHTML()}</div>`;
   if(UI.notif){const wa=UI.notif.app==="WhatsApp";h+=`<button class="notif ${wa?"wa":""}" data-act="dismissNotif">${wa?'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#mark"/></svg></div>':'<div class="av"><svg viewBox="0 0 60 70" style="width:22px;height:26px"><use href="#markw"/></svg></div>'}<div><small>${wa?'<span class="wab">WhatsApp</span> · Clinia · account business':esc(UI.notif.app||"Messaggi")} · adesso</small><b>${esc(UI.notif.title)}</b><span class="small">${esc(UI.notif.text)}</span></div></button>`}
   if(UI.toast)h+=`<div class="toast" role="status">${esc(UI.toast)}</div>`;
@@ -936,7 +939,7 @@ function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u
   const v=(k,def)=>esc(pp[k]??def??"");
   const f=(k,l,o={})=>`<label class="field"><span>${l}${o.req?"*":""}</span><input id="pp-${k}" name="${k}" value="${v(k,o.def)}" ${o.ac?`autocomplete="${o.ac}"`:""} ${o.type?`type="${o.type}"`:""} ${o.im?`inputmode="${o.im}"`:""} ${o.max?`maxlength="${o.max}"`:""} ${o.ph?`placeholder="${o.ph}"`:""} ${o.di?`data-input="${o.di}"`:""}></label>`;
   const photo=UI.ppPhoto||docPhoto(id);const cv=UI.ppCv||pp.cv;
-  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button>`}<h2>Profilo professionale</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipProf">Dopo</button>`:'<span style="width:44px"></span>'}</div>
+  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button>`}<h2>Profilo professionale</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipProf">Dopo</button>`:'<span style="width:44px"></span>'}</div>
   <form class="screen" data-form="proprof" novalidate><div class="content"><div class="pad stack" style="gap:16px">
    <p class="muted small">Questi dati compaiono ai pazienti (foto, nome, specializzazione, esperienza, contatti social) e servono per le fatture (P.IVA, codice fiscale, PEC, codice destinatario). I campi si compilano da soli con i dati che hai già inserito e con il riempimento automatico del telefono.</p>
    <span class="label">Foto</span>
@@ -972,7 +975,7 @@ function ibanOk(v){v=(v||"").replace(/\s/g,"").toUpperCase();if(!/^[A-Z]{2}\d{2}
   const r=(v.slice(4)+v.slice(0,4)).replace(/[A-Z]/g,c=>c.charCodeAt(0)-55);let m=0;for(const ch of r)m=(m*10+ +ch)%97;return m===1}
 const accKey=()=>isFpm()?"fpm":S.proId;
 function ibanScreen(onb){const a=S.payAcc[accKey()]||{},u=S.user||{},fpm=isFpm();
-  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button>`}<h2>Conto per gli accrediti</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipIban">Dopo</button>`:'<span style="width:44px"></span>'}</div>
+  return `<div class="screen"><div class="topbar">${onb?'<span style="width:44px"></span>':`<button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button>`}<h2>Conto per gli accrediti</h2>${onb?`<button class="link small" style="padding:0 10px" data-act="skipIban">Dopo</button>`:'<span style="width:44px"></span>'}</div>
   <form class="screen" data-form="iban" novalidate><div class="content"><div class="pad stack" style="gap:16px">
    <p class="lead">${fpm?"Qui arrivano in automatico la licenza di Clinia, gli abbonamenti degli specialisti e il servizio di prenotazione, al netto della ritenuta.":"Qui ricevi i pagamenti delle tue visite: in automatico quelle pagate con carta nell’app, e i bonifici dei pazienti che preferiscono pagarti così (dai loro questo IBAN). Contanti e POS li incassi in sede."}</p>
    ${a.last4?`<div class="ok-note card row small">${ic("check","sm")}<span>Conto attivo: <b>${esc(a.holder)}</b> · IBAN ••••${esc(a.last4)}</span></div>`:""}
@@ -1039,7 +1042,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 function pageHTML(p){switch(p.page){
   case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
-function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
+function bar(title,extra=""){return `<div class="topbar"><button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
 function pickSvc(id,sq,f){const sv=services(id);let c=sv.filter(s=>sq.mode==="online"?s.online:!s.online);
   if(f&&f.svcs.length){const m=c.filter(s=>f.svcs.includes(s.name));if(m.length)c=m}return c[0]||sv[0]}
@@ -1058,7 +1061,7 @@ const relDay=ds=>{const k=Math.round((parseD(ds)-parseD(today()))/864e5);return 
 const filterCount=f=>(f.date!=="any")+(f.area!=="all")+(f.gender!=="all")+f.kids+f.svcs.length;
 function mapSvg(){return `<svg class="map" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="400" height="160" fill="var(--bg-2)"/><path d="M-10 40 Q 120 64 210 22 T 420 30" stroke="var(--azure-soft)" stroke-width="12" fill="none"/><rect x="110" y="96" width="44" height="32" rx="5" fill="var(--accent-soft)"/><rect x="336" y="16" width="48" height="36" rx="5" fill="var(--accent-soft)"/><rect x="18" y="8" width="30" height="26" rx="5" fill="var(--accent-soft)"/><g stroke="var(--card)" stroke-width="6" fill="none" stroke-linecap="round"><path d="M0 112 L400 82"/><path d="M60 0 L92 160"/><path d="M182 0 L170 160"/><path d="M300 0 L330 160"/><path d="M0 60 L400 132"/><path d="M240 0 Q 262 80 400 104"/></g><g stroke="var(--card)" stroke-width="3" fill="none"><path d="M120 0 L130 160M0 140 L400 150M250 60 L350 40"/></g></svg>`}
 function searchPage(){const sq=UI.sq;const chips=CHIPS.map((c,i)=>[c,i]).filter(([c])=>sq.mode==="studio"||c[2].some(id=>services(id).some(s=>s.online)));
-  return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="pop" aria-label="Chiudi">${ic("x")}</button><span style="flex:1"></span></div>
+  return `<div class="screen"><div class="topbar plain"><button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button><span style="flex:1"></span></div>
   <div class="content"><div class="pad stack">
    <div class="row" role="tablist">${["studio","online"].map(m=>`<button class="mode ${sq.mode===m?"on":""}" data-act="mode" data-v="${m}" role="tab" aria-selected="${sq.mode===m}">${m==="studio"?"In studio":"Online"}</button>`).join("")}</div>
    <form data-form="search" class="searchbox focus">${ic("search")}<input id="q" type="search" value="${esc(sq.q)}" placeholder="Specialità, nome o prestazione" data-input="search" data-autofocus aria-label="Cerca" enterkeyhint="search"></form>
@@ -1087,7 +1090,7 @@ function resultCard(d){const s=pickSvc(d.id,UI.sq,UI.f),n=firstFree(d.id,s);
   ${n?`<div class="tchips">${n.slots.slice(0,4).map(x=>`<button class="tchip num" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}" data-v="${x.time}">${x.time}</button>`).join("")}<button class="tchip" data-act="quickBook" data-id="${d.id}" data-svc="${s.i}" data-date="${n.date}">Altro ${ic("right","sm")}</button></div>`:""}</article>`}
 function countLabel(){const n=matchDocs(UI.fd,{...UI.sq,mode:UI.fd.mode}).length;return n?`Vedi ${n} ${n===1?"risultato":"risultati"}`:"Nessun risultato"}
 function filtersPage(){const f=UI.fd;const radio=(k,v,l)=>`<label class="fopt"><span>${l}</span><input type="radio" name="f-${k}" value="${v}" ${f[k]===v?"checked":""} data-change="filt" data-k="${k}"></label>`;
-  return `<div class="screen"><div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Chiudi">${ic("x")}</button><h2>Filtri</h2><button class="link" style="padding:0 10px" data-act="resetDraft">Cancella tutto</button></div>
+  return `<div class="screen"><div class="topbar"><button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button><h2>Filtri</h2><button class="link" style="padding:0 10px" data-act="resetDraft">Cancella tutto</button></div>
   <div class="content"><div class="pad stack" style="gap:26px">
    <section><h3 class="fh">Date disponibili</h3>${radio("date","today","Oggi")}${radio("date","3","Entro 3 giorni")}${radio("date","any","Qualsiasi giorno")}</section>
    <section><h3 class="fh">Modalità</h3>${radio("mode","studio","In studio")}${radio("mode","online","Consulenza online")}</section>

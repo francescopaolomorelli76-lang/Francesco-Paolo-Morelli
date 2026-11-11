@@ -610,7 +610,7 @@ const GENDER={"marco-morelli":"M","enrico-pierangeli":"M","feliciana-pellegrino"
 const KIDS=["feliciana-pellegrino","francesca-trabace","donato-panetta"];
 const AREAS={all:"Tutti",chirurgia:"Chirurgia",medicina:"Medicina specialistica",riabilitazione:"Riabilitazione e movimento"};
 // Turni di esempio degli specialisti negli studi: [id, giorni settimana, inizio, fine, studio]
-const SCHEDULE=[["marco-morelli",[1,2,3,4,5],"09:00","13:00","s4"],["feliciana-pellegrino",[1,3,5],"14:00","19:00","s4"],
+const SCHEDULE=[["feliciana-pellegrino",[1,3,5],"14:00","19:00","s4"],
  ["enrico-pierangeli",[2],"15:00","19:00","s1"],["michele-picciallo",[1,4],"15:00","19:00","s2"],["vincenzo-de-leo",[3],"09:00","13:00","s1"],
  ["donato-panetta",[2,5],"09:00","13:00","s2"],["maria-alessandra-lassandro",[1,3],"15:00","19:00","s3"],["francesca-trabace",[2,4],"09:00","13:00","s5"],
  ["angelo-costantiello",[6],"09:00","13:00","s6"],["angelo-costantiello",[3],"15:00","19:00","s6"],["rossella-conversano",[2,4],"16:00","20:00","s4"]];
@@ -984,7 +984,7 @@ function ibanScreen(onb){const a=S.payAcc[accKey()]||{},u=S.user||{},fpm=isFpm()
   <div class="actions"><button class="btn primary block" type="submit">Salva il conto</button></div></form></div>`}
 function proPickScreen(){return `<div class="screen"><div class="content"><div class="pad stack">
   <h1 class="h-xl" style="margin-top:20px"><b>Chi sei</b> in Clinia?</h1><p class="lead">Collega il tuo account al tuo profilo di specialista. In produzione l’abbinamento sarà verificato dalla reception.</p>
-  ${DOCTORS.map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}">${docAv(d,"sm")}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
+  ${SPECIALISTI().map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}">${docAv(d,"sm")}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
   <button class="btn ghost block" data-act="newPro">${ic("plus","sm")} Non sono in elenco: crea il mio profilo</button>
  </div></div></div>`}
 function notifScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="notifs" data-v="no" aria-label="Chiudi">${ic("x")}</button></div>
@@ -998,7 +998,7 @@ function notifScreen(){return `<div class="screen"><div class="topbar plain"><sp
 /* ---------- Area principale ---------- */
 const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 const FPM_TABS=[["fpm","euro","Entrate"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
-const proTabs=()=>isOwner()?[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["clinia","euro","Clinia"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
+const proTabs=()=>isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 function mainScreen(){
   const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=tabs[0][0];
   const top=UI.stack[UI.stack.length-1];
@@ -1019,7 +1019,7 @@ function nextAppt(){return activeAppts().filter(a=>a.date>today()||(a.date===tod
 function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao.";const na=logged()&&nextAppt();
   return `<div class="pad stack" style="gap:20px">${markSvg(44)}<h1 class="hello">${nm}</h1>
   <button class="searchbox" data-act="openSearch">${ic("search")}<span class="muted">Cerca specialisti e prestazioni</span></button>
-  ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${DOCTORS.length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
+  ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${SPECIALISTI().length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
   <button class="card row" data-act="openPage" data-v="arca" style="text-align:left;width:100%;gap:12px;background:var(--accent-soft);border-color:var(--accent)"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--accent-2);display:grid;place-items:center">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Ogni prenotazione aiuta Progetto Arca</b><span class="tiny">Il 3 % del servizio va a chi vive in strada. Scopri la storia</span></span>${ic("right","sm")}</button>
   <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
   <button class="card row" data-act="openPage" data-v="chisiamo" style="width:100%;text-align:left;gap:12px">${markSvg(26)}<span style="flex:1;min-width:0"><b class="small" style="display:block">Chi siamo</b><span class="tiny">Mission, valori e spazi di Clinia</span></span>${ic("right","sm")}</button>
@@ -1032,7 +1032,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
   <section class="stack" style="gap:12px;margin-top:8px"><div><h2 class="h-sec">I tuoi specialisti</h2><p class="muted">Ritrova subito i tuoi preferiti</p></div>
    ${S.favs.length?S.favs.map(id=>doc(id)).filter(Boolean).map(docCard).join(""):`<div class="card center"><svg class="illo" viewBox="0 0 120 110" aria-hidden="true"><circle cx="54" cy="58" r="40" fill="var(--bg-2)"/><rect x="50" y="14" width="44" height="80" rx="9" fill="var(--card)" stroke="var(--accent)" stroke-width="3"/><path d="M72 66s-12-7-12-15a6 6 0 0 1 12-2 6 6 0 0 1 12 2c0 8-12 15-12 15z" fill="#f2c94c"/></svg>
    <h3>Salva i tuoi specialisti</h3><p class="muted">Tocca ${heartFill(false).replace('class="ic"','class="ic sm" style="vertical-align:-3px"')} sul profilo di uno specialista per ritrovarlo qui.</p><button class="btn ghost block" data-act="openSearch">Sfoglia gli specialisti ${ic("arrow","sm")}</button></div>`}</section>
-  <section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Specialisti di Clinia</h2>${DOCTORS.map(docCard).join("")}</section>
+  <section class="stack" style="gap:12px;margin-top:8px"><h2 class="h-sec">Specialisti di Clinia</h2>${SPECIALISTI().map(docCard).join("")}</section>
   <p class="tiny" style="text-align:center">${esc(CLINIC.address)}</p></div>`}
 
 /* ---------- Pagine impilate ---------- */
@@ -1044,7 +1044,7 @@ const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a
 function pickSvc(id,sq,f){const sv=services(id);let c=sv.filter(s=>sq.mode==="online"?s.online:!s.online);
   if(f&&f.svcs.length){const m=c.filter(s=>f.svcs.includes(s.name));if(m.length)c=m}return c[0]||sv[0]}
 function firstFree(id,s){for(let k=0;k<=HORIZON;k++){const ds=addDays(today(),k),sl=slotsFor(id,ds,s.dur).filter(x=>x.free);if(sl.length)return{k,date:ds,slots:sl}}return null}
-function matchDocs(f,sq){return DOCTORS.filter(d=>{const sv=services(d.id);
+function matchDocs(f,sq){return SPECIALISTI().filter(d=>{const sv=services(d.id);
   if(sq.spec!=null&&!CHIPS[sq.spec][2].includes(d.id))return false;
   if(sq.q){const t=(d.name+" "+d.role+" "+sv.map(s=>s.name).join(" ")+" "+CHIPS.filter(c=>c[2].includes(d.id)).map(c=>c[0]).join(" ")).toLowerCase();if(!t.includes(sq.q.toLowerCase()))return false}
   if(sq.mode==="online"&&!sv.some(s=>s.online))return false;
@@ -1065,7 +1065,7 @@ function searchPage(){const sq=UI.sq;const chips=CHIPS.map((c,i)=>[c,i]).filter(
    ${sq.mode==="studio"?`<div class="inline-field">${ic("pin")}<span class="muted">Clinia · Via La Martella 5/D, Matera</span></div>`:`<p class="muted small">Videoconsulti con gli specialisti di Clinia, direttamente dal telefono.</p>`}
    <span class="label">Suggerimenti</span>
    <div class="sugg">${chips.map(([c,i])=>`<button class="sg" data-act="spec" data-v="${i}" data-name="${esc((c[0]+" "+c[2].map(id=>doc(id).name).join(" ")).toLowerCase())}"><span class="sgi">${ic("user")}</span>${c[0]}</button>`).join("")}
-   ${DOCTORS.filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}">${docAv(d,"sm round")}<span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
+   ${SPECIALISTI().filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}">${docAv(d,"sm round")}<span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
    <p class="muted hidden" id="noresults">Nessun risultato. Prova con un’altra parola.</p>
    <button class="btn ghost block" data-act="allResults">Vedi tutti gli specialisti ${ic("arrow","sm")}</button>
   </div></div></div>`}
@@ -1203,7 +1203,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
+  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1246,7 +1246,7 @@ function requestsPage(){return `<div class="screen">${bar("Richieste")}<div clas
   <p class="muted">Chiedi alla reception o a uno specialista un certificato, una fattura o di essere richiamato.</p>
   <form class="card stack" data-form="request" novalidate><h3>Nuova richiesta</h3>
    <label class="field"><span>Tipo di richiesta</span><select id="rq-type" name="type">${REQ_TYPES.map(t=>`<option>${t}</option>`).join("")}</select></label>
-   <label class="field"><span>A chi</span><select id="rq-to" name="to"><option value="reception">Reception Clinia</option>${DOCTORS.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select></label>
+   <label class="field"><span>A chi</span><select id="rq-to" name="to"><option value="reception">Reception Clinia</option>${SPECIALISTI().map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</select></label>
    <textarea id="rq-text" name="text" placeholder="Scrivi i dettagli, per esempio la data della visita"></textarea><p class="err" id="rq-err"></p>
    <button class="btn primary block" type="submit">Invia richiesta</button></form>
   ${S.requests.length?`<span class="label">Le tue richieste</span><div class="list">${S.requests.map(r=>`<div class="li">${ic("list")}<span class="t"><b>${esc(r.type)}</b><small>${esc(r.to==="reception"?"Reception Clinia":doc(r.to).name)} · ${new Date(r.at).toLocaleDateString("it-IT",{day:"numeric",month:"short"})}${r.text?" · "+esc(r.text):""}</small></span><span class="badge">${esc(r.status)}</span></div>`).join("")}</div>`:""}
@@ -1313,7 +1313,9 @@ function pazientiTab(){const all=proAll(),seg=UI.paySeg||"todo",sum=v=>v.reduce(
    <div>${x.v.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(a=>`<div class="ap" style="padding:12px 0"><span class="t"><b>${cap(fmtD(a.date,{weekday:"short",day:"numeric",month:"short"}))} · <span class="num">${a.time}</span></b><small>${esc(a.svc)} · ${eur(a.price)} · ${a.method==="carta"?"carta nell’app":"in struttura · "+eur(APP_FEE)+" a tuo carico"}</small></span>${payBadge(a)}</div>`).join("")}</div></details>`).join("")
    :`<div class="card center">${ic("check")}<h3>${seg==="todo"?"Nessun pagamento in sospeso":"Nessun paziente"}</h3></div>`}</div>`}
 function proAllOf(id){const keep=S.proId;S.proId=id;try{return proAll()}finally{S.proId=keep}}
-const otherDocs=()=>DOCTORS.filter(d=>d.id!==OWNER.doctorId);
+// Il Dott. Marco Morelli è il titolare della struttura, non uno specialista: non compare tra gli specialisti
+const SPECIALISTI=()=>DOCTORS.filter(d=>d.id!==OWNER.doctorId);
+const otherDocs=SPECIALISTI;
 const quotaImp=()=>S.fpm.under35?0.6:0.75,RIT=()=>0.2*quotaImp(),lordoDaNetto=n=>r2(n/(1-RIT()));
 const iniz=n=>String(n||"").replace(/\(.*?\)/g,"").split(/\s+/).filter(Boolean).map(w=>w[0].toUpperCase()+".").join("");
 const nowStamp=()=>today()+" "+toT(nowMin());
@@ -1459,7 +1461,7 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
   return head+meseNav("cliMese",m)+`
   <div class="card" style="text-align:center"><span class="label">Saldo di Clinia nel mese</span><div class="big ${c.saldo<0?"neg":""}">${eur(c.saldo)}</div><p class="tiny">Entrate ${eur(c.entrate)} − uscite ${eur(c.uscite)}</p></div>
   <dl class="card ledger"><dt style="grid-column:1/-1"><span class="label">Entrate</span></dt>
-   <dt>Visite dei tuoi pazienti<small>Dott. Marco Morelli, carta e struttura</small></dt><dd>+ ${eur(c.visiteOwn)}</dd>
+   ${c.visiteOwn?`<dt>Visite del titolare<small>carta e struttura</small></dt><dd>+ ${eur(c.visiteOwn)}</dd>`:""}
    <dt>Affitti degli studi<small>prenotazioni a ore, IVA esclusa</small></dt><dd>+ ${eur(r2(c.affitti))}</dd>
    <dt>Pacchetti ore prepagati<small>IVA esclusa</small></dt><dd>+ ${eur(c.pacch)}</dd>
    <dt>Utilizzo studi a percentuale<small>stima su visite pagate: Studio 1 con ecografo 50 %, Studio 3 con Tecar 30 %</small></dt><dd>+ ${eur(c.perc)}</dd>

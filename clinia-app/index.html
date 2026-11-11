@@ -47,6 +47,8 @@ p{margin:0}
 .num{font-variant-numeric:tabular-nums}
 
 #app{position:relative;height:100%;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+/* iPhone: niente sotto l’orologio, la tacca e la barra di sistema in basso */
+#app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(min-width:520px){#app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
 .screen{flex:1;display:flex;flex-direction:column;min-height:0}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}

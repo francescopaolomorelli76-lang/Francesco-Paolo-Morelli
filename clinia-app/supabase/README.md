@@ -4,7 +4,7 @@
 
 ## Progetto collegato
 - Progetto: `iuydwatobtrpzhotcfyd` (regione eu-west-3, Parigi), URL `https://iuydwatobtrpzhotcfyd.supabase.co`
-- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql`, `migrazione-005-netti-fpm.sql`, `migrazione-006-pagamenti-fpm.sql` (voce "Pagato" della licenza: automatico, bonifico o contanti con ricevuta), `migrazione-007-studi-ufficiali.sql` (6 studi e tariffario mensile di Clinia Srl), `migrazione-008-tariffe-ore-percentuali.sql` (40 € l’ora, pacchetti prepagati, percentuali ecografo e Tecar) installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
+- Schema, dati iniziali, `migrazione-002-clinia-fpm.sql` e `migrazione-003-accrediti-tempo-reale.sql`, `migrazione-004-arca-fpm.sql`, `migrazione-005-netti-fpm.sql`, `migrazione-006-pagamenti-fpm.sql` (voce "Pagato" della licenza: automatico, bonifico o contanti con ricevuta), `migrazione-007-studi-ufficiali.sql` (6 studi e tariffario mensile di Clinia Srl), `migrazione-008-tariffe-ore-percentuali.sql` (40 € l’ora, pacchetti prepagati, percentuali ecografo e Tecar), `migrazione-009-richieste-notifiche.sql` (richiesta di visita confermata dallo specialista e notifiche) installati il 10/11/2026; chiave anon pubblica già nell'app (`SUPABASE` in `index.html`)
 - Conferma dell'e-mail alla registrazione: attiva (impostazione predefinita di Supabase)
 - Da fare quando l'app avrà un indirizzo web: Authentication › URL Configuration › Site URL e Redirect URLs
 
@@ -49,3 +49,6 @@ supabase functions deploy licenza-fpm --no-verify-jwt
 
 ## Importi netti per FPM
 Servizio 9 €, abbonamento 50 €, licenza 300 € (12 mesi) arrivano a FPM per intero. La ritenuta d'acconto (lordo = netto / 0,85) è a carico di Clinia e si versa con F24: la funzione registra lordo, ritenuta e netto in `fpm_transfers`.
+
+## Funzione `visita-esito` (migrazione 009)
+Lo specialista conferma, rifiuta o segna effettuata una visita. Con la carta il pagamento della visita è solo **autorizzato** alla richiesta (`capture_method: manual`) e viene **addebitato alla conferma**; se lo specialista rifiuta, l'autorizzazione è annullata. Nel webhook Stripe aggiungere l'evento `payment_intent.amount_capturable_updated`. L'autorizzazione di una carta dura 7 giorni: le richieste vanno confermate entro quel tempo.

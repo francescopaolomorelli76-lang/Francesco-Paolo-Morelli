@@ -1,0 +1,15 @@
+{
+  "appId": "it.cliniamatera.app",
+  "appName": "Clinia",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#ffffff",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

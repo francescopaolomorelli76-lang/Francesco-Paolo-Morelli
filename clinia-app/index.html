@@ -429,6 +429,7 @@ svg.map{position:absolute;inset:0;width:100%;height:100%}
 .gal{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.gal img{flex:0 0 72%;max-width:320px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;scroll-snap-align:start}
 .quote{font-family:var(--f-display);font-size:1.15rem;line-height:1.45;color:var(--azure);border-left:3px solid var(--gold);padding:4px 0 4px 14px;margin:0}
 .valori{display:grid;gap:10px}.valori .card b{color:var(--accent);font-size:1rem}
+.notifban{width:100%;text-align:left;gap:12px;border-color:var(--accent);background:var(--accent-soft)}
 .payoff{font-family:var(--f-display);font-size:.95rem;color:var(--ink-2);margin-top:6px}
 .r3dthumb{position:relative;display:block}.r3dthumb img{display:block;width:100%;height:150px;object-fit:cover}
 .r3dcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 12px;background:linear-gradient(transparent,rgba(8,30,38,.78));color:#fff;display:flex;flex-direction:column}.r3dcap small{opacity:.9}
@@ -611,7 +612,7 @@ const HORIZON=21;
 const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
 try{localStorage.removeItem("clinia-app-v1")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0},modalita:{},pacchetti:[],oreUsate:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
@@ -663,7 +664,7 @@ function demoBusy(docId,ds){if(DB.on)return[];const base=services(docId)[0].dur,
   for(const b of bookingsOn(ds,b=>b.doctorId===docId))for(let t=toMin(b.start);t+base<=toMin(b.end);t+=base)
     if(hash(docId+ds+t)%100<32)out.push({start:t,end:t+base,name:DEMO_NAMES[hash(ds+t+docId)%DEMO_NAMES.length],svc:services(docId)[hash(t+docId)%services(docId).length].name,roomId:b.roomId});
   return out}
-const activeAppts=()=>S.appts.filter(a=>a.status!=="annullata");
+const activeAppts=()=>S.appts.filter(a=>a.status!=="annullata"&&a.status!=="rifiutata");
 function slotsFor(docId,ds,dur){
   const busy=demoBusy(docId,ds),mine=activeAppts().filter(a=>a.doctorId===docId&&a.date===ds),res=[];
   const isToday=ds===today(),nm=nowMin();
@@ -747,6 +748,30 @@ function overlayHTML(){let h="";
   return h}
 let toastT,notifT;
 function toast(t){UI.toast=t;render();clearTimeout(toastT);toastT=setTimeout(()=>{UI.toast=null;render()},2600)}
+/* ---------- Notifiche ----------
+   Destinatari: "user:<email>" paziente · "spec:<id>" specialista · "titolare" direzione Clinia · "admin" FPM.
+   Con il database attivo le scrive il server (migrazione 009) e arrivano in tempo reale. */
+function mieChiavi(){if(!S.auth)return[];if(isFpm())return["admin"];const k=[];if(isOwner())k.push("titolare");if(isPro()&&S.proId)k.push("spec:"+S.proId);if(!isPro())k.push("user:"+S.auth.email);return k}
+function mieNotifiche(){if(DB.on&&UI.notifRemote)return UI.notifRemote;const k=mieChiavi();return S.notifs.filter(n=>k.includes(n.to)).sort((a,b)=>b.at-a.at)}
+const nonLette=()=>mieNotifiche().filter(n=>!n.letta).length;
+const iniz2=n=>String(n||"").trim().split(/\s+/).map(x=>x[0]?x[0].toUpperCase()+".":"").join(" ");
+function addNotif(to,tipo,titolo,testo,ref){if(DB.on)return;const n={id:uid(),to,tipo,titolo,testo,ref,at:Date.now(),letta:false};S.notifs.unshift(n);S.notifs=S.notifs.slice(0,300);save();
+  if(mieChiavi().includes(to)){avvisoSistema(titolo,testo);notify(titolo,testo,"Clinia")}}
+let notifId=1;
+async function avvisoSistema(titolo,testo){try{const LN=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;
+  if(LN){await LN.schedule({notifications:[{id:notifId++,title:titolo,body:testo,schedule:{at:new Date(Date.now()+300)}}]});return}
+  if("Notification" in window&&Notification.permission==="granted"&&document.hidden)new Notification(titolo,{body:testo,icon:"img/icone/icon-192.png"})}catch(e){}}
+async function chiediPermessoNotifiche(){try{const LN=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;
+  if(LN){const r=await LN.requestPermissions();return r.display==="granted"}
+  if("Notification" in window){if(Notification.permission==="default")await Notification.requestPermission();return Notification.permission==="granted"}}catch(e){}return false}
+function notifBanner(){if(!S.auth)return "";const n=nonLette();return n?`<button class="card row notifban" data-act="openPage" data-v="notifiche">${ic("bell","sm")}<span style="flex:1"><b>${n===1?"1 notifica nuova":n+" notifiche nuove"}</b><span class="tiny" style="display:block">${esc((mieNotifiche().find(x=>!x.letta)||{}).titolo||"")}</span></span>${ic("right","sm")}</button>`:""}
+const NOTIF_IC={richiesta_visita:"cal",richiesta_inviata:"cal",visita_confermata:"check",visita_rifiutata:"x",visita_effettuata:"check",visita_annullata:"x",studio_prenotato:"door",studio_annullato:"door"};
+function notifichePage(){const l=mieNotifiche();if(l.some(n=>!n.letta))setTimeout(()=>{l.forEach(n=>n.letta=true);save();DB.notifLette(l.map(n=>n.id))},1500);
+  return `<div class="screen">${bar("Notifiche")}<div class="content"><div class="pad stack" style="gap:12px">
+  ${l.length?l.map(n=>`<div class="card row" style="align-items:flex-start;gap:12px;${n.letta?"":"border-color:var(--accent);background:var(--accent-soft)"}"><span class="ri" style="width:38px;height:38px;border-radius:12px;background:var(--card);display:grid;place-items:center;color:var(--accent)">${ic(NOTIF_IC[n.tipo]||"bell","sm")}</span>
+    <span style="flex:1;min-width:0"><b class="small" style="display:block">${esc(n.titolo)}</b><span class="small muted">${esc(n.testo)}</span><span class="tiny" style="display:block;margin-top:4px">${new Date(n.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></span></div>`).join("")
+  :`<div class="card center">${ic("bell")}<h3>Nessuna notifica</h3><p class="muted small">Qui arrivano richieste di visita, conferme e prenotazioni degli studi.</p></div>`}
+  <p class="tiny">${isFpm()?"Ricevi una notifica quando una richiesta di visita viene confermata e quando la visita è effettuata (solo iniziali del paziente).":isOwner()?"Ricevi una notifica quando uno specialista prenota uno studio e quando arriva una richiesta per le tue visite.":isPro()?"Ricevi una notifica per ogni nuova richiesta di visita: confermala o rifiutala dall’Agenda.":"Ricevi una notifica quando lo specialista conferma o rifiuta la tua richiesta."}</p></div></div></div>`}
 function notify(title,text,app_){UI.notif={title,text,app:app_};render();clearTimeout(notifT);notifT=setTimeout(()=>{UI.notif=null;render()},7000)}
 
 /* ---------- Onboarding ---------- */
@@ -967,7 +992,8 @@ function mainScreen(){
   if(top)return pageHTML(top);
   return `<div class="screen"><div class="content">${tabHTML()}</div>
   <nav class="tabbar" aria-label="Sezioni" style="grid-template-columns:repeat(${tabs.length},1fr)">${tabs.map(([k,i,l])=>`<button class="tab ${UI.tab===k?"on":""}" data-act="tab" data-v="${k}" ${UI.tab===k?'aria-current="page"':""}>${k==="profile"&&logged()?meAv(26):ic(i)}<span>${l}</span></button>`).join("")}</nav></div>`}
-function tabHTML(){switch(UI.tab){
+function tabHTML(){const h=tabHTML0(),b=notifBanner();return b?h.replace(/^<div class="pad stack"([^>]*)>/,m=>m+b):h}
+function tabHTML0(){switch(UI.tab){
   case "home":return homeTab();case "visite":return visiteTab();case "files":return filesTab();case "msg":return msgTab();case "profile":return profileTab();
   case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();case "fpm":return fpmTab();case "fpmdoc":return fpmDocTab();case "fpmfisco":return fpmFiscoTab();}}
 function needLogin(title,text){return `<div class="pad stack"><h1 class="h-sec">${title}</h1><div class="card center">${markSvg(44)}<h3>${text}</h3><p class="muted small">Accedi o crea un account in meno di un minuto.</p><button class="btn primary" data-act="openAuth">Accedi o registrati</button></div></div>`}
@@ -997,7 +1023,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="iconbtn" data-act="pop" aria-label="Indietro">${ic("back")}</button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1088,22 +1114,22 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
    ${pick?`<dl class="card sum"><dt>Data</dt><dd>${cap(fmtD(b.date))}</dd><dt>Ora</dt><dd class="num">${b.time}</dd><dt>${s.online?"Modalità":"Studio"}</dt><dd>${s.online?"Videochiamata":room(pick.roomId).name}</dd><dt>Prestazione</dt><dd>${esc(s.name)}</dd>${(b.pay||"clinic")==="clinic"?`<dt>Da pagare in struttura</dt><dd class="num">${eur(s.price)}</dd>`:`<dt>Visita</dt><dd class="num">${eur(s.price)}</dd><dt>Servizio di prenotazione<small style="display:block;font-weight:500;color:var(--ink-3)">di cui ${eur(r2(APP_FEE*ARCA.pct))} a <button class="link" data-act="openPage" data-v="arca" style="font-size:inherit">Progetto Arca</button></small></dt><dd class="num">${eur(APP_FEE)}</dd><dt>Totale con carta</dt><dd class="num">${eur(s.price+APP_FEE)}</dd>`}<dt>Pagamento</dt><dd>${payLabel(b)}</dd></dl><p class="tiny">${(b.pay||"clinic")==="clinic"?"Paghi la visita direttamente allo specialista. Nessun costo di servizio per te.":`La visita va subito allo specialista; ${eur(APP_FEE)} sono il costo del servizio di prenotazione, di cui il 3 % in beneficenza a Progetto Arca.`} Puoi disdire gratis fino a 24 ore prima.</p>`:""}
   </div></div><div class="actions"><button class="btn primary block" data-act="confirmBook" ${pick?"":"disabled"}>${logged()?"Conferma prenotazione":"Accedi e conferma"}</button></div></div>`}
 function donePage(id){const a=S.appts.find(x=>x.id===id);return `<div class="screen"><div class="content"><div class="pad stack success">
-  <span class="ok">${ic("check")}</span><h1 class="h-xl">Visita <b>prenotata</b></h1><p class="lead">Ti abbiamo inviato la conferma via SMS al ${esc(S.user.pref+" "+S.user.tel)}.${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
+  <span class="ok">${ic("check")}</span><h1 class="h-xl">Richiesta <b>inviata</b></h1><p class="lead">${esc(doc(a.doctorId).name)} riceve subito la tua richiesta. Appena la conferma ti arriva una notifica.${a.payAuth?" La carta è solo autorizzata: l’addebito avviene alla conferma.":""}${a.online?" Il link della videochiamata arriverà il giorno della visita.":""}</p>
   <div style="width:100%;text-align:left">${visitCard(a,false)}</div>
   <div class="card" style="width:100%;text-align:left"><b>Cosa portare</b><ul class="blist" style="margin-top:8px"><li>Documento d’identità e tessera sanitaria</li><li>Esami e referti precedenti (puoi caricarli in “I miei file”)</li><li>Elenco dei farmaci che assumi</li></ul></div>
  </div></div><div class="actions"><button class="btn primary block" data-act="goVisite">Vai alle mie visite</button><button class="btn ghost block" data-act="home">Torna a Esplora</button></div></div>`}
 
 /* ---------- Visite ---------- */
 function visitCard(a,compact){const d=doc(a.doctorId),dt=parseD(a.date),past=a.date<today()||(a.date===today()&&toMin(a.time)<nowMin());
-  const st=a.status==="annullata"?`<span class="badge red">Annullata</span>`:past?`<span class="badge grey">Conclusa</span>`:`<span class="badge">Confermata</span>`;
+  const st=a.status==="annullata"?`<span class="badge red">Annullata</span>`:a.status==="rifiutata"?`<span class="badge red">Non accettata</span>`:a.status==="richiesta"?`<span class="badge warn">In attesa di conferma</span>`:a.status==="conclusa"||past?`<span class="badge grey">Effettuata</span>`:`<span class="badge">Confermata</span>`;
   return `<div class="card visit"><div class="vdate"><div class="cal"><small>${dt.toLocaleDateString("it-IT",{month:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</i></div>
   <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}${a.forId&&a.forId!=="me"?" · per "+esc(a.patient):""}</p></div>${st}</div>
   <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic(a.roomId?"door":"video","sm")}${a.roomId?room(a.roomId).name:"Videochiamata"}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
   ${compact||past||a.status==="annullata"?"":`<div class="row"><button class="btn ghost sm" style="flex:1" data-act="openChat" data-id="${a.doctorId}">${ic("chat","sm")} Scrivi</button><button class="btn danger sm" style="flex:1" data-act="askCancel" data-id="${a.id}">Disdici</button></div>`}</div>`}
 function visiteTab(){if(!logged())return needLogin("Le mie visite","Tutte le tue visite in un unico posto");
   const mineP=S.appts.filter(a=>(a.forId||"me")===UI.person);const now=today()+toT(nowMin()),desc=(a,b)=>(b.date+b.time).localeCompare(a.date+a.time);
-  const up=mineP.filter(a=>a.status!=="annullata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
-  const canc=mineP.filter(a=>a.status==="annullata").sort(desc),past=mineP.filter(a=>a.status!=="annullata"&&!up.includes(a)).sort(desc);
+  const up=mineP.filter(a=>a.status!=="annullata"&&a.status!=="rifiutata"&&(a.date+a.time)>=now).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const canc=mineP.filter(a=>a.status==="annullata"||a.status==="rifiutata").sort(desc),past=mineP.filter(a=>a.status!=="annullata"&&a.status!=="rifiutata"&&!up.includes(a)).sort(desc);
   const seg=UI.visitSeg,list=seg==="next"?up:seg==="past"?past:canc;
   const empty={next:["Non ci sono visite in programma","Prenota una visita e la vedrai in questa sezione."],past:["Nessuna visita passata","Qui trovi lo storico delle visite concluse."],canc:["Nessuna visita cancellata","Le visite che disdici compariranno qui."]}[seg];
   return `<div class="pad stack"><div class="row" style="justify-content:flex-end;gap:10px"><button class="iconbtn" style="border:1px solid var(--line);background:var(--card);width:50px;height:50px" data-act="openSearch" aria-label="Prenota una nuova visita">${ic("plus")}</button>${personChip()}</div><h1 class="ptitle">Le mie visite</h1>
@@ -1163,8 +1189,8 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
-    :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];
+  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc.fpm?" · ••••"+S.payAcc.fpm.last4:"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi e incassi"],["proprof","user","Profilo professionale"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie prestazioni e tariffe"],["tab:clinia","list","Clinia: rendiconto, stanze e spese"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
+    :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
    <h2 style="font-size:1.35rem;font-weight:800;text-align:center">${esc(u.nome+" "+u.cognome)}</h2>${pro?`<span class="badge az">${esc(doc(S.proId).name)}</span>`:""}${isOwner()?`<span class="badge">Direttore di Clinia · accesso gratuito</span>`:""}${isFpm()?`<span class="badge az">FPM WebDesignTech · area riservata</span>`:""}</div>
@@ -1220,10 +1246,18 @@ function proAppts(ds){const id=S.proId,price=n=>(services(id).find(s=>s.name===n
     return{key,date:ds,time:toT(x.start),end:toT(x.end),name:x.name,svc:x.svc,roomId:x.roomId,demo:true,price:price(x.svc),method:card?"carta":"struttura",
       paid:card||S.demoPaid.includes(key)||(ds<today()&&hash(key+"p")%4!==0)}});
   for(const a of activeAppts().filter(a=>a.doctorId===id&&a.date===ds)){const card=!!(a.pay&&a.pay!=="clinic");
-    out.push({key:"app|"+a.id,date:ds,time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,note:a.note,roomId:a.roomId,id:a.id,price:a.price,method:card?"carta":"struttura",paid:card||!!a.paid})}
+    out.push({key:"app|"+a.id,date:ds,time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,note:a.note,roomId:a.roomId,id:a.id,price:a.price,method:card?"carta":"struttura",paid:!!a.paid,status:a.status||"confermata",auth:!!a.payAuth})}
   return out.sort((a,b)=>a.time.localeCompare(b.time))}
 const docPhoto=id=>S.docPhotos[id]||(BASE_DOC_IDS.includes(id)?`img/specialisti/${id}.jpg`:null);
 function docAv(d,cls="",style=""){const src=docPhoto(d.id);return `<span class="av ${cls}"${style?` style="${style}"`:""}>${esc(initials(d.name))}${src?`<img src="${src}" alt="" loading="lazy" onerror="this.remove()">`:""}</span>`}
+function statoAzioni(a){if(a.status==="richiesta")return `<span class="stack" style="gap:6px;align-items:flex-end"><span class="badge warn">Da confermare</span><span class="row" style="gap:6px"><button class="btn primary sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="conferma">Conferma</button><button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="rifiuta" aria-label="Rifiuta">${ic("x","sm")}</button></span></span>`;
+  if(a.status==="conclusa")return `<span class="stack" style="gap:6px;align-items:flex-end"><span class="badge grey">${ic("check","sm")} Effettuata</span>${payBadge(a)}</span>`;
+  if(a.id&&a.status==="confermata"&&a.date<=today())return `<span class="stack" style="gap:6px;align-items:flex-end">${payBadge(a)}<button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="effettuata">Visita effettuata</button></span>`;
+  return payBadge(a)}
+function richiesteHTML(){const l=activeAppts().filter(a=>a.doctorId===S.proId&&a.status==="richiesta"&&a.date>=today()).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time));
+  return l.length?`<section class="card stack" style="gap:8px;border-color:var(--warn);background:var(--warn-soft)"><h3>${l.length===1?"1 richiesta di visita":l.length+" richieste di visita"} da confermare</h3>${l.map(a=>`<div class="ap"><span class="tm">${esc(fmtD(a.date,{day:"numeric",month:"short"}))}<br>${a.time}</span><span class="t"><b>${esc(a.patient)}</b><small>${esc(a.service)} · ${eur(a.price)}${a.roomId?" · "+esc(room(a.roomId).name):""}${a.payAuth?" · carta autorizzata":" · paga in struttura"}</small></span>${statoAzioni({...a,svc:a.service,status:"richiesta"})}</div>`).join("")}</section>`:""}
+function chiudereHTML(){const l=activeAppts().filter(a=>a.doctorId===S.proId&&a.status==="confermata"&&(a.date<today()||a.date===today()&&toMin(a.time)<=nowMin())).sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
+  return l.length?`<section class="card stack" style="gap:8px"><h3>Visite da chiudere</h3><p class="tiny">Segna “Visita effettuata” quando hai ricevuto il paziente.</p>${l.map(a=>`<div class="ap"><span class="tm">${esc(fmtD(a.date,{day:"numeric",month:"short"}))}<br>${a.time}</span><span class="t"><b>${esc(a.patient)}</b><small>${esc(a.service)} · ${eur(a.price)}</small></span><button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="effettuata">Effettuata</button></div>`).join("")}</section>`:""}
 function payBadge(a){return a.paid?`<span class="badge">${ic("check","sm")} Pagato${a.method==="carta"?" · carta":""}</span>`:`<button class="btn ghost sm" data-act="markPaid" data-id="${esc(a.key)}" data-n="${esc(a.name)}">Segna pagato</button>`}
 function proAll(){const out=[];for(let k=-14;k<=HORIZON;k++){const ds=addDays(today(),k);if(OPEN[parseD(ds).getDay()])out.push(...proAppts(ds))}return out}
 function ricavi(m){const v=proAll().filter(a=>a.date.startsWith(m)),sum=f=>v.filter(f).reduce((t,a)=>t+a.price,0);
@@ -1559,11 +1593,12 @@ function agendaTab(){const d=doc(S.proId);if(!UI.proDay||!OPEN[parseD(UI.proDay)
   const todayN=proAppts(today()).length;
   return `<div class="pad stack" style="gap:20px">${markSvg(40)}<h1 class="hello" style="font-size:1.8rem">Buongiorno, <b>${esc(d.name.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ")[0])}.</b></h1>
   <div class="stats"><div class="stat"><b>${todayN}</b><span>Visite oggi</span></div><div class="stat"><b>${(wkMin/60).toLocaleString("it-IT")} h</b><span>In studio, 7 giorni</span></div><div class="stat"><b>${eur(Math.round(cost))}</b><span>Studi nel mese</span></div></div>
+  ${richiesteHTML()}${chiudereHTML()}
   ${dayStrip(ds,"proDay",x=>{const n=proAppts(x).length;return n?n+" visite":"—"})}
   <h2 class="h-sec">${cap(fmtD(ds))}</h2>
   ${mine.length?mine.map(b=>{const r=room(b.roomId);const aps=proAppts(ds).filter(a=>a.time>=b.start&&a.time<b.end);
    return `<div class="shift"><div class="shift-h">${ic("door","sm")}<span style="flex:1">${r.name} · ${ROOM_TYPES[r.type].label}</span><span class="num">${b.start}–${b.end}</span></div>
-   ${aps.length?aps.map(a=>`<div class="ap"><span class="tm">${a.time}</span><span class="t"><b>${esc(a.name)}</b>${a.demo?' <span class="tiny">(esempio)</span>':""}<small>${esc(a.svc)} · ${eur(a.price)}${a.note?" · “"+esc(a.note)+"”":""}</small></span>${payBadge(a)}</div>`).join(""):`<div class="ap free"><span class="tm">—</span><span class="t">Nessuna visita prenotata in questo turno</span></div>`}</div>`}).join("")
+   ${aps.length?aps.map(a=>`<div class="ap"><span class="tm">${a.time}</span><span class="t"><b>${esc(a.name)}</b>${a.demo?' <span class="tiny">(esempio)</span>':""}<small>${esc(a.svc)} · ${eur(a.price)}${a.note?" · “"+esc(a.note)+"”":""}</small></span>${statoAzioni(a)}</div>`).join(""):`<div class="ap free"><span class="tm">—</span><span class="t">Nessuna visita prenotata in questo turno</span></div>`}</div>`}).join("")
   :`<div class="card center">${ic("door")}<h3>Nessuno studio prenotato</h3><p class="muted small">Prenota uno studio per aprire le tue disponibilità ai pazienti.</p><button class="btn primary" data-act="tab" data-v="stanze">Prenota uno studio</button></div>`}</div>`}
 function firstOpen(){for(let k=0;k<14;k++){const ds=addDays(today(),k);if(OPEN[parseD(ds).getDay()])return ds}return today()}
 
@@ -1676,7 +1711,7 @@ function modalHTML(){const m=UI.modal;
 /* ===================== Azioni ===================== */
 function go(screen){UI.screen=screen;UI.buf="";UI.pinErr="";UI.shake=false;render()}
 function push(p){UI.stack.push(p);render()}
-function afterAuthFlow(){ // prossimo passo dell'onboarding
+function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossimo passo dell'onboarding
   if(isFpm()){if(!S.pin)return go("pin-create");UI.screen="main";UI.stack=[];UI.tab="fpm";return render()}
   if(isPro()&&!subActive())return go("sub");
   if(!S.pin)return go("pin-create");
@@ -1691,9 +1726,12 @@ function afterAuthFlow(){ // prossimo passo dell'onboarding
   UI.stack=[];UI.tab=isPro()?"agenda":"home";if(!isPro()&&S.stats==null)UI.sheet={type:"stats"};render()}
 function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
   const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
-  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),fee:APP_FEE,feeBy:b.pay&&b.pay!=="clinic"?"paziente":"specialista",status:"confermata",created:Date.now()};
-  S.appts.push(a);save();DB.saveAppt(a);UI.stack=[{page:"done",id:a.id}];render();
-  setTimeout(()=>notify("Prenotazione confermata",`${a.service} con ${doc(id).name}, ${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}.`,"Clinia"),900)}
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),fee:APP_FEE,feeBy:b.pay&&b.pay!=="clinic"?"paziente":"specialista",status:"richiesta",created:Date.now(),ownerEmail:S.auth&&S.auth.email};a.paid=false;a.payAuth=!!(b.pay&&b.pay!=="clinic");
+  S.appts.push(a);save();DB.saveAppt(a);UI.stack=[{page:"done",id:a.id}];
+  const q=`${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}`;
+  addNotif("spec:"+id,"richiesta_visita","Nuova richiesta di visita",`${a.patient} · ${a.service} · ${q}${a.roomId?" · "+room(a.roomId).name:""}. Conferma o rifiuta dall’Agenda.`,a.id);
+  S.notifs.unshift({id:uid(),to:"user:"+S.auth.email,tipo:"richiesta_inviata",titolo:"Richiesta inviata",testo:`${a.service} con ${doc(id).name}, ${q}: in attesa di conferma.`,ref:a.id,at:Date.now(),letta:true});save();render();
+  setTimeout(()=>notify("Richiesta inviata",`${a.service} con ${doc(id).name}, ${q}. Ti avvisiamo appena lo specialista conferma.${a.payAuth?" La carta viene addebitata solo alla conferma.":""}`,"Clinia"),900)}
 function keyPress(v){
   if(v==="del"){UI.buf=UI.buf.slice(0,-1);UI.pinErr="";return render()}
   if(UI.buf.length>=4)return;UI.buf+=v;UI.pinErr="";UI.shake=false;render();
@@ -1747,6 +1785,16 @@ const ACT={
   buyPack:d=>{const o=+d.v,pr=(TARIFFE_ORE.pacchetti.find(x=>x[0]===o)||[])[1];if(!pr)return;const base=o*pr,iva=ivaDi(base);
     if(!confirm(`Acquistare il pacchetto da ${o} ore a ${pr} € l’ora?\nImponibile ${base} € + IVA ${String(iva).replace(".",",")} € = ${String(r2(base+iva)).replace(".",",")} €.\n(Versione di prova: pagamento simulato)`))return;
     S.pacchetti.push({id:uid(),docId:S.proId,ore:o,prezzoOra:pr,base,iva,at:Date.now()});save();toast(`Pacchetto da ${o} ore acquistato`);render()},
+  esitoVisita:async d=>{const a=S.appts.find(x=>x.id===d.id);if(!a)return;const sp=doc(a.doctorId).name,q=`${fmtD(a.date,{day:"numeric",month:"short"})} alle ${a.time}`;
+    if(d.v==="rifiuta"&&!confirm(`Rifiutare la richiesta di ${a.patient} del ${q}?${a.payAuth?" L’importo autorizzato sulla carta viene sbloccato.":""}`))return;
+    if(DB.on){const r=await DB.esitoVisita(a,d.v);if(!r)return}
+    if(d.v==="conferma"){a.status="confermata";if(a.payAuth)a.paid=true;
+      addNotif("user:"+(a.ownerEmail||"paziente"),"visita_confermata","Visita confermata",`${sp} ha confermato ${a.service} del ${q}${a.roomId?" · "+room(a.roomId).name:""}.`,a.id);
+      addNotif("admin","visita_confermata","Richiesta di visita confermata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q} · servizio ${eur(a.fee||APP_FEE)}`,a.id);toast("Visita confermata: il paziente riceve la notifica")}
+    else if(d.v==="rifiuta"){a.status="rifiutata";a.paid=false;
+      addNotif("user:"+(a.ownerEmail||"paziente"),"visita_rifiutata","Richiesta non accettata",`${sp} non può riceverti il ${q}. Nessun addebito: scegli un altro orario.`,a.id);toast("Richiesta rifiutata")}
+    else{a.status="conclusa";addNotif("admin","visita_effettuata","Visita effettuata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q}`,a.id);toast("Visita segnata come effettuata")}
+    save();render()},
   hideBanner:()=>{S.hideBanner=true;save();render()},
   openPage:d=>{if(d.v.startsWith("tab:")){UI.tab=d.v.slice(4);UI.stack=[];return render()}if(d.v==="payments")UI.addCard=false;saveNote();push({page:d.v})},
   pickPerson:()=>{UI.sheet={type:"persons"};render()},
@@ -1841,6 +1889,7 @@ const ACT={
     if(DB.on&&(isOwner()||!STRIPE.publishableKey)){const list=plan.map(ds=>({doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));UI.sheet=null;render();
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
     if(isOwner()||perc){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
+      if(!isOwner())addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)}${perc?" · a percentuale":""}`);
       return toast(`${r.name} prenotato${perc?" a percentuale":""}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
   rpCard:d=>{UI.sheet.card=d.v;render()},
@@ -1898,6 +1947,7 @@ const FORMS={
     sh.plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,paid:{amount:per,payment:pid}}));
     if(c.cred>0)S.oreUsate.push({docId:S.proId,ore:c.cred,at:Date.now(),roomId:r.id,payment:pid});
     if(c.base>0)S.roomPayments.unshift({id:pid,doctorId:S.proId,roomId:r.id,dates:sh.plan.slice(),start:toT(sh.start),end:toT(sh.end),amount:c.base,iva:c.iva,card:card.brand+" •••• "+card.last4,at:Date.now(),refund:0});
+    addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${sh.plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)} · ${c.base>0?eur(c.tot)+" IVA inclusa":"ore del pacchetto"}`);
     save();UI.sheet=null;render();
     notify(c.base>0?"Pagamento riuscito":"Studio prenotato",c.base>0?`${eur(c.tot)} (IVA inclusa) pagati a Clinia per ${r.name} con ${card.brand} •••• ${card.last4} (simulato).`:`${r.name} prenotato con ${String(c.cred).replace(".",",")} ${c.cred===1?"ora":"ore"} del tuo pacchetto.`,"Clinia")},
   request:f=>{setTimeout(()=>f.reset());S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
@@ -2014,7 +2064,8 @@ const DB={on:false,c:null,
       this.on=true;render();
       this.c.channel("clinia").on("postgres_changes",{event:"*",schema:"public",table:"room_bookings"},()=>this.pull())
         .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},()=>this.pull())
-        .on("postgres_changes",{event:"*",schema:"public",table:"fpm_pagamenti"},()=>this.pullPag().then(render)).subscribe();
+        .on("postgres_changes",{event:"*",schema:"public",table:"fpm_pagamenti"},()=>this.pullPag().then(render))
+        .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifiche"},()=>this.pullNotif(true)).subscribe();
       const{data}=await this.c.auth.getSession();if(data.session)await this.pull()}catch(e){console.warn("Supabase non raggiungibile, uso i dati sul telefono",e);this.on=false}},
   async login(email,pw,register,ruolo){const r=register?await this.c.auth.signUp({email,password:pw,options:{emailRedirectTo:location.href.split("#")[0],data:{ruolo:ruolo==="professionista"?"specialista":"paziente"}}})
       :await this.c.auth.signInWithPassword({email,password:pw});
@@ -2024,12 +2075,13 @@ const DB={on:false,c:null,
   async pull(){if(!this.on)return;const dal=addDays(today(),-14);
     const[r,a]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal)]);
     if(!r.error)S.rooms=r.data.map(b=>({id:b.id,doctorId:b.specialist_id,date:b.giorno,start:b.inizio.slice(0,5),end:b.fine.slice(0,5),roomId:b.room_id,paid:+b.importo>0&&b.stato==="confermata"?{amount:+b.importo,payment:b.payment_id}:null,remote:true}));
-    if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="annullata"?"annullata":"confermata"}));
+    if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="in_attesa_pagamento"?"richiesta":x.stato,payAuth:x.metodo_pagamento==="carta",ownerEmail:null}));
     if(S.auth&&(S.auth.owner||S.auth.fpm))await this.pullPag();
+    await this.pullNotif(false);
     render()},
   async saveAppt(a){if(!this.on)return;const{data:u}=await this.c.auth.getUser();
     const{error}=await this.c.from("appointments").insert({id:a.id.length===36?a.id:undefined,specialist_id:a.doctorId,patient_id:u.user&&u.user.id,paziente_nome:a.patient,prestazione:a.service,giorno:a.date,ora:a.time,durata_min:a.dur,room_id:a.roomId,online:a.online,prezzo:a.price,commissione_app:a.fee||APP_FEE,
-      commissione_a_carico:a.feeBy,metodo_pagamento:a.feeBy==="paziente"?"carta":"struttura",stato:a.feeBy==="paziente"?"in_attesa_pagamento":"confermata",nota:a.note});
+      commissione_a_carico:a.feeBy,metodo_pagamento:a.feeBy==="paziente"?"carta":"struttura",stato:a.feeBy==="paziente"?"in_attesa_pagamento":"richiesta",nota:a.note});
     if(error)toast("Prenotazione non salvata sul server: "+error.message)},
   async saveRooms(list,free){if(!this.on)return;
     const{error}=await this.c.from("room_bookings").insert(list.map(b=>({specialist_id:b.doctorId,room_id:b.roomId,giorno:b.date,inizio:b.start,fine:b.end,stato:free?"confermata":"in_attesa_pagamento",gratuito:!!free,importo:roomCost(b.roomId,toMin(b.end)-toMin(b.start))})));
@@ -2051,6 +2103,14 @@ const DB={on:false,c:null,
   async pullPag(){const[p,mt]=await Promise.all([this.c.from("fpm_pagamenti").select("*"),this.c.from("app_settings").select("valore").eq("chiave","licenza_metodo").maybeSingle()]);
     if(!p.error){S.pag={};for(const x of p.data)S.pag[x.mese.slice(0,7)]={metodo:x.metodo,data:x.pagato_il,importo:+x.importo_netto,nota:x.nota||"",conf:x.confermato_fpm}}
     if(!mt.error&&mt.data)S.licMetodo=mt.data.valore.metodo||"automatico"},
+  async pullNotif(nuove){const{data,error}=await this.c.from("notifiche").select("*").order("creata_il",{ascending:false}).limit(100);if(error)return;
+    const prima=new Set((UI.notifRemote||[]).map(n=>n.id));UI.notifRemote=data.map(n=>({id:n.id,tipo:n.tipo,titolo:n.titolo,testo:n.testo,ref:n.appointment_id||n.room_booking_id,at:Date.parse(n.creata_il),letta:n.letta}));
+    if(nuove)for(const n of UI.notifRemote)if(!prima.has(n.id)&&!n.letta){avvisoSistema(n.titolo,n.testo);notify(n.titolo,n.testo,"Clinia")}render()},
+  async notifLette(ids){if(!this.on||!ids.length)return;await this.c.from("notifiche").update({letta:true}).in("id",ids).eq("letta",false)},
+  async esitoVisita(a,esito){if(!this.on)return true;
+    if(a.payAuth||esito!=="effettuata"&&a.method==="carta"){const{data,error}=await this.c.functions.invoke("visita-esito",{body:{appointment_id:a.id,esito}});if(error||data&&data.errore){toast("Non riuscito: "+((data&&data.errore)||error.message));return false}return true}
+    const stato={conferma:"confermata",rifiuta:"rifiutata",effettuata:"conclusa"}[esito];const{error}=await this.c.from("appointments").update({stato}).eq("id",a.id);
+    if(error){toast("Non salvato sul server: "+error.message);return false}return true},
   async update(table,id,patch){if(!this.on||!/^[0-9a-f-]{36}$/.test(id))return;const{error}=await this.c.from(table).update(patch).eq("id",id);if(error)toast("Modifica non salvata sul server: "+error.message)}};
 DB.init();
 
@@ -2171,7 +2231,8 @@ async function startModel(el){const hint=el.querySelector(".hint");
 const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 let installEvt=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;render()});
 try{if("serviceWorker" in navigator&&location.protocol==="https:"&&window.top===window)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
-function installCard(){if(standalone())return "";const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const nativa=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+function installCard(){if(standalone()||nativa())return "";const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   return `<div class="card stack" style="gap:8px"><div class="row" style="gap:10px">${markSvg(24)}<b>Installa Clinia sul telefono</b></div>
   ${installEvt?`<p class="small muted">Aggiungi Clinia alla schermata Home: si apre a schermo intero, come un’app.</p><button class="btn primary block sm" data-act="installApp">Installa</button>`
   :ios?`<ol class="small" style="padding-left:20px;margin:0"><li>Apri questa pagina con <b>Safari</b>.</li><li>Tocca il tasto <b>Condividi</b> (il quadrato con la freccia in su).</li><li>Scegli <b>Aggiungi alla schermata Home</b>, poi <b>Aggiungi</b>.</li></ol>`

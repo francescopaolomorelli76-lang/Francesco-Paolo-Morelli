@@ -1,0 +1,17 @@
+{
+  "name": "clinia-app-ios",
+  "private": true,
+  "description": "Clinia App per iPhone (Capacitor). © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.",
+  "scripts": {
+    "www": "node scripts/www.mjs",
+    "sync": "npm run www && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0",
+    "@capacitor/local-notifications": "8.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0"
+  }
+}

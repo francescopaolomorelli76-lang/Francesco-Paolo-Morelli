@@ -1,0 +1,54 @@
+# Compila Clinia App per iPhone su un Mac di GitHub, SENZA firma (come Manga Vox).
+# Il file .ipa si installa con Sideloadly e un Apple ID gratuito: guida in clinia-app/docs/PROVA_IPHONE.md.
+# © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
+name: Clinia iPhone (IPA non firmata)
+
+on:
+  push:
+    branches: [claude/sharp-shannon-4hxlnd]
+    paths: ['clinia-app/**', '.github/workflows/clinia-ios.yml', '!clinia-app/**/*.md', '!clinia-app/supabase/**']
+  workflow_dispatch:
+
+concurrency:
+  group: clinia-ios
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: clinia-app/native
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pacchetti
+        run: npm ci
+
+      - name: Copia l'app nel progetto iPhone
+        run: npm run www && npx cap sync ios
+
+      - name: Compila (senza firma)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            MARKETING_VERSION=1.0.${GITHUB_RUN_NUMBER} CURRENT_PROJECT_VERSION=${GITHUB_RUN_NUMBER} build
+
+      - name: Crea IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry Clinia.ipa Payload
+          ls -lh Clinia.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Clinia-iPhone-ipa
+          path: clinia-app/native/Clinia.ipa
+          retention-days: 30

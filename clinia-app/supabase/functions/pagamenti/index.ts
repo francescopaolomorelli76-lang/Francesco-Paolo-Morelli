@@ -42,10 +42,12 @@ Deno.serve(async (req) => {
       const pi = await stripe.paymentIntents.create({
         amount: totale, currency: "eur",
         automatic_payment_methods: { enabled: true },       // carta, Apple Pay, Google Pay, PayPal se attivo
+        capture_method: "manual",                           // solo autorizzato: si addebita quando lo specialista conferma
         transfer_group: `visita-${a.id}`,
         description: `${a.prestazione} – ${a.giorno} ${a.ora}`,
         metadata: { tipo: "visita", appointment_id: a.id, specialist_id: a.specialist_id },
       }, { idempotencyKey: `visita-${a.id}` });
+      await admin.from("appointments").update({ stripe_payment_intent: pi.id }).eq("id", a.id);
       return json({ client_secret: pi.client_secret, importo: totale / 100 });
     }
 

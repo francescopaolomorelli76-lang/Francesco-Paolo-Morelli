@@ -4,7 +4,7 @@
 //   abbonamento → quota a FPM al netto della ritenuta
 //   stanze    → restano a Clinia
 // Stripe › Sviluppatori › Webhook: https://<progetto>.supabase.co/functions/v1/stripe-webhook
-// Eventi: payment_intent.succeeded, payment_intent.payment_failed, invoice.paid, invoice.payment_failed,
+// Eventi: payment_intent.amount_capturable_updated, payment_intent.succeeded, payment_intent.payment_failed, invoice.paid, invoice.payment_failed,
 //         customer.subscription.updated, customer.subscription.deleted, charge.refunded
 import Stripe from "npm:stripe@16.12.0";
 import { accreditaFpm, admin, cent, stripe } from "../_shared/clients.ts";
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       const charge = typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
       if (m.tipo === "visita") {
         const { data: a } = await admin.from("appointments")
-          .update({ pagato: true, pagato_il: new Date().toISOString(), stato: "confermata" })
+          .update({ pagato: true, pagato_il: new Date().toISOString() })   // lo stato lo ha già messo visita-esito
           .eq("id", m.appointment_id).select("*, specialists(specialist_private(stripe_account_id))").single();
         if (!a) break;
         // 1) prezzo della visita subito allo specialista
@@ -53,6 +53,14 @@ Deno.serve(async (req) => {
           stato: "riuscito", stripe_payment_intent: pi.id }, { onConflict: "stripe_payment_intent" }).select().single();
         if (p) await admin.from("room_bookings").update({ payment_id: p.id }).in("id", ids);
       }
+      break;
+    }
+    case "payment_intent.amount_capturable_updated": {
+      // Carta autorizzata: la visita diventa una richiesta da confermare (notifica allo specialista dal database)
+      const pi = ev.data.object as Stripe.PaymentIntent;
+      if (pi.metadata?.tipo === "visita") await admin.from("appointments")
+        .update({ stato: "richiesta", stripe_payment_intent: pi.id })
+        .eq("id", pi.metadata.appointment_id).eq("stato", "in_attesa_pagamento");
       break;
     }
     case "payment_intent.payment_failed": {

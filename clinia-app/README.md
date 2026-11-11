@@ -72,3 +72,8 @@ File unico: `index.html` (HTML + CSS + JavaScript, nessuna dipendenza).
 - Numerazione/tipologia studi (`ROOMS`) e orari (`OPEN`) da confermare con la clinica
 - Backend condiviso (account, SMS reali, prenotazioni tra più telefoni): ora i dati restano sul dispositivo
 - Pubblicazione su App Store / Play Store (wrapper Flutter o Capacitor)
+
+## App per iPhone (come Manga Vox)
+- Progetto nativo Capacitor in `native/` (cartella `ios/` con il progetto Xcode, icona e schermata di avvio Clinia).
+- GitHub Actions (`.github/workflows/clinia-ios.yml`) compila a ogni modifica `Clinia.ipa` non firmata; si installa con Sideloadly: guida in `docs/PROVA_IPHONE.md`.
+- Notifiche: sezione **Notifiche** in app + notifiche di sistema dell'iPhone (plugin Local Notifications). Le push ad app chiusa richiedono l'account Apple Developer.

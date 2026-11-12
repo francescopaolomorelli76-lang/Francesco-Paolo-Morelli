@@ -37,26 +37,26 @@ J.FORMS = {
 
 /* Campagna completa: 20 livelli (dati utente). Solo il n.1 è giocabile in questa build. */
 J.CAMPAIGN = [
-  { n: 1, title: 'Il risveglio dei mostri', env: 'Circuito / periferia', boss: 'Haniwa corazzato', chapter: 'Yamatai', playable: true },
-  { n: 2, title: 'Il rapimento di Mayumi', env: 'Quartiere / bosco', boss: 'Mostro Haniwa', chapter: 'Yamatai' },
+  { n: 1, title: 'Il risveglio dei mostri', env: 'Circuito / periferia', boss: 'Haniwa Genjin Doroma', chapter: 'Yamatai', playable: true, bossRef: 'Doroma: ascia, scudo rotondo, faccia demoniaca sul petto (rif. utente 9)' },
+  { n: 2, title: 'Il rapimento di Mayumi', env: 'Quartiere / bosco', boss: 'Mostro Haniwa', chapter: 'Yamatai', bossRef: 'mostro corazzato marrone, cresta rossa, cintura con teschio, coda a frusta (rif. utente 7)' },
   { n: 3, title: "L'inganno di Mimashi", env: 'Caverne', boss: 'Mimashi', chapter: 'Yamatai' },
-  { n: 4, title: 'Missili perforanti', env: 'Porto', boss: 'Haniwa gigante', chapter: 'Yamatai' },
-  { n: 5, title: 'Il segreto della campana', env: 'Rovine archeologiche', boss: 'Guardiano rovine', chapter: 'Yamatai' },
+  { n: 4, title: 'Missili perforanti', env: 'Porto', boss: 'Haniwa gigante', chapter: 'Yamatai', bossRef: 'volto bianco con lunghe corna bionde (rif. utente 3c)' },
+  { n: 5, title: 'Il segreto della campana', env: 'Rovine archeologiche', boss: 'Guardiano rovine', chapter: 'Yamatai', bossRef: 'gigante giallo, muso leonino, torace a scheletro, falce (rif. utente 5)' },
   { n: 6, title: 'La valle degli Haniwa', env: 'Canyon', boss: 'Amaso', chapter: 'Yamatai' },
-  { n: 7, title: 'S.O.S. Big Shooter', env: 'Cielo / montagne', boss: 'Mostro volante', chapter: 'Yamatai' },
+  { n: 7, title: 'S.O.S. Big Shooter', env: 'Cielo / montagne', boss: 'Mostro volante', chapter: 'Yamatai', bossRef: 'mostro dal volto viola con cappello giallo che afferra il Big Shooter (rif. utente 3a)' },
   { n: 8, title: 'Il guerriero Takeru', env: 'Tempio antico', boss: 'Takeru', chapter: 'Yamatai' },
   { n: 9, title: 'Assedio alla Base', env: 'Base Antiatomica', boss: 'Ikima', chapter: 'Yamatai' },
-  { n: 10, title: 'La Regina di Yamatai', env: 'Palazzo Himika', boss: 'Regina Himika', chapter: 'Yamatai' },
-  { n: 11, title: "L'ombra del Drago", env: 'Fortezza sotterranea', boss: "Mostro dell'Imperatore", chapter: 'Impero del Drago' },
-  { n: 12, title: 'La città sotto assedio', env: 'Tokyo devastata', boss: 'Robot bestia', chapter: 'Impero del Drago' },
-  { n: 13, title: 'La corsa infernale', env: 'Autostrada / tunnel', boss: 'Mecha assalto', chapter: 'Impero del Drago' },
-  { n: 14, title: 'La minaccia dalle tenebre', env: 'Fabbrica robotica', boss: 'Bestia meccanica', chapter: 'Impero del Drago' },
-  { n: 15, title: 'Il cimitero dimensionale', env: 'Dimensione aliena', boss: 'Guardiano dimensionale', chapter: 'Impero del Drago' },
-  { n: 16, title: 'La rosa nera', env: 'Foresta e rovine', boss: 'Comandante robotico', chapter: 'Impero del Drago' },
+  { n: 10, title: 'La Regina di Yamatai', env: 'Palazzo Himika', boss: 'Regina Himika', chapter: 'Yamatai', bossRef: 'Regina Himika (rif. utente 2 + originale 05)' },
+  { n: 11, title: "L'ombra del Drago", env: 'Fortezza sotterranea', boss: "Mostro dell'Imperatore", chapter: 'Impero del Drago', bossRef: 'teschio verde con corno, mantello rosso a pois gialli (rif. utente 3d)' },
+  { n: 12, title: 'La città sotto assedio', env: 'Tokyo devastata', boss: 'Robot bestia', chapter: 'Impero del Drago', bossRef: 'testa rossa cornuta, corpo grigio (rif. utente 6)' },
+  { n: 13, title: 'La corsa infernale', env: 'Autostrada / tunnel', boss: 'Mecha assalto', chapter: 'Impero del Drago', bossRef: 'mostro rotondo verde a pois (rif. utente 8)' },
+  { n: 14, title: 'La minaccia dalle tenebre', env: 'Fabbrica robotica', boss: 'Bestia meccanica', chapter: 'Impero del Drago', bossRef: 'robot grigio cornuto con mazza chiodata (rif. utente 4 + disegno)' },
+  { n: 15, title: 'Il cimitero dimensionale', env: 'Dimensione aliena', boss: 'Guardiano dimensionale', chapter: 'Impero del Drago', bossRef: 'mostro scuro avvolto dalle fiamme (rif. utente 3b)' },
+  { n: 16, title: 'La rosa nera', env: 'Foresta e rovine', boss: 'Comandante robotico', chapter: 'Impero del Drago', bossRef: 'guerriero cornuto muscoloso con falce (rif. utente 10, disegno)' },
   { n: 17, title: 'Il dilemma di Flora', env: 'Castello del Drago', boss: 'Generale Flora', chapter: 'Impero del Drago' },
   { n: 18, title: 'Il sacrificio di Flora', env: 'Fortezza in fiamme', boss: 'Guardia imperiale', chapter: 'Impero del Drago' },
   { n: 19, title: 'Il palazzo del Drago', env: 'Torre imperiale', boss: 'Guardiano supremo', chapter: 'Impero del Drago' },
-  { n: 20, title: 'La battaglia finale', env: 'Sala del trono', boss: 'Imperatore del Drago', chapter: 'Impero del Drago' },
+  { n: 20, title: 'La battaglia finale', env: 'Sala del trono', boss: 'Imperatore del Drago', chapter: 'Impero del Drago', bossRef: 'Imperatore del Drago (rif. utente 1 + originale 08)' },
 ];
 
 /* ------------------------------------------------------------------
@@ -119,5 +119,5 @@ J.LEVEL1 = {
     { type: 'energy', x: 5900, y: 400 },
     { type: 'health', x: 5260, y: 290 },
   ],
-  boss: { x: 7300, hp: 70, name: 'HANIWA CORAZZATO' },
+  boss: { x: 7300, hp: 70, name: 'HANIWA GENJIN DOROMA' },
 };

@@ -1,0 +1,1460 @@
+{
+ "hiro_idle0": {
+  "name": "hiro_idle0",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_idle1": {
+  "name": "hiro_idle1",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run0": {
+  "name": "hiro_run0",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run1": {
+  "name": "hiro_run1",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run2": {
+  "name": "hiro_run2",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run3": {
+  "name": "hiro_run3",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run4": {
+  "name": "hiro_run4",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_run5": {
+  "name": "hiro_run5",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_jump": {
+  "name": "hiro_jump",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_fall": {
+  "name": "hiro_fall",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_punch": {
+  "name": "hiro_punch",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_punch2": {
+  "name": "hiro_punch2",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_kick": {
+  "name": "hiro_kick",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_airkick": {
+  "name": "hiro_airkick",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_hurt": {
+  "name": "hiro_hurt",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hiro_dead": {
+  "name": "hiro_dead",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_idle0": {
+  "name": "hirog_idle0",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_idle1": {
+  "name": "hirog_idle1",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run0": {
+  "name": "hirog_run0",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run1": {
+  "name": "hirog_run1",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run2": {
+  "name": "hirog_run2",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run3": {
+  "name": "hirog_run3",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run4": {
+  "name": "hirog_run4",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_run5": {
+  "name": "hirog_run5",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_jump": {
+  "name": "hirog_jump",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_fall": {
+  "name": "hirog_fall",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_punch": {
+  "name": "hirog_punch",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_punch2": {
+  "name": "hirog_punch2",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_kick": {
+  "name": "hirog_kick",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_airkick": {
+  "name": "hirog_airkick",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_hurt": {
+  "name": "hirog_hurt",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_dead": {
+  "name": "hirog_dead",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_fists": {
+  "name": "hirog_fists",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "hirog_cheer": {
+  "name": "hirog_cheer",
+  "group": "pA",
+  "w": 96,
+  "h": 96,
+  "ax": 48,
+  "ay": 90,
+  "bg": false
+ },
+ "cyb_idle0": {
+  "name": "cyb_idle0",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_idle1": {
+  "name": "cyb_idle1",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run0": {
+  "name": "cyb_run0",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run1": {
+  "name": "cyb_run1",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run2": {
+  "name": "cyb_run2",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run3": {
+  "name": "cyb_run3",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run4": {
+  "name": "cyb_run4",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_run5": {
+  "name": "cyb_run5",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_jump": {
+  "name": "cyb_jump",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_fall": {
+  "name": "cyb_fall",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_punch": {
+  "name": "cyb_punch",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_punch2": {
+  "name": "cyb_punch2",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_kick": {
+  "name": "cyb_kick",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_airkick": {
+  "name": "cyb_airkick",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_hurt": {
+  "name": "cyb_hurt",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_dead": {
+  "name": "cyb_dead",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "cyb_cheer": {
+  "name": "cyb_cheer",
+  "group": "pA",
+  "w": 96,
+  "h": 104,
+  "ax": 48,
+  "ay": 98,
+  "bg": false
+ },
+ "sold_idle0": {
+  "name": "sold_idle0",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_run0": {
+  "name": "sold_run0",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_run1": {
+  "name": "sold_run1",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_run2": {
+  "name": "sold_run2",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_run3": {
+  "name": "sold_run3",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_windup": {
+  "name": "sold_windup",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_attack": {
+  "name": "sold_attack",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_hurt": {
+  "name": "sold_hurt",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "sold_fall": {
+  "name": "sold_fall",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_idle0": {
+  "name": "lanc_idle0",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_run0": {
+  "name": "lanc_run0",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_run1": {
+  "name": "lanc_run1",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_run2": {
+  "name": "lanc_run2",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_run3": {
+  "name": "lanc_run3",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_windup": {
+  "name": "lanc_windup",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_attack": {
+  "name": "lanc_attack",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_hurt": {
+  "name": "lanc_hurt",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "lanc_fall": {
+  "name": "lanc_fall",
+  "group": "eA",
+  "w": 112,
+  "h": 96,
+  "ax": 56,
+  "ay": 90,
+  "bg": false
+ },
+ "jeeg_idle0": {
+  "name": "jeeg_idle0",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_idle1": {
+  "name": "jeeg_idle1",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run0": {
+  "name": "jeeg_run0",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run1": {
+  "name": "jeeg_run1",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run2": {
+  "name": "jeeg_run2",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run3": {
+  "name": "jeeg_run3",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run4": {
+  "name": "jeeg_run4",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_run5": {
+  "name": "jeeg_run5",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_jump": {
+  "name": "jeeg_jump",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_fall": {
+  "name": "jeeg_fall",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_punch": {
+  "name": "jeeg_punch",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_punch2": {
+  "name": "jeeg_punch2",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_kick": {
+  "name": "jeeg_kick",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_airkick": {
+  "name": "jeeg_airkick",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_hurt": {
+  "name": "jeeg_hurt",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_dead": {
+  "name": "jeeg_dead",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_beam": {
+  "name": "jeeg_beam",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jeeg_cheer": {
+  "name": "jeeg_cheer",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_head": {
+  "name": "jpart_head",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_torso": {
+  "name": "jpart_torso",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_armB": {
+  "name": "jpart_armB",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_armF": {
+  "name": "jpart_armF",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_legB": {
+  "name": "jpart_legB",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "jpart_legF": {
+  "name": "jpart_legF",
+  "group": "pB",
+  "w": 176,
+  "h": 160,
+  "ax": 88,
+  "ay": 154,
+  "bg": false
+ },
+ "giant_idle0": {
+  "name": "giant_idle0",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_walk0": {
+  "name": "giant_walk0",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_walk1": {
+  "name": "giant_walk1",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_walk2": {
+  "name": "giant_walk2",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_walk3": {
+  "name": "giant_walk3",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_windup": {
+  "name": "giant_windup",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "giant_attack": {
+  "name": "giant_attack",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_idle0": {
+  "name": "gshoot_idle0",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_walk0": {
+  "name": "gshoot_walk0",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_walk1": {
+  "name": "gshoot_walk1",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_walk2": {
+  "name": "gshoot_walk2",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_walk3": {
+  "name": "gshoot_walk3",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_windup": {
+  "name": "gshoot_windup",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "gshoot_attack": {
+  "name": "gshoot_attack",
+  "group": "eB",
+  "w": 128,
+  "h": 136,
+  "ax": 56,
+  "ay": 130,
+  "bg": false
+ },
+ "dor_idle0": {
+  "name": "dor_idle0",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_idle1": {
+  "name": "dor_idle1",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_walk0": {
+  "name": "dor_walk0",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_walk1": {
+  "name": "dor_walk1",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_walk2": {
+  "name": "dor_walk2",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_walk3": {
+  "name": "dor_walk3",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_windup": {
+  "name": "dor_windup",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_slam": {
+  "name": "dor_slam",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_jump": {
+  "name": "dor_jump",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_hurt": {
+  "name": "dor_hurt",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "dor_charge": {
+  "name": "dor_charge",
+  "group": "eB",
+  "w": 224,
+  "h": 184,
+  "ax": 104,
+  "ay": 178,
+  "bg": false
+ },
+ "shooter0": {
+  "name": "shooter0",
+  "group": "pB",
+  "w": 224,
+  "h": 80,
+  "ax": 112,
+  "ay": 40,
+  "bg": false
+ },
+ "shooter1": {
+  "name": "shooter1",
+  "group": "pB",
+  "w": 224,
+  "h": 80,
+  "ax": 112,
+  "ay": 40,
+  "bg": false
+ },
+ "gloves_a": {
+  "name": "gloves_a",
+  "group": "pA",
+  "w": 48,
+  "h": 40,
+  "ax": 24,
+  "ay": 38,
+  "bg": false
+ },
+ "health_a": {
+  "name": "health_a",
+  "group": "pA",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 30,
+  "bg": false
+ },
+ "energy_a": {
+  "name": "energy_a",
+  "group": "pA",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 30,
+  "bg": false
+ },
+ "flag0_a": {
+  "name": "flag0_a",
+  "group": "pA",
+  "w": 48,
+  "h": 96,
+  "ax": 8,
+  "ay": 94,
+  "bg": false
+ },
+ "flag1_a": {
+  "name": "flag1_a",
+  "group": "pA",
+  "w": 48,
+  "h": 96,
+  "ax": 8,
+  "ay": 94,
+  "bg": false
+ },
+ "gloves_b": {
+  "name": "gloves_b",
+  "group": "pB",
+  "w": 48,
+  "h": 40,
+  "ax": 24,
+  "ay": 38,
+  "bg": false
+ },
+ "health_b": {
+  "name": "health_b",
+  "group": "pB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 30,
+  "bg": false
+ },
+ "energy_b": {
+  "name": "energy_b",
+  "group": "pB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 30,
+  "bg": false
+ },
+ "flag0_b": {
+  "name": "flag0_b",
+  "group": "pB",
+  "w": 48,
+  "h": 96,
+  "ax": 8,
+  "ay": 94,
+  "bg": false
+ },
+ "flag1_b": {
+  "name": "flag1_b",
+  "group": "pB",
+  "w": 48,
+  "h": 96,
+  "ax": 8,
+  "ay": 94,
+  "bg": false
+ },
+ "star0_a": {
+  "name": "star0_a",
+  "group": "eA",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "star1_a": {
+  "name": "star1_a",
+  "group": "eA",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "boom0_a": {
+  "name": "boom0_a",
+  "group": "eA",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "boom1_a": {
+  "name": "boom1_a",
+  "group": "eA",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "boom2_a": {
+  "name": "boom2_a",
+  "group": "eA",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "star0_b": {
+  "name": "star0_b",
+  "group": "eB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "star1_b": {
+  "name": "star1_b",
+  "group": "eB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "boom0_b": {
+  "name": "boom0_b",
+  "group": "eB",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "boom1_b": {
+  "name": "boom1_b",
+  "group": "eB",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "boom2_b": {
+  "name": "boom2_b",
+  "group": "eB",
+  "w": 64,
+  "h": 64,
+  "ax": 32,
+  "ay": 32,
+  "bg": false
+ },
+ "spear": {
+  "name": "spear",
+  "group": "eA",
+  "w": 48,
+  "h": 16,
+  "ax": 24,
+  "ay": 8,
+  "bg": false
+ },
+ "clay": {
+  "name": "clay",
+  "group": "eB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "orb": {
+  "name": "orb",
+  "group": "eB",
+  "w": 32,
+  "h": 32,
+  "ax": 16,
+  "ay": 16,
+  "bg": false
+ },
+ "shock0": {
+  "name": "shock0",
+  "group": "eB",
+  "w": 32,
+  "h": 48,
+  "ax": 16,
+  "ay": 46,
+  "bg": false
+ },
+ "shock1": {
+  "name": "shock1",
+  "group": "eB",
+  "w": 32,
+  "h": 48,
+  "ax": 16,
+  "ay": 46,
+  "bg": false
+ },
+ "ring0": {
+  "name": "ring0",
+  "group": "eB",
+  "w": 24,
+  "h": 48,
+  "ax": 12,
+  "ay": 24,
+  "bg": false
+ },
+ "ring1": {
+  "name": "ring1",
+  "group": "eB",
+  "w": 24,
+  "h": 48,
+  "ax": 12,
+  "ay": 24,
+  "bg": false
+ },
+ "gcore": {
+  "name": "gcore",
+  "group": "eB",
+  "w": 32,
+  "h": 16,
+  "ax": 0,
+  "ay": 8,
+  "bg": false
+ },
+ "pbeam": {
+  "name": "pbeam",
+  "group": "eB",
+  "w": 32,
+  "h": 24,
+  "ax": 0,
+  "ay": 12,
+  "bg": false
+ },
+ "spark": {
+  "name": "spark",
+  "group": "eB",
+  "w": 16,
+  "h": 16,
+  "ax": 8,
+  "ay": 8,
+  "bg": false
+ },
+ "alert": {
+  "name": "alert",
+  "group": "eB",
+  "w": 16,
+  "h": 24,
+  "ax": 8,
+  "ay": 22,
+  "bg": false
+ },
+ "alert_a": {
+  "name": "alert_a",
+  "group": "eA",
+  "w": 16,
+  "h": 24,
+  "ax": 8,
+  "ay": 22,
+  "bg": false
+ },
+ "bgB_A": {
+  "name": "bgB_A",
+  "group": "bgB_A",
+  "w": 256,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "bgB_B": {
+  "name": "bgB_B",
+  "group": "bgB_B",
+  "w": 256,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "bgA_A": {
+  "name": "bgA_A",
+  "group": "bgA_A",
+  "w": 2304,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "bgA_B": {
+  "name": "bgA_B",
+  "group": "bgA_B",
+  "w": 1728,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_title": {
+  "name": "scr_title",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_hiro": {
+  "name": "scr_hiro",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_miwa": {
+  "name": "scr_miwa",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_build": {
+  "name": "scr_build",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_boss": {
+  "name": "scr_boss",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ },
+ "scr_win": {
+  "name": "scr_win",
+  "group": "scr",
+  "w": 320,
+  "h": 224,
+  "ax": 0,
+  "ay": 0,
+  "bg": true
+ }
+}

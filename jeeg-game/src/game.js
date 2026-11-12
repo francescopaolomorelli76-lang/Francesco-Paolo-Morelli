@@ -121,7 +121,7 @@
   game.onPlayerDeath = function () { J.world.deathT = 0; J.audio.stopMusic(); };
   game.onBossDefeated = function () {
     const w = J.world; w.bossDefeatedT = 0;
-    game.msg('HANIWA CORAZZATO DISTRUTTO!', 3);
+    game.msg('HANIWA GENJIN DOROMA DISTRUTTO!', 3);
   };
 
   function activateCheckpoint(w, idx) {

@@ -1,4 +1,4 @@
-/* boss.js — HANIWA CORAZZATO (boss livello 1), 3 fasi con segnali leggibili (telegraph). */
+/* boss.js — HANIWA GENJIN DOROMA (boss livello 1), 3 fasi con segnali leggibili (telegraph). */
 'use strict';
 (function () {
   const W = () => J.world;
@@ -28,7 +28,7 @@
     if (ph > b.phase) {
       b.phase = ph; b.state = 'roar'; b.at = 0; b.vx = 0; b.armRaise = 1; b.eyeGlow = 1;
       sfx('bossWarn'); J.game.shake(14);
-      J.game.msg(ph === 2 ? 'FASE 2 — il boss usa il cannone della bocca!' : 'FASE 3 — furia del Haniwa corazzato: carica e onde d\'urto!', 3);
+      J.game.msg(ph === 2 ? 'FASE 2 — il boss usa il cannone della bocca!' : 'FASE 3 — furia di Doroma: carica e onde d\'urto!', 3);
       E().particle({ kind: 'ring', x: b.x, y: b.y - b.h * 0.5, life: 0.7, size: 420, col: '#ffcf5a' });
       // respinge il giocatore
       const p = W().player; p.vx = (p.x < b.x ? -1 : 1) * 600; p.vy = -500; p.onGround = false;
@@ -169,9 +169,21 @@
     if (b.state === 'stun') g.rotate(Math.sin(t * 20) * 0.03);
     g.fillStyle = 'rgba(20,10,30,0.3)'; g.beginPath(); g.ellipse(0, 0, 130, 18, 0, 0, 7); g.fill();
     if (b.flash > 0 && 'filter' in g) g.filter = 'brightness(2.4)';
-    g.scale(b.face * b.def.scale, b.def.scale);
+    g.scale(b.face * 4.4, 4.4);
     const phaseCol = b.phase === 1 ? '#e2412c' : b.phase === 2 ? '#ff8a1c' : '#ff2adf';
-    J.spr.drawHaniwaGiant(b.animT, { anim: b.anim, at: b.at, armRaise: b.armRaise, punch: b.punch, eyeGlow: b.eyeGlow, mouthGlow: b.mouthGlow }, 'boss', phaseCol);
+    // Haniwa Genjin DOROMA (riferimento utente): posa in base allo stato
+    const S = J.spr; let pose;
+    switch (b.state) {
+      case 'slamWind': case 'jumpWind': pose = S.pose('windup', Math.min(0.3, b.at)); break;
+      case 'slam': pose = S.pose('slash', Math.min(0.1, b.at)); break;
+      case 'chargeWind': case 'charge': pose = S.pose('kick', 0.02); break;
+      case 'hop': case 'jump': pose = S.pose('jump', 0); break;
+      case 'stun': case 'dying': pose = S.pose('hurt', 0); break;
+      case 'walk': pose = S.pose('run', b.animT, { cadence: 6 }); break;
+      default: pose = S.pose('idle', b.animT, { heavy: 1 });
+    }
+    if (!b._doroma || b._doromaPhase !== b.phase) { b._doroma = S.makeDoroma(b.phase > 1 || b.mouthGlow > 0.5 ? phaseCol : null); b._doromaPhase = b.phase; }
+    S.drawHumanoid(b._doroma, pose);
     if ('filter' in g) g.filter = 'none';
     g.restore();
     // telegraph

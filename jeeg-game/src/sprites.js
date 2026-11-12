@@ -102,6 +102,7 @@
         const b = S(t * 3) * 0.8;
         p.bob = b; p.legs = [{ t: -0.12, s: -0.08 }, { t: 0.18, s: 0.1 }];
         p.arms = [{ u: 0.25, f: 1.3 }, { u: 0.35, f: 1.6 }];
+        if (opt.heavy) { p.legs = [{ t: -0.22, s: -0.12 }, { t: 0.26, s: 0.12 }]; p.arms = [{ u: 0.9, f: 1.5 }, { u: -0.25, f: 0.5 }]; }
         break;
       }
       case 'run': {
@@ -266,7 +267,7 @@
     poly([-3, -36, -2, -39, 4, -39, 5, -36], '#9da2b6', 1.2);
   }
   const JEEG = {
-    hipY: -44, thigh: 21, shin: 22, upper: 14, fore: 15, shoulderY: -33, shoulderX: 1, neckY: -38, shoulderSpread: 0,
+    hipY: -44, thigh: 21, shin: 22, upper: 14, fore: 15, shoulderY: -33, shoulderX: 10, neckY: -38, shoulderSpread: 0,
     legR: 7, armR: 5.2, leg: JG_LEG, legShade: JG_LEG_SH, arm: JG_BLK, armShade: JG_BLK_SH, torsoOverLegs: true,
     legDetail: (L, f) => {
       const c = f ? JG_STRIPE : darken(JG_STRIPE, 0.7);
@@ -464,7 +465,6 @@
     line(-7, 2, 7, 2, OL, 2);
     // capelli scuri spettinati
     poly([-30, -20, -36, -50, -22, -74, 6, -80, 30, -70, 38, -44, 32, -18, 26, -34, 18, -44, 6, -38, -6, -46, -16, -38, -24, -42], HAIR, 3);
-    poly([-28, -60, -46, -72, -32, -50], HAIR, 2); poly([20, -70, 36, -86, 32, -62], HAIR, 2);
     // guanti uniti (rif. 02): gialli con emblema verde e lampo
     const pulse = 0.5 + 0.5 * S(t * 20);
     for (const sx of [-1, 1]) {
@@ -492,9 +492,59 @@
     g.restore();
   }
 
+
+  /* ---------- HANIWA GENJIN DOROMA (boss Livello 1, rif. utente "ドロマ"):
+   * corpo marrone, corna rosse, faccia demoniaca arancio sul petto, ascia e scudo rotondo ---------- */
+  const DR_BODY = '#8a5a34', DR_BODY_SH = '#5e3a20', DR_TAN = '#c79a62', DR_DARK = '#3e2a1e', DR_LIMB = '#6a4428', DR_LIMB_SH = '#3e2a1e';
+  function makeDoroma(phaseCol) {
+    return {
+      hipY: -42, thigh: 20, shin: 21, upper: 15, fore: 15, shoulderY: -34, shoulderX: 14, neckY: -38, shoulderSpread: 0,
+      legR: 8, armR: 6, leg: DR_LIMB, legShade: DR_LIMB_SH, arm: DR_LIMB, armShade: DR_LIMB_SH, torsoOverLegs: true,
+      legDetail: (L, f) => { circ(L.kx, L.ky, 6, f ? DR_TAN : darken(DR_TAN, 0.7), 1.6); },
+      armDetail: (A, f) => {
+        if (!f) { circ(A.sx, A.sy, 9, DR_BODY_SH, 2); for (const a of [-0.6, 0, 0.6]) poly([A.sx + Math.sin(a) * 8, A.sy - Math.cos(a) * 8, A.sx + Math.sin(a) * 14, A.sy - Math.cos(a) * 14, A.sx + Math.sin(a + 0.25) * 8, A.sy - Math.cos(a + 0.25) * 8], darken(DR_TAN, 0.7), 1.2); }
+        if (!f) { // scudo rotondo sul braccio posteriore
+          circ(A.hx + 2, A.hy - 4, 13, '#5a4632', 2.2); circ(A.hx + 2, A.hy - 4, 9.5, '#7a6246', 1.4); circ(A.hx + 2, A.hy - 4, 3.5, '#d8c26a', 1.2);
+          for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; poly([A.hx + 2 + Math.cos(a) * 12, A.hy - 4 + Math.sin(a) * 12, A.hx + 2 + Math.cos(a + 0.12) * 17, A.hy - 4 + Math.sin(a + 0.12) * 17, A.hx + 2 + Math.cos(a + 0.24) * 12, A.hy - 4 + Math.sin(a + 0.24) * 12], '#c9ced8', 1); }
+        }
+      },
+      torso: () => {
+        poly([-15, 3, -17, -14, -20, -30, -13, -38, 14, -38, 21, -30, 18, -14, 16, 3, 0, 6], DR_BODY, 2.2);
+        polyNoOl([-15, 3, -17, -14, -20, -30, -13, -38, -8, -38, -10, 3], DR_BODY_SH);
+        poly([-12, -10, -13, -30, 13, -30, 14, -10, 0, -6], DR_TAN, 1.8);
+        // faccia demoniaca arancio sul petto
+        poly([-10, -12, -11, -26, -5, -30, 6, -30, 11, -26, 10, -12, 0, -8], '#f0a030', 1.8);
+        poly([-8, -24, -2, -21, -8, -20], '#fff6c0', 1.1); poly([8, -24, 2, -21, 8, -20], '#fff6c0', 1.1);
+        circ(-5, -21.6, 1, phaseCol || '#1b1020', 0); circ(5, -21.6, 1, phaseCol || '#1b1020', 0);
+        line(-9, -26, -2, -23, OL, 1.6); line(9, -26, 2, -23, OL, 1.6);
+        poly([-6, -16, 6, -16, 4, -11, -4, -11], '#c8302a', 1.3);
+        poly([-5, -16, -4, -13, -3, -16], '#ffffff', 0.6); poly([5, -16, 4, -13, 3, -16], '#ffffff', 0.6);
+        // cintura
+        poly([-16, 3, -16, -3, 17, -3, 17, 3], DR_DARK, 1.6); circ(0, 0, 3, '#d8c26a', 1);
+      },
+      head: () => {
+        poly([-6, 0, -7, -9, -3, -13, 5, -13, 8, -8, 7, 0], DR_DARK, 1.6);
+        poly([0, -9, 8, -9, 8, -6, 1, -6], phaseCol ? '#ff4a2a' : '#ffcf4a', 1);
+        // corna rosse ricurve
+        poly([-5, -11, -14, -16, -18, -27, -12, -19, -3, -14], '#d42f28', 1.6);
+        poly([5, -11, 13, -15, 16, -27, 10, -18, 3, -14], '#d42f28', 1.6);
+      },
+      hand: (x, y, f) => circ(x, y, 6, f ? DR_LIMB : DR_LIMB_SH, 2),
+      foot: (x, y, a, f) => { g.save(); g.translate(x, y); poly([-9, -7, 12, -7, 14, 2, -9, 2], f ? DR_DARK : '#2a1c14', 2); g.restore(); },
+      weapon: (A, p) => { // ascia
+        const a = A.f; const dx = Math.sin(a), dy = Math.cos(a);
+        line(A.hx - dx * 14, A.hy - dy * 14, A.hx + dx * 34, A.hy + dy * 34, '#6b4a2a', 3.4);
+        const bx = A.hx + dx * 30, by = A.hy + dy * 30, nx = -dy, ny = dx;
+        poly([bx + nx * 2, by + ny * 2, bx + nx * 16 - dx * 10, by + ny * 16 - dy * 10, bx + nx * 20 + dx * 2, by + ny * 20 + dy * 2, bx + nx * 15 + dx * 13, by + ny * 15 + dy * 13, bx + nx * 2 + dx * 6, by + ny * 2 + dy * 6], '#a9c4b8', 2);
+        line(bx + nx * 14 - dx * 6, by + ny * 14 - dy * 6, bx + nx * 14 + dx * 9, by + ny * 14 + dy * 9, '#e8f4ee', 1.2);
+      },
+    };
+  }
+  const DOROMA = makeDoroma(null);
+
   J.spr = {
     setCtx, cap, poly, polyNoOl, circ, ell, line, curve, darken, OL,
     pose, drawHumanoid, HIRO, HIRO_G, CYBORG, JEEG, SOLDIER, LANCER,
-    drawHaniwaGiant, drawBigShooter, portraitMiwa, portraitHiroshi, drawGlovesItem,
+    drawHaniwaGiant, drawBigShooter, makeDoroma, DOROMA, portraitMiwa, portraitHiroshi, drawGlovesItem,
   };
 })();

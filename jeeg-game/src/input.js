@@ -21,11 +21,28 @@
   /* Gamepad "standard": 0=A(sud) 1=B(est) 2=X 3=Y 8=select 9=start 12-15=croce */
   const DEFAULT_PAD = { 0: 'A', 1: 'B', 2: 'T', 3: 'SEL', 4: 'AB', 5: 'AB', 8: 'SEL', 9: 'START', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
 
-  const held = {}; const prevHeld = {};
-  const pressed = {};
-  const kbHeld = {}; const touchHeld = {}; const padHeld = {};
+  /* Profilo RETROMAXI (sala giochi FPM): attivo quando il gioco è lanciato con ?rm=1.
+   * Tastiera RetroMaxi: A=A, S=B, Q=Y, W=H, 1=SELECT, 2=START, 4=MENU (uscita).
+   * Joypad RetroMaxi (layout Nintendo): 1=A, 0=B, 2=Y, 3=H, 8=SELECT, 9=START, 4/16=MENU. */
+  const RETROMAXI = /[?&#]rm=1/.test(location.search + location.hash);
+  const RM_KEYS = {
+    ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
+    KeyA: 'A', KeyS: 'B', KeyD: 'AB', KeyQ: 'T', KeyW: 'SEL', Digit1: 'SEL', Digit2: 'START', Numpad1: 'SEL', Numpad2: 'START',
+    KeyZ: 'A', KeyX: 'B', KeyV: 'AB', KeyT: 'T', KeyC: 'SEL', Enter: 'START', ControlLeft: 'A', AltLeft: 'B', Space: 'B', ShiftLeft: 'T',
+  };
+  const RM_PAD = { 1: 'A', 0: 'B', 2: 'T', 3: 'SEL', 5: 'AB', 6: 'AB', 7: 'AB', 8: 'SEL', 9: 'START', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
+  if (RETROMAXI) {
+    J.BINDINGS_KEY += '_retromaxi';
+    Object.keys(DEFAULT_KEYS).forEach((k) => delete DEFAULT_KEYS[k]); Object.assign(DEFAULT_KEYS, RM_KEYS);
+    Object.keys(DEFAULT_PAD).forEach((k) => delete DEFAULT_PAD[k]); Object.assign(DEFAULT_PAD, RM_PAD);
+    addEventListener('keydown', (e) => { if (e.code === 'Digit4' || e.code === 'Numpad4') { e.preventDefault(); try { parent.postMessage({ type: 'retromaxi-exit' }, '*'); } catch (_) {} } });
+  }
+
   let keyMap = Object.assign({}, DEFAULT_KEYS);
   let padMap = Object.assign({}, DEFAULT_PAD);
+  const held = {}; const prevHeld = {};
+  const pressed = {};
+  const kbHeld = {}; const touchHeld = {}; const padHeld = {}; const latch = {};
   let lastDevice = 'keyboard';
 
   try {
@@ -38,20 +55,27 @@
   let remapListener = null;
   function captureNext(cb) { remapListener = cb; }
 
-  addEventListener('keydown', (e) => {
+  function keyDown(code, e) {
     J.audio && J.audio.unlock();
-    if (remapListener) { e.preventDefault(); const cb = remapListener; remapListener = null; cb({ kind: 'key', code: e.code }); return; }
-    const l = keyMap[e.code];
-    if (l) { e.preventDefault(); kbHeld[l] = (kbHeld[l] || 0) | 1; kbHeld['_' + e.code] = l; lastDevice = 'keyboard'; }
-  });
-  addEventListener('keyup', (e) => {
-    const l = keyMap[e.code];
+    if (remapListener) { e && e.preventDefault(); const cb = remapListener; remapListener = null; cb({ kind: 'key', code }); return; }
+    const l = keyMap[code];
+    if (l) { e && e.preventDefault(); latch[l] = 1; kbHeld[l] = (kbHeld[l] || 0) | 1; kbHeld['_' + code] = l; lastDevice = 'keyboard'; }
+  }
+  function keyUp(code, e) {
+    const l = keyMap[code];
     if (l) {
-      e.preventDefault();
-      delete kbHeld['_' + e.code];
+      e && e.preventDefault();
+      delete kbHeld['_' + code];
       // il pulsante logico resta premuto se un altro tasto mappato sullo stesso è ancora giù
       kbHeld[l] = Object.keys(kbHeld).some((k) => k[0] === '_' && kbHeld[k] === l) ? 1 : 0;
     }
+  }
+  addEventListener('keydown', (e) => keyDown(e.code, e));
+  addEventListener('keyup', (e) => keyUp(e.code, e));
+  /* RetroMaxi inoltra i tasti quando la tastiera è rimasta sulla sala giochi */
+  addEventListener('message', (e) => {
+    const d = e.data; if (!d || d.type !== 'retromaxi-key' || typeof d.code !== 'string') return;
+    if (d.down) { if (!d.repeat) keyDown(d.code); } else keyUp(d.code);
   });
   addEventListener('blur', () => { for (const k in kbHeld) delete kbHeld[k]; for (const k in touchHeld) delete touchHeld[k]; });
 
@@ -59,7 +83,7 @@
   function bindTouch(root) {
     root.querySelectorAll('[data-btn]').forEach((el) => {
       const names = el.dataset.btn.split(',');
-      const down = (e) => { e.preventDefault(); J.audio && J.audio.unlock(); try { el.setPointerCapture(e.pointerId); } catch (_) {} names.forEach((n) => (touchHeld[n] = 1)); el.classList.add('on'); lastDevice = 'touch'; };
+      const down = (e) => { e.preventDefault(); J.audio && J.audio.unlock(); try { el.setPointerCapture(e.pointerId); } catch (_) {} names.forEach((n) => { touchHeld[n] = 1; latch[n] = 1; }); el.classList.add('on'); lastDevice = 'touch'; };
       const up = (e) => { e && e.preventDefault(); names.forEach((n) => (touchHeld[n] = 0)); el.classList.remove('on'); };
       el.addEventListener('pointerdown', down);
       el.addEventListener('pointerup', up);
@@ -98,7 +122,8 @@
     pollPad();
     for (const l of LOGICAL) {
       prevHeld[l] = held[l];
-      held[l] = !!(kbHeld[l] || touchHeld[l] || padHeld[l]);
+      held[l] = !!(kbHeld[l] || touchHeld[l] || padHeld[l] || latch[l]);
+      latch[l] = 0;
       pressed[l] = held[l] && !prevHeld[l];
     }
     actions.attack = actions.jump = actions.beam = false;
@@ -130,6 +155,6 @@
   /* Iniezione per test automatici */
   function inject(l, v) { touchHeld[l] = v ? 1 : 0; }
 
-  J.input = { held, pressed, actions, update, menuPressed, bindTouch, captureNext, setBinding, resetBindings, clearAll, inject, LOGICAL,
+  J.input = { RETROMAXI, held, pressed, actions, update, menuPressed, bindTouch, captureNext, setBinding, resetBindings, clearAll, inject, LOGICAL,
     get device() { return lastDevice; } };
 })();

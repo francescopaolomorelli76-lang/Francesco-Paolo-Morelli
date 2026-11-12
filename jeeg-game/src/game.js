@@ -84,7 +84,7 @@
       w.scene = J.scenes.dialog([
         { who: 'LIVELLO 1 — IL RISVEGLIO DEI MOSTRI', text: 'Circuito di periferia. Durante le prove di velocità, strani guerrieri dall\'antico regno Yamatai invadono la pista...', col: '#9fd8ff' },
         { who: 'HIROSHI SHIBA', text: 'Chi sono questi soldati Haniwa?! Devo fermarli... e trovare i guanti che mi ha lasciato mio padre!', portrait: 'hiroshi', bg: '#c8302a' },
-        { who: 'COMANDI', text: '← → muoviti · A attacco (combo pugno-pugno-calcio) · B salto (↓+B scende dalle passerelle) · A+B raggi (solo Jeeg) · T trasformazione · SEL cambia raggio · START pausa.', col: '#9fffc0' },
+        { who: 'COMANDI', text: J.input.RETROMAXI ? '← → muoviti · A attacco (combo) · B salto · A+B (o D / tasto 5) raggi solo Jeeg · Q / pulsante Y trasformazione · W / SELECT cambia raggio · 2 START pausa · 4 esci.' : '← → muoviti · A attacco (combo pugno-pugno-calcio) · B salto (↓+B scende dalle passerelle) · A+B raggi (solo Jeeg) · T trasformazione · SEL cambia raggio · START pausa.', col: '#9fffc0' },
       ]);
     } else {
       game.msg('Partita ripresa dal checkpoint: ' + w.level.checkpoints[w.cp].label, 3);
@@ -338,8 +338,8 @@
       const x = VW - 240 + i * 112, y = 36; const sel = p.beam === k;
       g.fillStyle = sel ? (k === 'gamma' ? '#ff8a2a' : '#e8f6ff') : '#2a2a44'; g.globalAlpha = jeeg ? 1 : 0.4;
       g.fillRect(x, y, 106, 30); g.lineWidth = sel ? 3 : 1.5; g.strokeStyle = sel ? '#ffe14a' : '#5a5a7a'; g.strokeRect(x, y, 106, 30);
-      g.fillStyle = sel ? '#1b1020' : '#c0c0d8'; g.font = 'bold 13px Impact, "Arial Black", sans-serif'; g.fillText(lab, x + 8, y + 20);
-      g.font = 'bold 11px Arial'; g.fillText(J.GAME_CONFIG.special_cost[k] + 'EN', x + 74, y + 20);
+      g.fillStyle = sel ? '#1b1020' : '#c0c0d8'; g.font = 'bold 12px Impact, "Arial Black", sans-serif'; g.fillText(lab, x + 6, y + 15);
+      g.font = 'bold 10px Arial'; g.fillText(J.GAME_CONFIG.special_cost[k] + ' EN', x + 6, y + 27);
       g.globalAlpha = 1;
     }
     // titolo livello
@@ -506,7 +506,8 @@
       g.fillText('Per console arcade, encoder USB, gamepad o tastiera.', 480, 130);
       g.fillText('A = avvia configurazione · SEL = ripristina predefiniti · B/START = indietro', 480, 160);
       g.font = '15px Arial'; g.fillStyle = '#9fd8ff';
-      const lines = ['Predefiniti tastiera: frecce/WASD, Z o CTRL = A, X o ALT o SPAZIO = B, V = A+B,', 'T o SHIFT = trasformazione, C = selettore raggio, INVIO/1/5 = START, F = schermo intero.',
+      const lines = J.input.RETROMAXI ? ['Profilo RETROMAXI: frecce/levetta, A = attacco, S = salto, D = A+B, Q = trasformazione,', 'W o 1 = selettore raggio, 2 = START, 4 = torna al menu di RetroMaxi.',
+        'Joypad RetroMaxi: 1 = A, 0 = B, 2 = trasformazione, 3/8 = raggio, 5 = A+B, 9 = START, LB = menu.'] : ['Predefiniti tastiera: frecce/WASD, Z o CTRL = A, X o ALT o SPAZIO = B, V = A+B,', 'T o SHIFT = trasformazione, C = selettore raggio, INVIO/1/5 = START, F = schermo intero.',
         'Gamepad standard: 0 = A, 1 = B, 2 = T, 3 = SEL, 4/5 = A+B, 9 = START, croce/levetta = movimento.'];
       lines.forEach((l, i) => g.fillText(l, 480, 220 + i * 26));
       if (r.msg) { g.fillStyle = '#7dff8a'; g.fillText(r.msg, 480, 330); }

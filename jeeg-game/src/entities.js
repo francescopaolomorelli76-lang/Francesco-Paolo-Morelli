@@ -124,11 +124,12 @@
         else if (act.attack) startAttack(p, 0);
         else if (act.jump) {
           if (inp.held.down && p.onGround && onOneWay(p)) { p.dropT = 0.25; p.onGround = false; p.y += 2; }
-          else if (p.coyote > 0) { p.vy = -f.jump; p.onGround = false; p.coyote = 0; sfx('jump'); if (p.form === 'jeeg') dust(p.x, p.y, 6, 2.5); }
+          else if (p.coyote > 0) { p.jumpT = 0; p.vy = -f.jump; p.onGround = false; p.coyote = 0; sfx('jump'); if (p.form === 'jeeg') dust(p.x, p.y, 6, 2.5); }
         }
       }
       // salto variabile
-      if (!inp.held.B && p.vy < -f.jump * 0.45 && !p.onGround) p.vy = -f.jump * 0.45;
+      p.jumpT = (p.jumpT || 0) + dt;
+      if (!inp.held.B && p.jumpT > 0.09 && p.vy < -f.jump * 0.45 && !p.onGround) p.vy = -f.jump * 0.45;
     }
 
     // limiti: cancello dei giganti per le forme non-Jeeg, arena del boss

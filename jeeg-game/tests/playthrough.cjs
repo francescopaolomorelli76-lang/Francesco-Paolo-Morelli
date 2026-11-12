@@ -11,13 +11,14 @@ const GOD = process.argv[3] !== 'nogod';
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message + '\n' + e.stack));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  console.log('goto');
   await page.goto('file://' + path.resolve(__dirname, '../dist/JEEG_LIVELLO1.html'));
   await page.waitForTimeout(300);
   await page.evaluate((god) => {
     localStorage.clear();
     JEEG.start(false); JEEG.god(god); JEEG.game.timeScale = 2;
     const I = JEEG.input; let f = 0; const log = (window.__log = []);
-    const tap = {}; const press = (k) => { tap[k] = 3; };
+    const tap = {}; const press = (k) => { tap[k] = k === 'B' ? 14 : 3; };
     window.__bot = setInterval(() => {
       f++;
       const w = JEEG.world; if (!w) return;
@@ -49,6 +50,7 @@ const GOD = process.argv[3] !== 'nogod';
       I.inject('right', move > 0); if (move < 0) I.inject('left', true); else if (move === 0) {} else I.inject('left', false);
     }, 16);
   }, GOD);
+  console.log('bot started');
   const shots = {};
   const shot = async (name) => { if (shots[name]) return; shots[name] = 1; await page.screenshot({ path: `${OUT}/${name}.png` }); console.log('shot', name); };
   const t0 = Date.now(); let last = '';
@@ -56,7 +58,7 @@ const GOD = process.argv[3] !== 'nogod';
     await page.waitForTimeout(120);
     const s = await page.evaluate(() => { const w = JEEG.world; const p = w.player; return { mode: JEEG.mode, x: Math.round(p.x), form: p.form, gloves: w.gloves, cp: w.cp, hp: Math.round(p.hp), en: Math.round(p.en), scene: w.scene && w.scene.kind, sceneT: w.scene && w.scene.t, boss: w.boss && { hp: Math.round(w.boss.hp), phase: w.boss.phase, state: w.boss.state, active: w.boss.active }, beam: p.state === 'beam' ? p.beamActive.kind : null, enemies: w.enemies.filter((e) => e.alive).length, near: w.enemies.some((e) => e.alive && Math.abs(e.x - p.x) < 120 && !e.giant), giantNear: w.enemies.some((e) => e.alive && e.giant && Math.abs(e.x - p.x) < 600), lives: w.lives, score: w.score }; });
     const key = `${s.mode} ${s.form} cp${s.cp} gl${+s.gloves} ${s.scene || ''} boss:${s.boss.active ? s.boss.phase + '/' + s.boss.hp : '-'}`;
-    if (key !== last) { console.log(Math.round((Date.now() - t0) / 1000) + 's', key, 'x=' + s.x, 'hp=' + s.hp, 'en=' + s.en, 'lives=' + s.lives); last = key; }
+    if (key !== last || Math.random() < 0.04) { console.log(Math.round((Date.now() - t0) / 1000) + 's', key, 'x=' + s.x, 'hp=' + s.hp, 'en=' + s.en, 'lives=' + s.lives); last = key; }
     if (s.mode === 'play' && !s.scene && s.form === 'human' && s.near) await shot('03_human_fight');
     if (s.gloves && s.form === 'human' && !s.scene) await shot('04_gloves');
     if (s.scene === 'transform') { await page.waitForTimeout(250); await shot('05_transform_cutin'); await page.waitForTimeout(700); await shot('06_transform_flash'); }

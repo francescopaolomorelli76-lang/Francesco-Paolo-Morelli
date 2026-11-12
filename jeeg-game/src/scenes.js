@@ -119,7 +119,7 @@
     const airY = gy - 210; // altezza dei piedi durante l'assemblaggio in volo
     const LAUNCH = { torso: 2.7, armB: 3.25, armF: 3.6, legB: 4.0, legF: 4.35 };
     const attached = {};
-    let shooter = { x: baseX + 2200, y: gy - 760 };
+    let shooter = { x: baseX + 2200, y: gy - 640 };
     J.game.setZoom(0.52);
     sfx('transform');
     p.vx = 0; p.atk = null; p.state = 'normal';
@@ -130,7 +130,7 @@
         t += dt;
         // Big Shooter: entra da destra, si posiziona sopra la testa, poi riparte
         const sx = t < 1.6 ? baseX + 2200 : t < 2.6 ? baseX + 2200 - ease((t - 1.6) / 1.0) * 1700 : t < 4.6 ? baseX + 500 - (t - 2.6) * 40 : baseX + 420 - (t - 4.6) * 1600;
-        const sy = t < 4.6 ? gy - 760 + Math.sin(t * 3) * 12 : gy - 760 - (t - 4.6) * 300;
+        const sy = t < 4.6 ? gy - 640 + Math.sin(t * 3) * 12 : gy - 640 - (t - 4.6) * 300;
         shooter.x = sx; shooter.y = sy;
         if (t > 1.6 && t < 1.62) sfx('shooter');
         if (t > 0.95 && !stages.headDone) { stages.headDone = true; E().sparks(baseX, airY - 280, 30, '#fff6b0', 600, 5); J.game.shake(8); sfx('magnet'); }

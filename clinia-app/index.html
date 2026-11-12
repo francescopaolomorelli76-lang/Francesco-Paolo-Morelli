@@ -780,6 +780,10 @@ const iniz2=n=>String(n||"").trim().split(/\s+/).map(x=>x[0]?x[0].toUpperCase()+
 function addNotif(to,tipo,titolo,testo,ref){if(DB.on)return;const n={id:uid(),to,tipo,titolo,testo,ref,at:Date.now(),letta:false};S.notifs.unshift(n);S.notifs=S.notifs.slice(0,300);save();
   if(mieChiavi().includes(to)){avvisoSistema(titolo,testo);notify(titolo,testo,"Clinia")}}
 let notifId=1;
+// FPM vede tutto: ogni operazione dell'app arriva anche nell'area FPM (solo iniziali, mai dati sanitari)
+const notifFPM=(tipo,titolo,testo,ref)=>addNotif("admin",tipo,titolo,testo,ref);
+const oreTurno=(sh,n)=>r2(((sh.end-sh.start)/60)*(n||1));
+const royTxt=ore=>`${String(ore).replace(".",",")} h × ${eur(CANONE_ORA)} = royalty ${eur(r2(ore*CANONE_ORA))}`;
 async function avvisoSistema(titolo,testo){try{const LN=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;
   if(LN){await LN.schedule({notifications:[{id:notifId++,title:titolo,body:testo,schedule:{at:new Date(Date.now()+300)}}]});return}
   if("Notification" in window&&Notification.permission==="granted"&&document.hidden)new Notification(titolo,{body:testo,icon:"img/icone/icon-192.png"})}catch(e){}}
@@ -787,7 +791,7 @@ async function chiediPermessoNotifiche(){try{const LN=window.Capacitor&&Capacito
   if(LN){const r=await LN.requestPermissions();return r.display==="granted"}
   if("Notification" in window){if(Notification.permission==="default")await Notification.requestPermission();return Notification.permission==="granted"}}catch(e){}return false}
 function notifBanner(){if(!S.auth)return "";const n=nonLette();return n?`<button class="card row notifban" data-act="openPage" data-v="notifiche">${ic("bell","sm")}<span style="flex:1"><b>${n===1?"1 notifica nuova":n+" notifiche nuove"}</b><span class="tiny" style="display:block">${esc((mieNotifiche().find(x=>!x.letta)||{}).titolo||"")}</span></span>${ic("right","sm")}</button>`:""}
-const NOTIF_IC={richiesta_visita:"cal",richiesta_inviata:"cal",visita_confermata:"check",visita_rifiutata:"x",visita_effettuata:"check",visita_annullata:"x",studio_prenotato:"door",studio_annullato:"door"};
+const NOTIF_IC={pagamento:"euro",incasso:"euro",quota_accreditata:"euro",royalty:"euro",pacchetto:"euro",abbonamento:"card",abbonamento_disdetto:"x",registrazione:"user",pagamento_fpm:"euro",ricezione_confermata:"check",richiesta_visita:"cal",richiesta_inviata:"cal",visita_confermata:"check",visita_rifiutata:"x",visita_effettuata:"check",visita_annullata:"x",studio_prenotato:"door",studio_annullato:"door"};
 function notifichePage(){const l=mieNotifiche();if(l.some(n=>!n.letta))setTimeout(()=>{l.forEach(n=>n.letta=true);save();DB.notifLette(l.map(n=>n.id))},1500);
   return `<div class="screen">${bar("Notifiche")}<div class="content"><div class="pad stack" style="gap:12px">
   ${l.length?l.map(n=>`<div class="card row" style="align-items:flex-start;gap:12px;${n.letta?"":"border-color:var(--accent);background:var(--accent-soft)"}"><span class="ri" style="width:38px;height:38px;border-radius:12px;background:var(--card);display:grid;place-items:center;color:var(--accent)">${ic(NOTIF_IC[n.tipo]||"bell","sm")}</span>
@@ -1871,6 +1875,7 @@ function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.
   S.appts.push(a);save();DB.saveAppt(a);UI.stack=[{page:"done",id:a.id}];
   const q=`${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}`;
   addNotif("spec:"+id,"richiesta_visita","Nuova richiesta di visita",`${a.patient} · ${a.service} · ${q}${a.roomId?" · "+room(a.roomId).name:""}. Conferma o rifiuta dall’Agenda.`,a.id);
+  notifFPM("richiesta_visita","Nuova richiesta di visita",`${iniz2(a.patient)} · ${a.service} · ${doc(id).name} · ${q}${a.payAuth?" · carta autorizzata "+eur(a.price):" · paga in sede"}`,a.id);
   S.notifs.unshift({id:uid(),to:"user:"+S.auth.email,tipo:"richiesta_inviata",titolo:"Richiesta inviata",testo:`${a.service} con ${doc(id).name}, ${q}: in attesa di conferma.`,ref:a.id,at:Date.now(),letta:true});save();render();
   setTimeout(()=>notify("Richiesta inviata",`${a.service} con ${doc(id).name}, ${q}. Ti avvisiamo appena lo specialista conferma.${a.payAuth?" La carta viene addebitata solo alla conferma.":""}`,"Clinia"),900)}
 function keyPress(v){
@@ -1896,8 +1901,8 @@ const ACT={
   cookie:d=>{S.cookie=d.v;save();go(logged()?"main":"welcome")},
   chooseRole:d=>{UI.authRole=d.v;if(d.v==="titolare"||d.v==="fpm"){UI.loginMode="login";UI.showPw=false;return go("login")}go("auth")},
   askCancelSub:()=>{UI.sheet={type:"confirm",title:"Disdire l’abbonamento?",text:`Resterai attivo fino al ${esc(fmtD(mySub().next,{day:"numeric",month:"long"}))}. Dopo quella data i pazienti non potranno più prenotare con te dall’app.`,ok:"Disdici",act:"cancelSub",danger:true};render()},
-  cancelSub:()=>{mySub().status="disdetto";save();UI.sheet=null;toast("Abbonamento disdetto")},
-  resumeSub:()=>{mySub().status="attivo";save();toast("Abbonamento riattivato")},
+  cancelSub:()=>{mySub().status="disdetto";notifFPM("abbonamento_disdetto","Abbonamento disdetto",`${S.proId?doc(S.proId).name:S.auth.email} · attivo fino al ${fmtD(mySub().next,{day:"numeric",month:"long"})}`);save();UI.sheet=null;toast("Abbonamento disdetto")},
+  resumeSub:()=>{mySub().status="attivo";notifFPM("abbonamento","Abbonamento riattivato",`${S.proId?doc(S.proId).name:S.auth.email} · royalty ${eur(SUB.price)} al mese`);save();toast("Abbonamento riattivato")},
   tab:d=>{UI.tab=d.v;UI.stack=[];render()},
   home:()=>{UI.stack=[];UI.tab="home";render()},
   goVisite:()=>{UI.stack=[];UI.tab="visite";UI.visitSeg="next";render()},
@@ -1925,15 +1930,20 @@ const ACT={
   setModalita:d=>{S.modalita[S.proId]=d.v;save();toast(d.v==="percentuale"?"Lavori a percentuale: gli studi si prenotano senza pagare":"Lavori ad affitto dello studio");render()},
   buyPack:d=>{const o=+d.v,pr=(TARIFFE_ORE.pacchetti.find(x=>x[0]===o)||[])[1];if(!pr)return;const base=o*pr,iva=ivaDi(base);
     if(!confirm(`Acquistare il pacchetto da ${o} ore a ${pr} € l’ora?\nImponibile ${base} € + IVA ${String(iva).replace(".",",")} € = ${String(r2(base+iva)).replace(".",",")} €.\n(Versione di prova: pagamento simulato)`))return;
-    S.pacchetti.push({id:uid(),docId:S.proId,ore:o,prezzoOra:pr,base,iva,at:Date.now()});save();toast(`Pacchetto da ${o} ore acquistato`);render()},
+    S.pacchetti.push({id:uid(),docId:S.proId,ore:o,prezzoOra:pr,base,iva,at:Date.now()});addNotif("titolare","quota_accreditata","Quota accreditata",`${eur(r2(base+iva))} (IVA inclusa) da ${doc(S.proId).name}: pacchetto da ${o} ore.`);
+    notifFPM("pacchetto","Pacchetto ore acquistato",`${doc(S.proId).name} · ${o} ore a ${eur(pr)} · le royalty maturano a ogni ora usata`);save();toast(`Pacchetto da ${o} ore acquistato`);render()},
   esitoVisita:async d=>{const a=S.appts.find(x=>x.id===d.id);if(!a)return;const sp=doc(a.doctorId).name,q=`${fmtD(a.date,{day:"numeric",month:"short"})} alle ${a.time}`;
     if(d.v==="rifiuta"&&!confirm(`Rifiutare la richiesta di ${a.patient} del ${q}?${a.payAuth?" L’importo autorizzato sulla carta viene sbloccato.":""}`))return;
     if(DB.on){const r=await DB.esitoVisita(a,d.v);if(!r)return}
     if(d.v==="conferma"){a.status="confermata";if(a.payAuth)a.paid=true;
       addNotif("user:"+(a.ownerEmail||"paziente"),"visita_confermata","Visita confermata",`${sp} ha confermato ${a.service} del ${q}${a.roomId?" · "+room(a.roomId).name:""}.`,a.id);
-      addNotif("admin","visita_confermata","Richiesta di visita confermata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q}`,a.id);toast("Visita confermata: il paziente riceve la notifica")}
+      addNotif("admin","visita_confermata","Richiesta di visita confermata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q}`,a.id);
+      if(a.payAuth){notifFPM("pagamento","Pagamento visita incassato",`${eur(a.price)} con carta · ${iniz2(a.patient)} · ${sp}`,a.id);
+        addNotif("spec:"+a.doctorId,"incasso","Incasso accreditato",`${eur(a.price)} di ${a.patient} per ${a.service} del ${q}: accreditati sul tuo conto.`,a.id)}
+      toast("Visita confermata: il paziente riceve la notifica")}
     else if(d.v==="rifiuta"){a.status="rifiutata";a.paid=false;
-      addNotif("user:"+(a.ownerEmail||"paziente"),"visita_rifiutata","Richiesta non accettata",`${sp} non può riceverti il ${q}. Nessun addebito: scegli un altro orario.`,a.id);toast("Richiesta rifiutata")}
+      addNotif("user:"+(a.ownerEmail||"paziente"),"visita_rifiutata","Richiesta non accettata",`${sp} non può riceverti il ${q}. Nessun addebito: scegli un altro orario.`,a.id);
+      notifFPM("visita_rifiutata","Richiesta di visita rifiutata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q}`,a.id);toast("Richiesta rifiutata")}
     else{a.status="conclusa";addNotif("admin","visita_effettuata","Visita effettuata",`${iniz2(a.patient)} · ${a.service} · ${sp} · ${q}`,a.id);toast("Visita segnata come effettuata")}
     save();render()},
   addAppt:()=>{UI.sheet={type:"addAppt",svc:0};render()},
@@ -2013,7 +2023,9 @@ const ACT={
     if(isPro()){toast("Per prenotare una visita passa al profilo paziente.");return}doConfirmBook()},
   vseg:d=>{UI.visitSeg=d.v;render()},
   askCancel:d=>{const a=S.appts.find(x=>x.id===d.id);UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
-  cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";save();DB.update("appointments",a.id,{stato:"annullata"});UI.sheet=null;toast("Visita disdetta")},
+  cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";const qq=`${fmtD(a.date,{day:"numeric",month:"short"})} alle ${a.time}`;
+    if(!isPro())addNotif("spec:"+a.doctorId,"visita_annullata","Visita disdetta dal paziente",`${a.patient} · ${a.service} · ${qq}. L’orario torna libero.`,a.id);
+    notifFPM("visita_annullata","Visita disdetta",`${iniz2(a.patient)} · ${a.service} · ${doc(a.doctorId).name} · ${qq}`,a.id);save();DB.update("appointments",a.id,{stato:"annullata"});UI.sheet=null;toast("Visita disdetta")},
   closeSheet:()=>{UI.sheet=null;render()},
   delFile:d=>{S.files=S.files.filter(f=>f.id!==d.id);save();render()},
   openChat:d=>{const k=isPro()?d.id:d.id+"|me";if(!logged()){return ACT.openAuth()}push({page:"chat",id:k})},
@@ -2044,6 +2056,7 @@ const ACT={
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
     if(isOwner()||perc){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
       if(!isOwner())addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)}${perc?" · a percentuale":""}`);
+      notifFPM("royalty","Studio prenotato",`${isOwner()?"Clinia":doc(S.proId).name} · ${r.name}${perc?" · a percentuale":""} · ${royTxt(oreTurno(sh,plan.length))}`);
       return toast(`${r.name} prenotato${perc?" a percentuale":""}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
   rpCard:d=>{UI.sheet.card=d.v;render()},
@@ -2051,11 +2064,13 @@ const ACT={
   paySeg:d=>{UI.paySeg=d.v;render()},
   markPaid:d=>{UI.sheet={type:"paidHow",id:d.id,n:d.n};render()},
   paidHow:d=>{const sh=UI.sheet;UI.openPz=sh.n;S.paidVia=S.paidVia||{};S.paidVia[sh.id]=d.v;if(sh.id.startsWith("demo|"))S.demoPaid.push(sh.id);else{const a=S.appts.find(x=>"app|"+x.id===sh.id);if(a){a.paid=true;a.paidAt=Date.now();a.paidVia=d.v;DB.update("appointments",a.id,{pagato:true})}}
-    UI.sheet=null;save();toast(`Pagamento di ${sh.n} (${({contanti:"contanti",pos:"POS",bonifico:"bonifico"})[d.v]}) segnato`)},
+    UI.sheet=null;save();notifFPM("pagamento","Pagamento visita registrato",`${iniz2(sh.n)} · ${({contanti:"contanti",pos:"POS",bonifico:"bonifico"})[d.v]} · ${isPro()&&S.proId?doc(S.proId).name:""}`);toast(`Pagamento di ${sh.n} (${({contanti:"contanti",pos:"POS",bonifico:"bonifico"})[d.v]}) segnato`)},
   askCancelRoom:d=>{const b=allBookings().find(x=>x.id===d.id);const n=activeAppts().filter(a=>a.doctorId===S.proId&&a.date===b.date&&a.time>=b.start&&a.time<b.end).length;
     if(n){toast(`Ci sono ${n} visite prenotate in questo turno: spostale prima di annullarlo.`);return}
     UI.sheet={type:"confirm",title:"Annullare il turno?",text:`${room(b.roomId).name}, ${esc(fmtD(b.date))} ${b.start}–${b.end}. Lo studio tornerà disponibile per gli altri professionisti.${b.paid?` Clinia ti rimborserà ${eur(b.paid.amount)} sulla carta usata.`:""}`,ok:"Annulla turno",act:"cancelRoom",id:b.id,danger:true};render()},
-  cancelRoom:d=>{if(d.id.startsWith("seed-"))S.cancelled.push(d.id);else{const b=S.rooms.find(x=>x.id===d.id);if(b&&b.paid){const p=S.roomPayments.find(x=>x.id===b.paid.payment);if(p)p.refund=(p.refund||0)+b.paid.amount}DB.update("room_bookings",d.id,{stato:"annullata"});S.rooms=S.rooms.filter(x=>x.id!==d.id)}save();UI.sheet=null;toast("Turno annullato")}
+  cancelRoom:d=>{if(d.id.startsWith("seed-"))S.cancelled.push(d.id);else{const b=S.rooms.find(x=>x.id===d.id);if(b&&b.paid){const p=S.roomPayments.find(x=>x.id===b.paid.payment);if(p)p.refund=(p.refund||0)+b.paid.amount}DB.update("room_bookings",d.id,{stato:"annullata"});S.rooms=S.rooms.filter(x=>x.id!==d.id)}
+    const nm=S.proId?doc(S.proId).name:"Specialista";if(!isOwner())addNotif("titolare","studio_annullato","Turno annullato",`${nm} ha annullato un turno in studio.`);notifFPM("studio_annullato","Turno di studio annullato",`${isOwner()?"Clinia":nm}: la royalty di quelle ore non è dovuta.`);
+    save();UI.sheet=null;toast("Turno annullato")}
 };
 function saveNote(){const t=$("#bk-note");if(t&&UI.book)UI.book.note=t.value}
 
@@ -2083,7 +2098,10 @@ const FORMS={
       err.textContent="";sha256("clinia-titolare:"+p).then(h=>{if(h!==OWNER.hash){err.textContent="Password errata per l’accesso riservato del titolare.";return}
         S.auth={email:OWNER.email,role:"professionista",owner:true};S.proId=OWNER.doctorId;save();toast("Accesso del titolare");afterAuthFlow()});return}
     if(p.length<(UI.loginMode==="register"?8:6)){err.textContent=UI.loginMode==="register"?"La password deve avere almeno 8 caratteri.":"Password troppo corta.";return}
-    S.auth={email:e,role:UI.authRole};if(UI.authRole==="paziente")S.proId=null;save();afterAuthFlow()},
+    S.auth={email:e,role:UI.authRole};if(UI.authRole==="paziente")S.proId=null;
+    if(UI.loginMode==="register"){const pro=UI.authRole!=="paziente";notifFPM("registrazione",pro?"Nuovo specialista registrato":"Nuovo paziente registrato",`${e.replace(/@.*/,"@…")} · ${new Date().toLocaleDateString("it-IT")}`);
+      if(pro)addNotif("titolare","registrazione","Nuovo specialista registrato","Un nuovo specialista si è registrato nell’app: lo trovi tra gli specialisti dopo l’attivazione.")}
+    save();afterAuthFlow()},
   phone:f=>{const v=k=>f[k].value.trim(),err=$("#ph-err");
     if(!v("nome")||!v("cognome")){err.textContent="Inserisci nome e cognome.";return}
     const tel=v("tel").replace(/\s+/g,"");if(!/^\d{6,12}$/.test(tel)){err.textContent="Inserisci un numero di telefono valido, solo cifre.";return}
@@ -2095,7 +2113,7 @@ const FORMS={
     setTimeout(()=>f.reset());S.family.push({id:uid(),nome:v("nome"),cognome:v("cognome"),nascita:v("nascita"),rel:f.rel.value});save();toast(v("nome")+" aggiunto ai familiari")},
   card:f=>{const c=readCard(f,$("#cc-err"));if(!c)return;S.cards.push(c);save();UI.addCard=false;toast("Carta salvata")},
   sub:f=>{const err=$("#sb-err"),c=readCard(f,err);if(!c)return;if(!f.terms.checked){err.textContent="Per continuare accetta le condizioni dell’abbonamento.";return}
-    S.cards.push(c);S.subs[S.auth.email]={plan:planFor().name,price:planFor().price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};save();
+    S.cards.push(c);S.subs[S.auth.email]={plan:planFor().name,price:planFor().price,start:today(),next:addMonth(today()),cardId:c.id,status:"attivo"};notifFPM("abbonamento","Abbonamento attivato",`Nuovo specialista abbonato · ${S.auth.email.replace(/@.*/,"@…")} · royalty ${eur(SUB.price)} al mese`);save();
     notify("Abbonamento attivato",`${SUB.name}: ${eur(SUB.price)} addebitati su ${c.brand} •••• ${c.last4} (simulato).`,"Clinia");afterAuthFlow()},
   roompay:f=>{const sh=UI.sheet,r=room(sh.id),c=roomPayCalc(sh,r);let card=null;
     if(c.tot>0){if(sh.card==="new"){card=readCard(f,$("#rp-err"));if(!card)return;S.cards.push(card)}else card=S.cards.find(x=>x.id===sh.card)}
@@ -2104,6 +2122,8 @@ const FORMS={
     if(c.cred>0)S.oreUsate.push({docId:S.proId,ore:c.cred,at:Date.now(),roomId:r.id,payment:pid});
     if(c.base>0)S.roomPayments.unshift({id:pid,doctorId:S.proId,roomId:r.id,dates:sh.plan.slice(),start:toT(sh.start),end:toT(sh.end),amount:c.base,iva:c.iva,card:card.brand+" •••• "+card.last4,at:Date.now(),refund:0});
     addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${sh.plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)} · ${c.base>0?eur(c.tot)+" IVA inclusa":"ore del pacchetto"}`);
+    if(c.base>0)addNotif("titolare","quota_accreditata","Quota accreditata",`${eur(c.tot)} (IVA inclusa) da ${doc(S.proId).name} per ${r.name}: accreditati sul conto di Clinia.`);
+    notifFPM("royalty","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${c.base>0?eur(c.tot)+" a Clinia":"ore del pacchetto"} · ${royTxt(oreTurno(sh,sh.plan.length))}`);
     save();UI.sheet=null;render();
     notify(c.base>0?"Pagamento riuscito":"Studio prenotato",c.base>0?`${eur(c.tot)} (IVA inclusa) pagati a Clinia per ${r.name} con ${card.brand} •••• ${card.last4} (simulato).`:`${r.name} prenotato con ${String(c.cred).replace(".",",")} ${c.cred===1?"ora":"ore"} del tuo pacchetto.`,"Clinia")},
   request:f=>{setTimeout(()=>f.reset());S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
@@ -2144,7 +2164,7 @@ const FORMS={
     if(!data||data>today())return err.textContent="Indica la data del pagamento (non nel futuro).";
     if(!(imp>0))return err.textContent="Indica l’importo pagato.";
     if(S.licMetodo==="contanti"&&imp>=5000)return err.textContent="Sopra il limite per i contanti: usa il bonifico.";
-    S.pag[m]={metodo:S.licMetodo,data,importo:r2(imp),nota:f.nota.value.trim(),conf:false,at:Date.now()};save();DB.savePag(m,S.pag[m]);toast("Segnato pagato: FPM lo vede subito");render()},
+    S.pag[m]={metodo:S.licMetodo,data,importo:r2(imp),nota:f.nota.value.trim(),conf:false,at:Date.now()};save();DB.savePag(m,S.pag[m]);notifFPM("pagamento_fpm","Clinia ha pagato",`${meseNome(m)}: ${eur(r2(imp))} netti con ${S.licMetodo} (software e royalty). Conferma la ricezione nella tua area.`);toast("Segnato pagato: FPM lo vede subito");render()},
   addAppt:f=>{const sh=UI.sheet,err=$("#aa-err"),nome=f.nome.value.trim().replace(/\s+/g," "),svc=services(S.proId)[sh.svc||0],ds=sh.day||giorniTurno(S.proId)[0];
     if(nome.length<2)return err.textContent="Scrivi nome e cognome del paziente.";if(!sh.time)return err.textContent="Scegli un orario libero.";
     const slot=slotsFor(S.proId,ds,svc.dur).find(x=>x.time===sh.time);
@@ -2199,7 +2219,7 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="fpmDoc")addFpmDocs([...e.target.files]);
   if(k==="fpmChk"){const m=e.target.dataset.m;S.fpm.ric[m]={...(S.fpm.ric[m]||{}),[e.target.dataset.k]:e.target.checked};save()}
   if(k==="fpmSet"){const key=e.target.dataset.k;if(key==="under35")S.fpm.under35=e.target.checked;else if(key==="aliquota")S.fpm.aliquota=+e.target.value;else if(key==="fondo")S.fpm.fondo=Math.max(0,parseFloat(String(e.target.value).replace(",","."))||0);else if(key==="fee"){S.fpm.fee=+e.target.value;APP_FEE=S.fpm.fee}save();render()}
-  if(k==="pagConf"){const m=e.target.dataset.m;if(S.pag[m]){S.pag[m].conf=e.target.checked;save();DB.confPag(m,e.target.checked);toast(e.target.checked?"Ricezione confermata: Clinia lo vede":"Conferma tolta")}render()}
+  if(k==="pagConf"){const m=e.target.dataset.m;if(S.pag[m]){S.pag[m].conf=e.target.checked;save();DB.confPag(m,e.target.checked);if(e.target.checked)addNotif("titolare","ricezione_confermata","FPM ha ricevuto il pagamento",`${meseNome(m)}: ${eur(S.pag[m].importo)} confermati da FPM.`);toast(e.target.checked?"Ricezione confermata: Clinia lo vede":"Conferma tolta")}render()}
   if(k==="aaSvc"){const f=$("form[data-form=addAppt]");if(f){UI.sheet.nome=f.nome.value;UI.sheet.tel=f.tel.value}UI.sheet.svc=+e.target.value;UI.sheet.time=null;render();return}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);

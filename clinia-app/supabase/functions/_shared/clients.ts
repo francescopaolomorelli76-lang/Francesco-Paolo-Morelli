@@ -45,16 +45,19 @@ export async function impostazioni() {
     abbonamento: Number(m.abbonamento_specialista?.importo ?? 50),
     licenzaMesi: Number(m.licenza?.mesi ?? 12),
     licenzaInizio: String(m.licenza?.inizio ?? "2026-11-01"),
+    licenzaUnica: Number(m.licenza?.unica_soluzione_netto ?? 3000),
+    royaltyOra: Number(m.royalty_ore?.euro_ora_netti ?? 4.99),
+    royaltyArcaPct: Number(m.royalty_ore?.arca_pct ?? 0.03),
     ritenuta: Number(rit.aliquota) * Number(rit.quota_imponibile),   // 0,15 (0,12 se FPM ha meno di 35 anni)
   };
 }
 
 // Accredito immediato a FPM (conto collegato). Gli importi sono NETTI GARANTITI:
-// 9 € a prenotazione, 50 € ad abbonamento, 300 € di licenza. La ritenuta d'acconto si calcola sul lordo
+// 4,99 € per ora di studio (royalty), 50 € ad abbonamento, 300 € di rata software. La ritenuta d'acconto si calcola sul lordo
 // fiscale (netto / (1 − 15 %)) ed è a carico di Clinia, che la versa con F24.
 // Il 3 % per Progetto Arca NON viene trattenuto: si registra in "donazioni" e FPM lo bonifica ogni mese.
 export async function accreditaFpm(o: {
-  tipo: "servizio_paziente" | "servizio_specialista" | "abbonamento" | "licenza";
+  tipo: "servizio_paziente" | "servizio_specialista" | "abbonamento" | "licenza" | "royalty";
   netto: number; conBeneficenza: boolean;
   sourceCharge?: string; appointment_id?: string; specialist_id?: string; chiave: string;
 }) {
@@ -62,7 +65,7 @@ export async function accreditaFpm(o: {
   const netto = r2(o.netto);
   const lordo = r2(netto / (1 - s.ritenuta));
   const ritenuta = r2(lordo - netto);
-  const beneficenza = o.conBeneficenza ? r2(netto * s.beneficenzaPct) : 0;
+  const beneficenza = o.conBeneficenza ? r2(netto * (o.tipo === "royalty" ? s.royaltyArcaPct : s.beneficenzaPct)) : 0;
   const conto = Deno.env.get("FPM_STRIPE_ACCOUNT");
   let trId: string | null = null, stato = "in_attesa";
   if (conto) {

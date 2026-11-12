@@ -22,13 +22,13 @@
     for (const f of fr) add(prefix + '_' + f[0], { group, w, h, ax, ay, draw: humanoid(def, f[1], f[2], f[3], scale) });
   }
   // Livello 1, zona umana: scala 0.8 (Hiroshi 64 px)
-  charSet('hiro', S.HIRO, 0.8, 'pA', [96, 96, 48, 90]);
-  charSet('hirog', S.HIRO_G, 0.8, 'pA', [96, 96, 48, 90], { more: [['fists', 'fists', 0], ['cheer', 'cheer', 0]] });
-  charSet('cyb', S.CYBORG, 0.8, 'pA', [96, 104, 48, 98], { more: [['cheer', 'cheer', 0]] });
+  charSet('hiro', S.HIRO, 0.9, 'pA', [104, 104, 52, 98]);
+  charSet('hirog', S.HIRO_G, 0.9, 'pA', [104, 104, 52, 98], { more: [['fists', 'fists', 0], ['cheer', 'cheer', 0]] });
+  charSet('cyb', S.CYBORG, 0.9, 'pA', [104, 112, 52, 106], { more: [['cheer', 'cheer', 0]] });
   for (const [pre, def] of [['sold', S.SOLDIER], ['lanc', S.LANCER]]) {
     const fr = [['idle0', 'idle', 0], ...[0, 1, 2, 3].map((k) => ['run' + k, 'run', (k / 4) * (TAU / 8), { cadence: 8 }]),
       ['windup', pre === 'lanc' ? 'throwW' : 'windup', 0.45], ['attack', pre === 'lanc' ? 'throw' : 'slash', 0.1], ['hurt', 'hurt', 0], ['fall', 'fall', 0]];
-    for (const f of fr) add(pre + '_' + f[0], { group: 'eA', w: 112, h: 96, ax: 56, ay: 90, draw: humanoid(def, f[1], f[2], f[3], 0.8) });
+    for (const f of fr) add(pre + '_' + f[0], { group: 'eA', w: 124, h: 104, ax: 62, ay: 98, draw: humanoid(def, f[1], f[2], f[3], 0.9) });
   }
   // Zona giganti: Jeeg scala 1.2 (120 px)
   const JB = [176, 160, 88, 154];
@@ -110,24 +110,26 @@
       g.fillStyle = dusk ? '#7a5a40' : '#56565f'; g.fillRect(0, 200, W, 24);
     };
   }
-  add('bgB_A', { group: 'bgB_A', w: 256, h: 224, ax: 0, ay: 0, bg: true, draw: panorama(false) });
-  add('bgB_B', { group: 'bgB_B', w: 256, h: 224, ax: 0, ay: 0, bg: true, draw: panorama(true) });
-  // piano A zona umana: 2240 x 224 (scala 0.8, terreno a y=200)
-  add('bgA_A', { group: 'bgA_A', w: 2304, h: 224, ax: 0, ay: 0, bg: true, transparent: true, draw: (g) => {
-    g.translate(0, 200 - 460 * 0.8); g.scale(0.8, 0.8);
-    const lv = J.LEVEL1; const cam = { x: 0, zoom: 0.8 / 0.8 * (960 / 2880) };
-    J.bg.drawWorldBack({ x: 0, zoom: 960 / 2880 }, lv, 0);
-    J.bg.drawGround({ x: 0, zoom: 960 / 2880 }, lv);
-    for (const pl of lv.platforms) if (pl.x < 2700) J.bg.drawPlatform(pl);
-  } });
-  // piano A zona giganti: scala 0.4, origine al cancello (x 2720 → 0)
-  add('bgA_B', { group: 'bgA_B', w: 1728, h: 224, ax: 0, ay: 0, bg: true, transparent: true, draw: (g) => {
-    g.translate(0, 200 - 460 * 0.4); g.scale(0.4, 0.4); g.translate(-2620, 0);
-    const lv = J.LEVEL1;
-    J.bg.drawWorldBack({ x: 2620, zoom: 960 / 4400 }, lv, 0);
-    J.bg.drawGround({ x: 2620, zoom: 960 / 4400 }, lv);
-    for (const pl of lv.platforms) if (pl.x > 2700) J.bg.drawPlatform(pl);
-  } });
+  add('bgB_A', { group: 'bgB_A', w: 512, h: 224, ax: 0, ay: 0, bg: true, draw: (g) => MDBG.panorama(g, 'A') });
+  add('bgB_B', { group: 'bgB_B', w: 512, h: 224, ax: 0, ay: 0, bg: true, draw: (g) => MDBG.panorama(g, 'B') });
+  add('bgA_A', { group: 'bgA_A', w: 2304, h: 224, ax: 0, ay: 0, bg: true, transparent: true, draw: (g) => MDBG.stageA(g) });
+  add('bgA_B', { group: 'bgA_B', w: 1728, h: 224, ax: 0, ay: 0, bg: true, transparent: true, draw: (g) => MDBG.stageB(g) });
+
+
+  /* ---------- HUD: ritratti 32x32 e icone vite 16x16 (tile grezzi, riga per riga) ---------- */
+  function portrait(def, sc, bg, dy) {
+    return (g) => {
+      g.fillStyle = '#1b1020'; g.fillRect(0, 0, 32, 32); g.fillStyle = bg; g.fillRect(2, 2, 28, 28);
+      g.save(); g.beginPath(); g.rect(2, 2, 28, 28); g.clip(); g.translate(14, 30 + dy); g.scale(sc, sc);
+      S.cap(-4, 0, -14, 14, 9, def === S.JEEG ? '#f2a428' : def === S.CYBORG ? '#d2342b' : '#f5eecd');
+      def.head({}); g.restore();
+    };
+  }
+  add('por_hiro', { group: 'pA', w: 32, h: 32, ax: 0, ay: 0, raw: true, draw: portrait(S.HIRO, 1.25, '#58c8cf', 0) });
+  add('por_cyb', { group: 'pA', w: 32, h: 32, ax: 0, ay: 0, raw: true, draw: portrait(S.CYBORG, 1.05, '#f6e04a', 2) });
+  add('por_jeeg', { group: 'pB', w: 32, h: 32, ax: 0, ay: 0, raw: true, draw: portrait(S.JEEG, 1.6, '#d9cf3a', 0) });
+  add('ico_hiro', { group: 'pA', w: 16, h: 16, ax: 0, ay: 0, raw: true, draw: (g) => { g.translate(7, 16); g.scale(0.62, 0.62); S.HIRO.head({}); } });
+  add('ico_jeeg', { group: 'pB', w: 16, h: 16, ax: 0, ay: 0, raw: true, draw: (g) => { g.translate(7, 16); g.scale(0.8, 0.8); S.JEEG.head({}); } });
 
   /* ---------- schermate (immagini intere 320x224) ---------- */
   function burst(g, cx, cy, c1, c2) { g.fillStyle = c1; g.fillRect(0, 0, 320, 224); g.save(); g.translate(cx, cy); for (let i = 0; i < 24; i++) { g.rotate(Math.PI / 12); if (i % 2) { g.fillStyle = c2; g.beginPath(); g.moveTo(0, 0); g.lineTo(400, -50); g.lineTo(400, 50); g.closePath(); g.fill(); } } g.restore(); }
@@ -161,7 +163,7 @@
     txt(g, 'LIVELLO 1', 228, 70, 24, '#ffe14a', '#c8302a'); txt(g, 'COMPLETATO!', 228, 100, 24, '#ffe14a', '#c8302a');
   } });
 
-  window.RENDER_LIST = () => order.map((n) => { const o = R[n]; return { name: n, group: o.group, w: o.w, h: o.h, ax: o.ax, ay: o.ay, bg: !!o.bg }; });
+  window.RENDER_LIST = () => order.map((n) => { const o = R[n]; return { name: n, group: o.group, w: o.w, h: o.h, ax: o.ax, ay: o.ay, bg: !!o.bg, raw: !!o.raw }; });
   window.RENDER_ONE = (name) => {
     const o = R[name]; cv.width = o.w; cv.height = o.h; S.setCtx(g); J.g = g;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, o.w, o.h);

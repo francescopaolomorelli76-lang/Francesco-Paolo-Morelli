@@ -19,7 +19,7 @@ PALS = {
     'pB': ['#1b1020', '#2e3440', '#24342c', '#d9cf3a', '#f2a428', '#c97b17', '#dcd5ec', '#a99fc4', '#d92b2b', '#d9dce6', '#a9aec0', '#353a52', '#ffffff', '#2b48b8', '#88d4ea'],
     'eB': ['#1b1020', '#c7774a', '#8f5535', '#e3a173', '#8a5a34', '#5e3a20', '#c79a62', '#3e2a1e', '#6a4428', '#f0a030', '#d42f28', '#a9c4b8', '#ffffff', '#ffe14a', '#9fd8ff'],
 }
-HUD_FIXED = ['#2f9a3a', '#1b1020', '#ffe14a', '#ffffff']  # PAL0 indici 12..15
+HUD_FIXED = ['#3ad8f0', '#e83a2a', '#14143a', '#ffe14a', '#ffffff']  # PAL0 indici 11..15: ciano, rosso, blu notte, giallo, bianco
 
 def nearest(pal_rgb, c):
     best, bi = 1e18, 1
@@ -82,6 +82,12 @@ for name, it in man.items():
     grp = it['group']; pal = [md_rgb(hx(c)) for c in PALS[grp]]
     im = Image.open(os.path.join(PNG, name + '.png'))
     m = index_image(im, pal)
+    if it.get('raw'):
+        words = []
+        for ty in range(it['h'] // 8):
+            for tx in range(it['w'] // 8): words += tile_bytes(m, tx, ty)
+        emit_u32('raw_' + name, words); H.append(f'extern const u32 raw_{name}[];'); stats[name] = (len(words) // 8, 0)
+        continue
     w, h = it['w'], it['h']; ax, ay = it['ax'], it['ay']
     xs = [x for y in range(h) for x in range(w) if m[y][x]]; ys = [y for y in range(h) for x in range(w) if m[y][x]]
     if not xs: xs, ys = [0], [0]
@@ -155,7 +161,7 @@ def emit_image(name, im, base_pal_index, ncol, transparent, fixed=None, weighted
                 i = len(tiles); tiles.append(t); hf = vf = 0
                 lookup.setdefault(t, (i, 0, 0)); lookup.setdefault(flip_h(t), (i, 1, 0))
                 lookup.setdefault(flip_v(t), (i, 0, 1)); lookup.setdefault(flip_v(flip_h(t)), (i, 1, 1))
-            mp.append((vf << 12) | (hf << 11) | i)
+            mp.append((1 << 13) | (vf << 12) | (hf << 11) | i)
     words = [w for t in tiles for w in t]
     palw = [0] + [mdword(c) for c in cols]
     if fixed:
@@ -166,12 +172,62 @@ def emit_image(name, im, base_pal_index, ncol, transparent, fixed=None, weighted
     H.append(f'extern const Image {name};')
     stats[name] = (len(tiles), tw)
 
+def emit_stage(sfx):
+    """Piano B (panorama) + piano A (ponte): PAL0 = cielo (10 colori + 5 fissi HUD),
+    PAL1 = condivisa tra piano A e parte bassa del panorama. Ogni tile del piano B sceglie la palette migliore."""
+    imB = Image.open(os.path.join(PNG, 'bgB_' + sfx + '.png')).convert('RGBA')
+    imA = Image.open(os.path.join(PNG, 'bgA_' + sfx + '.png')).convert('RGBA')
+    wB, hB = imB.size
+    # PAL0 = colori esatti del cielo (bande + nuvole), PAL1 = tutto il resto (piano A + rilievi del panorama)
+    SKY = {'A': ['#22164e', '#3c2268', '#6a3486', '#a84488', '#e0647a', '#f6a070', '#ffc8a0', '#e8808a', '#7a3a7a'],
+           'B': ['#240c30', '#4a1444', '#82224a', '#c04040', '#ea7a3a', '#f6a64a', '#ffc070', '#e86a4a', '#5a1e3a']}[sfx]
+    skyset = {hx(c) for c in SKY}
+    pal0 = [md_rgb(hx(c)) for c in SKY]
+    rest = Image.new('RGBA', imB.size, (0, 0, 0, 0)); rp = rest.load(); bp = imB.load()
+    for y in range(hB):
+        for x in range(wB):
+            c = bp[x, y]
+            if c[:3] not in skyset: rp[x, y] = c
+    comb = Image.new('RGBA', (max(imA.width, wB), imA.height + hB), (0, 0, 0, 0))
+    comb.paste(imA, (0, 0)); comb.paste(rest, (0, imA.height))
+    pal1 = quantize_bg(comb, 15, True, weighted=True)
+    fixed0 = [md_rgb(hx(c)) for c in HUD_FIXED]
+    pxB = imB.load()
+    mB0 = index_image(imB, pal0, 1, False); mB1 = index_image(imB, pal1, 1, False)
+    def err(m, pal, tx, ty):
+        e = 0
+        for y in range(8):
+            for x in range(8):
+                r, g, b, a = pxB[tx * 8 + x, ty * 8 + y]; c = pal[m[ty * 8 + y][tx * 8 + x] - 1]
+                e += (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2
+        return e
+    def build(name, mats_pal, w, h, palw):
+        tiles, lookup, mp = [tuple([0] * 8)], {tuple([0] * 8): (0, 0, 0)}, []
+        for ty in range(h // 8):
+            for tx in range(w // 8):
+                m, pl = mats_pal(tx, ty)
+                t = tile_bytes(m, tx, ty)
+                if t in lookup: i, hf, vf = lookup[t]
+                else:
+                    i = len(tiles); tiles.append(t); hf = vf = 0
+                    lookup.setdefault(t, (i, 0, 0)); lookup.setdefault(flip_h(t), (i, 1, 0))
+                    lookup.setdefault(flip_v(t), (i, 0, 1)); lookup.setdefault(flip_v(flip_h(t)), (i, 1, 1))
+                mp.append((pl << 13) | (vf << 12) | (hf << 11) | i)
+        words = [x for t in tiles for x in t]
+        emit_u32(name + '_t', words); emit_u16(name + '_m', mp); emit_u16(name + '_pal', palw)
+        C.append(f'const Image {name} = {{ {name}_t, {len(tiles)}, {name}_m, {w // 8}, {h // 8}, {name}_pal }};')
+        H.append(f'extern const Image {name};'); stats[name] = (len(tiles), w // 8)
+    p0w = [0] + [mdword(c) for c in pal0]; p0w += [0] * (11 - len(p0w)); p0w = p0w[:11] + [mdword(hx(c)) for c in HUD_FIXED]
+    p1w = [0] + [mdword(c) for c in pal1]; p1w += [0] * (16 - len(p1w))
+    build('img_bgB_' + sfx, lambda tx, ty: (mB0, 0) if err(mB0, pal0, tx, ty) <= err(mB1, pal1, tx, ty) else (mB1, 1), wB, hB, p0w[:16])
+    mA = index_image(imA, pal1, 1, True)
+    build('img_bgA_' + sfx, lambda tx, ty: (mA, 1), imA.width, imA.height, p1w[:16])
+
+emit_stage('A'); emit_stage('B')
 for name, it in man.items():
-    if not it['bg']: continue
+    if not it['bg'] or name.startswith('bg'): continue
     im = Image.open(os.path.join(PNG, name + '.png'))
-    if name.startswith('bgB'): emit_image('img_' + name, im, 0, 11, False, fixed=HUD_FIXED)
-    elif name.startswith('bgA'): emit_image('img_' + name, im, 1, 15, True)
-    else: emit_image('img_' + name, im, 1, 15, False, weighted=True)
+    emit_image('img_' + name, im, 1, 15, False, weighted=True)
 
 # ---------- font 8x8 (PAL0: 15 bianco, 14 giallo, 13 ombra) ----------
 font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 9)
@@ -190,16 +246,37 @@ for col in (15, 14):
                         if x + dx < 8 and y + dy < 8 and mtx[y + dy][x + dx] == 0: mtx[y + dy][x + dx] = 13
         fw += tile_bytes(mtx, 0, 0)
 emit_u32('font_tiles', fw); H.append('extern const u32 font_tiles[];'); H.append('#define FONT_TILES 128')
-# barre HUD: 9 livelli x 2 colori (12 verde, 14 giallo), bordo 13
+# barre HUD: 9 livelli di riempimento in 3 colori (14 giallo, 12 rosso, 11 ciano); vuoto = blu notte, cornice bianca
 bw = []
-for col in (12, 14):
+for col in (14, 12, 11):
     for lv in range(9):
-        mtx = [[13 if y in (1, 6) else 0 for x in range(8)] for y in range(8)]
+        mtx = [[15 if y in (1, 6) else 0 for x in range(8)] for y in range(8)]
         for y in range(2, 6):
-            for x in range(8): mtx[y][x] = col if x < lv else 13
+            for x in range(8): mtx[y][x] = (col if x < lv else 13)
+            mtx[y][7] = 13 if lv < 8 else mtx[y][7]
+        for x in range(8): mtx[2][x] = 15 if x < lv else mtx[2][x]
         bw += tile_bytes(mtx, 0, 0)
-emit_u32('bar_tiles', bw); H.append('extern const u32 bar_tiles[];')
-
+emit_u32('bar_tiles', bw); H.append('extern const u32 bar_tiles[];'); H.append('#define BAR_TILES 27')
+# caratteri grandi 8x16 in corsivo con contorno: lettere gialle, cifre bianche, "1P" ciano
+bigf = ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoSans-SemiCondensedBlackItalic.ttf', 15)
+BIG = [('HIROSCYBJEG', 14), ('0123456789x', 15), ('1P', 11)]
+gw = []
+for chars, col in BIG:
+    for ch in chars:
+        img = Image.new('L', (8, 16), 0); d = ImageDraw.Draw(img); tw = d.textlength(ch, font=bigf)
+        d.text(((8 - tw) / 2 - 0.5, -2), ch, fill=255, font=bigf)
+        px = img.load(); mtx = [[(col if px[x, y] > 100 else 0) for x in range(8)] for y in range(16)]
+        out = [r[:] for r in mtx]
+        for y in range(16):
+            for x in range(8):
+                if mtx[y][x] == 0 and any(0 <= x + dx < 8 and 0 <= y + dy < 16 and mtx[y + dy][x + dx] for dx in (-1, 0, 1) for dy in (-1, 0, 1)): out[y][x] = 13
+        # riflesso: metà alta più chiara (bianco) per il giallo, stile arcade
+        if col == 14:
+            for y in range(3, 7):
+                for x in range(8):
+                    if out[y][x] == 14: out[y][x] = 15
+        gw += tile_bytes(out, 0, 0) + tile_bytes(out[8:], 0, 0)
+emit_u32('big_tiles', gw); H.append('extern const u32 big_tiles[];'); H.append('#define BIG_GLYPHS 24')
 H.append('#endif')
 open(OUTC, 'w').write('\n'.join(C) + '\n'); open(OUTH, 'w').write('\n'.join(H) + '\n')
 tot = sum(v[0] for v in stats.values())

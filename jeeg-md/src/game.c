@@ -5,8 +5,8 @@
 
 /* ================= MAPPA VRAM (indici tile) ================= */
 #define T_FONT 1      /* 128 tile: bianco 1..64, giallo 65..128 (sfondo scuro) */
-#define T_BAR 129     /* 18 tile barre */
-#define T_SOLID 147
+#define T_BAR 129     /* 27 tile barre (giallo, rosso, ciano) */
+#define T_SOLID 156
 #define T_BG 160      /* fondali / schermate */
 #define T_MAX 1408
 
@@ -34,8 +34,8 @@ static const ItemDef itB[] = { { IT_ENERGY, 424, 148 }, { IT_HEALTH, 832, 116 },
 static const s16 CPX[4] = { 72, 944, 60, 1212 };
 
 /* statistiche delle forme: velocità, salto, gravità (1/16 px per frame), box, raggio d'attacco */
-static const s16 F_SPEED[3] = { 50, 60, 44 }, F_JUMP[3] = { 137, 150, 118 }, F_GRAV[3] = { 6, 7, 6 };
-static const s16 F_W[3] = { 20, 22, 44 }, F_H[3] = { 60, 66, 118 }, F_REACH[3] = { 26, 30, 56 };
+static const s16 F_SPEED[3] = { 54, 64, 44 }, F_JUMP[3] = { 145, 158, 118 }, F_GRAV[3] = { 6, 7, 6 };
+static const s16 F_W[3] = { 22, 24, 44 }, F_H[3] = { 68, 74, 118 }, F_REACH[3] = { 29, 34, 56 };
 static const u8 F_DMG[3][3] = { { 1, 1, 2 }, { 2, 2, 3 }, { 2, 2, 4 } };
 
 /* ================= STATO GLOBALE ================= */
@@ -90,7 +90,16 @@ static u16 slot_get(u8 first, u8 n, const Frame *f) {
 /* fotogrammi statici precaricati */
 typedef struct { const Frame *f; u16 base; } Static;
 static Static statics[24]; static u8 nstatics; static u16 tNext;
-static void static_load(const Frame *f) { statics[nstatics].f = f; statics[nstatics].base = tNext; nstatics++; vdp_load_tiles(f->tiles, tNext, f->ntiles); tNext += f->ntiles; }
+/* aree VRAM libere oltre a quella principale: resto della tabella finestra (righe 4+),
+ * metà alta della tabella del piano A (64x32 usa solo 4 KB), spazio prima della tabella sprite */
+static u16 poolCur[4], poolEnd[4];
+static void pools_reset(void) { poolCur[0] = tNext; poolEnd[0] = T_MAX; poolCur[1] = 1428; poolEnd[1] = 1536; poolCur[2] = 1664; poolEnd[2] = 1792; poolCur[3] = 1920; poolEnd[3] = 1984; }
+static u16 alloc_tiles(u16 n) {
+  poolCur[0] = tNext > poolCur[0] ? tNext : poolCur[0];
+  for (u8 i = 0; i < 4; i++) if (poolEnd[i] - poolCur[i] >= n) { u16 b = poolCur[i]; poolCur[i] += n; if (i == 0) tNext = poolCur[0]; return b; }
+  test_flags |= 0x40; return 0xFFFF;
+}
+static void static_load(const Frame *f) { u16 b = alloc_tiles(f->ntiles); if (b == 0xFFFF) return; statics[nstatics].f = f; statics[nstatics].base = b; nstatics++; vdp_load_tiles(f->tiles, b, f->ntiles); }
 static u16 static_base(const Frame *f) { for (u8 i = 0; i < nstatics; i++) if (statics[i].f == f) return statics[i].base; return 0xFFFF; }
 
 static void draw_frame(const Frame *f, u16 base, s16 x, s16 y, s8 face, u8 pal) {
@@ -110,26 +119,54 @@ static void put_text(u8 x, u8 y, const char *s, u8 yellow) {
 }
 static void clear_row(u8 y) { vdp_vram_addr(VRAM_WINDOW + y * 128); for (u8 i = 0; i < 40; i++) VDP_DATA = TILE_ATTR(0, 1, 0, 0, T_SOLID); }
 static void num_text(char *buf, u32 v, u8 digits) { buf[digits] = 0; for (s8 i = digits - 1; i >= 0; i--) { buf[i] = '0' + (u8)(v % 10); v /= 10; } }
-static void put_bar(u8 x, u8 y, s16 v, u8 yellow) { /* v 0..100 su 8 tile */
+static void put_bar(u8 x, u8 y, s16 v, u8 n, u8 set) { /* v 0..100 su n tile; set 0 giallo 1 rosso 2 ciano */
   vdp_vram_addr(VRAM_WINDOW + ((y * 64) + x) * 2);
-  s16 px = (v * 64) / 100;
-  for (u8 i = 0; i < 8; i++) { s16 l = px - i * 8; if (l < 0) l = 0; if (l > 8) l = 8; VDP_DATA = TILE_ATTR(0, 1, 0, 0, T_BAR + (yellow ? 9 : 0) + l); }
+  s16 px = (v * (n * 8)) / 100;
+  for (u8 i = 0; i < n; i++) { s16 l = px - i * 8; if (l < 0) l = 0; if (l > 8) l = 8; VDP_DATA = TILE_ATTR(0, 1, 0, 0, T_BAR + set * 9 + l); }
+}
+static u16 tBig, tPor, tIco;
+static const char BIGSET[] = "HIROSCYBJEG0123456789x1P";
+static void put_big(u8 x, u8 y, const char *str, u8 cyan) {
+  for (; *str; str++, x++) {
+    u16 t = 0xFFFF; char c = *str;
+    if (cyan) { if (c == '1') t = 22; if (c == 'P') t = 23; }
+    else { u8 start = (c >= '0' && c <= '9') || c == 'x' ? 11 : 0; for (u8 k = start; k < 22; k++) if (BIGSET[k] == c) { t = k; break; } }
+    u16 a0 = t == 0xFFFF ? TILE_ATTR(0, 1, 0, 0, T_SOLID) : TILE_ATTR(0, 1, 0, 0, tBig + t * 2);
+    u16 a1 = t == 0xFFFF ? a0 : a0 + 1;
+    vdp_vram_addr(VRAM_WINDOW + ((y * 64) + x) * 2); VDP_DATA = a0;
+    vdp_vram_addr(VRAM_WINDOW + (((y + 1) * 64) + x) * 2); VDP_DATA = a1;
+  }
+}
+static void put_block(u8 x, u8 y, u8 w, u8 h, u16 base, u8 pal) {
+  for (u8 j = 0; j < h; j++) { vdp_vram_addr(VRAM_WINDOW + (((y + j) * 64) + x) * 2); for (u8 i = 0; i < w; i++) VDP_DATA = TILE_ATTR(pal, 1, 0, 0, base + j * w + i); }
 }
 static void msg(const char *s, u16 frames) { u8 i = 0; while (s[i] && i < 40) { msgBuf[i] = s[i]; i++; } while (i < 40) msgBuf[i++] = ' '; msgBuf[40] = 0; msgT = frames; }
 static const char *FORM_NAME[3] = { "HIROSHI", "CYBORG ", "JEEG   " };
 static void draw_hud(void) {
   char b[12];
-  put_text(0, 0, FORM_NAME[P.form], 1);
-  put_text(8, 0, "VITA", 0); put_bar(12, 0, P.hp, 0);
-  put_text(21, 0, "EN", 0); put_bar(23, 0, P.form == FORM_JEEG ? P.en : 0, 1);
-  b[0] = 'X'; b[1] = '0' + (lives < 0 ? 0 : lives); b[2] = 0; put_text(31, 0, b, 1);
-  num_text(b, score, 6); put_text(34, 0, b, 0);
-  put_text(0, 1, gloves ? "GUANTI:SI" : "GUANTI:NO", gloves); put_text(10, 1, "CP", 0); b[0] = '0' + cp; b[1] = '/'; b[2] = '3'; b[3] = 0; put_text(13, 1, b, 1);
-  if (P.form == FORM_JEEG) { put_text(17, 1, "A+B:", 0); put_text(21, 1, P.beam ? "PROTONICO 35" : "GAMMA 15    ", 1); put_text(33, 1, "C:CAMBIA", 0); }
-  else if (gloves) put_text(18, 1, P.form == FORM_HUMAN ? "C:TRASFORMAZIONE     " : "C:BUILD UP (MIWA)    ", 1);
-  else put_text(18, 1, "                      ", 0);
-  if (B.active && B.alive) { put_text(0, 2, "DOROMA", 1); put_bar(7, 2, (B.hp * 100) / BOSS_HP, 0); b[0] = 'F'; b[1] = '0' + B.phase; b[2] = 0; put_text(16, 2, b, 1); { char t[22]; for (u8 i = 0; i < 21; i++) t[i] = msgT ? msgBuf[i] : ' '; t[21] = 0; put_text(19, 2, t, 1); } }
-  else put_text(0, 2, msgT ? msgBuf : "                                        ", 1);
+  /* ritratto e nome */
+  put_block(0, 0, 4, 4, tPor + (stage == 0 && P.form == FORM_CYBORG ? 16 : 0), 2);
+  put_big(5, 0, FORM_NAME[P.form], 0);
+  put_block(13, 0, 2, 2, tIco, 2);
+  b[0] = 'x'; b[1] = '0'; b[2] = '0' + (lives < 0 ? 0 : lives); b[3] = 0; put_big(15, 0, b, 0);
+  put_text(19, 0, "LIVELLO 1-1", 0); put_text(31, 0, "CREDIT 00", 0);
+  b[0] = 'C'; b[1] = 'P'; b[2] = '0' + cp; b[3] = '/'; b[4] = '3'; b[5] = ' '; b[6] = 0; put_text(19, 1, b, 1);
+  put_text(26, 1, P.form == FORM_JEEG ? (P.beam ? "PROTONICO 35EN" : "GAMMA 15EN    ") : gloves ? (P.form == FORM_HUMAN ? "C:TRASFORMA   " : "C:BUILD UP    ") : "GUANTI: NO    ", 1);
+  /* 1P e punteggio */
+  put_big(5, 2, "1P", 1); num_text(b, score, 7); put_big(8, 2, b, 0);
+  /* destra: boss o messaggi */
+  if (B.active && B.alive) {
+    put_text(16, 2, "DOROMA       FASE ", 1); b[0] = '0' + B.phase; b[1] = '/'; b[2] = '3'; b[3] = 0; put_text(34, 2, b, 1);
+    put_text(16, 3, " ", 0); put_bar(17, 3, (B.hp * 100) / BOSS_HP, 20, 1); put_text(37, 3, "   ", 0);
+  } else {
+    char t[25];
+    for (u8 i = 0; i < 24; i++) t[i] = msgT ? msgBuf[i] : ' '; t[24] = 0; put_text(16, 2, t, 1);
+    for (u8 i = 0; i < 24; i++) t[i] = (msgT && i < 16) ? msgBuf[24 + i] : ' '; t[24] = 0; put_text(16, 3, t, 1);
+  }
+  /* barre: vita (gialla, rossa se bassa) ed energia raggi */
+  put_bar(0, 4, P.hp, 16, P.hp > 30 ? 0 : 1);
+  put_text(17, 4, "EN", 0); put_bar(19, 4, P.form == FORM_JEEG ? P.en : 0, 10, 2);
+  put_text(30, 4, P.form == FORM_JEEG ? "A+B RAGGIO" : "          ", 0);
 }
 
 /* ================= SALVATAGGIO SRAM ================= */
@@ -146,7 +183,7 @@ static void load_font(void) {
   vdp_vram_addr(T_FONT * 32);
   const u16 *d = (const u16 *)font_tiles;
   for (u16 i = 0; i < 128 * 16; i++) { u16 w = d[i], o = 0; for (u8 k = 0; k < 4; k++) { u16 n = (w >> (k * 4)) & 15; o |= (n ? n : 13) << (k * 4); } VDP_DATA = o; }
-  vdp_load_tiles(bar_tiles, T_BAR, 18);
+  vdp_load_tiles(bar_tiles, T_BAR, BAR_TILES);
   vdp_vram_addr(T_SOLID * 32); for (u8 i = 0; i < 16; i++) VDP_DATA = 0xDDDD;
 }
 static void load_image_plane(const Image *im, u16 plane, u16 tbase, u8 pal, u8 repeat) {
@@ -156,7 +193,7 @@ static void load_image_plane(const Image *im, u16 plane, u16 tbase, u8 pal, u8 r
     for (u16 x = 0; x < PLANE_W; x++) {
       u16 sx = x; if (sx >= im->w) { if (!repeat) { VDP_DATA = 0; continue; } sx = x % im->w; }
       u16 m = im->map[y * im->w + sx]; u16 t = m & 0x7FF;
-      VDP_DATA = t ? ((m & 0x1800) | TILE_ATTR(pal, 0, 0, 0, tbase + t)) : (pal << 13);
+      VDP_DATA = t ? ((m & 0x7800) | (tbase + t)) : 0;
     }
   }
 }
@@ -168,7 +205,7 @@ static void plane_column(s16 col) {
   for (u16 y = 3; y < 28; y++) {
     u16 m = im->map[y * im->w + col]; u16 t = m & 0x7FF;
     vdp_vram_addr(VRAM_PLANE_A + (y * PLANE_W + pc) * 2);
-    VDP_DATA = t ? ((m & 0x1800) | TILE_ATTR(1, 0, 0, 0, tBgA + t)) : 0;
+    VDP_DATA = t ? ((m & 0x7800) | (tBgA + t)) : 0;
   }
 }
 static void stream_columns(void) {
@@ -192,9 +229,10 @@ static void load_stage(u8 s, u8 forBuild) {
   load_image_plane(bgB, VRAM_PLANE_B, T_BG, 0, 1);
   tBgA = T_BG + bgB->ntiles; vdp_load_tiles(bgA->tiles, tBgA, bgA->ntiles);
   tNext = tBgA + bgA->ntiles; nstatics = 0; slots_reset(); bossLoaded = 0; ndq = 0; dmaBytes = 0;
+  pools_reset();
   if (s == 0) {
-    playerSlot = slot_new(tNext, 80); tNext += 80;
-    for (u8 i = 0; i < 3; i++) { slot_new(tNext, 88); tNext += 88; }
+    playerSlot = slot_new(tNext, 96); tNext += 96;
+    for (u8 i = 0; i < 3; i++) { slot_new(tNext, 100); tNext += 100; }
     static_load(&spr_gloves_a); static_load(&spr_health_a); static_load(&spr_star0_a); static_load(&spr_star1_a);
     static_load(&spr_spear); static_load(&spr_alert_a); static_load(&spr_flag1_a); static_load(&spr_boom0_a);
   } else {
@@ -211,8 +249,11 @@ static void load_stage(u8 s, u8 forBuild) {
       static_load(&spr_energy_b);
     }
   }
+  tBig = alloc_tiles(BIG_GLYPHS * 2); vdp_load_tiles(big_tiles, tBig, BIG_GLYPHS * 2);
+  if (s == 0) { tPor = alloc_tiles(32); vdp_load_tiles(raw_por_hiro, tPor, 16); vdp_load_tiles(raw_por_cyb, tPor + 16, 16); tIco = alloc_tiles(4); vdp_load_tiles(raw_ico_hiro, tIco, 4); }
+  else { tPor = alloc_tiles(16); vdp_load_tiles(raw_por_jeeg, tPor, 16); tIco = alloc_tiles(4); vdp_load_tiles(raw_ico_jeeg, tIco, 4); }
   if (tNext > T_MAX) test_flags |= 0x40; /* errore: VRAM esaurita */
-  window_rows(3);
+  window_rows(5);
   plats = s == 0 ? platA : platB; nplats = s == 0 ? sizeof(platA) / sizeof(Plat) : sizeof(platB) / sizeof(Plat);
   worldW = s == 0 ? WIDTH_A : WIDTH_B;
   colDrawnL = (camX >> 3); colDrawnR = colDrawnL - 1; stream_columns(); 
@@ -397,7 +438,7 @@ static void update_player(void) {
 }
 
 /* ================= NEMICI ================= */
-static const s16 E_W[4] = { 20, 20, 52, 52 }, E_H[4] = { 60, 60, 112, 112 }, E_HP[4] = { 3, 2, 10, 8 };
+static const s16 E_W[4] = { 22, 22, 52, 52 }, E_H[4] = { 68, 68, 112, 112 }, E_HP[4] = { 3, 2, 10, 8 };
 static const s16 E_SPD[4] = { 16, 14, 13, 11 }, E_CHASE[4] = { 27, 20, 18, 13 };
 static const u16 E_SCORE[4] = { 100, 150, 500, 600 };
 static void spawn_enemy(const EnemyDef *d, u8 drop) {
@@ -460,7 +501,7 @@ static void update_enemy(Enemy *e) {
       e->b.vx = 0; u16 wt = e->type == E_LANCER ? 27 : giant ? 36 : 24;
       if (e->at >= wt) {
         e->state = 3; e->at = 0; e->hitDone = 0;
-        if (e->type == E_LANCER) { proj(P_SPEAR, ex + e->b.face * 16, PX(e->b.y) - 45, e->b.face * 81, -8, 0, 120); sfx(SFX_PUNCH); }
+        if (e->type == E_LANCER) { proj(P_SPEAR, ex + e->b.face * 18, PX(e->b.y) - 51, e->b.face * 81, -8, 0, 120); sfx(SFX_PUNCH); }
         if (e->type == E_GSHOOT) { s16 vx = (dx * 16) / 54; if (vx > 120) vx = 120; if (vx < -120) vx = -120; proj(P_CLAY, ex + e->b.face * 24, PX(e->b.y) - 95, vx, -75, 3, 200); sfx(SFX_SLAM); }
       }
       break;
@@ -468,7 +509,7 @@ static void update_enemy(Enemy *e) {
     case 3: { /* attacco */
       e->b.vx = 0;
       if (!e->hitDone && (e->type == E_SOLDIER || e->type == E_GIANT) && e->at > 2 && e->at < 12) {
-        s16 reach = giant ? 80 : 36; s16 x0 = e->b.face > 0 ? ex : ex - reach, x1 = e->b.face > 0 ? ex + reach : ex;
+        s16 reach = giant ? 80 : 40; s16 x0 = e->b.face > 0 ? ex : ex - reach, x1 = e->b.face > 0 ? ex + reach : ex;
         if (overlap(x0, BY0(e->b), x1, BY1(e->b) - e->b.h / 5, BX0(P.b), BY0(P.b), BX1(P.b), BY1(P.b))) { e->hitDone = 1; hurt_player(giant ? 20 : 12, ex); }
         if (giant && e->at == 6) { shake = 4; sfx(SFX_SLAM); }
       }
@@ -878,7 +919,7 @@ static u16 bot(void) {
   if (state != ST_PLAY || buildOn) return 0;
   if (P.dead) return 0;
   if (gloves && P.form != FORM_JEEG && P.b.onGround && (P.form == FORM_HUMAN || PX(P.b.x) > 2000)) return (t & 8) ? BTN_C : 0;
-  s16 px = PX(P.b.x); s16 reach = P.form == FORM_JEEG ? 90 : 34; s16 best = 999; s8 dir = 1; u8 isBoss = 0;
+  s16 px = PX(P.b.x); s16 reach = P.form == FORM_JEEG ? 90 : 38; s16 best = 999; s8 dir = 1; u8 isBoss = 0;
   for (u8 i = 0; i < MAX_EN; i++) { Enemy *e = &EN[i]; if (!e->alive) continue; s16 d = PX(e->b.x) - px; s16 ad = d < 0 ? -d : d; ad -= e->b.w / 2; if (ad < best && (PX(e->b.y) - PX(P.b.y) < 24 && PX(P.b.y) - PX(e->b.y) < 24)) { best = ad; dir = d < 0 ? -1 : 1; } }
   if (B.active && B.alive) { s16 d = PX(B.b.x) - px; s16 ad = (d < 0 ? -d : d) - 35; if (ad < best) { best = ad; dir = d < 0 ? -1 : 1; isBoss = 1; } }
   if (best < reach) {

@@ -12,6 +12,7 @@ fs.mkdirSync(OUT, { recursive: true });
   p.on('pageerror', (e) => console.error('PAGEERR', e.message));
   await p.setContent('<canvas id=c></canvas>');
   for (const f of ['config.js', 'sprites.js', 'background.js']) await p.addScriptTag({ content: fs.readFileSync(path.join(GAME, f), 'utf8') });
+  await p.addScriptTag({ path: path.join(__dirname, 'bg_md.js') });
   await p.addScriptTag({ path: path.join(__dirname, 'render_page.js') });
   const list = await p.evaluate(() => window.RENDER_LIST());
   const manifest = {};

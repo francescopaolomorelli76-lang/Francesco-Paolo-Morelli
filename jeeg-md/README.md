@@ -34,6 +34,14 @@ Note:
 
 Sul Pandora Box i pulsanti A/B/C corrispondono ai primi tre tasti del gioco Mega Drive, secondo la mappatura del modello.
 
+## Grafica (stile arcade anni '90, sul modello del mockup dell'utente)
+
+- **HUD arcade:** ritratto 32×32 della forma attuale (Hiroshi, cyborg, Jeeg), nome grande in corsivo giallo, "1P" e punteggio a cifre grandi, icona vite ×03, "LIVELLO 1-1", "CREDIT 00", barra vita a segmenti (gialla, rossa quando è bassa), barra energia dei raggi.
+- **Fondale a parallasse:** cielo al tramonto a bande con retinatura, nuvole a strisce, Fuji innevato, foresta, scogliera con la fortezza Yamatai e il volto di pietra, stendardi rossi e fiaccole. Nella zona dei giganti: cielo rosso, colonne di fumo e incendi.
+- **Primo piano:** ponte d'acciaio chiodato con travi reticolari e guard-rail, torre di controllo con parabola, portale di partenza a scacchi, casse di legno, passerelle con strisce di pericolo, auto da corsa.
+- **Personaggi** più grandi nella zona umana: Hiroshi è alto 72 pixel su 224.
+- **Limiti della Mega Drive:** 61 colori a schermo, 320×224 pixel, 64 KB di memoria video. Il fondale usa due tavolozze scelte tile per tile per avere circa 25 colori. I design di Jeeg e dei soldati seguono le immagini originali dell'utente, non il mockup.
+
 ## Cosa c'è nel Livello 1 (tutto verificato in emulatore)
 
 - **Zona A, circuito (scala umana):** Hiroshi umano; soldati Haniwa spadaccini e lancieri, con segnale "!" prima dell'attacco; casse, passerelle e auto da corsa; i **guanti magnetici** sull'auto; checkpoint 1 con bandiera; imboscata dopo la raccolta dei guanti.

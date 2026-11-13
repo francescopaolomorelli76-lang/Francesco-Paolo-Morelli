@@ -540,7 +540,33 @@ const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",p
     ["Oggi","Assistenza in strada, pasti caldi, cure mediche e accoglienza a Milano, Roma e Napoli. A Baggio (Milano) ha aperto Cascina Vita Nuova, la prima casa dove le persone senza dimora possono vivere con i propri animali."],
     ["2025","Pubblica il libro sui suoi 30 anni di storia."]]};
 // Accesso riservato FPM (password verificata tramite impronta SHA-256; nell'app pubblicata la verifica è sul server)
-const FPM={email:"fpm@fpmwebdesigntech.it",hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
+// Contatto pubblico di FPM per collaborazioni (logo FPM in fondo alle pagine)
+const FPM_MAIL="fpm@fpmwebdesigntech.it";
+const FPM_MAILTO=`mailto:${FPM_MAIL}?subject=${encodeURIComponent("Richiesta di collaborazione – da Clinia App")}&body=${encodeURIComponent("Buongiorno Francesco,\n\nvi scrivo per ")}`;
+// Professioni sanitarie e relative specializzazioni (scuole di specializzazione di area medica, DI 68/2015, e ambiti delle professioni sanitarie)
+const PROFESSIONI={
+ "Medico chirurgo":["Allergologia e immunologia clinica","Anatomia patologica","Anestesia, rianimazione, terapia intensiva e del dolore","Audiologia e foniatria","Cardiochirurgia","Cardiologia (malattie dell’apparato cardiovascolare)","Chirurgia generale","Chirurgia maxillo-facciale","Chirurgia pediatrica","Chirurgia plastica, ricostruttiva ed estetica","Chirurgia toracica","Chirurgia vascolare","Dermatologia e venereologia","Ematologia","Endocrinologia e malattie del metabolismo","Farmacologia e tossicologia clinica","Gastroenterologia (malattie dell’apparato digerente)","Genetica medica","Geriatria","Ginecologia e ostetricia","Igiene e medicina preventiva","Malattie dell’apparato respiratorio (pneumologia)","Malattie infettive e tropicali","Medicina d’emergenza-urgenza","Medicina del lavoro","Medicina dello sport e dell’esercizio fisico","Medicina di comunità e delle cure primarie","Medicina fisica e riabilitativa (fisiatria)","Medicina generale","Medicina interna","Medicina legale","Medicina nucleare","Microbiologia e virologia","Nefrologia","Neurochirurgia","Neurologia","Neuropsichiatria infantile","Oftalmologia","Oncologia medica","Ortopedia e traumatologia","Otorinolaringoiatria","Patologia clinica e biochimica clinica","Pediatria","Psichiatria","Radiodiagnostica","Radioterapia","Reumatologia","Scienza dell’alimentazione","Urologia","Angiologia","Ecografia clinica","Medicina estetica","Agopuntura","Terapia del dolore","Senologia","Flebologia"],
+ "Odontoiatra":["Odontoiatria generale","Chirurgia orale","Implantologia","Ortognatodonzia","Odontoiatria pediatrica","Parodontologia","Endodonzia","Protesi dentaria","Conservativa ed estetica dentale","Gnatologia"],
+ "Fisioterapista":["Riabilitazione ortopedica","Riabilitazione neurologica","Riabilitazione sportiva","Riabilitazione cardio-respiratoria","Riabilitazione del pavimento pelvico","Riabilitazione pediatrica","Terapia manuale","Rieducazione posturale (RPG)","Linfodrenaggio","Kinesio taping","Tecar terapia","Onde d’urto","Massoterapia","Riabilitazione vestibolare"],
+ "Psicologo / Psicoterapeuta":["Psicologia clinica","Psicoterapia cognitivo-comportamentale","Psicoterapia sistemico-relazionale","Psicoterapia psicodinamica","Psicoterapia umanistica","Psicologia dell’età evolutiva","Neuropsicologia","Psicologia dello sport","Sessuologia","EMDR","Disturbi del comportamento alimentare","Psicologia del lavoro"],
+ "Biologo nutrizionista":["Nutrizione clinica","Nutrizione sportiva","Nutrizione pediatrica","Nutrizione in gravidanza e allattamento","Alimentazione vegetariana e vegana","Disturbi del comportamento alimentare","Diabete e sindrome metabolica","Analisi della composizione corporea"],
+ "Dietista":["Dietetica clinica","Nutrizione sportiva","Nutrizione pediatrica","Educazione alimentare","Nutrizione artificiale"],
+ "Osteopata":["Osteopatia strutturale","Osteopatia viscerale","Osteopatia cranio-sacrale","Osteopatia pediatrica","Osteopatia sportiva"],
+ "Logopedista":["Disturbi del linguaggio","Disturbi della deglutizione","Disturbi della voce","DSA (disturbi specifici dell’apprendimento)","Balbuzie","Afasia"],
+ "Podologo":["Plantari su misura","Piede diabetico","Biomeccanica e analisi del passo","Onicocriptosi","Podologia sportiva"],
+ "Tecnico ortopedico":["Plantari personalizzati","Baropodometria","Ortesi","Protesi","Calzature ortopediche","Corsetti e busti"],
+ "Infermiere":["Medicazioni avanzate (wound care)","Prelievi e iniezioni","Stomaterapia","Assistenza domiciliare","Educazione sanitaria"],
+ "Ostetrica":["Corso di accompagnamento alla nascita","Allattamento","Riabilitazione del pavimento pelvico","Pap test e prevenzione","Puerperio"],
+ "Tecnico di radiologia medica":["Radiologia tradizionale","TC","Risonanza magnetica","Mammografia","MOC (densitometria ossea)"],
+ "Terapista occupazionale":["Riabilitazione funzionale","Ausili e adattamento domestico","Età evolutiva"],
+ "Igienista dentale":["Igiene orale professionale","Sbiancamento","Prevenzione"],
+ "Altra professione":[]};
+const VISIT_TIPI=["Prima visita","Visita di controllo","Visita specialistica","Consulenza","Seduta / trattamento","Esame strumentale","Visita online (videochiamata)","Altro"];
+// Videochiamata: stanza riservata generata dall'ID della visita (si può sostituire con un servizio a pagamento con server in UE)
+const VIDEO_BASE="https://meet.jit.si/Clinia-";
+const videoUrl=a=>VIDEO_BASE+String(a.vk||a.id).replace(/[^a-zA-Z0-9]/g,"").slice(0,24);
+const videoKey=()=>{const b=new Uint8Array(12);crypto.getRandomValues(b);return[...b].map(x=>x.toString(16).padStart(2,"0")).join("")};
+const FPM={email:FPM_MAIL,hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
 let APP_FEE=0; // niente più servizio di prenotazione per pazienti e specialisti (contratto FPM–Clinia, 12/11/2026)
 // Royalty d'autore: Clinia versa a FPM 4,99 € netti per ogni ora di studio gestita con l'app, con qualsiasi formula
@@ -631,12 +657,12 @@ const HORIZON=21;
 const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
 try{localStorage.removeItem("clinia-app-v1")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -662,7 +688,8 @@ const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul
 const doc=id=>DOCTORS.find(d=>d.id===id);
 const room=id=>ROOMS.find(r=>r.id===id);
 const initials=n=>n.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("");
-const services=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],dur:s[1],price:(S.prices[id]&&S.prices[id][i]!=null)?S.prices[id][i]:s[2],online:!!s[3]}));
+const services=id=>{const c=S.svcCustom&&S.svcCustom[id];if(c&&c.length)return c.map((x,i)=>({i,name:x.name,tipo:x.tipo,dur:x.dur,price:x.price,online:!!x.online}));return svcBase(id)};
+const svcBase=id=>(SERVICES[id]||[["Visita",30,80]]).map((s,i)=>({i,name:s[0],dur:s[1],price:(S.prices[id]&&S.prices[id][i]!=null)?S.prices[id][i]:s[2],online:!!s[3]}));
 const logged=()=>!!(S.auth&&S.user&&S.user.tel);
 const isPro=()=>S.auth&&S.auth.role==="professionista";
 const overlap=(a1,a2,b1,b2)=>a1<b2&&b1<a2;
@@ -740,7 +767,7 @@ function render(){
   app.querySelectorAll(".content,.pinwrap").forEach(c=>{if(!c.querySelector(".fpm-foot"))c.insertAdjacentHTML("beforeend",FPM_FOOT)});
   const r3=app.querySelector("#r3d");if(r3)start3D(r3);const a3=app.querySelector("#a3d");if(a3)startModel(a3);
 }
-const FPM_FOOT=`<button class="fpm-foot" data-act="openCopyright" aria-label="Copyright e note legali"><img src="img/fpm-logo-sm.png" alt="Logo FPM WebDesignTech">© ${LEGAL.anno} FPM WebDesignTech</button>`;
+const FPM_FOOT=`<button class="fpm-foot" data-act="fpmContatto" aria-label="FPM WebDesignTech: contatti e collaborazioni"><img src="img/fpm-logo-sm.png" alt="Logo FPM WebDesignTech">© ${LEGAL.anno} FPM WebDesignTech</button>`;
 function viewKey(){const t=UI.stack[UI.stack.length-1];return UI.screen+"|"+UI.tab+"|"+(t?t.page+(t.id||""):"")}
 function screenHTML(){
   if(UI.screen==="main"&&!logged())UI.screen="welcome";
@@ -943,6 +970,12 @@ function healthScreen(){return `<div class="screen"><div class="topbar plain"><s
  </div></div>
  <div class="actions"><button class="btn primary block" data-act="health" data-v="yes">Consenti</button><button class="btn ghost block" data-act="health" data-v="limited">Conserva accesso limitato</button></div></div>`}
 const PIVA_OK=v=>{if(!/^\d{11}$/.test(v))return false;let t=0;for(let i=0;i<11;i++){let c=+v[i];if(i%2){c*=2;if(c>9)c-=9}t+=c}return t%10===0};
+const profDa=r=>{r=String(r||"").toLowerCase();return /fisioterap/.test(r)?"Fisioterapista":/psicolog|psicoterap/.test(r)?"Psicologo / Psicoterapeuta":/nutrizion/.test(r)?"Biologo nutrizionista":/osteopat/.test(r)?"Osteopata":/tecnico ortoped/.test(r)?"Tecnico ortopedico":/odontoiatr|dentist/.test(r)?"Odontoiatra":/logoped/.test(r)?"Logopedista":"Medico chirurgo"};
+const specDa=r=>{r=String(r||"").trim();if(!r||PROFESSIONI[r])return[];const m=r.match(/specialista in\s+(.+)$/i);return[m?m[1].charAt(0).toUpperCase()+m[1].slice(1).toLowerCase():r]};
+const specChip=t=>`<span class="chip on" data-spec="${esc(t)}">${esc(t)}<button type="button" class="iconbtn" style="width:22px;height:22px" data-act="ppSpecDel" data-v="${esc(t)}" aria-label="Togli ${esc(t)}">${ic("x","sm")}</button></span>`;
+const specOpts=prof=>`<option value="">Scegli dall’elenco…</option>`+(PROFESSIONI[prof]||[]).map(x=>`<option>${esc(x)}</option>`).join("");
+function ppSpecs(){try{return JSON.parse($("#pp-specsval").value||"[]")}catch(e){return[]}}
+function ppSpecsSet(l){$("#pp-specsval").value=JSON.stringify(l);$("#pp-specs").innerHTML=l.map(specChip).join("")}
 function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u=S.user||{};
   const tit=pp.titolo??((d.name.match(/^(Prof\.ssa|Prof\.|Dott\.ssa|Dott\.)/)||[""])[0]);
   const parts=d.name.replace(/^(Prof\.ssa|Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ");
@@ -961,7 +994,13 @@ function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u
    <div class="fgrid"><label class="field"><span>Titolo</span><select id="pp-titolo" name="titolo" autocomplete="honorific-prefix">${["","Dott.","Dott.ssa","Prof.","Prof.ssa"].map(t=>`<option value="${t}" ${t===tit?"selected":""}>${t||"—"}</option>`).join("")}</select></label>
     ${f("iscrizione","N. iscrizione albo",{ph:"es. Ordine di Matera n. 1234"})}</div>
    <div class="fgrid">${f("nome","Nome",{req:1,ac:"given-name",def:pp.nome??(u.nome||parts.slice(0,-1).join(" "))})}${f("cognome","Cognome",{req:1,ac:"family-name",def:pp.cognome??(u.cognome||parts.slice(-1)[0])})}</div>
-   ${f("ruolo","Specializzazione",{req:1,ac:"organization-title",def:d.role})}
+   ${(()=>{const prof=pp.professione||d.professione||profDa(d.role),specs=pp.specs||d.specs||specDa(d.role);return `<label class="field"><span>Professione*</span><select id="pp-prof" name="professione" data-change="ppProf">${Object.keys(PROFESSIONI).map(k=>`<option ${k===prof?"selected":""}>${k}</option>`).join("")}</select></label>
+   <div class="stack" style="gap:8px"><span class="label">Specializzazioni e ambiti di cui ti occupi</span>
+    <div class="chips" id="pp-specs">${specs.map(specChip).join("")}</div>
+    <input type="hidden" name="specs" id="pp-specsval" value="${esc(JSON.stringify(specs))}">
+    <div class="row" style="gap:8px"><select id="pp-specsel" style="flex:1;min-width:0" aria-label="Scegli una specializzazione">${specOpts(prof)}</select><button type="button" class="btn ghost sm" data-act="ppSpecAdd">${ic("plus","sm")} Aggiungi</button></div>
+    <div class="row" style="gap:8px"><input id="pp-specfree" placeholder="Non c’è? Scrivila qui" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)"><button type="button" class="btn ghost sm" data-act="ppSpecAdd" data-v="free">${ic("plus","sm")} Aggiungi</button></div>
+    <p class="tiny">Puoi aggiungerne quante vuoi: i pazienti le vedono nel tuo profilo e ti trovano cercandole.</p></div>`})()}
    <label class="field"><span>Area</span><select id="pp-area" name="area">${Object.entries(AREAS).filter(([k])=>k!=="all").map(([k,l])=>`<option value="${k}" ${(pp.area||d.area)===k?"selected":""}>${l}</option>`).join("")}</select></label>
    <span class="label">Contatti</span>
    ${f("email","E-mail",{req:1,type:"email",ac:"email",def:S.auth&&S.auth.email})}
@@ -1014,7 +1053,7 @@ function notifScreen(){return `<div class="screen"><div class="topbar plain"><sp
 
 /* ---------- Area principale ---------- */
 const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
-const FPM_TABS=[["fpm","euro","Entrate"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
+const FPM_TABS=[["fpm","euro","Entrate"],["fpminc","plus","Incassi"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
 const proTabs=()=>isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 function mainScreen(){
   const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=tabs[0][0];
@@ -1025,7 +1064,7 @@ function mainScreen(){
 function tabHTML(){const h=tabHTML0(),b=notifBanner();return b?h.replace(/^<div class="pad stack"([^>]*)>/,m=>m+b):h}
 function tabHTML0(){switch(UI.tab){
   case "home":return homeTab();case "visite":return visiteTab();case "files":return filesTab();case "msg":return msgTab();case "profile":return profileTab();
-  case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();case "fpm":return fpmTab();case "fpmdoc":return fpmDocTab();case "fpmfisco":return fpmFiscoTab();}}
+  case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();case "fpm":return fpmTab();case "fpmdoc":return fpmDocTab();case "fpmfisco":return fpmFiscoTab();case "fpminc":return incassiTab();}}
 function needLogin(title,text){return `<div class="pad stack"><h1 class="h-sec">${title}</h1><div class="card center">${markSvg(44)}<h3>${text}</h3><p class="muted small">Accedi o crea un account in meno di un minuto.</p><button class="btn primary" data-act="openAuth">Accedi o registrati</button></div></div>`}
 function docCard(d){const n=nextAvail(d.id);return `<button class="doc" data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role).toLowerCase())}">
   ${docAv(d)}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span>
@@ -1039,6 +1078,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
   ${S.hideBanner?"":`<div class="banner"><svg class="mk" viewBox="0 0 60 70" aria-hidden="true"><use href="#markw"/></svg><div><b>${SPECIALISTI().length} specialisti in un unico centro</b><span>Via La Martella 5/D, Matera</span></div><button class="iconbtn x" data-act="hideBanner" aria-label="Chiudi avviso">${ic("x")}</button></div>`}
   <button class="card row" data-act="openPage" data-v="arca" style="text-align:left;width:100%;gap:12px;background:var(--accent-soft);border-color:var(--accent)"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--card);color:var(--accent-2);display:grid;place-items:center">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Ogni prenotazione aiuta Progetto Arca</b><span class="tiny">Il 3 % del servizio va a chi vive in strada. Scopri la storia</span></span>${ic("right","sm")}</button>
   <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
+  <button class="card row" data-act="visitaOnline" style="width:100%;text-align:left;gap:12px"><span class="ri" style="width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent-2);display:grid;place-items:center">${ic("video")}</span><span style="flex:1;min-width:0"><b class="small" style="display:block">Visita online in videochiamata</b><span class="tiny">Scegli lo specialista, paghi con la carta e vi collegate da casa</span></span>${ic("right","sm")}</button>
   <button class="card row" data-act="openPage" data-v="chisiamo" style="width:100%;text-align:left;gap:12px">${markSvg(26)}<span style="flex:1;min-width:0"><b class="small" style="display:block">Chi siamo</b><span class="tiny">Mission, valori e spazi di Clinia</span></span>${ic("right","sm")}</button>
   ${doveSiamoHTML()}
   <div class="chips">${CHIPS.map((c,i)=>`<button class="chip" data-act="chip" data-v="${i}"><span class="dot a-${c[1]}"></span>${c[0]}</button>`).join("")}</div>
@@ -1082,7 +1122,7 @@ function searchPage(){const sq=UI.sq;const chips=CHIPS.map((c,i)=>[c,i]).filter(
    ${sq.mode==="studio"?`<div class="inline-field">${ic("pin")}<span class="muted">Clinia · Via La Martella 5/D, Matera</span></div>`:`<p class="muted small">Videoconsulti con gli specialisti di Clinia, direttamente dal telefono.</p>`}
    <span class="label">Suggerimenti</span>
    <div class="sugg">${chips.map(([c,i])=>`<button class="sg" data-act="spec" data-v="${i}" data-name="${esc((c[0]+" "+c[2].map(id=>doc(id).name).join(" ")).toLowerCase())}"><span class="sgi">${ic("user")}</span>${c[0]}</button>`).join("")}
-   ${SPECIALISTI().filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}">${docAv(d,"sm round")}<span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
+   ${SPECIALISTI().filter(d=>sq.mode==="studio"||services(d.id).some(s=>s.online)).map(d=>`<button class="sg hidden" data-doc data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role+" "+(d.professione||"")+" "+(d.specs||[]).join(" ")+" "+services(d.id).map(s=>s.name).join(" ")).toLowerCase())}">${docAv(d,"sm round")}<span style="min-width:0;text-align:left"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span></span></button>`).join("")}</div>
    <p class="muted hidden" id="noresults">Nessun risultato. Prova con un’altra parola.</p>
    <button class="btn ghost block" data-act="allResults">Vedi tutti gli specialisti ${ic("arrow","sm")}</button>
   </div></div></div>`}
@@ -1117,17 +1157,18 @@ function filtersPage(){const f=UI.fd;const radio=(k,v,l)=>`<label class="fopt"><
   </div></div><div class="actions"><button class="btn primary block" id="fcount" data-act="applyFilters">${countLabel()}</button></div></div>`}
 function doctorPage(id){const d=doc(id),svc=services(id);const rs=[...new Set(allBookings().filter(b=>b.doctorId===id&&b.date>=today()).map(b=>b.roomId))];
   return `<div class="screen">${bar("Profilo",`<button class="iconbtn" data-act="fav" data-id="${id}" aria-label="Preferito">${heartFill(S.favs.includes(id))}</button>`)}
-  <div class="content"><div class="hero">${docAv(d,"lg")}<h1>${esc(d.name)}</h1><p class="muted">${esc(d.role)}</p>
+  <div class="content"><div class="hero">${docAv(d,"lg")}<h1>${esc(d.name)}</h1><p class="muted">${esc(d.professione?d.professione+(d.specs&&d.specs.length?" · "+d.specs[0]:""):d.role)}</p>
+   ${d.specs&&d.specs.length>1?`<div class="chips" style="justify-content:center;margin-top:6px">${d.specs.map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div>`:""}
    ${d.rating?`<p class="small"><span class="stars">★★★★★</span> <b>${d.rating}</b> · ${d.reviews} recensioni verificate</p>`:""}<span class="badge ${d.area==="chirurgia"?"az":""}">${AREAS[d.area]}</span></div>
   <div class="pad stack" style="gap:22px">
-   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${S.prices[id]?`<p class="tiny">Prezzi decisi dallo specialista.</p>`:`<p class="tiny">Prezzi di esempio: ogni specialista decide liberamente i suoi.</p>`}
-    ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.dur} min${s.online?" · online":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
+   <section class="card"><h3 style="margin-bottom:4px">Prestazioni e prezzi</h3>${S.prices[id]||(S.svcCustom[id]&&S.svcCustom[id].length)?`<p class="tiny">Prezzi e durate decisi dallo specialista.</p>`:`<p class="tiny">Prezzi di esempio: ogni specialista decide liberamente i suoi.</p>`}
+    ${svc.map(s=>`<div class="svc"><div class="t"><b>${esc(s.name)}</b><span class="tiny">${s.tipo&&s.tipo!==s.name?esc(s.tipo)+" · ":""}${ic("clock","sm")} ${s.dur} min${s.online?" · in videochiamata":""}</span></div><span class="price num">${eur(s.price)}</span><button class="btn primary sm" data-act="bookSvc" data-id="${id}" data-v="${s.i}">Prenota</button></div>`).join("")}</section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Dove riceve</h3>
     <div class="card row" style="align-items:flex-start">${ic("pin")}<div><b>Clinia</b><p class="muted small">${esc(CLINIC.address)}</p><p class="row" style="gap:8px;margin-top:6px;flex-wrap:wrap"><a class="btn ghost sm" href="${MAPS.google}" target="_blank" rel="noopener">${ic("pin","sm")} Google Maps</a><a class="btn ghost sm" href="${MAPS.dir}" target="_blank" rel="noopener">Indicazioni</a></p><p class="small" style="margin-top:6px"><button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="reception">${ic("door","sm")} Reception · vedi in 3D</button>${rs.map(r=>`<button class="badge grey" style="margin:2px 4px 0 0" data-act="room3d" data-id="${r}">${ic("door","sm")} ${esc(room(r).name)} · vedi in 3D</button>`).join("")}</p></div></div></section>
    <section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Esperienza</h3><ul class="blist">${d.bio.map(b=>`<li>${esc(b)}</li>`).join("")}</ul></section>
    <button class="btn ghost block" data-act="openChat" data-id="${id}">${ic("chat","sm")} Scrivi allo specialista</button>
   </div></div><div class="actions"><button class="btn primary block" data-act="bookSvc" data-id="${id}" data-v="0">Prenota una visita</button></div></div>`}
-function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.svc];
+function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.svc]||svc[0];if(!svc[b.svc])b.svc=0;if(s.online&&(!b.pay||b.pay==="clinic")&&S.cards[0])b.pay=S.cards[0].id;
   const days=[];for(let k=0;k<=HORIZON;k++){const ds=addDays(today(),k);const sl=slotsFor(id,ds,s.dur);days.push({ds,free:sl.filter(x=>x.free).length,any:sl.length})}
   if(!b.date||!days.find(x=>x.ds===b.date&&x.free)){const f=days.find(x=>x.free);b.date=f?f.ds:null;b.time=null}
   const slots=b.date?slotsFor(id,b.date,s.dur):[];const pick=slots.find(x=>x.time===b.time&&x.free);
@@ -1138,7 +1179,8 @@ function bookPage(id){const d=doc(id),svc=services(id),b=UI.book;const s=svc[b.s
    <section class="stack" style="gap:10px"><span class="label">3 · Orario${b.date?" · "+fmtD(b.date):""}</span>
     ${b.date?`<div class="slots">${slots.map(x=>`<button class="slot num ${x.time===b.time?"on":""}" data-act="bTime" data-v="${x.time}" ${x.free?"":"disabled"} aria-label="${x.time}${x.free?"":" occupato"}">${x.time}</button>`).join("")}</div>`:`<p class="muted">Nessuna disponibilità nelle prossime tre settimane. Scrivi alla reception per una data.</p>`}</section>
    ${logged()&&S.family.length?`<section class="stack" style="gap:10px"><span class="label">Per chi è la visita</span>${persons().map(p=>`<button class="opt ${(b.forId||"me")===p.id?"on":""}" data-act="bFor" data-v="${p.id}"><span class="radio"></span>${pav(p)}<span style="flex:1"><b>${esc(p.nome+" "+p.cognome)}</b><span class="tiny" style="display:block">${esc(p.rel)}</span></span></button>`).join("")}</section>`:""}
-   <section class="stack" style="gap:10px"><span class="label">Pagamento</span><button class="opt ${(b.pay||"clinic")==="clinic"?"on":""}" data-act="bPay" data-v="clinic"><span class="radio"></span><span style="flex:1"><b>In clinica o con bonifico</b><span class="tiny" style="display:block">Contanti, carta o bancomat il giorno della visita, oppure bonifico allo specialista</span></span></button>
+   ${s.online?`<div class="card row small" style="gap:10px;background:var(--accent-soft);border-color:var(--accent)">${ic("video","sm")}<span><b>Visita online in videochiamata.</b> Paghi prima con la carta: l’importo va direttamente allo specialista (sulla sua carta o sul suo IBAN). Alla conferma trovi in “Le mie visite” il pulsante per entrare in videochiamata.</span></div>`:""}
+   <section class="stack" style="gap:10px"><span class="label">Pagamento</span>${s.online?"":`<button class="opt ${(b.pay||"clinic")==="clinic"?"on":""}" data-act="bPay" data-v="clinic"><span class="radio"></span><span style="flex:1"><b>In clinica o con bonifico</b><span class="tiny" style="display:block">Contanti, carta o bancomat il giorno della visita, oppure bonifico allo specialista</span></span></button>`}
     ${DB.on&&!STRIPE.publishableKey?`<p class="tiny">Il pagamento con carta nell’app si attiva quando colleghiamo Stripe. Per ora paghi in struttura.</p>`:""}${(DB.on&&!STRIPE.publishableKey?[]:S.cards).map(c=>`<button class="opt ${b.pay===c.id?"on":""}" data-act="bPay" data-v="${c.id}"><span class="radio"></span><span class="cbrand">${c.brand}</span><span style="flex:1"><b class="num">•••• ${c.last4}</b><span class="tiny" style="display:block">Addebito alla conferma (simulato)</span></span></button>`).join("")}
     ${logged()?`<button class="link small" style="align-self:flex-start" data-act="openPage" data-v="payments">${ic("plus","sm")} Aggiungi una carta</button>`:""}</section>
    <section class="stack" style="gap:10px"><span class="label">4 · Motivo della visita (facoltativo)</span><textarea id="bk-note" placeholder="Descrivi brevemente sintomi o richieste">${esc(b.note||"")}</textarea></section>
@@ -1156,6 +1198,7 @@ function visitCard(a,compact){const d=doc(a.doctorId),dt=parseD(a.date),past=a.d
   return `<div class="card visit"><div class="vdate"><div class="cal"><small>${dt.toLocaleDateString("it-IT",{month:"short"})}</small><b class="num">${dt.getDate()}</b><i>${dt.toLocaleDateString("it-IT",{weekday:"short"})}</i></div>
   <div style="flex:1;min-width:0"><b>${esc(a.service)}</b><p class="muted small">${esc(d.name)}${a.forId&&a.forId!=="me"?" · per "+esc(a.patient):""}</p></div>${st}</div>
   <div class="meta"><span>${ic("clock","sm")}<span class="num">${a.time}–${toT(toMin(a.time)+a.dur)}</span></span><span>${ic(a.roomId?"door":"video","sm")}${a.roomId?room(a.roomId).name:"Videochiamata"}</span><span>${ic("euro","sm")}<span class="num">${eur(a.price)}</span></span></div>
+  ${a.online&&a.status==="confermata"&&!past?(a.paid?`<a class="btn primary block sm" href="${videoUrl(a)}" target="_blank" rel="noopener">${ic("video","sm")} Entra in videochiamata</a><p class="tiny" style="text-align:center">Il collegamento si apre all’ora della visita: ${a.time}. Visita già pagata.</p>`:`<p class="tiny">Videochiamata disponibile dopo il pagamento.</p>`):""}
   ${compact||past||a.status==="annullata"?"":`<div class="row"><button class="btn ghost sm" style="flex:1" data-act="openChat" data-id="${a.doctorId}">${ic("chat","sm")} Scrivi</button><button class="btn danger sm" style="flex:1" data-act="askCancel" data-id="${a.id}">Disdici</button></div>`}</div>`}
 function visiteTab(){if(!logged())return needLogin("Le mie visite","Tutte le tue visite in un unico posto");
   const mineP=S.appts.filter(a=>(a.forId||"me")===UI.person);const now=today()+toT(nowMin()),desc=(a,b)=>(b.date+b.time).localeCompare(a.date+a.time);
@@ -1220,7 +1263,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Tariffe, pacchetti ore e modalità"],["tab:stanze","door","I miei turni negli studi"]]
+  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie visite, durata e prezzi · studi e pacchetti"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1277,12 +1320,13 @@ function proAppts(ds){const id=S.proId,price=n=>(services(id).find(s=>s.name===n
     return{key,date:ds,time:toT(x.start),end:toT(x.end),name:x.name,svc:x.svc,roomId:x.roomId,demo:true,price:price(x.svc),method:card?"carta":"struttura",
       paid:card||S.demoPaid.includes(key)||(ds<today()&&hash(key+"p")%4!==0)}});
   for(const a of activeAppts().filter(a=>a.doctorId===id&&a.date===ds)){const card=!!(a.pay&&a.pay!=="clinic");
-    out.push({key:"app|"+a.id,date:ds,time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,note:a.note,roomId:a.roomId,id:a.id,price:a.price,method:card?"carta":"struttura",paid:!!a.paid,status:a.status||"confermata",auth:!!a.payAuth,origine:a.origine||"app"})}
+    out.push({key:"app|"+a.id,date:ds,time:a.time,end:toT(toMin(a.time)+a.dur),name:a.patient,svc:a.service,online:!!a.online,vk:a.vk,note:a.note,roomId:a.roomId,id:a.id,price:a.price,method:card?"carta":"struttura",paid:!!a.paid,status:a.status||"confermata",auth:!!a.payAuth,origine:a.origine||"app"})}
   return out.sort((a,b)=>a.time.localeCompare(b.time))}
 const docPhoto=id=>S.docPhotos[id]||(BASE_DOC_IDS.includes(id)?`img/specialisti/${id}.jpg`:null);
 function docAv(d,cls="",style=""){const src=docPhoto(d.id);return `<span class="av ${cls}"${style?` style="${style}"`:""}>${esc(initials(d.name))}${src?`<img src="${src}" alt="" loading="lazy" onerror="this.remove()">`:""}</span>`}
 function statoAzioni(a){if(a.status==="richiesta")return `<span class="stack" style="gap:6px;align-items:flex-end"><span class="badge warn">Da confermare</span><span class="row" style="gap:6px"><button class="btn primary sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="conferma">Conferma</button><button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="rifiuta" aria-label="Rifiuta">${ic("x","sm")}</button></span></span>`;
   if(a.status==="conclusa")return `<span class="stack" style="gap:6px;align-items:flex-end"><span class="badge grey">${ic("check","sm")} Effettuata</span>${payBadge(a)}</span>`;
+  if(a.id&&a.online&&a.status==="confermata"&&a.date>=today())return `<span class="stack" style="gap:6px;align-items:flex-end">${payBadge(a)}<a class="btn primary sm" href="${videoUrl(a)}" target="_blank" rel="noopener">${ic("video","sm")} Videochiamata</a>${a.date===today()?`<button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="effettuata">Visita effettuata</button>`:""}</span>`;
   if(a.id&&a.status==="confermata"&&a.date<=today())return `<span class="stack" style="gap:6px;align-items:flex-end">${payBadge(a)}<button class="btn ghost sm" data-act="esitoVisita" data-id="${esc(a.id)}" data-v="effettuata">Visita effettuata</button></span>`;
   return payBadge(a)}
 function richiesteHTML(){const l=activeAppts().filter(a=>a.doctorId===S.proId&&a.status==="richiesta"&&a.date>=today()).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time));
@@ -1571,7 +1615,7 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
   <div class="card stack" style="gap:10px"><div class="row between"><h3>${ic("heartplus","sm")} Progetto Arca</h3><b class="num">${eur(r2(f.arca))}</b></div>
    <p class="small muted">Il 3 % della royalty sulle ore di studio di ${esc(meseNome(m))}, da bonificare a ${esc(ARCA.nome)}. Lo vedono anche pazienti, specialisti e Clinia nella pagina Progetto Arca.</p>
    <label class="chk"><input type="checkbox" data-change="arcaDone" data-m="${m}" ${S.arca[m]?"checked":""}> Bonifico fatto</label>
-   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="tab" data-v="fpmdoc">${ic("upload","sm")} Carica la ricevuta</button><button class="btn ghost sm" data-act="openPage" data-v="arca">Vedi la pagina pubblica</button></div>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-act="tab" data-v="fpminc">${ic("plus","sm")} Registra un incasso</button><button class="btn ghost sm" data-act="tab" data-v="fpmdoc">${ic("upload","sm")} Carica la ricevuta</button><button class="btn ghost sm" data-act="openPage" data-v="arca">Vedi la pagina pubblica</button></div>
    <p class="tiny">C.F. ${ARCA.cf}. L’IBAN per le donazioni va preso dal sito ufficiale della fondazione.</p></div>
   <section class="card"><div class="row between"><h3>Movimenti</h3><span class="live"><i></i>aggiornati</span></div><p class="tiny" style="margin:4px 0 6px">Per la privacy dei pazienti vedi solo le iniziali e il servizio ricevuto.</p>
    ${f.mov.length?f.mov.slice(0,lim).map(x=>`<div class="mov"><span class="ini ${x.da==="clinia"?"w":x.tipo==="Abbonamento"?"az":""}">${x.ini?esc(x.ini):x.da==="clinia"?"CL":esc(initials(x.spec))}</span><span class="t"><b>${esc(x.tipo)}${x.demo?' <span class="tiny">(esempio)</span>':""}</b><small>${esc(x.svc)} · ${esc(x.spec)}</small><small>${x.pren&&x.at>nowStamp()?"pagata in anticipo · visita del ":""}${esc(fmtD(x.at.slice(0,10),{day:"numeric",month:"short"}))} alle ${x.at.slice(11)}</small></span><span class="amt">+ ${eur(x.netto)}<small>lordo ${eur(x.lordo)}</small></span></div>`).join("")
@@ -1584,6 +1628,54 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
    <button class="btn ghost block" data-act="fpmRicevuta" data-v="${m}" ${f.lordo?"":"disabled"}>${ic("file","sm")} Prepara la ricevuta del mese</button></div>
   <p class="tiny">${DB.on?"":"Nella versione di prova i movimenti sono di esempio. "}Stime da far confermare dal commercialista o dal CAF.</p></div>`}
 const DOC_CAT=["Ricevuta compenso","Bonifico","Contratto FPM–Clinia","Certificazione Unica (CU)","Dichiarazione dei redditi","Donazione Progetto Arca","Altro"];
+/* ---------- FPM: registro incassi e rendicontazione ---------- */
+const INC_VOCI=["Rata acquisto software Clinia App","Royalty ore di studio (4,99 €/ora)","Royalty abbonamenti specialisti","Pagamento fattura / richiesta","Sito web","Nuovo progetto / collaborazione","Altro"];
+const INC_METODI=["Bonifico","Bonifico istantaneo","Addebito automatico","Carta","PayPal","Contanti","Altro"];
+function incassiRighe(y,m){const man=S.incassi.filter(x=>x.data.startsWith(m||y)).map(x=>({...x,auto:false}));
+  let aut=[];if(UI.incAuto!==false){const ms=m?[m]:[...Array(12)].map((_,i)=>y+"-"+pad2(i+1)).filter(k=>k<=today().slice(0,7));
+    for(const k of ms)for(const x of fpmMovimenti(k)){if(x.tipo==="Prenotazione")continue;aut.push({id:"a"+x.at+x.tipo,data:x.at.slice(0,10),voce:x.tipo,da:x.spec||"",metodo:"Registrato dall’app",importo:r2(x.netto),note:x.svc||"",auto:true})}}
+  return [...man,...aut].sort((a,b)=>b.data.localeCompare(a.data))}
+function incassiTab(){const y=UI.incAnno||today().slice(0,4),m=UI.incMese||"",l=incassiRighe(y,m),tot=v=>r2(v.reduce((t,x)=>t+x.importo,0));
+  const man=l.filter(x=>!x.auto),aut=l.filter(x=>x.auto),anni=[...new Set([today().slice(0,4),"2026","2027","2028",...S.incassi.map(x=>x.data.slice(0,4))])].sort();
+  return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Incassi</h1></div>
+  <form class="card stack" data-form="incasso" style="gap:10px" novalidate><h3>Registra un incasso</h3><p class="tiny">Ogni volta che ti arriva un pagamento scrivilo qui: finisce nella rendicontazione e nel PDF.</p>
+   <label class="field"><span>Descrizione*</span><input name="voce" list="inc-voci" placeholder="es. Pagamento rata app, Pagamento fattura richiesta…"><datalist id="inc-voci">${INC_VOCI.map(v=>`<option value="${esc(v)}">`).join("")}</datalist></label>
+   <div class="fgrid"><label class="field"><span>Giorno*</span><input name="data" type="date" value="${today()}" max="${today()}"></label><label class="field"><span>Importo €*</span><input name="importo" inputmode="decimal" placeholder="300,00"></label></div>
+   <div class="fgrid"><label class="field"><span>Da chi</span><input name="da" value="Clinia Srl"></label><label class="field"><span>Come</span><select name="metodo">${INC_METODI.map(x=>`<option>${x}</option>`).join("")}</select></label></div>
+   <label class="field"><span>Note</span><input name="note" placeholder="es. rata 3 di 12, fattura n. 5, CRO del bonifico"></label>
+   <p class="err" id="inc-err"></p><button class="btn primary block" type="submit">${ic("plus","sm")} Registra incasso</button></form>
+  <section class="card stack" style="gap:12px"><h3>Rendicontazione</h3>
+   <div class="fgrid"><label class="field"><span>Anno</span><select data-change="incAnno">${anni.map(a=>`<option ${a===y?"selected":""}>${a}</option>`).join("")}</select></label>
+    <label class="field"><span>Mese</span><select data-change="incMese"><option value="">Tutto l’anno</option>${[...Array(12)].map((_,i)=>{const k=y+"-"+pad2(i+1);return `<option value="${k}" ${k===m?"selected":""}>${cap(meseNome(k))}</option>`}).join("")}</select></label></div>
+   <label class="row small" style="gap:8px"><input type="checkbox" data-change="incAuto" ${UI.incAuto!==false?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"> Includi i movimenti registrati dall’app (abbonamenti, royalty 4,99 €, rate)</label>
+   <dl class="card ledger" style="margin:0"><dt>Incassi registrati da te<small>${man.length} operazioni</small></dt><dd>${eur(tot(man))}</dd>${UI.incAuto!==false?`<dt>Movimenti dell’app<small>${aut.length} operazioni, netti</small></dt><dd>${eur(tot(aut))}</dd>`:""}<dt><b>Totale</b></dt><dd><b>${eur(tot(l))}</b></dd></dl>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary sm" style="flex:1" data-act="incassiPdf">${ic("file","sm")} Scarica PDF</button><button class="btn ghost sm" style="flex:1" data-act="incassiPdf" data-k="archivia">Salva in Documenti</button></div>
+   ${l.length?l.slice(0,UI.incAll?l.length:30).map(x=>`<div class="row" style="gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:10px"><span style="flex:1;min-width:0"><b class="small" style="display:block">${esc(x.voce)}</b><span class="tiny">${esc(fmtD(x.data,{day:"numeric",month:"short",year:"numeric"}))}${x.da?" · "+esc(x.da):""} · ${esc(x.metodo)}${x.note?" · "+esc(x.note):""}</span>${x.auto?`<span class="badge grey" style="margin-top:4px">App</span>`:`<span class="badge" style="margin-top:4px">Registrato da te</span>`}</span><b class="num">${eur(x.importo)}</b>${x.auto?"":`<button class="iconbtn" data-act="incDel" data-id="${x.id}" aria-label="Elimina">${ic("x","sm")}</button>`}</div>`).join("")+(l.length>30&&!UI.incAll?`<button class="link small" data-act="incAll">Mostra tutte (${l.length})</button>`:""):`<p class="muted small">Nessun incasso nel periodo scelto.</p>`}
+  </section></div>`}
+async function incassiPDF(){await loadPdf();const{jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"});
+  const y=UI.incAnno||today().slice(0,4),m=UI.incMese||"",l=incassiRighe(y,m).slice().reverse(),A=S.fpm.anag||{};
+  const L=15,R=195,eu=n=>"€ "+Number(n).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const logo=await imgData("img/fpm-logo.png");if(logo){const h=20,w=h*logo.w/logo.h;doc.addImage(logo.d,"PNG",L,10,w,h)}
+  doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("Rendicontazione incassi",R,17,{align:"right"});
+  doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Francesco Paolo Morelli – FPM WebDesignTech",R,23,{align:"right"});
+  doc.text("Periodo: "+(m?cap(meseNome(m)):"anno "+y)+" · creato il "+new Date().toLocaleDateString("it-IT"),R,28,{align:"right"});
+  let yy=40;const head=()=>{doc.setFillColor(43,74,100);doc.rect(L,yy-5,R-L,8,"F");doc.setTextColor(255);doc.setFont("helvetica","bold");doc.setFontSize(9);
+    doc.text("Data",L+2,yy);doc.text("Descrizione",L+24,yy);doc.text("Da / Come",L+102,yy);doc.text("Importo",R-2,yy,{align:"right"});doc.setTextColor(0);doc.setFont("helvetica","normal");yy+=8};
+  head();let tm=0,ta=0;
+  for(const x of l){const desc=doc.splitTextToSize(x.voce+(x.note?" – "+x.note:"")+(x.auto?" [app]":""),76),da=doc.splitTextToSize((x.da?x.da+" · ":"")+x.metodo,54),h=Math.max(desc.length,da.length)*4.4+2;
+    if(yy+h>280){doc.addPage();yy=20;head()}
+    doc.setFontSize(9);doc.text(new Date(x.data).toLocaleDateString("it-IT"),L+2,yy);doc.text(desc,L+24,yy);doc.text(da,L+102,yy);doc.text(eu(x.importo),R-2,yy,{align:"right"});
+    doc.setDrawColor(217,222,227);doc.line(L,yy+h-3.5,R,yy+h-3.5);yy+=h;if(x.auto)ta+=x.importo;else tm+=x.importo}
+  if(yy>255){doc.addPage();yy=20}yy+=4;doc.setFontSize(10);
+  doc.text("Incassi registrati manualmente",L+2,yy);doc.text(eu(r2(tm)),R-2,yy,{align:"right"});yy+=6;
+  if(ta){doc.text("Movimenti registrati dall’app (netti)",L+2,yy);doc.text(eu(r2(ta)),R-2,yy,{align:"right"});yy+=6}
+  doc.setFont("helvetica","bold");doc.text("Totale del periodo",L+2,yy);doc.text(eu(r2(tm+ta)),R-2,yy,{align:"right"});doc.setFont("helvetica","normal");yy+=10;
+  doc.setFontSize(8);doc.setTextColor(93,107,119);doc.text(doc.splitTextToSize("Documento di riepilogo per uso personale e per il commercialista. Gli importi dei compensi da diritti d’autore sono netti; la ritenuta d’acconto è versata da Clinia Srl come sostituto d’imposta.",R-L),L,yy);
+  const nome=`Incassi_FPM_${m||y}.pdf`;return{blob:doc.output("blob"),nome}}
+async function salvaPdf(blob,nome){const file=new File([blob],nome,{type:"application/pdf"});
+  const dl=window.claude&&window.claude.use?await window.claude.use("downloads").catch(()=>null):null;
+  if(dl){try{await dl.save({filename:nome,data:blob});toast("PDF salvato")}catch(e){if(e&&e.code!=="declined")toast("Download non disponibile qui: usa “Salva in Documenti”")}}
+  else if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome})}else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}}
 function fpmDocTab(){const docs=S.fpm.docs.slice().sort((a,b)=>b.at-a.at);
   return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Documenti</h1></div><p class="muted small">Ricevute, accrediti, contratto e documenti per la dichiarazione dei redditi. Restano in quest’area riservata.</p>
   <div class="card stack" style="gap:10px"><label class="field"><span>Tipo di documento</span><select id="fd-cat">${DOC_CAT.map(c=>`<option>${c}</option>`).join("")}</select></label>
@@ -1775,10 +1867,17 @@ function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack"
   ${modalitaCard()}
   <section class="card"><h3 style="margin-bottom:8px">Studi: affitto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
   <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti</h3>${pacchettoStato()}${tariffeOreHTML(!isOwner())}</section>
-  <form class="card stack" data-form="prices" style="gap:12px"><h3>Le tue prestazioni</h3><p class="tiny">Il prezzo delle visite lo decidi tu: i pazienti lo vedono quando prenotano. La fattura al paziente la emetti tu.</p>
-   <div class="svc-edit tiny"><span>Prestazione</span><span>Minuti</span><span>Prezzo €</span></div>
-   ${svc.map(s=>`<div class="svc-edit"><span class="small" style="font-weight:700">${esc(s.name)}</span><input value="${s.dur}" disabled aria-label="Durata ${esc(s.name)}"><input id="pr-${s.i}" name="p${s.i}" inputmode="decimal" value="${s.price}" aria-label="Prezzo ${esc(s.name)}"></div>`).join("")}
-   <button class="btn primary block" type="submit">Salva prezzi</button></form></div>`}
+  <form class="card stack" data-form="svcSave" style="gap:12px" novalidate><h3>Le tue visite e prestazioni</h3><p class="tiny">Scegli il tipo di visita, scrivi il nome che vedranno i pazienti, la durata in minuti e il prezzo. Con “Aggiungi” inserisci tutte quelle che fai, anche online in videochiamata. La fattura al paziente la emetti tu.</p>
+   <div id="svc-rows" class="stack" style="gap:10px">${svc.map(svcRow).join("")}</div>
+   <button type="button" class="btn ghost block" data-act="svcAdd">${ic("plus","sm")} Aggiungi una visita o prestazione</button>
+   <p class="err" id="svc-err"></p>
+   <button class="btn primary block" type="submit">Salva visite e prezzi</button></form></div>`}
+function svcRow(x){x=x||{};const tipo=x.tipo||(x.online?"Visita online (videochiamata)":/control/i.test(x.name||"")?"Visita di controllo":/prima/i.test(x.name||"")?"Prima visita":x.name?"Visita specialistica":"Prima visita");
+  return `<div class="card stack svcrow" style="gap:8px;padding:12px;background:var(--bg-2)">
+   <div class="row" style="gap:8px"><select name="tipo" style="flex:1;min-width:0" aria-label="Tipo di visita">${VISIT_TIPI.map(t=>`<option ${t===tipo?"selected":""}>${t}</option>`).join("")}</select><button type="button" class="iconbtn" data-act="svcDel" aria-label="Elimina questa prestazione">${ic("x","sm")}</button></div>
+   <input name="nome" value="${esc(x.name||"")}" placeholder="Nome visibile ai pazienti (es. Visita dermatologica)" style="border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)">
+   <div class="row" style="gap:8px;align-items:center"><label class="field" style="flex:1"><span>Minuti</span><input name="dur" inputmode="numeric" value="${x.dur||30}"></label><label class="field" style="flex:1"><span>Prezzo €</span><input name="prezzo" inputmode="decimal" value="${x.price!=null?String(x.price).replace(".",","):""}"></label></div>
+   <label class="row small" style="gap:8px"><input type="checkbox" name="online" ${x.online?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"> Anche online, in videochiamata (pagamento anticipato con carta)</label></div>`}
 
 /* ---------- Sheet e modali ---------- */
 function sheetHTML(){const s=UI.sheet;
@@ -1802,6 +1901,15 @@ function sheetHTML(){const s=UI.sheet;
    <button class="btn ghost block" data-act="ricevutaPdf" data-v="${s.m}" data-k="archivia">${ic("upload","sm")} Crea e salva in Documenti</button>
    <p class="tiny">Stampala, applica la marca da bollo da 2 € se il lordo supera 77,47 €, firmala e consegnala a Clinia (o mandala firmata via PEC).</p></div>`}
   if(s.type==="file")return `<div class="stack" style="gap:12px"><h2 style="font-size:1.1rem;font-weight:800;overflow:hidden;text-overflow:ellipsis">${esc(s.name)}</h2>${s.pdf?`<p class="muted small">Anteprima del PDF:</p><a class="btn primary block" href="${s.url}" target="_blank" rel="noopener">Apri il PDF</a>`:`<img src="${s.url}" alt="${esc(s.name)}" style="border-radius:12px">`}<button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
+  if(s.type==="fpmContatto")return `<div class="stack" style="gap:14px;text-align:center"><div style="display:grid;place-items:center"><img src="img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="height:110px;width:auto"></div>
+   <h2 style="font-size:1.25rem;font-weight:800">FPM WebDesignTech</h2>
+   <p class="muted">Francesco Paolo Morelli · autore di Clinia App<br>App, siti web e soluzioni digitali per studi, cliniche e attività.</p>
+   <p>Vuoi collaborare o realizzare un’app o un sito per la tua attività? Scrivimi.</p>
+   <div class="card" style="display:grid;gap:4px"><span class="label">E-mail</span><b style="font-size:1.05rem;user-select:all;word-break:break-all">${FPM_MAIL}</b></div>
+   <a class="btn primary block" href="${FPM_MAILTO}">${ic("chat","sm")} Scrivimi per una collaborazione</a>
+   <button class="btn ghost block" data-act="copiaMailFpm">Copia l’indirizzo e-mail</button>
+   <button class="link small" data-act="openCopyright">Copyright e note legali</button>
+   <button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
   if(s.type==="copyright")return `<div class="stack legal" style="gap:12px"><div style="display:grid;place-items:center"><img src="img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="height:120px;width:auto"></div>
    <h2 style="font-size:1.25rem;font-weight:800;text-align:center">Copyright e note legali</h2>
    <p style="text-align:center"><b>Clinia App</b> è progettata e sviluppata da <b>${esc(LEGAL.marchio)}</b> – ${esc(LEGAL.autore)}.<br>${proprietaClinia()?`<b>Software di proprietà di Clinia Srl</b> dal ${esc(new Date(proprietaClinia()).toLocaleDateString("it-IT"))}. Il nome dell’autore resta sempre indicato.`:`<b>© ${LEGAL.anno} ${esc(LEGAL.marchio)}. Tutti i diritti riservati</b> fino al pagamento completo del prezzo, quando la proprietà passa a Clinia Srl.`}</p>
@@ -1809,7 +1917,7 @@ function sheetHTML(){const s=UI.sheet;
    <p>È vietata qualsiasi riproduzione, copia, modifica, decompilazione, distribuzione, rivendita o imitazione, totale o parziale, senza autorizzazione scritta del titolare dei diritti.</p>
    <p><b>Ogni tentativo di plagio o di uso non autorizzato dell’app sarà perseguito ai sensi di legge</b>, in sede civile e penale (artt. 171, 171-bis e 171-ter L. 633/1941; art. 2598 c.c. sulla concorrenza sleale), con richiesta di risarcimento di tutti i danni.</p>
    <p>Il nome, il marchio e il logo Clinia, le foto e i dati dei professionisti appartengono ai rispettivi titolari e sono usati con il loro consenso.</p>
-   <div class="card small" style="display:grid;gap:4px"><span><b>Titolare dei diritti:</b> ${esc(LEGAL.autore)} – ${esc(LEGAL.marchio)}</span><span><b>P.IVA:</b> ${esc(LEGAL.piva)}</span><span><b>Sede:</b> ${esc(LEGAL.sede)}</span><span><b>PEC:</b> ${esc(LEGAL.pec)}</span></div>
+   <div class="card small" style="display:grid;gap:4px"><span><b>Titolare dei diritti:</b> ${esc(LEGAL.autore)} – ${esc(LEGAL.marchio)}</span><span><b>P.IVA:</b> ${esc(LEGAL.piva)}</span><span><b>Sede:</b> ${esc(LEGAL.sede)}</span><span><b>PEC:</b> ${esc(LEGAL.pec)}</span><span><b>E-mail:</b> <a href="${FPM_MAILTO}">${FPM_MAIL}</a></span></div>
    <button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
   if(s.type==="social"){const ap=s.v==="apple";return `<form class="stack" data-form="social" novalidate><div class="row" style="gap:10px">${ap?`<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--ink)"><path d="M16.4 12.6c0-2.5 2-3.7 2.1-3.8-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.1zM13.9 5.2c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>`:`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`}<h2 style="font-size:1.2rem;font-weight:800">${ap?"Accedi con Apple":"Accedi con Google"}</h2></div>
    <p class="muted small">Clinia riceverà nome ed e-mail del tuo account ${ap?"Apple":"Google"}. ${UI.loginMode==="register"?"L’account Clinia viene creato subito, senza password.":"Se l’account non esiste ancora, lo creiamo subito."}</p>
@@ -1870,8 +1978,9 @@ function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossi
   if(UI.pending){const p=UI.pending;UI.pending=null;UI.stack=p.stack;UI.book=p.book;UI.tab=p.tab;return doConfirmBook()}
   UI.stack=[];UI.tab=isPro()?"agenda":"home";if(!isPro()&&S.stats==null)UI.sheet={type:"stats"};render()}
 function doConfirmBook(){const b=UI.book,top=UI.stack[UI.stack.length-1],id=top.id,s=services(id)[b.svc];
+  if(s.online&&(!b.pay||b.pay==="clinic")){toast("Per la visita online scegli la carta: il pagamento è anticipato.");return render()}
   const slot=slotsFor(id,b.date,s.dur).find(x=>x.time===b.time&&x.free);if(!slot){toast("Questo orario non è più disponibile. Scegline un altro.");return render()}
-  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),fee:APP_FEE,feeBy:b.pay&&b.pay!=="clinic"?"paziente":"specialista",status:"richiesta",created:Date.now(),ownerEmail:S.auth&&S.auth.email};a.paid=false;a.payAuth=!!(b.pay&&b.pay!=="clinic");
+  const a={id:uid(),doctorId:id,date:b.date,time:b.time,dur:s.dur,service:s.name,price:s.price,roomId:s.online?null:slot.roomId,online:!!s.online,vk:s.online?videoKey():undefined,note:b.note||"",patient:(p=>p.nome+" "+p.cognome)(personOf(b.forId)),forId:b.forId||"me",pay:b.pay||"clinic",paid:!!(b.pay&&b.pay!=="clinic"),fee:APP_FEE,feeBy:b.pay&&b.pay!=="clinic"?"paziente":"specialista",status:"richiesta",created:Date.now(),ownerEmail:S.auth&&S.auth.email};a.paid=false;a.payAuth=!!(b.pay&&b.pay!=="clinic");
   S.appts.push(a);save();DB.saveAppt(a);UI.stack=[{page:"done",id:a.id}];
   const q=`${fmtD(a.date,{weekday:"short",day:"numeric",month:"short"})} alle ${a.time}`;
   addNotif("spec:"+id,"richiesta_visita","Nuova richiesta di visita",`${a.patient} · ${a.service} · ${q}${a.roomId?" · "+room(a.roomId).name:""}. Conferma o rifiuta dall’Agenda.`,a.id);
@@ -1977,6 +2086,19 @@ const ACT={
   delFpmDoc:d=>{S.fpm.docs=S.fpm.docs.filter(x=>x.id!==d.id);save();IDB.set("fpm:"+d.id,null);render()},
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
+  fpmContatto:()=>{UI.sheet={type:"fpmContatto"};render()},
+  copiaMailFpm:()=>{navigator.clipboard.writeText(FPM_MAIL).then(()=>toast("Indirizzo copiato: "+FPM_MAIL),()=>toast(FPM_MAIL))},
+  visitaOnline:()=>{UI.sq.mode="online";UI.sq.spec=null;UI.sq.q="";push({page:"results"})},
+  ppSpecAdd:d=>{const free=d.v==="free",el=free?$("#pp-specfree"):$("#pp-specsel"),t=(el&&el.value||"").trim();if(!t)return toast(free?"Scrivi la specializzazione":"Scegli una specializzazione dall’elenco");
+    const l=ppSpecs();if(l.some(x=>x.toLowerCase()===t.toLowerCase()))return toast("Già inserita");l.push(t);ppSpecsSet(l);el.value="";toast("Aggiunta: "+t)},
+  ppSpecDel:d=>{ppSpecsSet(ppSpecs().filter(x=>x!==d.v))},
+  svcAdd:()=>{const box=$("#svc-rows");box.insertAdjacentHTML("beforeend",svcRow({}));const r=box.lastElementChild;r.querySelector("[name=nome]").focus()},
+  svcDel:(d,el)=>{const rows=document.querySelectorAll("#svc-rows .svcrow");if(rows.length<=1)return toast("Serve almeno una prestazione");const t=el.closest(".svcrow");if(t)t.remove()},
+  incDel:d=>{if(!confirm("Eliminare questo incasso dalla rendicontazione?"))return;S.incassi=S.incassi.filter(x=>x.id!==d.id);save();render()},
+  incAll:()=>{UI.incAll=true;render()},
+  incassiPdf:async d=>{try{const{blob,nome}=await incassiPDF();
+    if(d.k==="archivia"){const id=uid(),f=new File([blob],nome,{type:"application/pdf"});if(await IDB.set("fpm:"+id,{name:nome,blob:f})){S.fpm.docs.push({id,name:nome,size:blob.size,cat:"Rendicontazione incassi",at:Date.now()});save();toast("PDF salvato in Documenti");render()}return}
+    await salvaPdf(blob,nome)}catch(e){if(e&&e.name!=="AbortError")toast("PDF non creato: "+(e.message||e))}},
   fpmRicevuta:d=>{UI.sheet={type:"ricevuta",m:d.v};render()},
   ricevutaPdf:async d=>{try{const{blob,nome}=await ricevutaPDF(d.v);
     if(d.k==="archivia"){const id=uid(),f=new File([blob],nome,{type:"application/pdf"});if(await IDB.set("fpm:"+id,{name:nome,blob:f})){S.fpm.docs.push({id,name:nome,size:blob.size,cat:"Ricevuta compenso",at:Date.now()});S.fpm.ric[d.v]={...(S.fpm.ric[d.v]||{}),emessa:true,archiviata:true};save();toast("Ricevuta salvata in Documenti");render()}return}
@@ -2129,7 +2251,9 @@ const FORMS={
   request:f=>{setTimeout(()=>f.reset());S.requests.unshift({id:uid(),type:f.type.value,to:f.to.value,text:f.text.value.trim(),at:Date.now(),status:"Inviata"});save();toast("Richiesta inviata")},
   proprof:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#pp-err");err.textContent="";
     const em=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    if(!v("nome")||!v("cognome")||!v("ruolo"))return err.textContent="Inserisci nome, cognome e specializzazione.";
+    const specs=ppSpecs(),prof=v("professione");
+    if(!v("nome")||!v("cognome"))return err.textContent="Inserisci nome e cognome.";
+    if(!prof)return err.textContent="Scegli la tua professione.";
     if(!em.test(v("email")))return err.textContent="Inserisci un’e-mail valida.";
     if(v("pec")&&!em.test(v("pec")))return err.textContent="La PEC non è un indirizzo valido.";
     if(v("piva")&&!PIVA_OK(v("piva")))return err.textContent="La partita IVA non è valida: controlla le 11 cifre.";
@@ -2137,10 +2261,10 @@ const FORMS={
     if(v("sdi")&&!/^[A-Z0-9]{7}$/.test(v("sdi")))return err.textContent="Il codice destinatario ha 7 caratteri.";
     if(v("sito")&&!/^https?:\/\/\S+\.\S+/.test(v("sito")))return err.textContent="Il sito deve iniziare con https://";
     const id=S.proId,bio=v("bio").split("\n").map(x=>x.trim()).filter(Boolean);
-    const data={};["titolo","iscrizione","nome","cognome","ruolo","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
+    const data={professione:prof,specs,ruolo:specs.length?(prof==="Altra professione"?specs[0]:specs[0].replace(/\s*\(.*\)$/,"")):prof};["titolo","iscrizione","nome","cognome","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
     const isNew=id.startsWith("sp-")&&!(S.proProfile[id]&&S.proProfile[id].done);S.proProfile[id]={...(S.proProfile[id]||{}),...data,bio,cv:UI.ppCv||(S.proProfile[id]||{}).cv,done:true};DB.saveProfile(id,{...data,bio},isNew);
     if(UI.ppPhoto)S.docPhotos[id]=UI.ppPhoto;
-    S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio};applyOverrides();
+    S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio,professione:prof,specs};applyOverrides();
     UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
     if(UI.screen==="proprof")afterAuthFlow();else{UI.stack.pop();render()}},
   room:f=>{const id=f.dataset.id,err=$("#re-"+id),ora=parseFloat(String(f.ora.value).replace(",","."));
@@ -2184,6 +2308,20 @@ const FORMS={
     if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
     f.t.value="";S.msgs[k].list.push({from:isPro()?(k.startsWith("reception")?"pr":"d"):"me",text:t,at:Date.now()});save();render();
     if(k.startsWith("reception")){setTimeout(()=>{S.msgs[k].list.push({from:"r",text:"Grazie, abbiamo ricevuto il tuo messaggio. La reception ti risponderà al più presto. (risposta automatica)",at:Date.now()});save();render()},1300)}},
+  svcSave:f=>{const err=$("#svc-err");err.textContent="";const rows=[...f.querySelectorAll(".svcrow")],out=[];
+    for(const r of rows){const q=n=>r.querySelector(`[name=${n}]`),tipo=q("tipo").value,nome=q("nome").value.trim()||tipo,dur=parseInt(q("dur").value,10),pr=parseFloat(String(q("prezzo").value).replace(",","."));
+      if(!(dur>=5&&dur<=480))return err.textContent=`“${nome}”: indica la durata in minuti (da 5 a 480).`;
+      if(isNaN(pr)||pr<0)return err.textContent=`“${nome}”: indica il prezzo, per esempio 80 o 80,50.`;
+      out.push({tipo,name:nome,dur:Math.round(dur/5)*5,price:r2(pr),online:q("online").checked||tipo==="Visita online (videochiamata)"})}
+    if(!out.length)return err.textContent="Inserisci almeno una prestazione.";
+    S.svcCustom[S.proId]=out;delete S.prices[S.proId];save();DB.saveServices(S.proId,out);notifFPM("prestazioni","Prestazioni aggiornate",`${doc(S.proId).name} · ${out.length} prestazioni${out.some(x=>x.online)?" · anche online":""}`);toast("Visite e prezzi salvati: i pazienti li vedono subito");render()},
+  incasso:f=>{const err=$("#inc-err");err.textContent="";const voce=f.voce.value.trim(),data=f.data.value,imp=parseFloat(String(f.importo.value).replace(/\./g,"").replace(",","."));
+    if(!voce)return err.textContent="Scrivi la descrizione, per esempio “Pagamento rata app”.";
+    if(!data||data>today())return err.textContent="Indica il giorno dell’incasso (non nel futuro).";
+    if(!(imp>0))return err.textContent="Indica l’importo ricevuto.";
+    S.incassi.push({id:uid(),voce,data,importo:r2(imp),da:f.da.value.trim(),metodo:f.metodo.value,note:f.note.value.trim(),at:Date.now()});save();
+    notifFPM("incasso","Incasso registrato",`${voce} · ${eur(r2(imp))} · ${new Date(data).toLocaleDateString("it-IT")}`);
+    UI.incAnno=data.slice(0,4);toast("Incasso registrato in rendicontazione");render()},
   prices:f=>{const out={};let bad=false;services(S.proId).forEach(s=>{const v=parseFloat(String(f["p"+s.i].value).replace(",","."));if(isNaN(v)||v<0)bad=true;else out[s.i]=Math.round(v*100)/100});
     if(bad){toast("Controlla i prezzi: usa solo numeri, per esempio 45 o 45,50.");return}S.prices[S.proId]=out;save();toast("Prezzi salvati")}
 };
@@ -2223,6 +2361,10 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="aaSvc"){const f=$("form[data-form=addAppt]");if(f){UI.sheet.nome=f.nome.value;UI.sheet.tel=f.tel.value}UI.sheet.svc=+e.target.value;UI.sheet.time=null;render();return}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
+  if(k==="incAnno"){UI.incAnno=e.target.value;UI.incMese="";render()}
+  if(k==="incMese"){UI.incMese=e.target.value;render()}
+  if(k==="incAuto"){UI.incAuto=e.target.checked;render()}
+  if(k==="ppProf"){const sel=$("#pp-specsel");if(sel)sel.innerHTML=specOpts(e.target.value)}
   if(k==="roomTime"){UI.sheet[e.target.dataset.k]=+e.target.value;if(e.target.dataset.k==="start"&&UI.sheet.end<=UI.sheet.start)UI.sheet.end=UI.sheet.start+30;render()}
   if(k==="roomRepeat"){UI.sheet.repeat=e.target.checked;render()}
   if(k==="filt"){const fk=e.target.dataset.k,fd=UI.fd;
@@ -2263,9 +2405,11 @@ const DB={on:false,c:null,
     if(!r.data.session)return{err:`Ti abbiamo mandato un’e-mail di conferma a ${email}. Aprila, poi torna qui e tocca Login.`};const{data:p}=await this.c.from("profiles").select("ruolo").eq("id",r.data.user.id).single();
     await this.pull();return{owner:p&&p.ruolo==="titolare",admin:p&&p.ruolo==="admin"}},
   async pull(){if(!this.on)return;const dal=addDays(today(),-14);
-    const[r,a]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal)]);
+    const[r,a,sv,sp]=await Promise.all([this.c.from("room_bookings").select("*").gte("giorno",dal).neq("stato","annullata"),this.c.from("appointments").select("*").gte("giorno",dal),this.c.from("services").select("*").eq("attivo",true).order("ordine"),this.c.from("specialists").select("id,professione,specializzazioni")]);
+    if(!sv.error&&sv.data.length){const m={};for(const x of sv.data)(m[x.specialist_id]=m[x.specialist_id]||[]).push({tipo:x.tipo,name:x.nome,dur:x.durata_min,price:+x.prezzo,online:x.online});S.svcCustom=m}
+    if(!sp.error)for(const x of sp.data){const d=DOCTORS.find(y=>y.id===x.id);if(d&&x.professione){d.professione=x.professione;d.specs=x.specializzazioni||[]}}
     if(!r.error)S.rooms=r.data.map(b=>({id:b.id,doctorId:b.specialist_id,date:b.giorno,start:b.inizio.slice(0,5),end:b.fine.slice(0,5),roomId:b.room_id,paid:+b.importo>0&&b.stato==="confermata"?{amount:+b.importo,payment:b.payment_id}:null,remote:true}));
-    if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="in_attesa_pagamento"?"richiesta":x.stato,payAuth:x.metodo_pagamento==="carta",ownerEmail:null,origine:x.origine||"app"}));
+    if(!a.error)S.appts=a.data.map(x=>({id:x.id,doctorId:x.specialist_id,date:x.giorno,time:x.ora.slice(0,5),dur:x.durata_min,service:x.prestazione,price:+x.prezzo,roomId:x.room_id,online:x.online,vk:x.video_key||undefined,note:x.nota||"",patient:x.paziente_nome,forId:x.family_member_id||"me",pay:x.metodo_pagamento==="carta"?"card":"clinic",paid:x.pagato,fee:+x.commissione_app,feeBy:x.commissione_a_carico,status:x.stato==="in_attesa_pagamento"?"richiesta":x.stato,payAuth:x.metodo_pagamento==="carta",ownerEmail:null,origine:x.origine||"app"}));
     if(S.auth&&(S.auth.owner||S.auth.fpm))await this.pullPag();
     await this.pullNotif(false);
     render()},
@@ -2277,11 +2421,14 @@ const DB={on:false,c:null,
     const{error}=await this.c.from("room_bookings").insert(list.map(b=>({specialist_id:b.doctorId,room_id:b.roomId,giorno:b.date,inizio:b.start,fine:b.end,stato:free?"confermata":"in_attesa_pagamento",gratuito:!!free,importo:roomCost(b.roomId,toMin(b.end)-toMin(b.start))})));
     if(error)toast(error.code==="42501"?"Il tuo account non è ancora collegato al profilo di specialista: chiedi al titolare di abilitarlo.":/studio_libero|specialista_libero/.test(error.message)?"Lo studio è stato appena occupato da un altro specialista.":"Prenotazione non salvata: "+error.message);await this.pull()},
   async saveProfile(id,d,isNew){if(!this.on)return;const{data:u}=await this.c.auth.getUser();if(!u.user)return;
-    const pub={id,user_id:u.user.id,titolo:d.titolo||null,nome_visualizzato:((d.titolo?d.titolo+" ":"")+d.nome+" "+d.cognome).trim(),ruolo:d.ruolo,area:d.area,bio:d.bio||[],sito:d.sito||null,instagram:d.instagram||null,facebook:d.facebook||null,linkedin:d.linkedin||null};
+    const pub={id,user_id:u.user.id,titolo:d.titolo||null,nome_visualizzato:((d.titolo?d.titolo+" ":"")+d.nome+" "+d.cognome).trim(),ruolo:d.ruolo,professione:d.professione||null,specializzazioni:d.specs||[],area:d.area,bio:d.bio||[],sito:d.sito||null,instagram:d.instagram||null,facebook:d.facebook||null,linkedin:d.linkedin||null};
     let r=isNew?await this.c.from("specialists").insert(pub):await this.c.from("specialists").update(pub).eq("id",id);
     if(r.error)return toast("Profilo non salvato sul server: "+r.error.message);
     r=await this.c.from("specialist_private").upsert({specialist_id:id,email:d.email,telefono:d.telefono||null,pec:d.pec||null,partita_iva:d.piva||null,codice_fiscale:d.cf||null,codice_sdi:d.sdi||null,iscrizione_albo:d.iscrizione||null,indirizzo_fatturazione:[d.indirizzo,d.cap,d.citta].filter(Boolean).join(", ")||null});
     if(r.error)toast("Dati di fatturazione non salvati sul server: "+r.error.message)},
+  async saveServices(id,l){if(!this.on)return;let r=await this.c.from("services").delete().eq("specialist_id",id);
+    if(!r.error)r=await this.c.from("services").insert(l.map((x,i)=>({specialist_id:id,nome:x.name,tipo:x.tipo,durata_min:x.dur,prezzo:x.price,online:x.online,ordine:i})));
+    if(r.error)toast("Prestazioni non salvate sul server: "+r.error.message)},
   async saveRoomEdit(id,e){if(!this.on)return;const{error}=await this.c.from("rooms").update({nome:e.name,tipo:e.type,tariffa_ora:e.tariff.ora,tariffa_mezza:e.tariff.mezza,tariffa_giornata:e.tariff.giornata}).eq("id",id);if(error)toast("Stanza non salvata sul server: "+error.message)},
   async saveIban(key,a){if(!this.on||key==="fpm")return;const{error}=await this.c.from("specialist_private").upsert({specialist_id:key,iban_intestatario:a.holder,iban_ultime4:a.last4,accrediti_attivi:true});if(error)toast("Conto non salvato sul server: "+error.message)},
   async loadArca(){const{data,error}=await this.c.rpc("arca_storia");if(!error){UI.arcaRemote=data.map(x=>({m:x.mese.slice(0,7),importo:+x.importo,pren:x.prenotazioni,fatto:x.donata}));render()}},

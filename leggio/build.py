@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assembla FPM Leggio in un unico file HTML.
+"""Assembla Mozart in un unico file HTML.
 
   python3 leggio/build.py            -> leggio/index.html (web-app installabile)
   python3 leggio/build.py --artifact OUT.html  -> versione senza <!doctype> per l'anteprima
@@ -23,7 +23,7 @@ def build(standalone: bool) -> str:
     css = (SRC / "style.css").read_text()
     body = (SRC / "body.html").read_text().replace("__LOGO__", logo)
     js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo)
-    head = f"""<title>FPM Leggio</title>
+    head = f"""<title>Mozart</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{FONTS}">
@@ -51,7 +51,7 @@ boot();
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FPM Leggio">
+<meta name="apple-mobile-web-app-title" content="Mozart">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-512.png">

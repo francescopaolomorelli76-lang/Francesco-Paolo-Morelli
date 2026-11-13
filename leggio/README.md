@@ -1,4 +1,6 @@
-# FPM Leggio
+# Mozart
+
+App di FPM web designer.
 
 Leggio digitale per iPad (web-app installabile): spartiti PDF, annotazioni, segni musicali, scansione da foto e inserimento pagine. Grafica nero e oro FPM.
 

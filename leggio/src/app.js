@@ -1,4 +1,4 @@
-// ================= FPM Leggio — stato e lettore =================
+// ================= Mozart — stato e lettore =================
 const ST = {
   scores:[], cur:null, doc:null, page:0, ann:{}, setlists:[], activeSetlist:null,
   bars:{top:true,bottom:true}, annotate:false,
@@ -104,7 +104,7 @@ const nextPage=()=>goPage(ST.page+1), prevPage=()=>goPage(ST.page-1);
 
 function updateChrome(){
   const sc=ST.cur;
-  $('#titleText').innerHTML = sc? `<b>${esc(sc.title)}</b><span>, p. ${ST.page+1} di ${sc.pages}</span>` : '<b>FPM Leggio</b>';
+  $('#titleText').innerHTML = sc? `<b>${esc(sc.title)}</b><span>, p. ${ST.page+1} di ${sc.pages}</span>` : '<b>Mozart</b>';
   $('#pageNum').textContent = sc? `${ST.page+1} / ${sc.pages}` : '–';
   $('#annoTitle').innerHTML = `Pagina ${ST.page+1} <span>(${esc(Anno.layers[Anno.layer]?.name||'Livello 1')})</span>`;
   buildScrub();
@@ -463,7 +463,7 @@ function showSettings(){
   m2.querySelector('[data-ok]').onclick=closeLayers;
 }
 function showPedals(){
-  modal('Pedaliera Bluetooth',`<div class="hint">Collega la pedaliera all'iPad dalle Impostazioni di sistema (Bluetooth). FPM Leggio riconosce i tasti più usati dalle pedaliere:</div>
+  modal('Pedaliera Bluetooth',`<div class="hint">Collega la pedaliera all'iPad dalle Impostazioni di sistema (Bluetooth). Mozart riconosce i tasti più usati dalle pedaliere:</div>
     <div class="hint"><kbd>→</kbd> <kbd>↓</kbd> <kbd>Pag giù</kbd> <kbd>Spazio</kbd> pagina successiva<br><kbd>←</kbd> <kbd>↑</kbd> <kbd>Pag su</kbd> pagina precedente</div>
     <div class="hint">Prova ora: premi un pedale, la pagina gira.</div>`,`<button class="goldBtn" data-close>${iconSvg('check')}Ok</button>`);
   $('.modal [data-close]:last-child')?.addEventListener('click',closeLayers);
@@ -480,7 +480,7 @@ function showBackup(){
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="goldBtn" id="bkSave">${iconSvg('backup')}Crea backup</button><button class="ghostBtn" id="bkLoad">${iconSvg('up')}Ripristina</button></div><div id="bkOut"></div>`);
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
     for(const s of ST.scores){const {bytes,...meta}=s;let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
-    busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`FPM-Leggio-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
+    busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
   $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,bytes:u8.buffer};if(!ST.scores.some(x=>x.id===sc.id)){ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
       for(const sl of data.setlists||[]) if(!ST.setlists.some(x=>x.id===sl.id)) ST.setlists.push(sl); saveSetlists(); busy(); closeLayers(); renderLibrary(); toast('Backup ripristinato')}catch(e){busy();toast('File di backup non valido')}};f.click()};
 }
@@ -488,11 +488,11 @@ function offerDownload(blob,name,where){
   const url=URL.createObjectURL(blob);
   if(navigator.canShare && navigator.share){ try{const file=new File([blob],name,{type:blob.type}); if(navigator.canShare({files:[file]})){navigator.share({files:[file],title:name}).catch(()=>{});}}catch(e){} }
   const a=document.createElement('a');a.href=url;a.download=name;a.className='goldBtn';a.style.textDecoration='none';a.innerHTML=iconSvg('share')+'Salva “'+esc(name)+'”';
-  if(where){where.innerHTML='';where.appendChild(a);where.insertAdjacentHTML('beforeend','<div class="hint" style="margin-top:8px">Se il salvataggio non parte, apri FPM Leggio da Safari o dalla Home dell\'iPad.</div>')}
+  if(where){where.innerHTML='';where.appendChild(a);where.insertAdjacentHTML('beforeend','<div class="hint" style="margin-top:8px">Se il salvataggio non parte, apri Mozart da Safari o dalla Home dell\'iPad.</div>')}
   else { const m2=modal('File pronto',`<div id="dlBox"></div>`); $('#dlBox').appendChild(a); }
 }
 function showAbout(){
-  modal('FPM Leggio',`<div style="display:flex;gap:16px;align-items:center"><div class="brandDot" style="width:84px;height:84px"><img src="__LOGO__" alt="FPM"></div>
+  modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><div class="brandDot" style="width:84px;height:84px"><img src="__LOGO__" alt="FPM"></div>
     <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM web designer</div><div class="hint">Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM web designer · Tutti i diritti riservati.</div></div></div>
     <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>`);
 }
@@ -558,7 +558,7 @@ async function demoPdf(d){
   for(let p=0;p<d.pages;p++){
     const pg=doc.addPage([595,842]); const W=595,H=842;
     if(p===0){ pg.drawText(d.title.replace('Esempio · ',''),{x:W/2-fB.widthOfTextAtSize(d.title.replace('Esempio · ',''),22)/2,y:H-70,size:22,font:fB,color:black});
-      pg.drawText('Spartito di esempio generato da FPM Leggio',{x:W/2-fI.widthOfTextAtSize('Spartito di esempio generato da FPM Leggio',11)/2,y:H-90,size:11,font:fI,color:rgb(.35,.35,.35)});
+      pg.drawText('Spartito di esempio generato da Mozart',{x:W/2-fI.widthOfTextAtSize('Spartito di esempio generato da Mozart',11)/2,y:H-90,size:11,font:fI,color:rgb(.35,.35,.35)});
       pg.drawText('Allegro',{x:60,y:H-125,size:13,font:fB,color:black}); }
     pg.drawText(String(440+p),{x:p%2?W-60:40,y:H-40,size:11,font:fB,color:black});
     const systems=p===0?5:6; const top=p===0?H-160:H-80;

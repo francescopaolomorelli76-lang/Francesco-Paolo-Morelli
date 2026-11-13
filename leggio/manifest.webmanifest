@@ -1,6 +1,6 @@
 {
-  "name": "FPM Leggio",
-  "short_name": "FPM Leggio",
+  "name": "Mozart",
+  "short_name": "Mozart",
   "description": "Leggio digitale per spartiti: annotazioni, segni musicali, scansione e inserimento pagine.",
   "start_url": "./index.html",
   "display": "fullscreen",

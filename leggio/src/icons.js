@@ -1,4 +1,4 @@
-// Icone a tratto (24×24), disegnate per FPM Leggio.
+// Icone a tratto (24×24), disegnate per Mozart.
 const ICONS = {
   note:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   book:'<path d="M3 5.5C5.5 4 9 4 12 6c3-2 6.5-2 9-.5V19c-2.5-1.5-6-1.5-9 .5-3-2-6.5-2-9-.5z"/><path d="M12 6v13.5"/>',

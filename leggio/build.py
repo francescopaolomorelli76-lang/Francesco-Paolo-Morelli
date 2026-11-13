@@ -15,7 +15,7 @@ PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worke
 PDFLIB = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;"
          "1,6..96,600&family=Manrope:wght@400;500;600;700;800&family=Noto+Music&display=swap")
-JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js", "audio.js"]
+JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js", "audio.js", "forscore.js"]
 
 
 def build(standalone: bool) -> str:

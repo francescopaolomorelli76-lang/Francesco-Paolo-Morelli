@@ -28,7 +28,10 @@ const saveAnn=debounce(()=>{ if(ST.cur) DB.set('ann:'+ST.cur.id, ST.ann); },400)
 
 async function addScore(bytes, meta={}){
   const doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
-  const sc = {id:uid(), title:meta.title||'Senza titolo', composer:meta.composer||'', genre:meta.genre||'', tags:meta.tags||[], key:meta.key||'',
+  if(meta.fromFile){ try{ const info=(await doc.getMetadata()).info||{}; const t=(info.Title||'').trim(), a=(info.Author||'').trim();
+    if(t && !/^(untitled|senza titolo|microsoft|document|documento|\d+)/i.test(t) && t.length<140) meta.title=t;
+    if(a && !meta.composer && a.length<80 && !/scanner|adobe|microsoft|camscanner/i.test(a)) meta.composer=a; }catch(e){} }
+  const sc = {id:uid(), title:meta.title||'Senza titolo', file:meta.file||'', composer:meta.composer||'', genre:meta.genre||'', tags:meta.tags||[], key:meta.key||'',
     added:Date.now(), opened:0, pages:doc.numPages, bookmarks:[], crop:{l:0,t:0,r:0,b:0}, bytes};
   doc.destroy();
   ST.scores.push(sc); await DB.putScore(sc); return sc;
@@ -214,6 +217,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  forscore:()=>{closeSides();FS4.pick()},
   library:()=>openSide('library',!$('#library').classList.contains('open')),
   libClose:()=>openSide('library',false),
   tools:()=>openSide('tools',!$('#tools').classList.contains('open')),
@@ -333,9 +337,10 @@ function libMenu(el){
     <button class="toolRow" data-m="select">${iconSvg('check')}Seleziona più spartiti</button>
     <button class="toolRow" data-m="import">${iconSvg('file')}Importa PDF</button>
     <button class="toolRow" data-m="scan">${iconSvg('camera')}Scansione in nuovo spartito</button>
-    <button class="toolRow" data-m="tpl">${iconSvg('staff')}Pentagrammata vuota</button></div>`);
+    <button class="toolRow" data-m="tpl">${iconSvg('staff')}Pentagrammata vuota</button>
+    <button class="toolRow" data-m="fs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div>`);
   p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();const m2=b.dataset.m;
-    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew();};
+    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='fs')FS4.pick();};
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
@@ -428,8 +433,9 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
+    <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),tpl:()=>Insert.templatesNew(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------
@@ -477,7 +483,10 @@ async function showDashboard(){
 }
 function showBackup(){
   const m2=modal('Backup',`<div class="hint">Salva tutta la libreria (spartiti, annotazioni, setlist, segnalibri) in un unico file, oppure ripristinala da un backup.</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="goldBtn" id="bkSave">${iconSvg('backup')}Crea backup</button><button class="ghostBtn" id="bkLoad">${iconSvg('up')}Ripristina</button></div><div id="bkOut"></div>`);
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="goldBtn" id="bkSave">${iconSvg('backup')}Crea backup</button><button class="ghostBtn" id="bkLoad">${iconSvg('up')}Ripristina</button></div>
+    <div class="hint">Vieni da forScore? Apri qui il suo backup o archivio <b>.4sb</b>: Mozart importa spartiti, titoli, compositori, etichette e setlist.</div>
+    <div><button class="goldBtn" id="bkFs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div><div id="bkOut"></div>`);
+  $('#bkFs').onclick=()=>{closeLayers();FS4.pick()};
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
     for(const s of ST.scores){const {bytes,...meta}=s;let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
     busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};

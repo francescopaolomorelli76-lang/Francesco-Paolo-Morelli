@@ -15,6 +15,7 @@ Pubblica la cartella `leggio/` (per esempio con GitHub Pages), apri `index.html`
 - **Scansione**: rileva il foglio, angoli trascinabili con lente, raddrizzamento prospettico, miglioramento per partiture (toglie ombre, B/N adattivo, nitidezza, intensità dei segni, contrasto).
 - **Annota**: penne, evidenziatori, bianchetto, forme (forcelle, legature, parentesi, volte, vi-de), testo, righello, lazo, gomma, livelli, annulla/ripeti, stile pennello (dimensione, colore, tonalità, saturazione, luminosità, trasparenza).
 - **Segni musicali**: oltre 300 segni in 15 categorie (alterazioni, dinamiche, articolazioni, abbellimenti, note, pause, chiavi e tempi, ripetizioni, termini, coro e voce, strumenti e pedale, diteggiature, notazione antica, simboli) più tutto il blocco Unicode dei simboli musicali.
+- **Da forScore**: apre backup e archivi `.4sb` (anche più file insieme): importa i PDF contenuti, titoli, compositori, generi, etichette e setlist. Un backup "solo dati" abbina i metadati ai PDF già importati con lo stesso nome. Legge anche titolo e autore scritti dentro ai PDF.
 - **Metronomo / Tonalità / Accordatore**, pianoforte, registratore, cruscotto, backup, riordina pagine, esportazione PDF annotato.
 
 ## Sviluppo

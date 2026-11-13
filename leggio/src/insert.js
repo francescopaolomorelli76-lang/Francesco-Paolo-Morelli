@@ -27,7 +27,7 @@ const Insert = {
   pickPdf(target){
     this.target=target; const f=$('#filePdf'); f.value='';
     f.onchange=async()=>{ const files=[...f.files]; if(!files.length) return;
-      if(target==='new'){ busy('Importo…'); let last=null; for(const file of files){ try{ last=await addScore(await file.arrayBuffer(),{title:file.name.replace(/\.pdf$/i,'').replace(/[_]+/g,' ')}); }catch(e){ toast('“'+file.name+'” non è un PDF leggibile'); } } busy(); renderLibrary(); if(last){ openScore(last.id); toast(files.length>1?files.length+' spartiti importati':'Spartito importato'); } return; }
+      if(target==='new'){ busy('Importo…'); let last=null; for(const file of files){ try{ last=await addScore(await file.arrayBuffer(),{title:file.name.replace(/\.pdf$/i,'').replace(/[_]+/g,' '),file:file.name,fromFile:true}); }catch(e){ toast('“'+file.name+'” non è un PDF leggibile'); } } busy(); renderLibrary(); if(last){ openScore(last.id); toast(files.length>1?files.length+' spartiti importati':'Spartito importato'); } return; }
       this.choosePages(await files[0].arrayBuffer(), files[0].name);
     };
     f.click();

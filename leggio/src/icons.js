@@ -1,0 +1,67 @@
+// Icone a tratto (24×24), disegnate per FPM Leggio.
+const ICONS = {
+  note:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  book:'<path d="M3 5.5C5.5 4 9 4 12 6c3-2 6.5-2 9-.5V19c-2.5-1.5-6-1.5-9 .5-3-2-6.5-2-9-.5z"/><path d="M12 6v13.5"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+  cloud:'<path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 9.1 4.5 4.5 0 0 0 7 18z"/><path d="M12 11v6M9.5 13.5 12 11l2.5 2.5"/>',
+  chevDown:'<circle cx="12" cy="12" r="9"/><path d="m8 10.5 4 4 4-4"/>',
+  chevLeft:'<path d="m15 5-7 7 7 7"/>', chevRight:'<path d="m9 5 7 7-7 7"/>',
+  plusDoc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 11v6M9 14h6"/>',
+  pen:'<path d="M4 20l1.2-4.6L16.5 4.1a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M14.5 6l3.5 3.5"/>',
+  search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/>',
+  metro:'<path d="M8.5 3h7l4 18h-15z"/><path d="M12 16 17 6"/><path d="M6.5 15h11"/>',
+  case:'<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>',
+  camera:'<path d="M4 8h3l1.8-2.5h6.4L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.8"/>',
+  skipBack:'<path d="M6 5v14M18 6l-9 6 9 6z"/>', skipFwd:'<path d="M18 5v14M6 6l9 6-9 6z"/>',
+  dots:'<circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/><circle cx="16" cy="12" r=".6" fill="currentColor"/>',
+  close:'<path d="M6 6l12 12M18 6 6 18"/>', check:'<path d="m5 12.5 4.5 4.5L19 7"/>',
+  score:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 11h8M8 14h8"/><circle cx="10.5" cy="17.2" r="1.3" fill="currentColor"/>',
+  clock:'<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4M12 7.5V12l3 2"/>',
+  quill:'<path d="M3 17c3 0 3-4 6-4s2 4 5 4 3-5 7-6"/><path d="M14 4 9 14"/><path d="M14 4c2 0 3 1.5 3 3"/>',
+  masks:'<path d="M3 5c3 1.5 6 1.5 9 0v6a4.5 4.5 0 0 1-9 0z"/><path d="M12 8c3 1.5 6 1.5 9 0v6a4.5 4.5 0 0 1-9 0"/><path d="M5.5 9h1M8.5 9h1M14.5 12h1M17.5 12h1M15 16c1 .8 2 .8 3 0"/>',
+  rings:'<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>',
+  tag:'<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  clef:'<path d="M12.5 21c-2 0-2.6-2.2-1.2-3 1.5-.8 2.6 1 1.5 2.2M12 20 10.5 4.5C10.3 2.8 13 2.5 13.5 4.5c.6 2.4-5 5.5-5 9.5 0 2.5 2 4 4 4s3.5-1.5 3.3-3.3C15.6 12.5 13.7 11.5 12 12"/>',
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
+  crop:'<path d="M6 2v16h16"/><path d="M2 6h16v16"/>',
+  share:'<path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 16.5h7"/>',
+  staff:'<path d="M3 6h18M3 9h18M3 12h18M3 15h18M3 18h18"/>',
+  piano:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M8 5v14M12 5v14M16 5v14"/><path d="M6.5 5v7h3V5M14.5 5v7h3V5" fill="currentColor"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  restart:'<path d="M5 12a7 7 0 1 0 2-5"/><path d="M5 3.5V8h4.5"/><path d="M11 9.5v5l4-2.5z"/>',
+  pedal:'<path d="M5 20h14l-2-12H7z"/><path d="M9 8V5h6v3"/>',
+  gauge:'<path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 4-5"/><circle cx="12" cy="13" r="1.5"/>',
+  backup:'<path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v5c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12v5c0 1.7 3.6 3 8 3s8-1.3 8-3v-5"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/>',
+  ruler:'<rect x="2.5" y="8" width="19" height="8" rx="1.5" transform="rotate(-20 12 12)"/><path d="m7 10.5.6 1.7M10 9.4l.9 2.5M13 8.3l.6 1.7M16 7.2l.9 2.5"/>',
+  lasso:'<path d="M5 13c-2-4 2-9 8-9s9 3.5 8 7-6 5-10 4"/><path d="M7.5 14.5c-1.5 1-1 3 .5 3.2s2.2-1.6 1.5-3"/><path d="M8 17.7c0 1.5-.8 2.5-2 3.3"/>',
+  text:'<path d="M5 6V4h14v2M12 4v16M9 20h6"/>',
+  eraser:'<path d="M8 20h12M5.5 15.5 14 7a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 20H8.5L5.5 17a1 1 0 0 1 0-1.5z"/><path d="m10 11 5 5"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>',
+  rotate:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+  wand:'<path d="m4 20 11-11M14 4v2M14 10v2M10 6h2M16 6h2M18.5 2.5l-1 1M18.5 9.5l-1-1"/><path d="m15 9-2-2"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M3 3l18 18M10.6 5.1A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A16.6 16.6 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  up:'<path d="M12 19V5M5 12l7-7 7 7"/>', down:'<path d="M12 5v14M5 12l7 7 7-7"/>',
+  merge:'<path d="M6 3v6a6 6 0 0 0 6 6h0a6 6 0 0 1 6 6M18 3v6a6 6 0 0 1-6 6"/>',
+  bookmarkAdd:'<path d="M6 3h12v18l-6-4-6 4z"/><path d="M12 7v6M9 10h6"/>',
+  play:'<path d="M7 4v16l13-8z"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m21 16-5-5-8 9"/>',
+};
+function iconSvg(name, cls){ return `<svg class="i${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`; }
+function hydrateIcons(root=document){
+  root.querySelectorAll('[data-i]').forEach(el=>{
+    const n=el.getAttribute('data-i');
+    if(el.tagName.toLowerCase()==='svg'){ el.setAttribute('viewBox','0 0 24 24'); el.innerHTML=ICONS[n]||''; el.classList.add('i'); }
+    else if(!el.querySelector('svg')) el.insertAdjacentHTML('afterbegin', iconSvg(n));
+    el.removeAttribute('data-i');
+  });
+}

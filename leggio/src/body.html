@@ -1,0 +1,137 @@
+<div id="app">
+  <div id="stage">
+    <div id="loading">FPM Leggio</div>
+    <div id="pageWrap" hidden>
+      <canvas id="pageCanvas"></canvas>
+      <canvas id="inkCanvas"></canvas>
+      <div id="ribbon" hidden></div>
+    </div>
+    <div id="metroFlash"></div>
+  </div>
+  <div class="edgeGlow top"></div><div class="edgeGlow bottom"></div><div class="edgeGlow left"></div><div class="edgeGlow right"></div>
+
+  <!-- Barra superiore -->
+  <header id="topbar" class="bar">
+    <div class="pill">
+      <button class="ib" data-act="library" title="Libreria (o tieni premuto il bordo sinistro)" aria-label="Libreria" data-i="note"></button>
+      <button class="ib" data-act="bookmarks" title="Segnalibri" aria-label="Segnalibri" data-i="book"></button>
+      <button class="ib hideSm" data-act="setlists" title="Setlist" aria-label="Setlist" data-i="list"></button>
+      <button class="ib hideSm" data-act="services" title="Importa" aria-label="Importa" data-i="cloud"></button>
+    </div>
+    <div class="pill" id="titlePill">
+      <div class="brandDot"><img src="__LOGO__" alt="FPM"></div>
+      <div class="t" id="titleText"><b>FPM Leggio</b></div>
+      <button class="ib" data-act="recents" aria-label="Spartiti recenti" data-i="chevDown"></button>
+    </div>
+    <button class="goldBtn" data-act="insert" title="Inserisci pagine: da PDF, da foto o pentagrammate"><svg class="i" data-i="plusDoc"></svg><span class="lbl">Inserisci pagine</span></button>
+    <div class="pill">
+      <button class="ib" data-act="annotate" title="Annota" aria-label="Annota" data-i="pen"></button>
+      <button class="ib hideSm" data-act="search" title="Cerca" aria-label="Cerca" data-i="search"></button>
+      <button class="ib" data-act="metro" title="Metronomo, tonalità, accordatore" aria-label="Metronomo" data-i="metro"></button>
+      <button class="ib" data-act="tools" title="Attrezzi (o tieni premuto il bordo destro)" aria-label="Attrezzi" data-i="case"></button>
+    </div>
+  </header>
+
+  <!-- Barra inferiore -->
+  <footer id="bottombar" class="bar">
+    <div class="pill" id="setlistNav">
+      <button class="ib" data-act="slPrev" aria-label="Brano precedente della setlist" data-i="skipBack"></button>
+      <button class="ib" data-act="slNext" aria-label="Brano successivo della setlist" data-i="skipFwd"></button>
+    </div>
+    <div class="pill" id="scrub">
+      <button class="ib" data-act="prev" aria-label="Pagina precedente" data-i="chevLeft"></button>
+      <div id="scrubTrack"><div id="scrubDots"></div><div id="scrubKnob"></div><div id="scrubBubble"></div></div>
+      <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
+      <div id="pageNum">1 / 1</div>
+    </div>
+    <button class="goldBtn" data-act="scanInsert" title="Scatta una foto e aggiungila come pagina"><svg class="i" data-i="camera"></svg><span class="lbl">Foto → pagina</span></button>
+  </footer>
+
+  <!-- Libreria (bordo sinistro) -->
+  <aside id="library" class="side" aria-label="Libreria">
+    <div class="sideHead">
+      <div class="row">
+        <div><div class="eyebrow">FPM Leggio</div><h2 id="libTitle">Tutti gli spartiti</h2></div>
+        <div class="pill" style="box-shadow:none">
+          <button class="ib" data-act="libSelect" aria-label="Seleziona" data-i="dots"></button>
+          <button class="ib" data-act="libClose" aria-label="Chiudi libreria" data-i="close"></button>
+        </div>
+      </div>
+      <label class="search"><svg class="i" data-i="search"></svg><input id="libSearch" type="search" placeholder="Cerca titolo, compositore, etichetta" autocomplete="off"></label>
+      <div class="tabs" id="libTabs">
+        <button data-tab="all" class="on" title="Tutti gli spartiti" aria-label="Tutti" data-i="score"></button>
+        <button data-tab="recent" title="Recenti" aria-label="Recenti" data-i="clock"></button>
+        <button data-tab="composers" title="Compositori" aria-label="Compositori" data-i="quill"></button>
+        <button data-tab="genres" title="Generi" aria-label="Generi" data-i="masks"></button>
+        <button data-tab="setlists" title="Setlist" aria-label="Setlist" data-i="rings"></button>
+        <button data-tab="tags" title="Etichette" aria-label="Etichette" data-i="tag"></button>
+      </div>
+    </div>
+    <div class="sideBody" id="libBody"></div>
+    <div class="letterIdx" id="letterIdx"></div>
+    <div class="sideFoot" id="libFoot"></div>
+  </aside>
+
+  <!-- Attrezzi (bordo destro) -->
+  <aside id="tools" class="side" aria-label="Attrezzi">
+    <div class="sideHead">
+      <div class="row"><div><div class="eyebrow">Questo spartito</div><h2>Attrezzi</h2></div>
+        <button class="ib" data-act="toolsClose" aria-label="Chiudi" data-i="close"></button></div>
+    </div>
+    <div class="sideBody" style="padding-left:8px">
+      <div class="toolList">
+        <button class="toolRow gold" data-act="insert"><svg class="i" data-i="plusDoc"></svg>Inserisci pagine<small>PDF · foto · righe</small></button>
+        <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scatta e migliora<small>foto → pagina</small></button>
+        <h3>Modifica questo spartito</h3>
+        <button class="toolRow" data-act="annotate"><svg class="i" data-i="pen"></svg>Annota</button>
+        <button class="toolRow" data-act="stampsOpen"><svg class="i" data-i="clef"></svg>Segni musicali</button>
+        <button class="toolRow" data-act="bookmarks"><svg class="i" data-i="book"></svg>Segnalibri</button>
+        <button class="toolRow" data-act="reorder"><svg class="i" data-i="grid"></svg>Riordina pagine</button>
+        <button class="toolRow" data-act="crop"><svg class="i" data-i="crop"></svg>Ritaglia margini</button>
+        <button class="toolRow" data-act="info"><svg class="i" data-i="info"></svg>Informazioni</button>
+        <button class="toolRow" data-act="export"><svg class="i" data-i="share"></svg>Esporta PDF annotato</button>
+        <h3>Aggiungi spartiti</h3>
+        <button class="toolRow" data-act="importPdf"><svg class="i" data-i="file"></svg>Importa PDF</button>
+        <button class="toolRow" data-act="scanNew"><svg class="i" data-i="camera"></svg>Scansione in nuovo spartito</button>
+        <button class="toolRow" data-act="templates"><svg class="i" data-i="staff"></svg>Modelli (pentagrammata)</button>
+        <h3>Altro</h3>
+        <button class="toolRow" data-act="piano"><svg class="i" data-i="piano"></svg>Pianoforte</button>
+        <button class="toolRow" data-act="metro"><svg class="i" data-i="metro"></svg>Metronomo e accordatore</button>
+        <button class="toolRow" data-act="record"><svg class="i" data-i="mic"></svg>Registra</button>
+        <button class="toolRow" data-act="first"><svg class="i" data-i="restart"></svg>Dai l'inizio</button>
+        <button class="toolRow" data-act="pedals"><svg class="i" data-i="pedal"></svg>Pedaliera Bluetooth</button>
+        <button class="toolRow" data-act="dashboard"><svg class="i" data-i="gauge"></svg>Cruscotto</button>
+        <button class="toolRow" data-act="backup"><svg class="i" data-i="backup"></svg>Backup</button>
+        <button class="toolRow" data-act="settings"><svg class="i" data-i="gear"></svg>Impostazioni</button>
+        <button class="toolRow" data-act="about"><svg class="i" data-i="star"></svg>FPM web designer</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Barra annotazioni -->
+  <div id="annobar">
+    <div class="annoTop">
+      <button class="ib" data-act="annoCancel" aria-label="Annulla modifiche" data-i="close"></button>
+      <button class="goldBtn sm" data-act="insert" title="Inserisci pagine"><svg class="i" data-i="plusDoc"></svg><span class="lbl">Pagine</span></button>
+      <div class="ttl" id="annoTitle">Pagina 1 <span>(Livello 1)</span></div>
+      <button class="ib" data-act="prev" aria-label="Pagina precedente" data-i="chevLeft"></button>
+      <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
+      <button class="ib on" data-act="annoDone" aria-label="Fine" data-i="check"></button>
+    </div>
+    <div class="annoTools" id="annoTools"></div>
+  </div>
+
+  <div id="pianoSheet">
+    <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b>
+      <div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
+      <button class="ib" data-act="pianoClose" aria-label="Chiudi" data-i="close"></button></div>
+    <div class="keys" id="keys"></div>
+  </div>
+
+  <div id="layerRoot"></div>
+  <div id="toast"></div>
+  <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>
+  <input type="file" id="fileImg" accept="image/*" multiple hidden>
+  <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+  <input type="file" id="fileBackup" accept="application/json,.json" hidden>
+</div>

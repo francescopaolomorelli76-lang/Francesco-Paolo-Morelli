@@ -1,7 +1,58 @@
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Music&family=Bodoni+Moda:opsz,wght@6..96,700&display=swap">
-<style>body{margin:0}#i{width:512px;height:512px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 38%,#1c1810,#050403 70%)}
-#i img{position:absolute;left:118px;top:14px;width:352px;height:352px;-webkit-mask:radial-gradient(circle,#000 58%,transparent 71%)}
-.clef{position:absolute;left:14px;top:84px;font:250px "Noto Music";color:transparent;background:linear-gradient(170deg,#f6dc93,#d6a84e 50%,#8f6a22);-webkit-background-clip:text;line-height:1;opacity:.95}
-.n{position:absolute;left:0;right:0;bottom:44px;text-align:center;font:700 74px "Bodoni Moda";letter-spacing:.06em;background:linear-gradient(180deg,#f6dc93,#d6a84e 55%,#9c7426);-webkit-background-clip:text;color:transparent}
-.l{position:absolute;left:120px;right:120px;bottom:34px;height:2px;background:linear-gradient(90deg,transparent,#d6a84e,transparent)}</style>
-<div id="i"><img src="../assets/brand/fpm_logo.jpg"><div class="clef">&#x1D11E;</div><div class="n">MOZART</div><div class="l"></div></div>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,700&display=swap">
+<body style="margin:0;background:#000"><canvas id="c" width="1024" height="1024" style="width:512px;height:512px"></canvas>
+<img id="L" src="fpm_letters.png" hidden>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');x.scale(2,2);
+let seed=7;const R=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+const bg=x.createRadialGradient(256,230,10,256,256,360);bg.addColorStop(0,'#17130c');bg.addColorStop(1,'#030302');x.fillStyle=bg;x.fillRect(0,0,512,512);
+const gold=x.createLinearGradient(0,40,512,500);gold.addColorStop(0,'#f7e09a');gold.addColorStop(.35,'#d9ab52');gold.addColorStop(.6,'#f0cd7c');gold.addColorStop(1,'#8c661f');
+function cub(p,t){const u=1-t;return[u*u*u*p[0][0]+3*u*u*t*p[1][0]+3*u*t*t*p[2][0]+t*t*t*p[3][0],u*u*u*p[0][1]+3*u*u*t*p[1][1]+3*u*t*t*p[2][1]+t*t*t*p[3][1]]}
+function strand(p,w,a=1,tap=.7){const N=48,L=[],Rr=[];for(let i=0;i<=N;i++){const t=i/N,q=cub(p,t),q2=cub(p,Math.min(1,t+.01)),q1=cub(p,Math.max(0,t-.01));let dx=q2[0]-q1[0],dy=q2[1]-q1[1];const l=Math.hypot(dx,dy)||1;const ww=w*Math.pow(Math.sin(Math.PI*Math.min(.999,Math.max(.001,t))),tap)/2;L.push([q[0]-dy/l*ww,q[1]+dx/l*ww]);Rr.push([q[0]+dy/l*ww,q[1]-dx/l*ww])}
+ x.globalAlpha=a;x.beginPath();L.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));Rr.reverse().forEach(q=>x.lineTo(q[0],q[1]));x.closePath();x.fill();x.globalAlpha=1}
+x.fillStyle=gold;x.shadowColor='rgba(240,200,110,.35)';x.shadowBlur=3;
+const cx=256;
+function poly(P,w,a=1,tap=.7){const L=[],Rr=[],N=P.length-1;for(let i=0;i<=N;i++){const q=P[i],q1=P[Math.max(0,i-1)],q2=P[Math.min(N,i+1)];let dx=q2[0]-q1[0],dy=q2[1]-q1[1];const l=Math.hypot(dx,dy)||1;const t=i/N;const ww=w*Math.pow(Math.sin(Math.PI*Math.min(.995,Math.max(.005,t))),tap)/2;L.push([q[0]-dy/l*ww,q[1]+dx/l*ww]);Rr.push([q[0]+dy/l*ww,q[1]-dx/l*ww])}
+ x.globalAlpha=a;x.beginPath();L.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));Rr.reverse().forEach(q=>x.lineTo(q[0],q[1]));x.closePath();x.fill();x.globalAlpha=1}
+// sagoma della parrucca (volume morbido)
+for(let k=0;k<9;k++){const o=k*4+R()*3; strand([[cx-150-o*.3,215],[cx-150-o*.2,60-o],[cx+150+o*.2,60-o],[cx+150+o*.3,215]],1.4+R()*1.8,.45+R()*.3,.9)}
+// ciocche pettinate all'indietro: salgono dall'attaccatura e scendono morbide ai lati della cupola
+for(let k=0;k<170;k++){const s=(R()*2-1)||.01, as=Math.abs(s), sg=Math.sign(s);
+  const hx=cx+s*96, hy=150+Math.pow(as,1.7)*40+R()*4;
+  const topY=62+as*30+R()*10;
+  const ex=cx+sg*(122+as*48+R()*12), ey=170+as*30+R()*24;
+  strand([[hx,hy],[hx+s*4,hy-70+as*20],[cx+s*120+sg*20,topY-6],[ex,ey]],0.9+R()*2.6,.5+R()*.5,.8);
+}
+// riccioli orizzontali arrotolati con spirale all'esterno
+function roll(y,dir){
+  const inner=cx+dir*118, outer=cx+dir*186, r=18;
+  for(let j=0;j<9;j++){const yy=y-r+j*(2*r/8); const bow=(j-4)*1.2;
+    strand([[inner,yy+bow*.4],[inner+dir*30,yy-6+bow],[outer-dir*30,yy-6+bow],[outer-dir*6,yy]],1.1+R()*1.6,.55+R()*.4,.8)}
+  const P=[];for(let t=0;t<=1;t+=.01){const ang=t*Math.PI*3.4, rr=r*(1-t*.82); P.push([outer+dir*(-Math.cos(ang)*rr*.62-4),y+Math.sin(ang)*rr*-1])} poly(P,3.4,1,.6);
+  const P2=[];for(let t=0;t<=1;t+=.01){const ang=t*Math.PI*2.4+.6, rr=(r-5)*(1-t*.7); P2.push([outer+dir*(-Math.cos(ang)*rr*.62-4),y+Math.sin(ang)*rr*-1])} poly(P2,1.6,.8,.6);
+  strand([[inner,y+r],[inner+dir*40,y+r+5],[outer-dir*30,y+r+5],[outer-dir*2,y+r-6]],2.6,.95,.7);
+}
+roll(212,-1);roll(212,1);roll(256,-1);roll(256,1);
+// ciocche ai lati del viso, dietro i riccioli
+for(let k=0;k<14;k++){const sg=k%2?1:-1;const bx=cx+sg*(112+R()*10);strand([[bx,276],[bx+sg*6,300],[bx-sg*2,322],[bx-sg*12,338+R()*16]],1+R()*1.6,.5+R()*.3)}
+// volto: mascella e mento appena accennati
+strand([[cx-100,300],[cx-94,350],[cx-58,394],[cx-10,404]],1.8,.6);strand([[cx+100,300],[cx+94,350],[cx+58,394],[cx+10,404]],1.8,.6);
+// labbra
+strand([[cx-24,354],[cx-12,348],[cx-4,352],[cx,350]],2.4,1,1);strand([[cx,350],[cx+4,352],[cx+12,348],[cx+24,354]],2.4,1,1);
+strand([[cx-18,360],[cx-8,368],[cx+8,368],[cx+18,360]],2,.85,1);strand([[cx-8,390],[cx-3,393],[cx+3,393],[cx+8,390]],1.4,.55,1);
+// collo
+strand([[cx-38,400],[cx-36,415],[cx-36,425],[cx-38,436]],1.8,.7);strand([[cx+38,400],[cx+36,415],[cx+36,425],[cx+38,436]],1.8,.7);
+// cravatta-nodo e jabot a cascata di pizzo
+strand([[cx-46,430],[cx-20,438],[cx+20,438],[cx+46,430]],3.2,1,.6);
+for(let k=0;k<26;k++){const s=(k/25)*2-1; const sx=cx+s*20, ex=cx+s*70+(R()-.5)*8, ey=500+R()*12;
+  strand([[sx,440],[sx+s*30+Math.sin(k)*8,462],[ex-s*10+Math.cos(k)*10,484],[ex,ey]],1+R()*2.2,.55+R()*.4,.8)}
+for(let j=0;j<4;j++){const y=458+j*14, w=26+j*14; const P=[];for(let t=0;t<=1;t+=.02){const xx=cx-w+t*2*w;P.push([xx,y+Math.sin(t*Math.PI*(6+j*2))*2.6+Math.sin(t*Math.PI)*6])} poly(P,1.8,.75,.5)}
+// giacca con risvolti
+strand([[cx-56,432],[cx-80,462],[cx-112,492],[cx-150,514]],4.2,1);strand([[cx+56,432],[cx+80,462],[cx+112,492],[cx+150,514]],4.2,1);
+strand([[cx-74,428],[cx-115,446],[cx-165,472],[cx-220,504]],2.6,.8);strand([[cx+74,428],[cx+115,446],[cx+165,472],[cx+220,504]],2.6,.8);
+x.shadowBlur=0;
+// lettere FPM (dal logo originale) davanti al volto
+const L=document.getElementById('L');
+const go=()=>{const w=318,h=w*L.naturalHeight/L.naturalWidth;x.save();x.shadowColor='rgba(0,0,0,.85)';x.shadowBlur=14;x.drawImage(L,cx-w/2+4,182,w,h);x.restore();
+  x.font='700 54px "Bodoni Moda"';x.textAlign='center';x.letterSpacing='5px';x.fillStyle=gold;x.shadowColor='rgba(0,0,0,.9)';x.shadowBlur=10;window.done=true};
+document.fonts.load('700 54px "Bodoni Moda"').then(()=>L.complete?go():L.onload=go);
+</script>

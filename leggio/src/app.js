@@ -554,7 +554,7 @@ function offerDownload(blob,name,where){
   else { const m2=modal('File pronto',`<div id="dlBox"></div>`); $('#dlBox').appendChild(a); }
 }
 function showAbout(){
-  modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><div class="brandDot" style="width:84px;height:84px"><img src="__LOGO__" alt="FPM"></div>
+  modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><img src="__COVER__" alt="Mozart · FPM" style="width:130px;flex:none">
     <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM web designer</div><div class="hint">Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM web designer · Tutti i diritti riservati.</div></div></div>
     <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>`);
 }
@@ -643,14 +643,18 @@ async function demoPdf(d){
 // ---------- Avvio ----------
 async function boot(){
   hydrateIcons();
+  const splash=$('#splash'), t0=Date.now(); let gone=false;
+  const hide=()=>{ if(gone) return; gone=true; splash.classList.add('out'); setTimeout(()=>{ if(splash.parentNode) splash.parentNode.removeChild(splash); },700); };
+  splash.addEventListener('click',hide); setTimeout(hide,6000);
+  boot.ready=()=>setTimeout(hide,Math.max(0,1800-(Date.now()-t0)));
   try{ await document.fonts.load('40px "Noto Music"','\u{1D11E}'); await document.fonts.load('italic 600 20px "Bodoni Moda"','Allegro'); }catch(e){}
-  if(!window.pdfjsLib||!window.PDFLib){ $('#loading').textContent='Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.'; return; }
+  if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
   Anno.init(); Piano.build(); Zoom.init(); Bright.apply();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);
-  renderLibrary();
+  renderLibrary(); boot.ready();
   if(ST.settings.firstRun){ if(innerWidth>=900) openSide('library'); setTimeout(()=>toast('Suggerimento: tieni premuto sui bordi dello schermo per mostrare barre e pannelli',4200),900); ST.settings.firstRun=false; saveSettings(); }
 }

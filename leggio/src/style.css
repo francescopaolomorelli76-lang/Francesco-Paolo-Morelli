@@ -64,7 +64,23 @@ body.night #pageWrap{background:#111}
 #metroFlash{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 var(--gold);transition:box-shadow .12s ease-out}
 #metroFlash.on{box-shadow:inset 0 0 0 10px var(--gold)}
 #metroFlash.accent{box-shadow:inset 0 0 0 16px var(--gold-hi)}
-#loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--f-display);font-size:22px;letter-spacing:.04em}
+#loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--f-display);font-size:20px;text-align:center;padding:24px}
+#loading img{width:min(70vw,460px);opacity:.9}
+/* Copertina Mozart · FPM come filigrana in trasparenza su ogni schermata */
+#stage::before,.side::before,.modal::before,.pop::before,#annobar::before,#pianoSheet::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:url("__COVER__") center/min(88%,720px) no-repeat;opacity:.10}
+#stage::before{opacity:.16;background-size:min(96vw,900px)}
+.side::before{opacity:.07;background-position:center 62%}
+.modal::before,.pop::before{opacity:.06}
+#annobar::before,#pianoSheet::before{opacity:.05;background-size:auto 260%}
+.side>*,.modal>*,.pop>*,#annobar>*,#pianoSheet>*{position:relative;z-index:1}
+.pop>.dialWrap,.pop>*{position:relative}
+/* Copertina all'avvio */
+#splash{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s ease}
+#splash img{width:min(78vw,78vh,560px);animation:splashIn 1.1s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 0 40px rgba(214,168,78,.25))}
+#splash span{color:var(--gold);font-family:var(--f-display);font-style:italic;font-size:clamp(15px,2.4vw,20px);letter-spacing:.04em;animation:splashIn 1.1s .35s both}
+#splash.out{opacity:0;pointer-events:none}
+@keyframes splashIn{from{opacity:0;transform:scale(.94)}}
 
 /* ---------- Bordi: indicatore di pressione lunga ---------- */
 .edgeGlow{position:absolute;pointer-events:none;background:linear-gradient(90deg,transparent,var(--gold-hi),transparent);opacity:0;transition:opacity .15s}
@@ -93,7 +109,7 @@ body.night #pageWrap{background:#111}
 #titlePill .t b{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.01em}
 #titlePill .t span{color:var(--muted);font-weight:500}
 .brandDot{width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none;box-shadow:0 0 0 1.5px var(--gold)}
-.brandDot img{width:100%;height:100%;display:block}
+.brandDot img{width:100%;height:100%;display:block;object-fit:cover;object-position:50% 22%;transform:scale(1.9)}
 
 /* Pulsante d'oro "Inserisci pagine" — presente in ogni parte dell'app */
 .goldBtn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border-radius:var(--r-pill);background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-deep));color:#1b1406;font-weight:800;font-size:14px;letter-spacing:.02em;box-shadow:0 6px 18px rgba(214,168,78,.35),inset 0 1px 0 rgba(255,255,255,.5);white-space:nowrap}

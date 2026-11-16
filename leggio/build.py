@@ -9,6 +9,7 @@ import base64, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 LOGO = ROOT / "logo160.jpg"
+COVER = ROOT / "cover.jpg"
 
 PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
 PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"
@@ -20,9 +21,10 @@ JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js
 
 def build(standalone: bool) -> str:
     logo = "data:image/jpeg;base64," + base64.b64encode(LOGO.read_bytes()).decode()
-    css = (SRC / "style.css").read_text()
-    body = (SRC / "body.html").read_text().replace("__LOGO__", logo)
-    js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo)
+    cover = "data:image/jpeg;base64," + base64.b64encode(COVER.read_bytes()).decode()
+    css = (SRC / "style.css").read_text().replace("__COVER__", cover)
+    body = (SRC / "body.html").read_text().replace("__LOGO__", logo).replace("__COVER__", cover)
+    js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo).replace("__COVER__", cover)
     head = f"""<title>Mozart</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +56,7 @@ boot();
 <meta name="apple-mobile-web-app-title" content="Mozart">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-startup-image" href="cover.jpg">
 <link rel="icon" href="icon-512.png">
 <style>[hidden]{{display:none!important}}:root{{padding-top:0}}body{{margin:0}}*{{box-sizing:border-box}}</style>
 {head}</head>

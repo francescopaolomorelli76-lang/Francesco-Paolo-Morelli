@@ -19,6 +19,8 @@ Pubblica la cartella `leggio/` (per esempio con GitHub Pages), apri `index.html`
 - **Tutto schermo** (iPad e iPhone), **luminosità e luce calda** nella barra in basso, **zoom con due dita** e doppio tocco, **pagina che gira** con pagine pre-caricate.
 - **Apple Pencil**: riconoscimento automatico (Pencil scrive, dito sfoglia e ingrandisce, il palmo non lascia segni), spessore dalla pressione, anteprima della punta sospesa.
 - **Evidenziatori fluo** e **multicolore**; **testo sotto la nota** centrato e allineato al rigo.
+- **Testo in omoritmia**: seleziona le sillabe con il lazo → *Copia sui righi*: Mozart trova i pentagrammi, riconosce quelli che hanno già testo stampato e copia le sillabe nei righi senza testo, alla stessa distanza.
+- **Pronuncia italianizzata** (latino ecclesiastico, tedesco, francese): dalle sillabe selezionate o da un testo scritto/incollato.
 - **Invia** con AirDrop, WhatsApp, Messaggi, Mail (PDF originale o annotato).
 - **Per Cantanti**: vocalizzi trasportabili cromaticamente per ogni voce, vocalizzo creato suonando la tastiera con metronomo e quantizzazione, registrazione della performance da inviare su WhatsApp.
 - **Metronomo / Tonalità / Accordatore**, pianoforte, registratore, cruscotto, backup, riordina pagine, esportazione PDF annotato.

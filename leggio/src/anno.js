@@ -144,6 +144,7 @@ const Anno = {
   },
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
+    if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:.017,align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
     const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry';
     box.innerHTML=`<div class="seg" id="teMode" style="flex-wrap:nowrap"><button data-tm="lyric" class="${this.textMode!=='free'?'on':''}" title="Sillaba centrata sotto la nota, allineata al rigo">Sotto la nota</button><button data-tm="free" class="${this.textMode==='free'?'on':''}">Libero</button></div><input id="teIn" placeholder="${this.textMode==='free'?'es. rit., respira':'sillaba, es. glo-'}" enterkeyhint="done" autocapitalize="off"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
     $('#app').appendChild(box);
@@ -167,12 +168,15 @@ const Anno = {
   showSelBar(){
     $('#selBar')?.remove(); if(!this.selBox) return; const r=inkCanvas.getBoundingClientRect();
     const b=document.createElement('div'); b.id='selBar'; b.className='pill';
-    b.innerHTML=`<button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
-    $('#app').appendChild(b); b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-170)+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
+    const hasText=this.selIdx.some(i=>this.strokes[i]&&this.strokes[i].t==='text');
+    b.innerHTML=(hasText?`<button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button><button class="ghostBtn" data-s="pr" style="height:40px">${iconSvg('voice')}Pronuncia</button>`:'')+`<button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-(hasText?430:170))+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
     b.onclick=e=>{const k=e.target.closest('[data-s]')?.dataset.s; if(!k) return;
       if(k==='del'){this.push();this.strokes=this.strokes.filter((_,i)=>!this.selIdx.includes(i));this.clearSel()}
       if(k==='dup'){this.push();const n=this.selIdx.map(i=>{const c=JSON.parse(JSON.stringify(this.strokes[i]));moveStroke(c,.02,.02);return c});const base=this.strokes.length;this.strokes.push(...n);this.selIdx=n.map((_,i)=>base+i);this.updSelBox();this.showSelBar()}
       if(k==='done') this.clearSel();
+      if(k==='lc'){ LyricCopy.start(); return; }
+      if(k==='pr'){ Pron.fromSelection(); return; }
       this.redraw(); saveAnn(); this.buildBar(); };
   },
   clearSel(){ this.selIdx=[]; this.selBox=null; $('#selBar')?.remove(); this.redraw&&ST.cur&&this.redraw(); },

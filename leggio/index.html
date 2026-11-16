@@ -66,6 +66,11 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .turnSheet{position:absolute;z-index:6;pointer-events:none;backface-visibility:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
 .turnSheet .tsFace{width:100%;height:100%;display:block}
 .turnSheet .tsShade{position:absolute;inset:0;opacity:0}
+.lcBand{position:absolute;left:-6px;right:-6px;border:2px dashed rgba(214,168,78,.8);background:rgba(214,168,78,.10);border-radius:10px;color:#1b1406;font-weight:800;font-size:12px;text-align:right;padding:2px 10px;display:flex;align-items:flex-start;justify-content:flex-end}
+.lcBand span,.lcBand{text-shadow:0 0 4px #fff}
+.lcBand.on{background:rgba(57,255,20,.22);border-color:#1d8a4a;border-style:solid}
+.lcBand.ref{background:rgba(31,95,214,.14);border-color:#1f5fd6;border-style:solid}
+.lcBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);gap:8px;padding:6px}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
@@ -461,6 +466,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <div class="toolList">
         <button class="toolRow gold" data-act="insert"><svg class="i" data-i="plusDoc"></svg>Inserisci pagine<small>PDF · foto · righe</small></button>
         <button class="toolRow gold" data-act="singers"><svg class="i" data-i="voice"></svg>Per Cantanti<small>vocalizzi · rec</small></button>
+        <button class="toolRow" data-act="pron"><svg class="i" data-i="voice"></svg>Pronuncia italianizzata<small>latino · tedesco · francese</small></button>
         <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scatta e migliora<small>foto → pagina</small></button>
         <h3>Modifica questo spartito</h3>
         <button class="toolRow" data-act="annotate"><svg class="i" data-i="pen"></svg>Annota</button>
@@ -1089,6 +1095,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  pron:()=>{closeSides();Pron.open()},
   fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
   forscore:()=>{closeSides();FS4.pick()},
   library:()=>openSide('library',!$('#library').classList.contains('open')),
@@ -1625,6 +1632,7 @@ const Anno = {
   },
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
+    if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:.017,align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
     const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry';
     box.innerHTML=`<div class="seg" id="teMode" style="flex-wrap:nowrap"><button data-tm="lyric" class="${this.textMode!=='free'?'on':''}" title="Sillaba centrata sotto la nota, allineata al rigo">Sotto la nota</button><button data-tm="free" class="${this.textMode==='free'?'on':''}">Libero</button></div><input id="teIn" placeholder="${this.textMode==='free'?'es. rit., respira':'sillaba, es. glo-'}" enterkeyhint="done" autocapitalize="off"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
     $('#app').appendChild(box);
@@ -1648,12 +1656,15 @@ const Anno = {
   showSelBar(){
     $('#selBar')?.remove(); if(!this.selBox) return; const r=inkCanvas.getBoundingClientRect();
     const b=document.createElement('div'); b.id='selBar'; b.className='pill';
-    b.innerHTML=`<button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
-    $('#app').appendChild(b); b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-170)+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
+    const hasText=this.selIdx.some(i=>this.strokes[i]&&this.strokes[i].t==='text');
+    b.innerHTML=(hasText?`<button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button><button class="ghostBtn" data-s="pr" style="height:40px">${iconSvg('voice')}Pronuncia</button>`:'')+`<button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-(hasText?430:170))+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
     b.onclick=e=>{const k=e.target.closest('[data-s]')?.dataset.s; if(!k) return;
       if(k==='del'){this.push();this.strokes=this.strokes.filter((_,i)=>!this.selIdx.includes(i));this.clearSel()}
       if(k==='dup'){this.push();const n=this.selIdx.map(i=>{const c=JSON.parse(JSON.stringify(this.strokes[i]));moveStroke(c,.02,.02);return c});const base=this.strokes.length;this.strokes.push(...n);this.selIdx=n.map((_,i)=>base+i);this.updSelBox();this.showSelBar()}
       if(k==='done') this.clearSel();
+      if(k==='lc'){ LyricCopy.start(); return; }
+      if(k==='pr'){ Pron.fromSelection(); return; }
       this.redraw(); saveAnn(); this.buildBar(); };
   },
   clearSel(){ this.selIdx=[]; this.selBox=null; $('#selBar')?.remove(); this.redraw&&ST.cur&&this.redraw(); },
@@ -2635,7 +2646,7 @@ const Singers = {
   async open(){
     this.saved=(await DB.get('vocalizzi'))||[];
     try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
-    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
+    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
       null,{eyebrow:'Riscaldamento e studio',onClose:()=>this.stopAll()});
     m2.style.width='min(720px,calc(100% - 16px))';
     $('#sgTabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){this.stopAll();this.tab=b.dataset.t;this.render()}};
@@ -2646,6 +2657,7 @@ const Singers = {
   render(){
     $$('#sgTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab));
     const B=$('#sgBody'); if(!B) return;
+    if(this.tab==='pron'){ closeLayers(); this.tab='voc'; Pron.open(); return; }
     if(this.tab==='voc') this.renderVoc(B); else if(this.tab==='make') this.renderMake(B); else this.renderRec(B);
   },
   // ---------- Vocalizzi ----------
@@ -2779,6 +2791,119 @@ function miniRoll(c,v,big){
   for(const n of v.notes){ if(!n.rest){ const xx=pad+(t/tot)*(W-pad*2), w=Math.max(3,(n.d/tot)*(W-pad*2)-3), yy=H-pad-((n.n-lo)/rng)*(H-pad*2)-(big?12:5); x.globalAlpha=n.st?.7:1; x.fillRect(xx,yy,w,big?14:6); if(big){x.globalAlpha=1;x.fillStyle='#f4ecdc';x.font='18px Manrope';x.fillText(NOTE_IT[((n.n%12)+12)%12],xx+2,yy-4);x.fillStyle='#d6a84e'} } t+=n.d; }
   x.globalAlpha=1;
 }
+
+// ================= Testo: copia in omoritmia sui righi senza testo · pronuncia italianizzata =================
+
+// Trova i pentagrammi nella pagina: righe orizzontali scure lunghe, raggruppate a 5 con passo regolare.
+function detectStaves(){
+  const c=pageCanvas, W=c.width, H=c.height; if(!W) return [];
+  const s=Math.min(1,900/W), w=Math.round(W*s), h=Math.round(H*s);
+  const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true}); x.drawImage(c,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data; const prof=new Float32Array(h);
+  // una riga sottile può cadere a cavallo di due righe di pixel: si guarda il più scuro tra le due
+  for(let y=0;y<h;y++){ let run=0,best=0,dark=0; for(let i=0;i<w;i++){ const k=(y*w+i)*4, k2=k+(y<h-1?w*4:0); const v=Math.min(d[k]+d[k+1]+d[k+2],d[k2]+d[k2+1]+d[k2+2]); if(v<470){run++;dark++;if(run>best)best=run}else run=0; } prof[y]=Math.max(best,dark*.8)/w; }
+  // righe del pentagramma: profilo alto e massimo locale
+  const lines=[]; for(let y=1;y<h-1;y++) if(prof[y]>.38&&prof[y]>=prof[y-1]&&prof[y]>=prof[y+1]){ if(lines.length&&y-lines[lines.length-1]<=2){ continue; } lines.push(y); }
+  const staves=[]; let i=0;
+  while(i+4<lines.length){
+    const g=lines.slice(i,i+5), gaps=g.slice(1).map((v,k)=>v-g[k]); const avg=gaps.reduce((a,b)=>a+b,0)/4;
+    if(avg>2&&gaps.every(v=>Math.abs(v-avg)<=Math.max(1.6,avg*.35))){ staves.push({top:g[0]/h,bottom:g[4]/h,gap:avg/h}); i+=5; } else i++;
+  }
+  // testo stampato sotto il rigo: molte colonne con segni nella fascia delle sillabe (gambi e note isolate ne toccano poche)
+  staves.forEach((st,k)=>{ const g=st.gap*h, y0=Math.round(st.bottom*h+g*.45), lim=staves[k+1]?staves[k+1].top*h-g*.3:h, y1=Math.round(Math.min(lim,st.bottom*h+g*3.2)); let cols=0;
+    if(y1>y0) for(let i=0;i<w;i++){ for(let y=y0;y<y1;y++){ const q=(y*w+i)*4; if(d[q]+d[q+1]+d[q+2]<540){cols++;break} } }
+    st.printed = y1>y0 && cols/w>.12; });
+  return staves;
+}
+
+const LyricCopy = {
+  start(){
+    const A=Anno; const src=A.selIdx.map(i=>A.strokes[i]).filter(s=>s.t==='text');
+    if(!src.length) return toast('Seleziona con il lazo le sillabe da copiare');
+    const staves=detectStaves(); if(!staves.length) return toast('Non trovo i pentagrammi in questa pagina: copia con Duplica e trascina');
+    const sy=Math.min(...src.map(s=>s.y));
+    // rigo di riferimento: l'ultimo che termina sopra il testo selezionato
+    const ref=[...staves].filter(st=>st.bottom<sy+.005).pop()||staves[0];
+    this.src=src; this.ref=ref; this.staves=staves; this.picked=new Set();
+    this.overlay();
+  },
+  overlay(){
+    $('#lcLayer')?.remove(); const r=inkCanvas.getBoundingClientRect(); const L=document.createElement('div'); L.id='lcLayer';
+    L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
+    L.innerHTML=this.staves.map((st,i)=>{const isRef=st===this.ref; return `<button data-st="${i}" class="lcBand${isRef?' ref':''}${this.picked.has(i)?' on':''}" style="top:${(st.top-st.gap*.6)*100}%;height:${(st.bottom-st.top+st.gap*1.2)*100}%">${isRef?'Testo da qui':this.picked.has(i)?'✓ Copia qui':'Tocca per copiare'}</button>`}).join('')
+      +`<div class="lcBar pill"><button class="ghostBtn" data-lc="all">Tutti i righi senza testo</button><button class="goldBtn" data-lc="ok">${iconSvg('check')}Copia</button><button class="ib" data-lc="x" aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    $('#app').appendChild(L);
+    L.onclick=e=>{ const b=e.target.closest('[data-st]'); if(b){ const i=+b.dataset.st; if(this.staves[i]===this.ref) return; this.picked.has(i)?this.picked.delete(i):this.picked.add(i); this.overlay(); return; }
+      const a=e.target.closest('[data-lc]')?.dataset.lc; if(a==='x') L.remove(); if(a==='all'){ this.staves.forEach((st,i)=>{ if(st!==this.ref && !this.hasText(st)) this.picked.add(i); }); this.overlay(); } if(a==='ok') this.apply(); };
+  },
+  hasText(st){ if(st.printed) return true; const nx=this.staves[this.staves.indexOf(st)+1]; const lim=nx?nx.top:1; return Anno.strokes.some(s=>s.t==='text'&&s.y>st.bottom&&s.y<lim); },
+  apply(){
+    if(!this.picked.size) return toast('Tocca almeno un rigo dove copiare');
+    const A=Anno; A.push(); let n=0;
+    for(const i of this.picked){ const st=this.staves[i]; const k=st.gap/this.ref.gap||1; // righi di dimensione diversa: mantiene la distanza proporzionale
+      for(const s of this.src){ const c=JSON.parse(JSON.stringify(s)); c.y=st.bottom+(s.y-this.ref.bottom)*k; A.strokes.push(c); n++; } }
+    $('#lcLayer')?.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar();
+    toast(`Testo copiato su ${this.picked.size} ${this.picked.size===1?'rigo':'righi'} (${n} sillabe) · Annulla per tornare indietro`,3200);
+  },
+};
+
+// ---------- Pronuncia italianizzata (latino ecclesiastico, tedesco, francese) ----------
+const PRON = {
+  la(w){ let s=w.toLowerCase();
+    s=s.replace(/^mihi$/,'michi').replace(/^nihil$/,'nichil').replace(/ae|æ|oe|œ/g,'e').replace(/j/g,'i').replace(/y/g,'i').replace(/z/g,'dz');
+    s=s.replace(/([^stx])ti(?=[aeiou])/g,'$1zi').replace(/^ti(?=[aeiou])/,'zi');
+    s=s.replace(/xc(?=[ei])/g,'csc').replace(/x/g,'cs').replace(/ph/g,'f').replace(/th/g,'t').replace(/rh/g,'r');
+    s=s.replace(/ch(?=[aou]|$)/g,'c').replace(/h/g,'');
+    return s; },
+  de(w){ let s=w.toLowerCase();
+    s=s.replace(/tsch/g,'c§').replace(/sch(?=[ei])/g,'sc').replace(/sch(?=[aouäöü])/g,'sci').replace(/sch/g,'sh');
+    s=s.replace(/^st/,'sht').replace(/^sp/,'shp').replace(/ß/g,'ss').replace(/ck/g,'k').replace(/qu/g,'kv');
+    s=s.replace(/ie/g,'ī').replace(/ei|ai/g,'ai').replace(/eu|äu/g,'oi').replace(/ä/g,'è');
+    s=s.replace(/([aou])ch/g,'$1kh').replace(/ch/g,'ç').replace(/([aeiouäöü])h/g,'$1').replace(/^h/,'h');
+    s=s.replace(/w/g,'§v§').replace(/v/g,'f').replace(/§f§/g,'v').replace(/j/g,'i').replace(/z/g,'z');
+    s=s.replace(/k(?=[eiīè])/g,'ch').replace(/g(?=[eiīè])/g,'gh').replace(/c(?=[ei])/g,'z');
+    s=s.replace(/ig$/,'iç').replace(/b$/,'p').replace(/d$/,'t').replace(/g$/,'k');
+    s=s.replace(/^s(?=[aeiouäöü])/,'ṡ').replace(/c§/g,'c').replace(/ī/g,'i');
+    return s; },
+  fr(w){ let s=w.toLowerCase();
+    s=s.replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/oi/g,'ua').replace(/ou/g,'Ů').replace(/(?<![aeo])u(?![aeio])/g,'ü').replace(/Ů/g,'u');
+    s=s.replace(/(ain|ein|in|im|ym|yn)(?![aeiouyn])/g,'ẽ').replace(/(an|en|am|em)(?![aeiouyn])/g,'ã').replace(/(on|om)(?![aeiouyn])/g,'õ').replace(/(un|um)(?![aeiouyn])/g,'œ̃');
+    s=s.replace(/ai|ei|ê|è/g,'è').replace(/é|er$|ez$/g,'é').replace(/ch/g,'sc').replace(/gn/g,'gn').replace(/qu/g,'k');
+    s=s.replace(/ç/g,'s').replace(/c(?=[eiy])/g,'s').replace(/g(?=[eiy])/g,'j').replace(/ill/g,'i').replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'');
+    s=s.replace(/(?<=[aeiouéèü])s(?=[aeiouéèü])/g,'ṡ').replace(/[stdxzp]+$/,'').replace(/([^aeiouéèü])e$/,'$1(e)').replace(/y/g,'i');
+    return s; },
+  conv(text,lang){ return String(text).replace(/[A-Za-zÀ-ÿßæœ]+/g,w=>{const r=this[lang](w);return w[0]===w[0].toUpperCase()&&w[0]!==w[0].toLowerCase()?r.charAt(0).toUpperCase()+r.slice(1):r}); },
+  names:{la:'Latino (ecclesiastico)',de:'Tedesco',fr:'Francese'},
+};
+const Pron = {
+  lang:'la',
+  // Dalle sillabe selezionate: aggiunge sotto ciascuna la pronuncia all'italiana, in blu.
+  fromSelection(){
+    const A=Anno; const src=A.selIdx.map(i=>A.strokes[i]).filter(s=>s.t==='text');
+    if(!src.length) return toast('Seleziona con il lazo il testo da pronunciare');
+    const m2=modal('Pronuncia italianizzata',`<div class="field"><label>Lingua del testo</label><div class="seg" id="prLang">${Object.entries(PRON.names).map(([k,l])=>`<button data-l="${k}" class="${this.lang===k?'on':''}">${l}</button>`).join('')}</div></div>
+      <div id="prPrev" class="hint" style="font-size:16px;line-height:1.7"></div>
+      <div class="hint" style="font-size:12.5px">ṡ = s sonora (come in “rosa”) · sh = “sc” di “scena” · ç = suono di “ich” tedesco · ã õ ẽ = vocali nasali francesi · ü ö = vocali turbate · (e) = e muta.</div>`,
+      `<button class="ghostBtn" data-no>Annulla</button><button class="goldBtn" data-ok>${iconSvg('check')}Scrivi sotto il testo</button>`);
+    const upd=()=>{$('#prPrev').innerHTML=src.map(s=>`<b>${esc(s.text)}</b> → <span style="color:var(--gold-hi)">${esc(PRON.conv(s.text,this.lang))}</span>`).join(' &nbsp; ')};
+    $('#prLang').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;this.lang=b.dataset.l;$$('#prLang button').forEach(x=>x.classList.toggle('on',x===b));upd()}; upd();
+    m2.querySelector('[data-no]').onclick=closeLayers;
+    m2.querySelector('[data-ok]').onclick=()=>{ A.push(); src.forEach(s=>A.strokes.push({...JSON.parse(JSON.stringify(s)),text:PRON.conv(s.text,this.lang),y:s.y+s.size*1.15,size:s.size*.8,color:'#1f5fd6',lyric:1,align:s.align||'l',pron:1}));
+      closeLayers(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Pronuncia aggiunta sotto il testo'); };
+  },
+  // Testo libero (anche per partiture scansionate, dove il testo è un'immagine)
+  open(){
+    const m2=modal('Pronuncia italianizzata',`<div class="field"><label>Lingua</label><div class="seg" id="prLang">${Object.entries(PRON.names).map(([k,l])=>`<button data-l="${k}" class="${this.lang===k?'on':''}">${l}</button>`).join('')}</div></div>
+      <div class="field"><label for="prIn">Testo da cantare</label><textarea id="prIn" placeholder="Scrivi o incolla qui il testo in lingua"></textarea></div>
+      <div class="field"><label>Come si legge</label><div id="prOut" style="font-size:19px;line-height:1.6;color:var(--gold-hi);min-height:30px"></div></div>
+      <div class="hint" style="font-size:12.5px">ṡ = s sonora · sh = “sc” di “scena” · ç = “ich” tedesco · ã õ ẽ = nasali francesi · ü ö = vocali turbate · (e) = e muta. È una guida: per i casi dubbi fa fede il maestro del coro.</div>`,
+      `<button class="goldBtn" data-ok>${iconSvg('text')}Metti sulla pagina</button>`,{eyebrow:'Per Cantanti'});
+    const upd=()=>{$('#prOut').textContent=PRON.conv($('#prIn').value,this.lang)};
+    $('#prLang').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;this.lang=b.dataset.l;$$('#prLang button').forEach(x=>x.classList.toggle('on',x===b));upd()};
+    $('#prIn').oninput=upd;
+    m2.querySelector('[data-ok]').onclick=()=>{ const t=$('#prOut').textContent.trim(); if(!t) return toast('Scrivi prima il testo'); closeLayers(); if(!ST.annotate) Anno.enter(); Anno.mode='text'; Anno.textMode='free'; Anno.buildBar(); Anno.pendingText=t; toast('Tocca la pagina dove scrivere la pronuncia',2600); };
+  },
+};
 
 boot();
 </script>

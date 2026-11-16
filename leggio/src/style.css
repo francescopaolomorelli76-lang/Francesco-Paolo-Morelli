@@ -37,10 +37,21 @@ svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stro
 /* ---------- Palco e pagina ---------- */
 #stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;touch-action:none;background:
   radial-gradient(120% 80% at 50% 0%,#1a160f 0%,var(--stage) 60%)}
-#pageWrap{position:relative;overflow:hidden;background:var(--paper);box-shadow:0 0 0 1px rgba(214,168,78,.12),0 30px 80px rgba(0,0,0,.7);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s}
+#pageWrap{position:relative;overflow:hidden;background:var(--paper);box-shadow:0 0 0 1px rgba(214,168,78,.12),0 30px 80px rgba(0,0,0,.7)}
 #pageWrap.turn-next{transform:translateX(-18px);opacity:.4}
 #pageWrap.turn-prev{transform:translateX(18px);opacity:.4}
-#pageCanvas,#inkCanvas{position:absolute;left:0;top:0}
+#pageCanvas,#hlCanvas,#inkCanvas{position:absolute;left:0;top:0}
+#hlCanvas{mix-blend-mode:multiply;pointer-events:none}
+body.night #hlCanvas{mix-blend-mode:screen}
+#pageWrap{transform-origin:center center;will-change:transform}
+.turnSheet{position:absolute;z-index:6;pointer-events:none;backface-visibility:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.turnSheet .tsFace{width:100%;height:100%;display:block}
+.turnSheet .tsShade{position:absolute;inset:0;opacity:0}
+#dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
+#warmer{mix-blend-mode:multiply}
+#penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
+#inkCanvas,#stage{-webkit-touch-callout:none}
+body.immersive #stage{background:#000}
 #inkCanvas{touch-action:none}
 body.night #pageCanvas{filter:invert(1) hue-rotate(180deg) brightness(.92)}
 body.night #pageWrap{background:#111}
@@ -321,6 +332,18 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .hint b{color:var(--text)}
 kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 
+@media (max-width:520px){
+  .pill{padding:3px}
+  .ib{width:40px;height:40px}
+  #titlePill .brandDot{display:none}
+  #titlePill{padding:3px 4px 3px 10px}
+  #topbar{gap:6px;flex-wrap:wrap}
+  #topbar .goldBtn{order:5}
+  #scrub{padding:3px 8px 3px 3px;gap:4px}
+  #pageNum{min-width:48px;font-size:13px}
+  .modal .mHead h3{font-size:20px}
+  .stampGrid{grid-template-columns:repeat(4,1fr)}
+}
 @media (max-width:760px){
   #topbar .hideSm{display:none}
   #titlePill .t b{font-size:15px}

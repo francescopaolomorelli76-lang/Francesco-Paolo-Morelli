@@ -3,6 +3,7 @@
     <div id="loading">Mozart</div>
     <div id="pageWrap" hidden>
       <canvas id="pageCanvas"></canvas>
+      <canvas id="hlCanvas"></canvas>
       <canvas id="inkCanvas"></canvas>
       <div id="ribbon" hidden></div>
     </div>
@@ -28,6 +29,7 @@
       <button class="ib" data-act="annotate" title="Annota" aria-label="Annota" data-i="pen"></button>
       <button class="ib hideSm" data-act="search" title="Cerca" aria-label="Cerca" data-i="search"></button>
       <button class="ib" data-act="metro" title="Metronomo, tonalità, accordatore" aria-label="Metronomo" data-i="metro"></button>
+      <button class="ib" data-act="fullscreen" title="Tutto schermo" aria-label="Tutto schermo" data-i="expand"></button>
       <button class="ib" data-act="tools" title="Attrezzi (o tieni premuto il bordo destro)" aria-label="Attrezzi" data-i="case"></button>
     </div>
   </header>
@@ -43,6 +45,7 @@
       <div id="scrubTrack"><div id="scrubDots"></div><div id="scrubKnob"></div><div id="scrubBubble"></div></div>
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
       <div id="pageNum">1 / 1</div>
+      <button class="ib" data-act="bright" title="Luminosità" aria-label="Luminosità" data-i="sun"></button>
     </div>
     <button class="goldBtn" data-act="scanInsert" title="Scatta una foto e aggiungila come pagina"><svg class="i" data-i="camera"></svg><span class="lbl">Foto → pagina</span></button>
   </footer>
@@ -81,6 +84,7 @@
     <div class="sideBody" style="padding-left:8px">
       <div class="toolList">
         <button class="toolRow gold" data-act="insert"><svg class="i" data-i="plusDoc"></svg>Inserisci pagine<small>PDF · foto · righe</small></button>
+        <button class="toolRow gold" data-act="singers"><svg class="i" data-i="voice"></svg>Per Cantanti<small>vocalizzi · rec</small></button>
         <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scatta e migliora<small>foto → pagina</small></button>
         <h3>Modifica questo spartito</h3>
         <button class="toolRow" data-act="annotate"><svg class="i" data-i="pen"></svg>Annota</button>
@@ -89,6 +93,7 @@
         <button class="toolRow" data-act="reorder"><svg class="i" data-i="grid"></svg>Riordina pagine</button>
         <button class="toolRow" data-act="crop"><svg class="i" data-i="crop"></svg>Ritaglia margini</button>
         <button class="toolRow" data-act="info"><svg class="i" data-i="info"></svg>Informazioni</button>
+        <button class="toolRow" data-act="share"><svg class="i" data-i="airdrop"></svg>Invia (AirDrop, WhatsApp…)</button>
         <button class="toolRow" data-act="export"><svg class="i" data-i="share"></svg>Esporta PDF annotato</button>
         <h3>Aggiungi spartiti</h3>
         <button class="toolRow" data-act="importPdf"><svg class="i" data-i="file"></svg>Importa PDF</button>
@@ -103,6 +108,8 @@
         <button class="toolRow" data-act="pedals"><svg class="i" data-i="pedal"></svg>Pedaliera Bluetooth</button>
         <button class="toolRow" data-act="dashboard"><svg class="i" data-i="gauge"></svg>Cruscotto</button>
         <button class="toolRow" data-act="backup"><svg class="i" data-i="backup"></svg>Backup</button>
+        <button class="toolRow" data-act="fullscreen"><svg class="i" data-i="expand"></svg>Tutto schermo</button>
+        <button class="toolRow" data-act="bright"><svg class="i" data-i="sun"></svg>Luminosità</button>
         <button class="toolRow" data-act="settings"><svg class="i" data-i="gear"></svg>Impostazioni</button>
         <button class="toolRow" data-act="about"><svg class="i" data-i="star"></svg>FPM web designer</button>
       </div>
@@ -129,6 +136,7 @@
     <div class="keys" id="keys"></div>
   </div>
 
+  <div id="dimmer"></div><div id="warmer"></div>
   <div id="layerRoot"></div>
   <div id="toast"></div>
   <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>

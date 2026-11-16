@@ -2,10 +2,10 @@
 const ST = {
   scores:[], cur:null, doc:null, page:0, ann:{}, setlists:[], activeSetlist:null,
   bars:{top:true,bottom:true}, annotate:false,
-  settings:{pencilOnly:false, night:false, longPress:450, tapZones:true, turnAnim:true, firstRun:true},
+  settings:{pencilOnly:false, autoPencil:true, night:false, longPress:450, tapZones:true, turnAnim:true, turnStyle:'curl', bright:100, warm:0, firstRun:true},
   libTab:'all', libDrill:null, libSelect:false, selected:new Set(), libQuery:'',
 };
-const stage=$('#stage'), pageWrap=$('#pageWrap'), pageCanvas=$('#pageCanvas'), inkCanvas=$('#inkCanvas');
+const stage=$('#stage'), pageWrap=$('#pageWrap'), pageCanvas=$('#pageCanvas'), inkCanvas=$('#inkCanvas'), hlCanvas=$('#hlCanvas');
 let renderSeq=0, renderTask=null, pageGeom={w:1,h:1,cssW:1,cssH:1,dpr:1,offX:0,offY:0};
 const thumbCache=new Map();
 
@@ -19,6 +19,8 @@ async function loadAll(){
   ST.setlists = (await DB.get('setlists'))||[];
   Object.assign(ST.settings, (await DB.get('settings'))||{});
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
+  if(pr&&pr.length&&!ST.settings.neonV){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
+  ST.settings.neonV=1;
   document.body.classList.toggle('night', !!ST.settings.night);
   if(!ST.scores.length){ busy('Preparo gli spartiti di esempio…'); await makeDemoLibrary(); busy(); }
 }
@@ -37,7 +39,7 @@ async function addScore(bytes, meta={}){
   ST.scores.push(sc); await DB.putScore(sc); return sc;
 }
 async function replaceBytes(sc, bytes, annMap){
-  sc.bytes=bytes; thumbCache.delete(sc.id);
+  sc.bytes=bytes; thumbCache.delete(sc.id); pageCache.clear();
   const doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; sc.pages=doc.numPages;
   await DB.putScore(sc);
   if(ST.cur && ST.cur.id===sc.id){ if(ST.doc) ST.doc.destroy(); ST.doc=doc; if(annMap){ST.ann=annMap; DB.set('ann:'+sc.id,annMap);} ST.page=clamp(ST.page,0,sc.pages-1); await renderPage(); updateChrome(); }
@@ -60,37 +62,79 @@ async function openScore(id, page=0, opts={}){
   try{localStorage.setItem('fpm-last',JSON.stringify({id,page:ST.page}))}catch(e){}
 }
 
-async function renderPage(dir){
+// Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
+const pageCache=new Map();
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.bytes.byteLength}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+async function drawPageTo(p,W,H,dpr){
+  const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
+  const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
+  const scale=Math.min((W-16)/cw,(H-16)/ch);
+  // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
+  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>15e6) d=Math.sqrt(15e6/full);
+  const vp=pg.getViewport({scale:scale*d});
+  const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
+  const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
+  await pg.render({canvasContext:x,viewport:vp}).promise;
+  const v={off,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
+  pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
+  return v;
+}
+const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
+async function renderPage(dir,opts={}){
   if(!ST.doc) return;
-  const seq=++renderSeq;
-  if(dir && ST.settings.turnAnim){pageWrap.classList.add(dir>0?'turn-next':'turn-prev');}
-  const pg = await ST.doc.getPage(ST.page+1);
+  const seq=++renderSeq; const W=stage.clientWidth, H=stage.clientHeight;
+  const dpr=baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1);
+  let v;
+  try{ v=await drawPageTo(ST.page,W,H,dpr); }catch(e){ return; }
   if(seq!==renderSeq) return;
-  const crop = ST.cur.crop||{l:0,t:0,r:0,b:0};
-  const vp1 = pg.getViewport({scale:1});
-  const W=stage.clientWidth, H=stage.clientHeight;
-  const padX = 8, padY = 8;
-  const cw = vp1.width*(1-crop.l-crop.r), ch = vp1.height*(1-crop.t-crop.b);
-  const scale = Math.min((W-padX*2)/cw, (H-padY*2)/ch);
-  const dpr = Math.min(window.devicePixelRatio||1, 2.5);
-  const vp = pg.getViewport({scale:scale*dpr});
-  const off = document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
-  const octx = off.getContext('2d'); octx.fillStyle='#fff'; octx.fillRect(0,0,off.width,off.height);
-  if(renderTask){try{renderTask.cancel()}catch(e){}}
-  renderTask = pg.render({canvasContext:octx, viewport:vp});
-  try{ await renderTask.promise; }catch(e){ return; }
-  if(seq!==renderSeq) return;
-  const cssW = vp.width/dpr, cssH = vp.height/dpr;
-  pageGeom={w:off.width,h:off.height,cssW,cssH,dpr,offX:-crop.l*cssW,offY:-crop.t*cssH};
-  pageCanvas.width=off.width; pageCanvas.height=off.height;
-  pageCanvas.getContext('2d').drawImage(off,0,0);
-  for(const c of [pageCanvas,inkCanvas]){ c.style.width=cssW+'px'; c.style.height=cssH+'px'; c.style.left=pageGeom.offX+'px'; c.style.top=pageGeom.offY+'px'; }
-  inkCanvas.width=off.width; inkCanvas.height=off.height;
-  pageWrap.style.width=(cw*scale)+'px'; pageWrap.style.height=(ch*scale)+'px';
+  const old = (dir && ST.settings.turnAnim!==false && !pageWrap.hidden) ? snapshotPage() : null;
+  pageGeom={w:v.off.width,h:v.off.height,cssW:v.cssW,cssH:v.cssH,dpr,offX:-v.crop.l*v.cssW,offY:-v.crop.t*v.cssH};
+  for(const c of [pageCanvas,hlCanvas,inkCanvas]){ c.width=v.off.width; c.height=v.off.height; c.style.width=v.cssW+'px'; c.style.height=v.cssH+'px'; c.style.left=pageGeom.offX+'px'; c.style.top=pageGeom.offY+'px'; }
+  pageCanvas.getContext('2d').drawImage(v.off,0,0);
+  pageWrap.style.width=v.cw+'px'; pageWrap.style.height=v.ch+'px';
   Anno.redraw();
-  pageWrap.classList.remove('turn-next','turn-prev');
+  if(old) animateTurn(old,dir);
   $('#ribbon').hidden = !(ST.cur.bookmarks||[]).some(b=>b.p===ST.page);
   updateChrome();
+  if(!opts.noPrefetch) setTimeout(()=>prefetch(seq),60);
+}
+function prefetch(seq){
+  const W=stage.clientWidth,H=stage.clientHeight,d=baseDpr();
+  [ST.page+1,ST.page-1,ST.page+2].forEach((p,i)=>{ if(p>=0&&p<ST.cur.pages) setTimeout(()=>{ if(seq===renderSeq) drawPageTo(p,W,H,d).catch(()=>{}); },i*120); });
+}
+// Fotografa la pagina visibile (con annotazioni) per l'effetto voltapagina.
+function snapshotPage(){
+  const r=pageWrap.getBoundingClientRect(); const c=document.createElement('canvas'); const k=Math.min(2,baseDpr());
+  c.width=Math.max(1,Math.round(r.width*k)); c.height=Math.max(1,Math.round(r.height*k)); const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+  const sx=-pageGeom.offX/pageGeom.cssW*pageCanvas.width, sy=-pageGeom.offY/pageGeom.cssH*pageCanvas.height;
+  const sw=r.width/Zoom.z/pageGeom.cssW*pageCanvas.width, sh=r.height/Zoom.z/pageGeom.cssH*pageCanvas.height;
+  if(document.body.classList.contains('night')) x.filter='invert(1) hue-rotate(180deg) brightness(.92)';
+  x.drawImage(pageCanvas,sx,sy,sw,sh,0,0,c.width,c.height); x.filter='none';
+  x.globalCompositeOperation='multiply'; x.drawImage(hlCanvas,sx,sy,sw,sh,0,0,c.width,c.height); x.globalCompositeOperation='source-over';
+  x.drawImage(inkCanvas,sx,sy,sw,sh,0,0,c.width,c.height);
+  return {c,r};
+}
+// Effetto pagina che gira: il foglio vecchio ruota sul dorso e rivela quello nuovo.
+function animateTurn(old,dir){
+  $$('.turnSheet').forEach(e=>e.parentNode&&e.parentNode.removeChild(e));
+  const mode=ST.settings.turnStyle||'curl';
+  const sr=stage.getBoundingClientRect(); const {c,r}=old;
+  const wrap=document.createElement('div'); wrap.className='turnSheet';
+  wrap.style.cssText=`left:${r.left-sr.left}px;top:${r.top-sr.top}px;width:${r.width}px;height:${r.height}px`;
+  c.className='tsFace'; wrap.appendChild(c); const shade=document.createElement('i'); shade.className='tsShade'; wrap.appendChild(shade);
+  stage.appendChild(wrap);
+  const fwd=dir>0, dur=mode==='slide'?220:420;
+  const drop=()=>{ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); };
+  wrap.style.transformOrigin=fwd?'left center':'right center';
+  shade.style.background=`linear-gradient(${fwd?'90deg':'270deg'},rgba(0,0,0,0) 25%,rgba(0,0,0,.45))`;
+  const kf = mode==='slide'
+    ? [{transform:'translateX(0)',opacity:1},{transform:`translateX(${fwd?-35:35}%)`,opacity:0}]
+    : [{transform:'perspective(2200px) rotateY(0deg)'},{transform:`perspective(2200px) rotateY(${fwd?-95:95}deg)`}];
+  const an=wrap.animate(kf,{duration:dur,easing:'cubic-bezier(.45,.05,.4,1)',fill:'forwards'});
+  shade.animate([{opacity:0},{opacity:1}],{duration:dur,fill:'forwards'});
+  an.onfinish=drop; setTimeout(drop,dur+200);
 }
 
 function goPage(p, animate=true){
@@ -98,7 +142,7 @@ function goPage(p, animate=true){
   const n=ST.cur.pages;
   if(p>=n){ if(ST.activeSetlist){ setlistStep(1); } else toast('Ultima pagina'); return; }
   if(p<0){ if(ST.activeSetlist){ setlistStep(-1, true); } else toast('Prima pagina'); return; }
-  const dir = p>ST.page?1:-1; ST.page=p;
+  const dir = p>ST.page?1:-1; ST.page=p; Zoom.reset(true);
   if(ST.annotate) Anno.pageChanged();
   renderPage(animate?dir:0);
   try{localStorage.setItem('fpm-last',JSON.stringify({id:ST.cur.id,page:p}))}catch(e){}
@@ -163,16 +207,19 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
     if(edge){ const g=glow(edge); g.style.setProperty('--lp',ST.settings.longPress+'ms'); requestAnimationFrame(()=>g.classList.add('charging'));
       timer=setTimeout(()=>{st.done=true;clearGlow();reveal(edge)},ST.settings.longPress); }
   });
-  stage.addEventListener('pointermove',e=>{if(!st)return;if(Math.hypot(e.clientX-st.x,e.clientY-st.y)>14){clearTimeout(timer);clearGlow()}});
+  stage.addEventListener('pointermove',e=>{if(!st)return;if(Zoom.ptrs.size>1||Math.hypot(e.clientX-st.x,e.clientY-st.y)>14){clearTimeout(timer);clearGlow()}});
   const end=e=>{
     clearTimeout(timer);clearGlow(); if(!st) return; const s=st; st=null; if(s.done) return;
     if(ST.annotate) return;
+    if(Zoom.gestured || Zoom.active) return;
     const dx=e.clientX-s.x, dy=e.clientY-s.y;
+    if(Zoom.z>1.02){ return; }
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.3){ dx<0?nextPage():prevPage(); return; }
     if(Math.hypot(dx,dy)>14) return;
     if(anySideOpen()){ closeSides(); return; }
     if(Date.now()-s.t>ST.settings.longPress) return;
     const W=innerWidth, x=e.clientX;
+    if(Zoom.z>1.02) return;
     if(ST.settings.tapZones && x<W*.3) prevPage();
     else if(ST.settings.tapZones && x>W*.7) nextPage();
     else setBars(!(ST.bars.top&&ST.bars.bottom), !(ST.bars.top&&ST.bars.bottom));
@@ -217,6 +264,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
   forscore:()=>{closeSides();FS4.pick()},
   library:()=>openSide('library',!$('#library').classList.contains('open')),
   libClose:()=>openSide('library',false),
@@ -456,15 +504,19 @@ function switchRow(id,label,on,hint){return `<div class="switchRow"><div><b>${la
 function showSettings(){
   const s=ST.settings;
   const m2=modal('Impostazioni',`
-    ${switchRow('setPencil','Disegna solo con Apple Pencil',s.pencilOnly,'Con il dito sfogli le pagine anche mentre annoti.')}
+    ${switchRow('setAuto','Riconosci Apple Pencil da sola',s.autoPencil!==false,'Appena usi la Pencil: Pencil per scrivere, dito per sfogliare e ingrandire, il palmo appoggiato non lascia segni.')}
+    ${switchRow('setPencil','Disegna solo con Apple Pencil',s.pencilOnly,'Sempre: con il dito sfogli le pagine anche mentre annoti.')}
+    <div class="field"><label>Cambio pagina</label><div class="seg" id="setTurn">${[['curl','Pagina che gira'],['slide','Scorrimento'],['none','Istantaneo']].map(([k,l])=>`<button data-k="${k}" class="${(s.turnAnim===false?'none':(s.turnStyle||'curl'))===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div><button class="ghostBtn" id="setFs">${iconSvg('expand')}Tutto schermo</button></div>
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
-    ${switchRow('setAnim','Animazione del voltapagina',s.turnAnim)}
     <div class="sl"><span>Durata della pressione sui bordi<em id="lpv">${s.longPress} ms</em></span><input type="range" id="setLp" min="250" max="1000" step="50" value="${s.longPress}" style="--v:${(s.longPress-250)/7.5}%"></div>
     <div class="hint">Tieni premuto sul <b>bordo alto</b> per la barra superiore, sul <b>bordo basso</b> per le pagine, a <b>sinistra</b> per la libreria e a <b>destra</b> per gli attrezzi.</div>`,
     `<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
   const tg=(id,key,after)=>{const b=$('#'+id);b.onclick=()=>{s[key]=!s[key];b.classList.toggle('on',s[key]);b.setAttribute('aria-checked',s[key]);saveSettings();after&&after()}};
-  tg('setPencil','pencilOnly'); tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones'); tg('setAnim','turnAnim');
+  tg('setPencil','pencilOnly'); s.autoPencil=s.autoPencil!==false; tg('setAuto','autoPencil');
+  $('#setTurn').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;s.turnAnim=k!=='none';if(k!=='none')s.turnStyle=k;saveSettings();$$('#setTurn button').forEach(x=>x.classList.toggle('on',x===b))};
+  $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
   m2.querySelector('[data-ok]').onclick=closeLayers;
 }
@@ -523,16 +575,7 @@ async function mergeSelected(){
 async function exportPdf(){
   if(!ST.cur) return; busy('Preparo il PDF con le annotazioni…');
   try{
-    const doc=await PDFLib.PDFDocument.load(ST.cur.bytes,{ignoreEncryption:true}); const pages=doc.getPages();
-    for(let i=0;i<pages.length;i++){
-      const strokes=ST.ann[i]; if(!strokes||!strokes.length) continue;
-      const pg=pages[i]; const {width,height}=pg.getSize(); const sc=3;
-      const c=document.createElement('canvas');c.width=Math.round(width*sc);c.height=Math.round(height*sc);
-      Anno.paint(c.getContext('2d'),strokes,c.width,c.height,true);
-      const png=await doc.embedPng(await (await new Promise(r=>c.toBlob(r,'image/png'))).arrayBuffer());
-      pg.drawImage(png,{x:0,y:0,width,height});
-    }
-    const bytes=await doc.save(); busy();
+    const bytes=await buildAnnotatedPdf(ST.cur,ST.ann); busy();
     offerDownload(new Blob([bytes],{type:'application/pdf'}),(ST.cur.title||'spartito')+' (annotato).pdf');
   }catch(e){busy();toast('Esportazione non riuscita')}
 }
@@ -603,7 +646,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ $('#loading').textContent='Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.'; return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build();
+  Anno.init(); Piano.build(); Zoom.init(); Bright.apply();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);

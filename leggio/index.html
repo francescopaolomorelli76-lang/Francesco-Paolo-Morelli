@@ -56,10 +56,21 @@ svg.i{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stro
 /* ---------- Palco e pagina ---------- */
 #stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;touch-action:none;background:
   radial-gradient(120% 80% at 50% 0%,#1a160f 0%,var(--stage) 60%)}
-#pageWrap{position:relative;overflow:hidden;background:var(--paper);box-shadow:0 0 0 1px rgba(214,168,78,.12),0 30px 80px rgba(0,0,0,.7);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s}
+#pageWrap{position:relative;overflow:hidden;background:var(--paper);box-shadow:0 0 0 1px rgba(214,168,78,.12),0 30px 80px rgba(0,0,0,.7)}
 #pageWrap.turn-next{transform:translateX(-18px);opacity:.4}
 #pageWrap.turn-prev{transform:translateX(18px);opacity:.4}
-#pageCanvas,#inkCanvas{position:absolute;left:0;top:0}
+#pageCanvas,#hlCanvas,#inkCanvas{position:absolute;left:0;top:0}
+#hlCanvas{mix-blend-mode:multiply;pointer-events:none}
+body.night #hlCanvas{mix-blend-mode:screen}
+#pageWrap{transform-origin:center center;will-change:transform}
+.turnSheet{position:absolute;z-index:6;pointer-events:none;backface-visibility:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.turnSheet .tsFace{width:100%;height:100%;display:block}
+.turnSheet .tsShade{position:absolute;inset:0;opacity:0}
+#dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
+#warmer{mix-blend-mode:multiply}
+#penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
+#inkCanvas,#stage{-webkit-touch-callout:none}
+body.immersive #stage{background:#000}
 #inkCanvas{touch-action:none}
 body.night #pageCanvas{filter:invert(1) hue-rotate(180deg) brightness(.92)}
 body.night #pageWrap{background:#111}
@@ -340,6 +351,18 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .hint b{color:var(--text)}
 kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 
+@media (max-width:520px){
+  .pill{padding:3px}
+  .ib{width:40px;height:40px}
+  #titlePill .brandDot{display:none}
+  #titlePill{padding:3px 4px 3px 10px}
+  #topbar{gap:6px;flex-wrap:wrap}
+  #topbar .goldBtn{order:5}
+  #scrub{padding:3px 8px 3px 3px;gap:4px}
+  #pageNum{min-width:48px;font-size:13px}
+  .modal .mHead h3{font-size:20px}
+  .stampGrid{grid-template-columns:repeat(4,1fr)}
+}
 @media (max-width:760px){
   #topbar .hideSm{display:none}
   #titlePill .t b{font-size:15px}
@@ -356,6 +379,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
     <div id="loading">Mozart</div>
     <div id="pageWrap" hidden>
       <canvas id="pageCanvas"></canvas>
+      <canvas id="hlCanvas"></canvas>
       <canvas id="inkCanvas"></canvas>
       <div id="ribbon" hidden></div>
     </div>
@@ -381,6 +405,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <button class="ib" data-act="annotate" title="Annota" aria-label="Annota" data-i="pen"></button>
       <button class="ib hideSm" data-act="search" title="Cerca" aria-label="Cerca" data-i="search"></button>
       <button class="ib" data-act="metro" title="Metronomo, tonalità, accordatore" aria-label="Metronomo" data-i="metro"></button>
+      <button class="ib" data-act="fullscreen" title="Tutto schermo" aria-label="Tutto schermo" data-i="expand"></button>
       <button class="ib" data-act="tools" title="Attrezzi (o tieni premuto il bordo destro)" aria-label="Attrezzi" data-i="case"></button>
     </div>
   </header>
@@ -396,6 +421,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <div id="scrubTrack"><div id="scrubDots"></div><div id="scrubKnob"></div><div id="scrubBubble"></div></div>
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
       <div id="pageNum">1 / 1</div>
+      <button class="ib" data-act="bright" title="Luminosità" aria-label="Luminosità" data-i="sun"></button>
     </div>
     <button class="goldBtn" data-act="scanInsert" title="Scatta una foto e aggiungila come pagina"><svg class="i" data-i="camera"></svg><span class="lbl">Foto → pagina</span></button>
   </footer>
@@ -434,6 +460,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
     <div class="sideBody" style="padding-left:8px">
       <div class="toolList">
         <button class="toolRow gold" data-act="insert"><svg class="i" data-i="plusDoc"></svg>Inserisci pagine<small>PDF · foto · righe</small></button>
+        <button class="toolRow gold" data-act="singers"><svg class="i" data-i="voice"></svg>Per Cantanti<small>vocalizzi · rec</small></button>
         <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scatta e migliora<small>foto → pagina</small></button>
         <h3>Modifica questo spartito</h3>
         <button class="toolRow" data-act="annotate"><svg class="i" data-i="pen"></svg>Annota</button>
@@ -442,6 +469,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
         <button class="toolRow" data-act="reorder"><svg class="i" data-i="grid"></svg>Riordina pagine</button>
         <button class="toolRow" data-act="crop"><svg class="i" data-i="crop"></svg>Ritaglia margini</button>
         <button class="toolRow" data-act="info"><svg class="i" data-i="info"></svg>Informazioni</button>
+        <button class="toolRow" data-act="share"><svg class="i" data-i="airdrop"></svg>Invia (AirDrop, WhatsApp…)</button>
         <button class="toolRow" data-act="export"><svg class="i" data-i="share"></svg>Esporta PDF annotato</button>
         <h3>Aggiungi spartiti</h3>
         <button class="toolRow" data-act="importPdf"><svg class="i" data-i="file"></svg>Importa PDF</button>
@@ -456,6 +484,8 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
         <button class="toolRow" data-act="pedals"><svg class="i" data-i="pedal"></svg>Pedaliera Bluetooth</button>
         <button class="toolRow" data-act="dashboard"><svg class="i" data-i="gauge"></svg>Cruscotto</button>
         <button class="toolRow" data-act="backup"><svg class="i" data-i="backup"></svg>Backup</button>
+        <button class="toolRow" data-act="fullscreen"><svg class="i" data-i="expand"></svg>Tutto schermo</button>
+        <button class="toolRow" data-act="bright"><svg class="i" data-i="sun"></svg>Luminosità</button>
         <button class="toolRow" data-act="settings"><svg class="i" data-i="gear"></svg>Impostazioni</button>
         <button class="toolRow" data-act="about"><svg class="i" data-i="star"></svg>FPM web designer</button>
       </div>
@@ -482,6 +512,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
     <div class="keys" id="keys"></div>
   </div>
 
+  <div id="dimmer"></div><div id="warmer"></div>
   <div id="layerRoot"></div>
   <div id="toast"></div>
   <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>
@@ -585,6 +616,10 @@ const ICONS = {
   merge:'<path d="M6 3v6a6 6 0 0 0 6 6h0a6 6 0 0 1 6 6M18 3v6a6 6 0 0 1-6 6"/>',
   bookmarkAdd:'<path d="M6 3h12v18l-6-4-6 4z"/><path d="M12 7v6M9 10h6"/>',
   play:'<path d="M7 4v16l13-8z"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  voice:'<path d="M5 10v4M8.5 7v10M12 4v16M15.5 8v8M19 11v2"/>',
+  airdrop:'<circle cx="12" cy="13" r="1.6"/><path d="M8.6 16.4a4.8 4.8 0 1 1 6.8 0M5.9 19.1a8.6 8.6 0 1 1 12.2 0"/>',
   image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m21 16-5-5-8 9"/>',
 };
 function iconSvg(name, cls){ return `<svg class="i${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`; }
@@ -792,10 +827,10 @@ function glyphBox(c,g,s){
 const ST = {
   scores:[], cur:null, doc:null, page:0, ann:{}, setlists:[], activeSetlist:null,
   bars:{top:true,bottom:true}, annotate:false,
-  settings:{pencilOnly:false, night:false, longPress:450, tapZones:true, turnAnim:true, firstRun:true},
+  settings:{pencilOnly:false, autoPencil:true, night:false, longPress:450, tapZones:true, turnAnim:true, turnStyle:'curl', bright:100, warm:0, firstRun:true},
   libTab:'all', libDrill:null, libSelect:false, selected:new Set(), libQuery:'',
 };
-const stage=$('#stage'), pageWrap=$('#pageWrap'), pageCanvas=$('#pageCanvas'), inkCanvas=$('#inkCanvas');
+const stage=$('#stage'), pageWrap=$('#pageWrap'), pageCanvas=$('#pageCanvas'), inkCanvas=$('#inkCanvas'), hlCanvas=$('#hlCanvas');
 let renderSeq=0, renderTask=null, pageGeom={w:1,h:1,cssW:1,cssH:1,dpr:1,offX:0,offY:0};
 const thumbCache=new Map();
 
@@ -809,6 +844,8 @@ async function loadAll(){
   ST.setlists = (await DB.get('setlists'))||[];
   Object.assign(ST.settings, (await DB.get('settings'))||{});
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
+  if(pr&&pr.length&&!ST.settings.neonV){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
+  ST.settings.neonV=1;
   document.body.classList.toggle('night', !!ST.settings.night);
   if(!ST.scores.length){ busy('Preparo gli spartiti di esempio…'); await makeDemoLibrary(); busy(); }
 }
@@ -827,7 +864,7 @@ async function addScore(bytes, meta={}){
   ST.scores.push(sc); await DB.putScore(sc); return sc;
 }
 async function replaceBytes(sc, bytes, annMap){
-  sc.bytes=bytes; thumbCache.delete(sc.id);
+  sc.bytes=bytes; thumbCache.delete(sc.id); pageCache.clear();
   const doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; sc.pages=doc.numPages;
   await DB.putScore(sc);
   if(ST.cur && ST.cur.id===sc.id){ if(ST.doc) ST.doc.destroy(); ST.doc=doc; if(annMap){ST.ann=annMap; DB.set('ann:'+sc.id,annMap);} ST.page=clamp(ST.page,0,sc.pages-1); await renderPage(); updateChrome(); }
@@ -850,37 +887,79 @@ async function openScore(id, page=0, opts={}){
   try{localStorage.setItem('fpm-last',JSON.stringify({id,page:ST.page}))}catch(e){}
 }
 
-async function renderPage(dir){
+// Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
+const pageCache=new Map();
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.bytes.byteLength}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+async function drawPageTo(p,W,H,dpr){
+  const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
+  const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
+  const scale=Math.min((W-16)/cw,(H-16)/ch);
+  // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
+  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>15e6) d=Math.sqrt(15e6/full);
+  const vp=pg.getViewport({scale:scale*d});
+  const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
+  const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
+  await pg.render({canvasContext:x,viewport:vp}).promise;
+  const v={off,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
+  pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
+  return v;
+}
+const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
+async function renderPage(dir,opts={}){
   if(!ST.doc) return;
-  const seq=++renderSeq;
-  if(dir && ST.settings.turnAnim){pageWrap.classList.add(dir>0?'turn-next':'turn-prev');}
-  const pg = await ST.doc.getPage(ST.page+1);
+  const seq=++renderSeq; const W=stage.clientWidth, H=stage.clientHeight;
+  const dpr=baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1);
+  let v;
+  try{ v=await drawPageTo(ST.page,W,H,dpr); }catch(e){ return; }
   if(seq!==renderSeq) return;
-  const crop = ST.cur.crop||{l:0,t:0,r:0,b:0};
-  const vp1 = pg.getViewport({scale:1});
-  const W=stage.clientWidth, H=stage.clientHeight;
-  const padX = 8, padY = 8;
-  const cw = vp1.width*(1-crop.l-crop.r), ch = vp1.height*(1-crop.t-crop.b);
-  const scale = Math.min((W-padX*2)/cw, (H-padY*2)/ch);
-  const dpr = Math.min(window.devicePixelRatio||1, 2.5);
-  const vp = pg.getViewport({scale:scale*dpr});
-  const off = document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
-  const octx = off.getContext('2d'); octx.fillStyle='#fff'; octx.fillRect(0,0,off.width,off.height);
-  if(renderTask){try{renderTask.cancel()}catch(e){}}
-  renderTask = pg.render({canvasContext:octx, viewport:vp});
-  try{ await renderTask.promise; }catch(e){ return; }
-  if(seq!==renderSeq) return;
-  const cssW = vp.width/dpr, cssH = vp.height/dpr;
-  pageGeom={w:off.width,h:off.height,cssW,cssH,dpr,offX:-crop.l*cssW,offY:-crop.t*cssH};
-  pageCanvas.width=off.width; pageCanvas.height=off.height;
-  pageCanvas.getContext('2d').drawImage(off,0,0);
-  for(const c of [pageCanvas,inkCanvas]){ c.style.width=cssW+'px'; c.style.height=cssH+'px'; c.style.left=pageGeom.offX+'px'; c.style.top=pageGeom.offY+'px'; }
-  inkCanvas.width=off.width; inkCanvas.height=off.height;
-  pageWrap.style.width=(cw*scale)+'px'; pageWrap.style.height=(ch*scale)+'px';
+  const old = (dir && ST.settings.turnAnim!==false && !pageWrap.hidden) ? snapshotPage() : null;
+  pageGeom={w:v.off.width,h:v.off.height,cssW:v.cssW,cssH:v.cssH,dpr,offX:-v.crop.l*v.cssW,offY:-v.crop.t*v.cssH};
+  for(const c of [pageCanvas,hlCanvas,inkCanvas]){ c.width=v.off.width; c.height=v.off.height; c.style.width=v.cssW+'px'; c.style.height=v.cssH+'px'; c.style.left=pageGeom.offX+'px'; c.style.top=pageGeom.offY+'px'; }
+  pageCanvas.getContext('2d').drawImage(v.off,0,0);
+  pageWrap.style.width=v.cw+'px'; pageWrap.style.height=v.ch+'px';
   Anno.redraw();
-  pageWrap.classList.remove('turn-next','turn-prev');
+  if(old) animateTurn(old,dir);
   $('#ribbon').hidden = !(ST.cur.bookmarks||[]).some(b=>b.p===ST.page);
   updateChrome();
+  if(!opts.noPrefetch) setTimeout(()=>prefetch(seq),60);
+}
+function prefetch(seq){
+  const W=stage.clientWidth,H=stage.clientHeight,d=baseDpr();
+  [ST.page+1,ST.page-1,ST.page+2].forEach((p,i)=>{ if(p>=0&&p<ST.cur.pages) setTimeout(()=>{ if(seq===renderSeq) drawPageTo(p,W,H,d).catch(()=>{}); },i*120); });
+}
+// Fotografa la pagina visibile (con annotazioni) per l'effetto voltapagina.
+function snapshotPage(){
+  const r=pageWrap.getBoundingClientRect(); const c=document.createElement('canvas'); const k=Math.min(2,baseDpr());
+  c.width=Math.max(1,Math.round(r.width*k)); c.height=Math.max(1,Math.round(r.height*k)); const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+  const sx=-pageGeom.offX/pageGeom.cssW*pageCanvas.width, sy=-pageGeom.offY/pageGeom.cssH*pageCanvas.height;
+  const sw=r.width/Zoom.z/pageGeom.cssW*pageCanvas.width, sh=r.height/Zoom.z/pageGeom.cssH*pageCanvas.height;
+  if(document.body.classList.contains('night')) x.filter='invert(1) hue-rotate(180deg) brightness(.92)';
+  x.drawImage(pageCanvas,sx,sy,sw,sh,0,0,c.width,c.height); x.filter='none';
+  x.globalCompositeOperation='multiply'; x.drawImage(hlCanvas,sx,sy,sw,sh,0,0,c.width,c.height); x.globalCompositeOperation='source-over';
+  x.drawImage(inkCanvas,sx,sy,sw,sh,0,0,c.width,c.height);
+  return {c,r};
+}
+// Effetto pagina che gira: il foglio vecchio ruota sul dorso e rivela quello nuovo.
+function animateTurn(old,dir){
+  $$('.turnSheet').forEach(e=>e.parentNode&&e.parentNode.removeChild(e));
+  const mode=ST.settings.turnStyle||'curl';
+  const sr=stage.getBoundingClientRect(); const {c,r}=old;
+  const wrap=document.createElement('div'); wrap.className='turnSheet';
+  wrap.style.cssText=`left:${r.left-sr.left}px;top:${r.top-sr.top}px;width:${r.width}px;height:${r.height}px`;
+  c.className='tsFace'; wrap.appendChild(c); const shade=document.createElement('i'); shade.className='tsShade'; wrap.appendChild(shade);
+  stage.appendChild(wrap);
+  const fwd=dir>0, dur=mode==='slide'?220:420;
+  const drop=()=>{ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); };
+  wrap.style.transformOrigin=fwd?'left center':'right center';
+  shade.style.background=`linear-gradient(${fwd?'90deg':'270deg'},rgba(0,0,0,0) 25%,rgba(0,0,0,.45))`;
+  const kf = mode==='slide'
+    ? [{transform:'translateX(0)',opacity:1},{transform:`translateX(${fwd?-35:35}%)`,opacity:0}]
+    : [{transform:'perspective(2200px) rotateY(0deg)'},{transform:`perspective(2200px) rotateY(${fwd?-95:95}deg)`}];
+  const an=wrap.animate(kf,{duration:dur,easing:'cubic-bezier(.45,.05,.4,1)',fill:'forwards'});
+  shade.animate([{opacity:0},{opacity:1}],{duration:dur,fill:'forwards'});
+  an.onfinish=drop; setTimeout(drop,dur+200);
 }
 
 function goPage(p, animate=true){
@@ -888,7 +967,7 @@ function goPage(p, animate=true){
   const n=ST.cur.pages;
   if(p>=n){ if(ST.activeSetlist){ setlistStep(1); } else toast('Ultima pagina'); return; }
   if(p<0){ if(ST.activeSetlist){ setlistStep(-1, true); } else toast('Prima pagina'); return; }
-  const dir = p>ST.page?1:-1; ST.page=p;
+  const dir = p>ST.page?1:-1; ST.page=p; Zoom.reset(true);
   if(ST.annotate) Anno.pageChanged();
   renderPage(animate?dir:0);
   try{localStorage.setItem('fpm-last',JSON.stringify({id:ST.cur.id,page:p}))}catch(e){}
@@ -953,16 +1032,19 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
     if(edge){ const g=glow(edge); g.style.setProperty('--lp',ST.settings.longPress+'ms'); requestAnimationFrame(()=>g.classList.add('charging'));
       timer=setTimeout(()=>{st.done=true;clearGlow();reveal(edge)},ST.settings.longPress); }
   });
-  stage.addEventListener('pointermove',e=>{if(!st)return;if(Math.hypot(e.clientX-st.x,e.clientY-st.y)>14){clearTimeout(timer);clearGlow()}});
+  stage.addEventListener('pointermove',e=>{if(!st)return;if(Zoom.ptrs.size>1||Math.hypot(e.clientX-st.x,e.clientY-st.y)>14){clearTimeout(timer);clearGlow()}});
   const end=e=>{
     clearTimeout(timer);clearGlow(); if(!st) return; const s=st; st=null; if(s.done) return;
     if(ST.annotate) return;
+    if(Zoom.gestured || Zoom.active) return;
     const dx=e.clientX-s.x, dy=e.clientY-s.y;
+    if(Zoom.z>1.02){ return; }
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.3){ dx<0?nextPage():prevPage(); return; }
     if(Math.hypot(dx,dy)>14) return;
     if(anySideOpen()){ closeSides(); return; }
     if(Date.now()-s.t>ST.settings.longPress) return;
     const W=innerWidth, x=e.clientX;
+    if(Zoom.z>1.02) return;
     if(ST.settings.tapZones && x<W*.3) prevPage();
     else if(ST.settings.tapZones && x>W*.7) nextPage();
     else setBars(!(ST.bars.top&&ST.bars.bottom), !(ST.bars.top&&ST.bars.bottom));
@@ -1007,6 +1089,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
   forscore:()=>{closeSides();FS4.pick()},
   library:()=>openSide('library',!$('#library').classList.contains('open')),
   libClose:()=>openSide('library',false),
@@ -1246,15 +1329,19 @@ function switchRow(id,label,on,hint){return `<div class="switchRow"><div><b>${la
 function showSettings(){
   const s=ST.settings;
   const m2=modal('Impostazioni',`
-    ${switchRow('setPencil','Disegna solo con Apple Pencil',s.pencilOnly,'Con il dito sfogli le pagine anche mentre annoti.')}
+    ${switchRow('setAuto','Riconosci Apple Pencil da sola',s.autoPencil!==false,'Appena usi la Pencil: Pencil per scrivere, dito per sfogliare e ingrandire, il palmo appoggiato non lascia segni.')}
+    ${switchRow('setPencil','Disegna solo con Apple Pencil',s.pencilOnly,'Sempre: con il dito sfogli le pagine anche mentre annoti.')}
+    <div class="field"><label>Cambio pagina</label><div class="seg" id="setTurn">${[['curl','Pagina che gira'],['slide','Scorrimento'],['none','Istantaneo']].map(([k,l])=>`<button data-k="${k}" class="${(s.turnAnim===false?'none':(s.turnStyle||'curl'))===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div><button class="ghostBtn" id="setFs">${iconSvg('expand')}Tutto schermo</button></div>
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
-    ${switchRow('setAnim','Animazione del voltapagina',s.turnAnim)}
     <div class="sl"><span>Durata della pressione sui bordi<em id="lpv">${s.longPress} ms</em></span><input type="range" id="setLp" min="250" max="1000" step="50" value="${s.longPress}" style="--v:${(s.longPress-250)/7.5}%"></div>
     <div class="hint">Tieni premuto sul <b>bordo alto</b> per la barra superiore, sul <b>bordo basso</b> per le pagine, a <b>sinistra</b> per la libreria e a <b>destra</b> per gli attrezzi.</div>`,
     `<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
   const tg=(id,key,after)=>{const b=$('#'+id);b.onclick=()=>{s[key]=!s[key];b.classList.toggle('on',s[key]);b.setAttribute('aria-checked',s[key]);saveSettings();after&&after()}};
-  tg('setPencil','pencilOnly'); tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones'); tg('setAnim','turnAnim');
+  tg('setPencil','pencilOnly'); s.autoPencil=s.autoPencil!==false; tg('setAuto','autoPencil');
+  $('#setTurn').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;s.turnAnim=k!=='none';if(k!=='none')s.turnStyle=k;saveSettings();$$('#setTurn button').forEach(x=>x.classList.toggle('on',x===b))};
+  $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
   m2.querySelector('[data-ok]').onclick=closeLayers;
 }
@@ -1313,16 +1400,7 @@ async function mergeSelected(){
 async function exportPdf(){
   if(!ST.cur) return; busy('Preparo il PDF con le annotazioni…');
   try{
-    const doc=await PDFLib.PDFDocument.load(ST.cur.bytes,{ignoreEncryption:true}); const pages=doc.getPages();
-    for(let i=0;i<pages.length;i++){
-      const strokes=ST.ann[i]; if(!strokes||!strokes.length) continue;
-      const pg=pages[i]; const {width,height}=pg.getSize(); const sc=3;
-      const c=document.createElement('canvas');c.width=Math.round(width*sc);c.height=Math.round(height*sc);
-      Anno.paint(c.getContext('2d'),strokes,c.width,c.height,true);
-      const png=await doc.embedPng(await (await new Promise(r=>c.toBlob(r,'image/png'))).arrayBuffer());
-      pg.drawImage(png,{x:0,y:0,width,height});
-    }
-    const bytes=await doc.save(); busy();
+    const bytes=await buildAnnotatedPdf(ST.cur,ST.ann); busy();
     offerDownload(new Blob([bytes],{type:'application/pdf'}),(ST.cur.title||'spartito')+' (annotato).pdf');
   }catch(e){busy();toast('Esportazione non riuscita')}
 }
@@ -1393,7 +1471,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ $('#loading').textContent='Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.'; return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build();
+  Anno.init(); Piano.build(); Zoom.init(); Bright.apply();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);
@@ -1402,6 +1480,7 @@ async function boot(){
 }
 
 // ================= Annotazioni =================
+const NEON=['#fff200','#39ff14','#ff3cac','#00e5ff','#ff9f1c','#b388ff','#ff5252','#7dffd4'];
 const SWATCHES=['#111111','#d23b2f','#1f5fd6','#1d8a4a','#c8962e','#7a4a2a','#8b3fc4','#f4e04d','#ff8a3d','#5fd0e6','#ff6fae','#ffffff'];
 const SHAPES=[
   {id:'cresc',n:'Crescendo'},{id:'dim',n:'Diminuendo'},{id:'slurUp',n:'Legatura sopra'},{id:'slurDown',n:'Legatura sotto'},
@@ -1415,7 +1494,8 @@ const Anno = {
     {k:'shape',shape:'dim',color:'#d23b2f',size:6,alpha:1},
     {k:'pen',color:'#d23b2f',size:5,alpha:1},{k:'pen',color:'#1f5fd6',size:5,alpha:1},{k:'pen',color:'#111111',size:4,alpha:1},
     {k:'pen',color:'#111111',size:14,alpha:1},{k:'pen',color:'#111111',size:8,alpha:1},{k:'pen',color:'#1f5fd6',size:14,alpha:1},
-    {k:'hl',color:'#f4e04d',size:30,alpha:.42},{k:'pen',color:'#d23b2f',size:3,alpha:1},{k:'hl',color:'#f4e04d',size:70,alpha:.42},
+    {k:'hl',color:'#fff200',size:30,alpha:.5},{k:'pen',color:'#d23b2f',size:3,alpha:1},{k:'hl',color:'#fff200',size:70,alpha:.5},
+    {k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true},
     {k:'pen',color:'#7a4a2a',size:22,alpha:1},{k:'pen',color:'#d23b2f',size:14,alpha:1},{k:'pen',color:'#d23b2f',size:8,alpha:1},
     {k:'mask',color:'#ffffff',size:40,alpha:1},
   ],
@@ -1479,6 +1559,7 @@ const Anno = {
     const w=clamp(this.W(p)*900,2,30);
     x.globalAlpha=p.k==='hl'?Math.max(.55,p.alpha):1; x.strokeStyle=p.color; x.lineWidth=w; x.lineCap=p.k==='hl'?'butt':'round';
     if(p.k==='mask'){x.fillStyle='#3a3326';x.fillRect(10,10,68,68);x.strokeStyle='#fff'}
+    if(p.rainbow){ const g=x.createLinearGradient(18,70,70,18); ['#ff3cac','#fff200','#39ff14','#00e5ff','#b388ff'].forEach((c,i)=>g.addColorStop(i/4,c)); x.strokeStyle=g; }
     x.beginPath(); x.moveTo(18,70); x.lineTo(70,18); x.stroke();
   },
 
@@ -1489,7 +1570,9 @@ const Anno = {
   redo(){ const h=this.hist[ST.page]; if(!h||!h.r.length) return; h.u.push(JSON.stringify(this.strokes)); this.strokes=JSON.parse(h.r.pop()); this.redraw(); saveAnn(); this.buildBar(); },
   down(e){
     if(!ST.annotate) return;
-    if(ST.settings.pencilOnly && e.pointerType==='touch'){ this.touchNav={x:e.clientX,y:e.clientY}; return; }
+    if(e.pointerType==='pen' && !ST.pencilSeen){ ST.pencilSeen=true; if(ST.settings.autoPencil) toast('Apple Pencil riconosciuta: con il dito sfogli e ingrandisci, con la Pencil scrivi',3200); }
+    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ this.touchNav={x:e.clientX,y:e.clientY}; return; }
+    this.livePointer=e.pointerType; this.liveId=e.pointerId;
     inkCanvas.setPointerCapture(e.pointerId);
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
@@ -1500,10 +1583,16 @@ const Anno = {
     }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016,color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
-    this.live={t:pr.k,color:pr.k==='mask'?'#ffffff':pr.color,alpha:pr.alpha,w:this.W(pr),pts:[[p[0],p[1]]],layer:this.layer};
+    const pen=e.pointerType==='pen'&&pr.k==='pen';
+    this.live={t:pr.k,color:pr.k==='mask'?'#ffffff':pr.color,alpha:pr.alpha,w:this.W(pr),pts:[pen?[p[0],p[1],+(e.pressure||.5).toFixed(3)]:[p[0],p[1]]],layer:this.layer};
+    if(pen) this.live.pr=1;
+    if(pr.k==='hl'&&pr.rainbow) this.live.rainbow=1;
   },
+  touchNavigates(){ return ST.settings.pencilOnly || (ST.settings.autoPencil && ST.pencilSeen); },
+  cancelTouchStroke(){ if(this.live && this.livePointer==='touch'){ this.live=null; this.redraw(); } },
   move(e){
     if(this.touchNav) return;
+    if(e.pointerType==='pen' && e.buttons===0 && !this.live){ this.hover(e); return; }
     const L=this.live; if(!L) return;
     const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
     const p=this.pt(e);
@@ -1513,9 +1602,12 @@ const Anno = {
     if(L.t==='stamp'){ L.x=p[0]; L.y=p[1]; this.redraw(); return; }
     if(L.t==='shape'){ L.b=[p[0],p[1]]; this.redraw(); return; }
     if(this.ruler){ L.pts=[L.pts[0],[p[0],p[1]]]; }
-    else for(const ev of evs){ const q=this.pt(ev); const last=L.pts[L.pts.length-1]; if(Math.hypot(q[0]-last[0],q[1]-last[1])>.0012) L.pts.push([q[0],q[1]]); }
+    else for(const ev of evs){ const q=this.pt(ev); const last=L.pts[L.pts.length-1]; if(Math.hypot(q[0]-last[0],q[1]-last[1])>.0009) L.pts.push(L.pr?[q[0],q[1],+(ev.pressure||.5).toFixed(3)]:[q[0],q[1]]); }
     this.redraw();
   },
+  hover(e){ let d=$('#penHover'); if(!d){ d=document.createElement('div'); d.id='penHover'; $('#app').appendChild(d); }
+    const pr=this.presets[this.sel]; const r=inkCanvas.getBoundingClientRect(); const sz=Math.max(6,this.W(pr)*r.width);
+    d.style.cssText=`left:${e.clientX-sz/2}px;top:${e.clientY-sz/2}px;width:${sz}px;height:${sz}px;border-color:${pr.color}`; clearTimeout(this._hv); this._hv=setTimeout(()=>d.style.display='none',600); },
   up(e){
     if(this.touchNav){ const dx=e.clientX-this.touchNav.x; this.touchNav=null; if(Math.abs(dx)>60) dx<0?nextPage():prevPage(); return; }
     const L=this.live; this.live=null; if(!L) return;
@@ -1534,10 +1626,16 @@ const Anno = {
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
     const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry';
-    box.innerHTML=`<input id="teIn" placeholder="Scrivi… (es. rit., respira)" enterkeyhint="done"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
+    box.innerHTML=`<div class="seg" id="teMode" style="flex-wrap:nowrap"><button data-tm="lyric" class="${this.textMode!=='free'?'on':''}" title="Sillaba centrata sotto la nota, allineata al rigo">Sotto la nota</button><button data-tm="free" class="${this.textMode==='free'?'on':''}">Libero</button></div><input id="teIn" placeholder="${this.textMode==='free'?'es. rit., respira':'sillaba, es. glo-'}" enterkeyhint="done" autocapitalize="off"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
     $('#app').appendChild(box);
     box.style.left=clamp(r.left+p[0]*r.width-10,8,innerWidth-320)+'px'; box.style.top=clamp(r.top+p[1]*r.height-26,70,innerHeight-120)+'px';
-    const commit=()=>{const v=$('#teIn').value.trim(); box.remove(); if(!v) return; this.push(); this.strokes.push({t:'text',text:v,x:p[0],y:p[1],size:Math.max(.018,pr.size*.0012),color:pr.k==='mask'?'#111':pr.color,alpha:1,layer:this.layer}); this.redraw(); saveAnn(); this.buildBar(); };
+    const commit=()=>{const v=$('#teIn').value.trim(); box.remove(); if(!v) return; this.push();
+      const lyric=this.textMode!=='free';
+      // sotto la nota: centrato sul punto toccato e sulla stessa riga degli altri testi vicini
+      let y=p[1]; if(lyric){ const near=this.strokes.filter(t=>t.t==='text'&&Math.abs(t.y-p[1])<.02).sort((a,b)=>Math.abs(a.y-p[1])-Math.abs(b.y-p[1]))[0]; if(near) y=near.y; }
+      const size=lyric?(this.strokes.find(t=>t.t==='text'&&t.lyric&&Math.abs(t.y-y)<.002)?.size||Math.max(.016,pr.size*.0011)):Math.max(.018,pr.size*.0012);
+      this.strokes.push({t:'text',text:v,x:p[0],y,size,align:lyric?'c':'l',lyric:lyric?1:0,color:pr.k==='mask'||pr.k==='hl'?'#111':pr.color,alpha:1,layer:this.layer}); this.redraw(); saveAnn(); this.buildBar(); };
+    box.querySelector('#teMode').onclick=e=>{const b=e.target.closest('[data-tm]');if(!b)return;this.textMode=b.dataset.tm;box.querySelectorAll('#teMode button').forEach(x=>x.classList.toggle('on',x===b));$('#teIn').focus()};
     $('#teOk').onclick=commit; $('#teIn').onkeydown=e=>{if(e.key==='Enter')commit();if(e.key==='Escape')box.remove()}; setTimeout(()=>$('#teIn').focus(),20);
   },
   selectLasso(poly){
@@ -1562,10 +1660,13 @@ const Anno = {
 
   redraw(){
     if(!inkCanvas.width) return; const x=inkCanvas.getContext('2d'); const W=inkCanvas.width,H=inkCanvas.height;
+    const hx=hlCanvas.getContext('2d'); hx.clearRect(0,0,hlCanvas.width,hlCanvas.height);
     x.clearRect(0,0,W,H);
-    this.paint(x,ST.ann[ST.page]||[],W,H,false);
+    const all=ST.ann[ST.page]||[];
+    this.paint(hx,all.filter(s=>s.t==='hl'),W,H,false);
+    this.paint(x,all.filter(s=>s.t!=='hl'),W,H,false);
     const L=this.live;
-    if(L && !['erase','lasso','drag'].includes(L.t)) this.paint(x,[L],W,H,true);
+    if(L && !['erase','lasso','drag'].includes(L.t)) this.paint(L.t==='hl'?hx:x,[L],W,H,true);
     if(L && L.t==='lasso'){ x.save(); x.setLineDash([8,6]); x.strokeStyle='#c8962e'; x.lineWidth=2; x.beginPath(); L.pts.forEach((p,i)=>i?x.lineTo(p[0]*W,p[1]*H):x.moveTo(p[0]*W,p[1]*H)); x.stroke(); x.restore(); }
     if(this.selBox){ const b=this.selBox; x.save(); x.setLineDash([10,6]); x.strokeStyle='#c8962e'; x.lineWidth=2.5; x.strokeRect(b.x0*W,b.y0*H,(b.x1-b.x0)*W,(b.y1-b.y0)*H); x.restore(); }
   },
@@ -1575,12 +1676,22 @@ const Anno = {
       x.save(); x.globalAlpha=s.alpha??1;
       if(s.t==='pen'||s.t==='hl'||s.t==='mask'){
         x.strokeStyle=s.color; x.lineWidth=s.w*W; x.lineCap=s.t==='hl'?'butt':'round'; x.lineJoin='round';
-        const P2=s.pts.map(p=>[p[0]*W,p[1]*H]); x.beginPath(); x.moveTo(P2[0][0],P2[0][1]);
+        const P2=s.pts.map(p=>[p[0]*W,p[1]*H,p[2]]);
+        if(s.pr||s.rainbow){ // tratto per tratto: spessore dalla pressione della Pencil o colore arcobaleno
+          let dist=0;
+          for(let i=1;i<P2.length;i++){ const a=P2[i-1],b=P2[i]; dist+=Math.hypot(b[0]-a[0],b[1]-a[1]);
+            if(s.rainbow) x.strokeStyle=`hsl(${(dist/W*900)%360},100%,55%)`;
+            if(s.pr) x.lineWidth=s.w*W*(.35+Math.min(1,(a[2]+b[2])/2)*1.3);
+            x.beginPath(); x.moveTo(a[0],a[1]); x.lineTo(b[0],b[1]); x.stroke(); }
+          if(P2.length===1){ x.beginPath(); x.arc(P2[0][0],P2[0][1],x.lineWidth/2,0,7); x.fillStyle=s.color; x.fill(); }
+          x.restore(); continue;
+        }
+        x.beginPath(); x.moveTo(P2[0][0],P2[0][1]);
         for(let i=1;i<P2.length-1;i++){const mx=(P2[i][0]+P2[i+1][0])/2,my=(P2[i][1]+P2[i+1][1])/2;x.quadraticCurveTo(P2[i][0],P2[i][1],mx,my)}
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
       } else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
-      else if(s.t==='text'){ x.fillStyle=s.color; x.font=`italic 600 ${s.size*W}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText(s.text,s.x*W,s.y*H); }
+      else if(s.t==='text'){ x.fillStyle=s.color; x.font=`${s.lyric?'500':'italic 600'} ${s.size*W}px ${css(s.lyric?'--f-body':'--f-display')}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left'; x.fillText(s.text,s.x*W,s.y*H); }
       x.restore();
     }
   },
@@ -1595,6 +1706,7 @@ const Anno = {
     const p=popover(anchor,`<h4>Stile pennello</h4><div style="width:300px;display:flex;flex-direction:column;gap:10px">
       <div class="brushPrev"><canvas id="bpC" width="600" height="172"></canvas></div>
       ${sl('bSize','Dimensioni',1,100,pr.size)}
+      ${pr.k==='hl'?`<div class="eyebrow">Evidenziatori fluo</div><div class="swatches" id="bNeon">${NEON.map(c=>`<button class="sw${c===pr.color&&!pr.rainbow?' on':''}" style="background:${c};box-shadow:0 0 10px ${c}" data-c="${c}" aria-label="Fluo ${c}"></button>`).join('')}<button class="sw${pr.rainbow?' on':''}" style="background:conic-gradient(#ff3cac,#fff200,#39ff14,#00e5ff,#b388ff,#ff3cac)" data-rb="1" aria-label="Multicolore"></button></div>`:''}
       <div class="swatches" id="bSw">${SWATCHES.map(c=>`<button class="sw${c.toLowerCase()===pr.color.toLowerCase()?' on':''}" style="background:${c}" data-c="${c}" aria-label="Colore ${c}"></button>`).join('')}</div>
       ${sl('bH','Tonalità',0,360,Math.round(hsl[0]),'°')}${sl('bS','Saturazione',0,100,Math.round(hsl[1]),'%')}${sl('bL','Luminosità',0,100,Math.round(hsl[2]),'%')}${sl('bA','Trasparenza',5,100,Math.round(pr.alpha*100),'%')}
       ${switchRow('bMask','Maschera (bianchetto)',pr.k==='mask','Copre segni sbagliati della stampa.')}
@@ -1604,6 +1716,7 @@ const Anno = {
     const fromHsl=()=>{pr.color=hslToHex(+$('#bH').value,+$('#bS').value,+$('#bL').value);$$('#bSw .sw').forEach(s=>s.classList.toggle('on',s.dataset.c===pr.color))};
     const bind=(id,fn,suf='')=>{const i=$('#'+id);i.oninput=()=>{i.style.setProperty('--v',(i.value-i.min)/(i.max-i.min)*100+'%');$('#'+id+'v').textContent=i.value+suf;fn(+i.value);prev();this.savePresets()}};
     bind('bSize',v=>pr.size=v); bind('bH',fromHsl,'°'); bind('bS',fromHsl,'%'); bind('bL',fromHsl,'%'); bind('bA',v=>pr.alpha=v/100,'%');
+    const neon=$('#bNeon'); if(neon) neon.onclick=e=>{const rb=e.target.closest('[data-rb]');if(rb){pr.rainbow=!pr.rainbow;}else{const s2=e.target.closest('[data-c]');if(!s2)return;pr.color=s2.dataset.c;pr.rainbow=false;}neon.querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x.dataset.rb?!!pr.rainbow:(x.dataset.c===pr.color&&!pr.rainbow)));prev();this.savePresets()};
     $('#bSw').onclick=e=>{const s=e.target.closest('[data-c]');if(!s)return;pr.color=s.dataset.c;const h=hexToHsl(pr.color);['bH','bS','bL'].forEach((id,i)=>{const el=$('#'+id);el.value=Math.round(h[i]);el.dispatchEvent(new Event('input'))});prev();this.savePresets()};
     $('#bMask').onclick=()=>{pr.k=pr.k==='mask'?'pen':'mask';$('#bMask').classList.toggle('on',pr.k==='mask');$('#bHl').classList.toggle('on',false);prev();this.savePresets()};
     $('#bHl').onclick=()=>{pr.k=pr.k==='hl'?'pen':'hl';if(pr.k==='hl'&&pr.alpha>.6)pr.alpha=.42;$('#bHl').classList.toggle('on',pr.k==='hl');$('#bMask').classList.toggle('on',false);prev();this.savePresets()};
@@ -1668,7 +1781,7 @@ function strokePts(s){ if(s.pts) return s.pts; if(s.t==='shape') return [s.a,s.b
 function moveStroke(s,dx,dy){ if(s.pts) s.pts=s.pts.map(p=>[p[0]+dx,p[1]+dy]); else if(s.t==='shape'){s.a=[s.a[0]+dx,s.a[1]+dy];s.b=[s.b[0]+dx,s.b[1]+dy]} else {s.x+=dx;s.y+=dy} }
 function hitStroke(s,x,y,r){
   if(s.t==='stamp') return Math.hypot(s.x-x,s.y-y)<Math.max(r,s.size*.5);
-  if(s.t==='text') return x>=s.x-r&&x<=s.x+s.size*s.text.length*.55+r&&Math.abs(y-s.y)<s.size*.7+r;
+  if(s.t==='text'){ const w=s.size*s.text.length*.55, x0=s.align==='c'?s.x-w/2:s.x; return x>=x0-r&&x<=x0+w+r&&Math.abs(y-s.y)<s.size*.7+r; }
   const pts=strokePts(s);
   for(let i=0;i<pts.length-1;i++) if(segDist(x,y,pts[i],pts[i+1])<r+(s.w||0)/2) return true;
   return pts.length===1 && Math.hypot(pts[0][0]-x,pts[0][1]-y)<r;
@@ -2376,6 +2489,295 @@ function harvest(root,recs,sls){
     for(const k in v) walk(v[k],k);
   };
   walk(root,'');
+}
+
+// ================= Zoom con due dita · Tutto schermo · Luminosità · Invio (AirDrop) =================
+const Zoom = {
+  z:1, x:0, y:0, ptrs:new Map(), active:false, gestured:false, start:null, lastTap:0,
+  apply(){ pageWrap.style.transform = (this.z===1&&!this.x&&!this.y) ? '' : `translate(${this.x}px,${this.y}px) scale(${this.z})`; },
+  reset(silent){ if(this.z===1&&!this.x&&!this.y) return; this.z=1; this.x=0; this.y=0; this.apply(); if(!silent) renderPage(0,{noPrefetch:true}); },
+  clampPan(){ const r=stage.getBoundingClientRect(); const w=pageWrap.offsetWidth*this.z, h=pageWrap.offsetHeight*this.z;
+    const mx=Math.max(0,(w-r.width)/2+40), my=Math.max(0,(h-r.height)/2+40); this.x=clamp(this.x,-mx,mx); this.y=clamp(this.y,-my,my); },
+  init(){
+    const sharpen=debounce(()=>renderPage(0,{noPrefetch:true}),220);
+    stage.addEventListener('pointerdown',e=>{
+      if(e.pointerType!=='touch') return;
+      this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY});
+      if(this.ptrs.size===2){
+        this.active=true; this.gestured=true; Anno.cancelTouchStroke&&Anno.cancelTouchStroke();
+        const [a,b]=[...this.ptrs.values()]; const r=stage.getBoundingClientRect();
+        this.start={d:Math.hypot(a.x-b.x,a.y-b.y)||1, z:this.z, mx:(a.x+b.x)/2-r.left-r.width/2, my:(a.y+b.y)/2-r.top-r.height/2, x:this.x, y:this.y};
+      }
+    },true);
+    stage.addEventListener('pointermove',e=>{
+      const p=this.ptrs.get(e.pointerId); if(!p) return; const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
+      if(this.active && this.ptrs.size>=2){
+        const [a,b]=[...this.ptrs.values()]; const r=stage.getBoundingClientRect(); const s=this.start;
+        const z=clamp(s.z*Math.hypot(a.x-b.x,a.y-b.y)/s.d,1,5);
+        const mx=(a.x+b.x)/2-r.left-r.width/2, my=(a.y+b.y)/2-r.top-r.height/2;
+        const px=(s.mx-s.x)/s.z, py=(s.my-s.y)/s.z;   // punto della pagina sotto le dita
+        this.z=z; this.x=mx-px*z; this.y=my-py*z; this.clampPan(); this.apply();
+      } else if(this.z>1.02 && this.ptrs.size===1 && !(ST.annotate && !Anno.touchNavigates())){
+        if(Math.hypot(p.x-p.x0,p.y-p.y0)>6) this.gestured=true;
+        this.x+=dx; this.y+=dy; this.clampPan(); this.apply();
+      }
+    },true);
+    const up=e=>{
+      if(!this.ptrs.has(e.pointerId)) return; this.ptrs.delete(e.pointerId);
+      if(this.active && this.ptrs.size<2){ this.active=false; if(this.z<1.06) this.reset(); else sharpen(); }
+      if(!this.ptrs.size){
+        // doppio tocco: torna alla pagina intera (o ingrandisce)
+        const now=Date.now(); const moved=this.gestured;
+        if(!moved && now-this.lastTap<300 && !ST.annotate){ if(this.z>1.02) this.reset(); else { this.z=2.2; const r=stage.getBoundingClientRect(); this.x=-(e.clientX-r.left-r.width/2)*1.2; this.y=-(e.clientY-r.top-r.height/2)*1.2; this.clampPan(); this.apply(); sharpen(); } this.gestured=true; this.lastTap=0; }
+        else this.lastTap=moved?0:now;
+        setTimeout(()=>{ this.gestured=false; },0);
+      }
+    };
+    stage.addEventListener('pointerup',up,true); stage.addEventListener('pointercancel',up,true);
+    // iOS: evita lo zoom di Safari sull'intera pagina
+    ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+  },
+};
+
+// ---------- Tutto schermo (iPad: schermo intero vero; iPhone: modalità concerto + app dalla Home) ----------
+const FS = {
+  standalone(){ return navigator.standalone===true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches; },
+  isOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement) || document.body.classList.contains('immersive'); },
+  async toggle(){
+    if(this.isOn()){ try{ if(document.fullscreenElement) await document.exitFullscreen(); else if(document.webkitFullscreenElement) document.webkitExitFullscreen(); }catch(e){} this.immersive(false); return; }
+    const el=document.documentElement; let ok=false;
+    try{ if(el.requestFullscreen){ await el.requestFullscreen({navigationUI:'hide'}); ok=true; } else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); ok=true; } }catch(e){ ok=false; }
+    this.immersive(true);
+    if(!ok && !this.standalone()) this.tip();
+    else toast('Tutto schermo · tieni premuto un bordo per i comandi',2600);
+  },
+  immersive(on){ document.body.classList.toggle('immersive',on); if(on){ closeSides(); setBars(false,false); } else setBars(true,true); $$('[data-act="fullscreen"]').forEach(b=>b.classList.toggle('on',on)); renderPage(0,{noPrefetch:true}); },
+  tip(){
+    const iphone=/iPhone|iPod/.test(navigator.userAgent);
+    modal('Tutto schermo',`<div class="hint">Ora Mozart mostra solo la musica: tieni premuto un bordo per far tornare comandi e pannelli.</div>
+      <div class="hint">${iphone?'Su <b>iPhone</b>':'Per togliere anche le barre di <b>Safari</b>'}: tocca <b>Condividi</b> ${iconSvg('share')} → <b>Aggiungi alla schermata Home</b>, poi apri Mozart dalla sua icona. Si apre a tutto schermo, senza indirizzo e senza barre, su iPhone e su iPad.</div>`,
+      `<button class="goldBtn" data-close>${iconSvg('check')}Ho capito</button>`);
+    $('.modal .mFoot [data-close]').onclick=closeLayers;
+  },
+};
+document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && document.body.classList.contains('immersive')) FS.immersive(false); });
+
+// ---------- Luminosità e calore dello schermo ----------
+const Bright = {
+  apply(){ const s=ST.settings; const d=$('#dimmer'); d.style.background=`rgba(0,0,0,${(100-(s.bright??100))/100*.85})`; $('#warmer').style.background=`rgba(255,150,40,${(s.warm||0)/100*.35})`; },
+  open(el){
+    const s=ST.settings;
+    const p=popover(el,`<h4>Luminosità</h4><div style="width:280px;display:flex;flex-direction:column;gap:10px">
+      <div class="sl"><span>Luminosità<em id="brV">${s.bright??100}%</em></span><input type="range" id="brR" min="25" max="100" value="${s.bright??100}" style="--v:${((s.bright??100)-25)/75*100}%"></div>
+      <div class="sl"><span>Luce calda (riposa gli occhi)<em id="wmV">${s.warm||0}%</em></span><input type="range" id="wmR" min="0" max="100" value="${s.warm||0}" style="--v:${s.warm||0}%"></div>
+      <div class="seg"><button data-b="100">Giorno</button><button data-b="70">Sala</button><button data-b="45">Palco buio</button></div>
+      <div class="hint" style="font-size:12.5px">Regola la luce dentro Mozart. La luminosità generale dell'iPhone/iPad si cambia dal Centro di Controllo.</div></div>`,{above:true});
+    const bind=(id,key,lab,min,max)=>{const i=$('#'+id);i.oninput=()=>{s[key]=+i.value;$('#'+lab).textContent=i.value+'%';i.style.setProperty('--v',(i.value-min)/(max-min)*100+'%');this.apply();saveSettings()}};
+    bind('brR','bright','brV',25,100); bind('wmR','warm','wmV',0,100);
+    p.querySelector('.seg').onclick=e=>{const b=e.target.closest('[data-b]');if(!b)return;const v=+b.dataset.b;s.bright=v;s.warm=v<60?35:v<90?15:0;saveSettings();this.apply();this.open(el)};
+  },
+};
+
+// ---------- Invia (AirDrop, Messaggi, WhatsApp, Mail…) ----------
+async function buildAnnotatedPdf(sc, ann){
+  const doc=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true}); const pages=doc.getPages();
+  for(let i=0;i<pages.length;i++){
+    const strokes=ann[i]; if(!strokes||!strokes.length) continue;
+    const pg=pages[i]; const {width,height}=pg.getSize(); const k=3;
+    const c=document.createElement('canvas'); c.width=Math.round(width*k); c.height=Math.round(height*k);
+    Anno.paint(c.getContext('2d'),strokes,c.width,c.height,true);
+    const png=await doc.embedPng(await (await new Promise(r=>c.toBlob(r,'image/png'))).arrayBuffer());
+    pg.drawImage(png,{x:0,y:0,width,height});
+  }
+  return doc.save();
+}
+async function shareFile(blob,name,title){
+  const file=new File([blob],name,{type:blob.type});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title}); return true; }catch(e){ if(e&&e.name==='AbortError') return true; }
+  }
+  offerDownload(blob,name); return false;
+}
+function shareScore(){
+  if(!ST.cur) return toast('Apri prima uno spartito');
+  const sc=ST.cur;
+  const m2=modal('Invia spartito',`<div class="hint">Si apre il foglio di condivisione dell'iPhone/iPad: scegli <b>AirDrop</b> e il tuo iPad o iPhone, oppure Messaggi, WhatsApp, Mail.</div>
+    <div class="srcCards"><button class="srcCard hero" data-w="ann">${iconSvg('pen')}<b>Con annotazioni</b><span>Segni e note stampati sul PDF</span></button>
+    <button class="srcCard" data-w="orig">${iconSvg('file')}<b>PDF originale</b><span>Senza segni</span></button></div>
+    <div class="hint" style="font-size:13px">Sull'altro dispositivo: il PDF arriva in File o Download. Apri Mozart → Importa → PDF dai File.</div>`,null,{eyebrow:sc.title});
+  m2.querySelector('.srcCards').onclick=async e=>{const b=e.target.closest('[data-w]');if(!b)return;closeLayers();busy('Preparo il PDF…');
+    try{ const bytes=b.dataset.w==='ann'?await buildAnnotatedPdf(sc,ST.ann):new Uint8Array(sc.bytes); busy();
+      await shareFile(new Blob([bytes],{type:'application/pdf'}),(sc.title||'spartito').replace(/[\\/:*?"<>|]+/g,' ')+(b.dataset.w==='ann'?' (annotato)':'')+'.pdf',sc.title); }
+    catch(err){ busy(); toast('Invio non riuscito'); }};
+}
+
+// ================= Per Cantanti: vocalizzi trasportabili, vocalizzo da tastiera, registrazione =================
+// Un vocalizzo è una sequenza di note: n = semitoni dalla tonica, d = durata in battiti.
+const vq=(arr,d=1)=>arr.map(n=>({n,d}));
+const VOC_BASE=[
+  {id:'scala5', name:'Scala di 5 note', syl:'Mi-a / Zi-a', notes:[...vq([0,2,4,5,7,5,4,2],.5),{n:0,d:2}]},
+  {id:'arp', name:'Arpeggio 1-3-5-8', syl:'A / No', notes:[...vq([0,4,7,12,7,4],.75),{n:0,d:2}]},
+  {id:'terze', name:'Terze 1-3-2-4-3-5', syl:'La-le-li-lo-lu', notes:[...vq([0,4,2,5,4,7,5,2],.5),{n:0,d:2}]},
+  {id:'nona', name:'Scala di nona', syl:'A (legato)', notes:[...vq([0,2,4,5,7,9,11,12,14,12,11,9,7,5,4,2],.25),{n:0,d:2}]},
+  {id:'stacc', name:'Triade staccata', syl:'Ha-ha-ha', notes:[...vq([0,4,7,4],.5).map(o=>({...o,st:1})),{n:0,d:1,st:1},{n:-12,d:0,rest:1}]},
+  {id:'ripet', name:'Nota ribattuta 5 vocali', syl:'Ma-me-mi-mo-mu', notes:[...vq([0,0,0,0],.75),{n:0,d:2}]},
+  {id:'ottava', name:'Salto d\'ottava', syl:'Ng-a', notes:[{n:0,d:1},{n:12,d:1.5},{n:11,d:.5},{n:7,d:.5},{n:4,d:.5},{n:0,d:2}]},
+  {id:'sirena', name:'Sirena (glissando)', syl:'Ng / U', notes:[...vq([0,2,4,5,7,9,11,12],.18),...vq([11,9,7,5,4,2],.18),{n:0,d:1.5}]},
+  {id:'quinta', name:'Quinta discendente', syl:'Mi-ao', notes:[...vq([7,5,4,2],.5),{n:0,d:2}]},
+  {id:'rossini', name:'Agilità (scala veloce)', syl:'A', notes:[...vq([0,2,4,5,7,9,11,12,11,9,7,5,4,2],.125),{n:0,d:1.5}]},
+];
+const VOICES=[['Soprano',60],['Mezzosoprano',57],['Contralto',55],['Tenore',48],['Baritono',45],['Basso',41]]; // MIDI della tonica di partenza
+const midiName=m=>NOTE_IT[(m%12+12)%12]+(Math.floor(m/12)-1);
+const midiHz=m=>Metro.A4*Math.pow(2,(m-69)/12);
+
+const Singers = {
+  tab:'voc', sel:'scala5', start:48, steps:7, dir:'up', bpm:96, chord:true, playing:false, cur:0, saved:[], takes:[],
+  async open(){
+    this.saved=(await DB.get('vocalizzi'))||[];
+    try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
+    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
+      null,{eyebrow:'Riscaldamento e studio',onClose:()=>this.stopAll()});
+    m2.style.width='min(720px,calc(100% - 16px))';
+    $('#sgTabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){this.stopAll();this.tab=b.dataset.t;this.render()}};
+    this.render();
+  },
+  all(){ return [...VOC_BASE,...this.saved]; },
+  stopAll(){ this.playing=false; clearTimeout(this._t); (this._nodes||[]).forEach(n=>{try{n.stop()}catch(e){}}); this._nodes=[]; Metro.stop&&this.recMetro&&Metro.stop(); },
+  render(){
+    $$('#sgTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab));
+    const B=$('#sgBody'); if(!B) return;
+    if(this.tab==='voc') this.renderVoc(B); else if(this.tab==='make') this.renderMake(B); else this.renderRec(B);
+  },
+  // ---------- Vocalizzi ----------
+  renderVoc(B){
+    const v=this.all().find(x=>x.id===this.sel)||VOC_BASE[0];
+    B.innerHTML=`
+      <div class="field"><label>Voce (nota di partenza)</label><div class="seg" id="sgVoice">${VOICES.map(([n,mm])=>`<button data-m="${mm}" class="${this.start===mm?'on':''}">${n}</button>`).join('')}</div></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="ghostBtn" data-tr="-1" aria-label="Mezzo tono sotto">${iconSvg('down')}½ tono</button>
+        <div style="flex:1;min-width:150px;text-align:center"><div class="eyebrow">Tonalità di partenza</div><div style="font-family:var(--f-display);font-size:34px;font-weight:700;color:var(--gold-hi)" id="sgKey">${midiName(this.start)}</div><div class="hint" id="sgNow">&nbsp;</div></div>
+        <button class="ghostBtn" data-tr="1" aria-label="Mezzo tono sopra">${iconSvg('up')}½ tono</button></div>
+      <div class="grid2">
+        <div class="field"><label>Direzione</label><div class="seg" id="sgDir">${[['up','Sale'],['down','Scende'],['both','Sale e scende']].map(([k,l])=>`<button data-d="${k}" class="${this.dir===k?'on':''}">${l}</button>`).join('')}</div></div>
+        <div class="sliders" style="grid-template-columns:1fr">
+          <div class="sl"><span>Quanti semitoni<em id="sgStV">${this.steps}</em></span><input type="range" id="sgSt" min="0" max="16" value="${this.steps}" style="--v:${this.steps/16*100}%"></div>
+          <div class="sl"><span>Velocità<em id="sgBpV">${this.bpm}</em></span><input type="range" id="sgBp" min="40" max="200" value="${this.bpm}" style="--v:${(this.bpm-40)/160*100}%"></div></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="goldBtn" id="sgPlay">${iconSvg(this.playing?'stop':'play')}${this.playing?'Ferma':'Suona'}</button>
+        ${switchRow('sgChord','Accordo prima di ogni ripetizione',this.chord)}</div>
+      <div class="group"><div class="groupHead">Scegli il vocalizzo</div>
+        ${this.all().map(x=>`<div class="item${x.id===this.sel?' cur':''}" data-v="${x.id}"><canvas width="160" height="60" data-mini="${x.id}" style="width:80px;height:30px;flex:none"></canvas><div class="tx"><div class="tt">${esc(x.name)}${x.mine?'<span class="tag">MIO</span>':''}</div><div class="st">${esc(x.syl||'')} · ${x.notes.filter(n=>!n.rest).length} note</div></div>${x.mine?`<button class="infoBtn" data-del="${x.id}" aria-label="Elimina">${iconSvg('trash')}</button>`:''}</div>`).join('')}</div>`;
+    B.querySelectorAll('[data-mini]').forEach(c=>miniRoll(c,this.all().find(x=>x.id===c.dataset.mini)));
+    $('#sgVoice').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;this.start=+b.dataset.m;try{localStorage.setItem('mz-voice',this.start)}catch(err){}this.render()};
+    B.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{this.start=clamp(this.start+(+b.dataset.tr),30,84);$('#sgKey').textContent=midiName(this.start);Piano.play&&this.tone(this.start,.6)});
+    $('#sgDir').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;this.dir=b.dataset.d;$$('#sgDir button').forEach(x=>x.classList.toggle('on',x===b))};
+    const sl=(id,key,lab,min,max)=>{const i=$('#'+id);i.oninput=()=>{this[key]=+i.value;$('#'+lab).textContent=i.value;i.style.setProperty('--v',(i.value-min)/(max-min)*100+'%')}};
+    sl('sgSt','steps','sgStV',0,16); sl('sgBp','bpm','sgBpV',40,200);
+    $('#sgChord').onclick=()=>{this.chord=!this.chord;$('#sgChord').classList.toggle('on',this.chord)};
+    $('#sgPlay').onclick=()=>{ if(this.playing){this.stopAll();this.render();} else this.playVoc(v); };
+    B.querySelector('.group').onclick=async e=>{const d=e.target.closest('[data-del]');if(d){e.stopPropagation();this.saved=this.saved.filter(x=>x.id!==d.dataset.del);await DB.set('vocalizzi',this.saved);this.render();return}
+      const r=e.target.closest('[data-v]');if(r){this.stopAll();this.sel=r.dataset.v;this.render()}};
+  },
+  tone(m,dur,when,vol=.32,stacc){ ac(); const t=when??AC.currentTime; const f=midiHz(m); const g=AC.createGain(); const len=stacc?Math.min(dur,.12):dur;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.setTargetAtTime(vol*.55,t+.05,.2); g.gain.setTargetAtTime(0,t+len*.92,.04); g.connect(AC.destination);
+    [[1,'triangle',1],[2,'sine',.3],[3,'sine',.1]].forEach(([k,ty,v])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty;o.frequency.value=f*k;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+len+.3);(this._nodes=this._nodes||[]).push(o)}); },
+  keysList(){ const s=this.start, n=this.steps; const up=[...Array(n+1).keys()].map(i=>s+i);
+    if(this.dir==='up') return up; if(this.dir==='down') return up.map(i=>s-(i-s)); return [...up,...up.slice(0,-1).reverse()]; },
+  playVoc(v){
+    ac(); this.playing=true; this._nodes=[]; const beat=60/this.bpm; let t=AC.currentTime+.15; const keys=this.keysList();
+    keys.forEach((k,idx)=>{
+      if(this.chord){ [0,4,7].forEach(iv=>this.tone(k+iv-12,beat*1.4,t,.16)); this.tone(k,beat*1.4,t,.18); t+=beat*1.6; }
+      const at=t; setTimeout(()=>{ if(!this.playing) return; const e=$('#sgNow'); if(e) e.textContent=`Ora: ${midiName(k)} (${idx+1}/${keys.length})`; },(at-AC.currentTime)*1000);
+      v.notes.forEach(nt=>{ if(!nt.rest) this.tone(k+nt.n,nt.d*beat,t,.3,nt.st); t+=nt.d*beat; });
+      t+=beat*.6;
+    });
+    const total=(t-AC.currentTime)*1000; this._t=setTimeout(()=>{this.playing=false;this.render()},total+100);
+    this.render();
+  },
+  // ---------- Crea il tuo vocalizzo (tastiera + metronomo + quantizzazione) ----------
+  rec:null, grid:.5,
+  renderMake(B){
+    B.innerHTML=`<div class="hint">1. Scegli velocità e suddivisione. 2. Premi <b>Registra</b>: dopo 4 colpi di metronomo suona il vocalizzo sulla tastiera. 3. Premi <b>Stop</b>: le note vengono allineate al tempo. 4. Ascolta, dai un nome e salva: lo trovi in Vocalizzi, trasportabile in ogni tonalità.</div>
+      <div class="grid2"><div class="sl"><span>Velocità del metronomo<em id="mkBpV">${this.bpm}</em></span><input type="range" id="mkBp" min="40" max="180" value="${this.bpm}" style="--v:${(this.bpm-40)/140*100}%"></div>
+        <div class="field"><label>Allinea le note a</label><div class="seg" id="mkGrid">${[[1,'♩ semiminime'],[.5,'♪ crome'],[.25,'𝅘𝅥𝅯 semicrome'],[1/3,'terzine']].map(([g,l])=>`<button data-g="${g}" class="${Math.abs(this.grid-g)<.01?'on':''}">${l}</button>`).join('')}</div></div></div>
+      <div class="keys" id="mkKeys" style="height:140px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="goldBtn" id="mkRec">${iconSvg('mic')}${this.rec?'Stop':'Registra'}</button><button class="ghostBtn" id="mkPlay">${iconSvg('play')}Ascolta</button><button class="ghostBtn" id="mkClear">${iconSvg('trash')}Ricomincia</button><span class="hint" id="mkInfo"></span></div>
+      <canvas id="mkRoll" width="1300" height="220" style="width:100%;height:110px;background:var(--panel-2);border-radius:12px;border:1px solid var(--line)"></canvas>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="field" style="flex:1;min-width:180px"><label for="mkName">Nome</label><input id="mkName" placeholder="es. Mio vocalizzo · Ma-me-mi"></div><div class="field" style="flex:1;min-width:140px"><label for="mkSyl">Sillabe</label><input id="mkSyl" placeholder="es. Ma-me-mi-mo-mu"></div></div>
+      <div><button class="goldBtn" id="mkSave">${iconSvg('check')}Salva nei vocalizzi</button></div>`;
+    this.buildKeys($('#mkKeys'));
+    const i=$('#mkBp'); i.oninput=()=>{this.bpm=+i.value;$('#mkBpV').textContent=i.value;i.style.setProperty('--v',(i.value-40)/140*100+'%')};
+    $('#mkGrid').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;this.grid=+b.dataset.g;$$('#mkGrid button').forEach(x=>x.classList.toggle('on',x===b));if(this.raw)this.quantize()};
+    $('#mkRec').onclick=()=>this.rec?this.stopRec():this.startRec();
+    $('#mkPlay').onclick=()=>{ if(!this.made||!this.made.notes.length) return toast('Registra prima qualche nota');
+      const c=this.chord, st=this.steps, d=this.dir; this.chord=false; this.steps=0; this.dir='up'; this.playVoc(this.made); this.chord=c; this.steps=st; this.dir=d; };
+    $('#mkClear').onclick=()=>{this.raw=null;this.made=null;this.drawRoll()};
+    $('#mkSave').onclick=async()=>{ if(!this.made||!this.made.notes.length) return toast('Registra prima qualche nota');
+      const v={id:'my-'+uid(),mine:true,name:$('#mkName').value.trim()||'Mio vocalizzo',syl:$('#mkSyl').value.trim(),notes:this.made.notes};
+      this.saved.push(v); await DB.set('vocalizzi',this.saved); this.sel=v.id; this.tab='voc'; this.render(); toast('Vocalizzo salvato: ora puoi trasportarlo'); };
+    this.drawRoll();
+  },
+  buildKeys(K){
+    const whites=['Do','Re','Mi','Fa','Sol','La','Si'], ws=[0,2,4,5,7,9,11], n=14, base=this.start-(this.start%12); let h='';
+    for(let i=0;i<n;i++){const o=Math.floor(i/7),w=i%7;h+=`<div class="wk" data-m="${base+o*12+ws[w]}">${whites[w]}${w===0?(Math.floor((base+o*12)/12)-1):''}</div>`}
+    K.innerHTML=h; const kw=100/n;
+    [0,1,3,4,5].forEach(w=>{for(let o=0;o<2;o++){const i=o*7+w;const d=document.createElement('div');d.className='bk';d.dataset.m=base+o*12+ws[w]+1;d.style.left=`calc(${(i+1)*kw}% - ${kw*.32}%)`;d.style.width=kw*.64+'%';K.appendChild(d)}});
+    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-m]');if(!k)return;e.preventDefault();k.classList.add('dn');const m=+k.dataset.m;this.tone(m,.6);
+      if(this.rec) this.rec.on.set(e.pointerId,{m,t:performance.now()});});
+    const up=e=>{$$('#mkKeys .dn').forEach(x=>x.classList.remove('dn'));const r=this.rec&&this.rec.on.get(e.pointerId);if(r){this.rec.on.delete(e.pointerId);this.rec.notes.push({m:r.m,t:r.t,e:performance.now()});this.raw=this.rec.notes;this.drawRoll(true)}};
+    K.addEventListener('pointerup',up); K.addEventListener('pointercancel',up); K.addEventListener('pointerleave',up);
+  },
+  startRec(){
+    ac(); const beat=60000/this.bpm; this.rec={on:new Map(),notes:[],t0:performance.now()+beat*4}; this.raw=null; this.made=null;
+    // metronomo: 4 colpi di attacco, poi continua finché registri
+    let i=0; const tick=()=>{ if(!this.rec) return; click(i%4===0); const info=$('#mkInfo'); if(info) info.textContent=i<4?`Attacco: ${4-i}…`:'Suona ora'; i++; this._mt=setTimeout(tick,beat); }; tick();
+    const b=$('#mkRec'); if(b) b.innerHTML=iconSvg('stop')+'Stop';
+  },
+  stopRec(){ clearTimeout(this._mt); const r=this.rec; this.rec=null; const b=$('#mkRec'); if(b) b.innerHTML=iconSvg('mic')+'Registra';
+    if(!r||!r.notes.length){ $('#mkInfo').textContent='Nessuna nota registrata'; return; } this.raw=r.notes; this.raw.t0=r.t0; this.quantize(); },
+  quantize(){
+    const beat=60000/this.bpm, g=this.grid, t0=this.raw.t0??this.raw[0].t; const ns=[...this.raw].sort((a,b)=>a.t-b.t);
+    const at=ns.map(n=>({m:n.m,s:Math.max(0,Math.round(((n.t-t0)/beat)/g)*g),len:Math.max(g,Math.round(((n.e-n.t)/beat)/g)*g)}));
+    const s0=at[0].s; at.forEach(n=>n.s-=s0);
+    const root=at[0].m; const notes=[];
+    for(let k=0;k<at.length;k++){ const nx=at[k+1]; let d=nx?Math.max(g,nx.s-at[k].s):Math.max(at[k].len,1); notes.push({n:at[k].m-root,d}); }
+    this.made={name:'',notes}; this.drawRoll();
+    $('#mkInfo').textContent=`${notes.length} note allineate a ${g===1?'semiminime':g===.5?'crome':g===.25?'semicrome':'terzine'}`;
+  },
+  drawRoll(raw){ const c=$('#mkRoll'); if(!c) return; const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height);
+    const v=this.made; if(!v){ x.fillStyle='#a89c83'; x.font='28px Manrope'; x.fillText(raw?'Registro…':'Le note registrate appariranno qui',30,120); return; } miniRoll(c,v,true); },
+  // ---------- Registra performance ----------
+  renderRec(B){
+    B.innerHTML=`<div class="hint">Registra la tua esecuzione e inviala su WhatsApp, Messaggi, Mail o con AirDrop.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="goldBtn" id="prGo">${iconSvg('mic')}${Rec.rec?'Ferma':'Registra'}</button><span class="hint" id="prT"></span></div>
+      <canvas id="prVu" width="1200" height="80" style="width:100%;height:40px;border-radius:10px;background:var(--panel-2)"></canvas>
+      <div id="prList">${this.takes.map((t,i)=>`<div class="item"><div class="tx"><div class="tt">${esc(t.name)}</div><div class="st">${t.when} · ${t.dur}</div><audio controls src="${t.url}" style="width:100%;margin-top:6px"></audio></div><button class="infoBtn" data-sh="${i}" aria-label="Invia">${iconSvg('share')}</button></div>`).join('')||'<div class="empty">Ancora nessuna registrazione.</div>'}</div>`;
+    $('#prGo').onclick=()=>this.toggleRec();
+    $('#prList').onclick=e=>{const b=e.target.closest('[data-sh]');if(!b)return;const t=this.takes[+b.dataset.sh];shareFile(t.blob,t.file,t.name)};
+  },
+  async toggleRec(){
+    if(this.mr){ this.mr.stop(); return; }
+    let s; try{ s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); }
+    catch(e){ toast('Microfono non disponibile: consenti il microfono a Mozart',3200); return; }
+    const type=['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/aac','audio/webm;codecs=opus','audio/webm'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+    const chunks=[]; this.mr=new MediaRecorder(s,type?{mimeType:type,audioBitsPerSecond:128000}:undefined); const t0=Date.now();
+    ac(); const an=AC.createAnalyser(); AC.createMediaStreamSource(s).connect(an); const buf=new Uint8Array(an.fftSize);
+    const vu=()=>{ if(!this.mr) return; an.getByteTimeDomainData(buf); let pk=0; for(const v of buf) pk=Math.max(pk,Math.abs(v-128)); const c=$('#prVu'); if(c){const x=c.getContext('2d');x.clearRect(0,0,1200,80);x.fillStyle=pk>120?'#e0624f':'#d6a84e';x.fillRect(0,0,1200*pk/128,80)} const tt=$('#prT'); if(tt){const s2=Math.round((Date.now()-t0)/1000);tt.textContent=`● ${Math.floor(s2/60)}:${String(s2%60).padStart(2,'0')}`} requestAnimationFrame(vu); };
+    this.mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+    this.mr.onstop=()=>{ s.getTracks().forEach(t=>t.stop()); const mime=this.mr.mimeType||type||'audio/mp4'; const blob=new Blob(chunks,{type:mime.split(';')[0]}); const ext=/mp4|aac/.test(mime)?'m4a':'webm';
+      const d=Math.round((Date.now()-t0)/1000), now=new Date(); const name=`${ST.cur?ST.cur.title.replace('Esempio · ',''):'Performance'} · ${now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`;
+      this.takes.unshift({blob,url:URL.createObjectURL(blob),name,file:`${name.replace(/[\\/:*?"<>|·]+/g,' ').trim()}.${ext}`,when:now.toLocaleDateString('it-IT'),dur:`${Math.floor(d/60)}:${String(d%60).padStart(2,'0')}`});
+      this.mr=null; this.render(); toast('Registrazione pronta: tocca Invia per WhatsApp'); };
+    this.mr.start(250); this.render(); vu();
+  },
+};
+// Disegno di un vocalizzo come rullo di pianoforte (anteprima).
+function miniRoll(c,v,big){
+  const x=c.getContext('2d'), W=c.width, H=c.height; x.clearRect(0,0,W,H); if(!v) return; const ns=v.notes.filter(n=>!n.rest); if(!ns.length) return;
+  const tot=v.notes.reduce((a,n)=>a+n.d,0)||1, lo=Math.min(...ns.map(n=>n.n)), hi=Math.max(...ns.map(n=>n.n)), rng=Math.max(4,hi-lo);
+  let t=0; const pad=big?20:6; x.fillStyle='#d6a84e';
+  for(const n of v.notes){ if(!n.rest){ const xx=pad+(t/tot)*(W-pad*2), w=Math.max(3,(n.d/tot)*(W-pad*2)-3), yy=H-pad-((n.n-lo)/rng)*(H-pad*2)-(big?12:5); x.globalAlpha=n.st?.7:1; x.fillRect(xx,yy,w,big?14:6); if(big){x.globalAlpha=1;x.fillStyle='#f4ecdc';x.font='18px Manrope';x.fillText(NOTE_IT[((n.n%12)+12)%12],xx+2,yy-4);x.fillStyle='#d6a84e'} } t+=n.d; }
+  x.globalAlpha=1;
 }
 
 boot();

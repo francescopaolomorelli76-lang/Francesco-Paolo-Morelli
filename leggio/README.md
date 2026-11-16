@@ -16,6 +16,11 @@ Pubblica la cartella `leggio/` (per esempio con GitHub Pages), apri `index.html`
 - **Annota**: penne, evidenziatori, bianchetto, forme (forcelle, legature, parentesi, volte, vi-de), testo, righello, lazo, gomma, livelli, annulla/ripeti, stile pennello (dimensione, colore, tonalità, saturazione, luminosità, trasparenza).
 - **Segni musicali**: oltre 300 segni in 15 categorie (alterazioni, dinamiche, articolazioni, abbellimenti, note, pause, chiavi e tempi, ripetizioni, termini, coro e voce, strumenti e pedale, diteggiature, notazione antica, simboli) più tutto il blocco Unicode dei simboli musicali.
 - **Da forScore**: apre backup e archivi `.4sb` (anche più file insieme): importa i PDF contenuti, titoli, compositori, generi, etichette e setlist. Un backup "solo dati" abbina i metadati ai PDF già importati con lo stesso nome. Legge anche titolo e autore scritti dentro ai PDF.
+- **Tutto schermo** (iPad e iPhone), **luminosità e luce calda** nella barra in basso, **zoom con due dita** e doppio tocco, **pagina che gira** con pagine pre-caricate.
+- **Apple Pencil**: riconoscimento automatico (Pencil scrive, dito sfoglia e ingrandisce, il palmo non lascia segni), spessore dalla pressione, anteprima della punta sospesa.
+- **Evidenziatori fluo** e **multicolore**; **testo sotto la nota** centrato e allineato al rigo.
+- **Invia** con AirDrop, WhatsApp, Messaggi, Mail (PDF originale o annotato).
+- **Per Cantanti**: vocalizzi trasportabili cromaticamente per ogni voce, vocalizzo creato suonando la tastiera con metronomo e quantizzazione, registrazione della performance da inviare su WhatsApp.
 - **Metronomo / Tonalità / Accordatore**, pianoforte, registratore, cruscotto, backup, riordina pagine, esportazione PDF annotato.
 
 ## Sviluppo

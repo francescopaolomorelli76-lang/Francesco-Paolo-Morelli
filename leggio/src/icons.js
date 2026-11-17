@@ -58,6 +58,7 @@ const ICONS = {
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
   voice:'<path d="M5 10v4M8.5 7v10M12 4v16M15.5 8v8M19 11v2"/>',
   airdrop:'<circle cx="12" cy="13" r="1.6"/><path d="M8.6 16.4a4.8 4.8 0 1 1 6.8 0M5.9 19.1a8.6 8.6 0 1 1 12.2 0"/>',
+  hand:'<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 10V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M14 10.5V6a1.5 1.5 0 0 1 3 0v5"/><path d="M17 9.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.8-2.4L3.5 14.5a1.6 1.6 0 0 1 2.4-2.1L8 14.5"/>',
   image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m21 16-5-5-8 9"/>',
 };
 function iconSvg(name, cls){ return `<svg class="i${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`; }

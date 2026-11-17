@@ -56,7 +56,7 @@ const Anno = {
     let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`</div><div class="toolFixed">`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
     // Annulla / Ripeti sempre in vista nella barra in alto
@@ -68,7 +68,7 @@ const Anno = {
       const b=e.target.closest('[data-t]'); if(!b) return; const k=b.dataset.t;
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
-      else if(['lasso','text','eraser','lyric'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
+      else if(['lasso','text','eraser','lyric','hand'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
@@ -101,6 +101,7 @@ const Anno = {
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
     if(this.mode==='lyric'){ LyricType.start(p); return; }
+    if(this.mode==='hand'){ this.live={t:'hand'}; Finger.down(p); return; }
     if(this.mode==='lasso'){
       if(this.selBox && p[0]>=this.selBox.x0&&p[0]<=this.selBox.x1&&p[1]>=this.selBox.y0&&p[1]<=this.selBox.y1){ this.push(); this.live={t:'drag',from:p}; return; }
       this.clearSel(); this.live={t:'lasso',pts:[p]}; return;
@@ -127,6 +128,7 @@ const Anno = {
     if(this.touchNav) return;
     if(e.pointerType==='pen' && e.buttons===0 && !this.live){ this.hover(e); return; }
     const L=this.live; if(!L) return;
+    if(L.t==='hand'){ Finger.move(this.pt(e)); return; }
     const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
     const p=this.pt(e);
     if(L.t==='erase'){ this.erase(p); return; }
@@ -145,6 +147,7 @@ const Anno = {
   up(e){
     if(this.touchNav){ const dx=e.clientX-this.touchNav.x; this.touchNav=null; if(Math.abs(dx)>60) dx<0?nextPage():prevPage(); return; }
     const L=this.live; this.live=null; if(!L) return;
+    if(L.t==='hand'){ Finger.up(); return; }
     if(L.t==='erase'){ if(!L.hit){ const h=this.hist[ST.page]; h&&h.u.pop(); } saveAnn(); this.buildBar(); return; }
     if(L.t==='lasso'){ this.selectLasso(L.pts); this.redraw(); return; }
     if(L.t==='drag'){ saveAnn(); this.showSelBar(); this.buildBar(); return; }
@@ -226,8 +229,8 @@ const Anno = {
       else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
       else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
-        const style=s.lyric?'500':s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
-        x.font=`${style} ${s.size*W}px ${s.lyric?css('--f-body'):fam}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left';
+        const style=s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
+        x.font=`${style} ${s.size*W}px ${fam}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left';
         String(s.text).split('\n').forEach((ln2,i)=>x.fillText(ln2,s.x*W,s.y*H+i*s.size*W*1.25)); }
       x.restore();
     }

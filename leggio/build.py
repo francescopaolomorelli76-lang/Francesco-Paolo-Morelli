@@ -17,7 +17,7 @@ CDN = "https://cdnjs.cloudflare.com/ajax/libs/"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;"
          "1,6..96,600&family=Manrope:wght@400;500;600;700;800&family=Noto+Music&display=swap")
 JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js", "audio.js", "forscore.js",
-            "features.js", "singers.js", "lyrics.js", "uizoom.js", "textbox.js", "fix.js", "native.js"]
+            "features.js", "singers.js", "lyrics.js", "uizoom.js", "textbox.js", "fix.js", "finger.js", "native.js"]
 
 
 def build(mode: str) -> str:

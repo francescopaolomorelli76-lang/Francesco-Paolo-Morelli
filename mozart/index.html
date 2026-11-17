@@ -979,10 +979,11 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOf(ST.cur))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOfPage(ST.cur,p))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
-  const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  const pg=await ST.doc.getPage(p+1); let crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  { const f=fixOfPage(ST.cur,p); if(f.on){ try{ const a=await autoAnalyze(ST.cur,p,pg); if(f.crop&&a.box) crop=a.box; }catch(e){} } }
   const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
   const scale=Math.min((W-16)/cw,(H-16)/ch);
   // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
@@ -3358,21 +3359,22 @@ async function ocrBrowser(canvas){
   finally{ w.terminate(); }
 }
 
-// ================= Migliora pagina: raddrizza pagine e righi storti, mette a fuoco, pulisce lo sfondo =================
+// ================= Migliora pagina: raddrizza, ritaglia i bordi e ingrandisce, pulisce, mette a fuoco =================
+// Si applica a una sola pagina o a tutto lo spartito; si può rendere permanente nel PDF.
 
-// Angolo dei righi (gradi; positivo = salgono verso destra… nel verso dello schermo, ruotare di -angolo).
-// Cerca l'inclinazione per cui le righe scure si "impilano" meglio: è quella dei pentagrammi.
+// Angolo dei righi in gradi (si corregge ruotando di -angolo).
 function detectSkew(src){
   const w=Math.min(700,src.width), h=Math.round(src.height*w/src.width);
   const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true});
   x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(src,0,0,w,h);
   const d=x.getImageData(0,0,w,h).data; const px=[], py=[];
-  for(let y=0;y<h;y++) for(let i=0;i<w;i++){ const k=(y*w+i)*4; if(d[k]+d[k+1]+d[k+2]<330){ px.push(i-w/2); py.push(y); } }
+  // si ignorano i bordi (ombre del dorso, dita): contano le righe lunghe al centro
+  const x0=Math.round(w*.08), x1=Math.round(w*.92);
+  for(let y=0;y<h;y++) for(let i=x0;i<x1;i++){ const k=(y*w+i)*4; if(d[k]+d[k+1]+d[k+2]<330){ px.push(i-w/2); py.push(y); } }
   if(px.length<200) return 0;
-  // al massimo ~40.000 punti per restare veloce
   const step=Math.max(1,Math.floor(px.length/40000));
   const score=a=>{ const tn=Math.tan(a*Math.PI/180), M=h+w; const bins=new Float32Array(M*2); let s=0;
-    for(let j=0;j<px.length;j+=step){ const b=Math.round(py[j]-px[j]*tn)+M; bins[b]++; }
+    for(let j=0;j<px.length;j+=step){ bins[Math.round(py[j]-px[j]*tn)+M]++; }
     for(let j=0;j<bins.length;j++) s+=bins[j]*bins[j]; return s; };
   let best=0, bs=-1;
   for(let a=-6;a<=6.001;a+=.25){ const s=score(a); if(s>bs){bs=s;best=a;} }
@@ -3386,71 +3388,171 @@ function rotateCanvas(src,deg){
   x.translate(c.width/2,c.height/2); x.rotate(-deg*Math.PI/180); x.imageSmoothingQuality='high'; x.drawImage(src,-src.width/2,-src.height/2);
   return c;
 }
-// Applica raddrizzamento e miglioramento a una pagina già disegnata (in lettura).
-const FIX_DEF={on:false, straighten:true, sharpen:true, mode:'gray', clean:28};
+// Zona della musica: dai pentagrammi (gruppi di 5 righe lunghe) si allarga a testi, titoli e indicazioni vicine,
+// e si ferma ai bordi del foglio, alle ombre del dorso, alle dita e alle scritte lontane (es. "Scansionato con…").
+function contentBox(src){
+  const w=Math.min(1000,src.width), h=Math.round(src.height*w/src.width);
+  const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true});
+  x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(src,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data; const g=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])<510?1:0;
+  // 1) righe sottili e lunghe (i righi): orizzontali, con bianco poco sopra e poco sotto.
+  //    L'ombra del dorso e le dita sono scure "a macchia" e non passano questo filtro.
+  const thin=new Uint8Array(w*h), runMin=Math.round(w*.03);
+  for(let y=4;y<h-4;y++){ let st=-1;
+    for(let i=0;i<=w;i++){ const on=i<w&&g[y*w+i]&&!(g[(y-4)*w+i]&&g[(y+4)*w+i]);
+      if(on){ if(st<0) st=i; } else if(st>=0){ if(i-st>=runMin) for(let k=st;k<i;k++) thin[y*w+k]=1; st=-1; } } }
+  const colT=new Float32Array(w), rowT=new Float32Array(h);
+  for(let y=0;y<h;y++) for(let i=0;i<w;i++) if(thin[y*w+i]){ colT[i]++; rowT[y]++; }
+  const cmax=Math.max(...colT); if(cmax<10) return null;
+  // 2) larghezza: colonne dove i righi ci sono davvero (media mobile)
+  const sm=new Float32Array(w), R0=Math.round(w*.01);
+  for(let i=0;i<w;i++){ let s2=0,n=0; for(let k=Math.max(0,i-R0);k<=Math.min(w-1,i+R0);k++){ s2+=colT[k]; n++; } sm[i]=s2/n; }
+  let L=0; while(L<w&&sm[L]<cmax*.35) L++; let R=w-1; while(R>0&&sm[R]<cmax*.35) R--;
+  if(R-L<w*.3) return null;
+  // distanza tipica tra le righe di un rigo
+  const lineRows=[]; for(let y=0;y<h;y++) if(rowT[y]>(R-L)*.25) { if(!lineRows.length||y-lineRows[lineRows.length-1]>2) lineRows.push(y); }
+  const dif=lineRows.slice(1).map((v,k)=>v-lineRows[k]).filter(v=>v>=4&&v<=30).sort((a,b)=>a-b);
+  const gap=dif.length?dif[Math.floor(dif.length/2)]:9;
+  L=Math.max(0,Math.round(L-Math.max(gap*1.8,w*.035))); R=Math.min(w-1,Math.round(R+gap*1.2));
+  // a destra si allarga finché c'è musica (ultima battuta, numero di pagina), fermandosi al primo vuoto
+  { let empty=0; for(let c=R+1;c<Math.min(w,R+w*.08);c++){ let n=0; for(let y=0;y<h;y+=2) if(g[y*w+c]) n++; if(n>h*.01&&n<h*.35){ R=c; empty=0; } else if(++empty>gap*1.5) break; } R=Math.min(w-1,R+Math.round(gap*.8)); }
+  // 3) altezza: blocchi di righe con inchiostro dentro la larghezza della musica;
+  //    si tengono i blocchi con righi e quelli vicini (titoli, testo, numeri), non le scritte lontane
+  const rowInk=new Float32Array(h);
+  for(let y=1;y<h-1;y++){ let n=0; for(let k=L;k<=R;k++){ const q=y*w+k; if(g[q]&&(g[q-1]||g[q+1]||g[q-w]||g[q+w])) n++; } rowInk[y]=n/(R-L+1); }
+  const edge=y=>(y<h*.06||y>h*.94)&&rowInk[y]>.4;
+  const blocks=[]; let cur=null, empty=0;
+  for(let y=0;y<h;y++){ const on=!edge(y)&&rowInk[y]>.008;
+    if(on){ if(!cur) cur={a:y,b:y}; else cur.b=y; empty=0; }
+    else if(cur&&++empty>gap*1.3){ blocks.push(cur); cur=null; empty=0; } }
+  if(cur) blocks.push(cur);
+  const music=bk=>{ for(let y=bk.a;y<=bk.b;y++) if(rowT[y]>(R-L)*.25) return true; return false; };
+  const keep=new Set(); blocks.forEach((bk,j)=>{ if(music(bk)) keep.add(j); });
+  if(!keep.size) return null;
+  let changed=true; while(changed){ changed=false; blocks.forEach((bk,j)=>{ if(keep.has(j)) return;
+    if(blocks.some((o,k)=>keep.has(k)&&(Math.abs(o.a-bk.b)<gap*2.6||Math.abs(bk.a-o.b)<gap*2.6))){ keep.add(j); changed=true; } }); }
+  const kept=blocks.filter((_,j)=>keep.has(j));
+  let T=Math.min(...kept.map(b=>b.a)), B=Math.max(...kept.map(b=>b.b));
+  const pad=gap*1.1; T=Math.max(0,Math.round(T-pad)); B=Math.min(h-1,Math.round(B+pad));
+  const box={l:L/w,t:T/h,r:1-R/w,b:1-B/h};
+  if(box.l+box.r<.03&&box.t+box.b<.03) return {l:0,t:0,r:0,b:0};
+  return box;
+}
+// pulizia: fuori dalla musica tutto bianco; dentro, via i puntini isolati (polvere, grana della fotocopia)
+function cleanCanvas(c,box,despeckle){
+  const W=c.width,H=c.height, x=c.getContext('2d',{willReadFrequently:true});
+  if(box){ x.fillStyle='#fff'; const L=box.l*W,T=box.t*H,R=W-box.r*W,B=H-box.b*H;
+    x.fillRect(0,0,W,T); x.fillRect(0,B,W,H-B); x.fillRect(0,T,L,B-T); x.fillRect(R,T,W-R,B-T); }
+  if(!despeckle) return c;
+  const im=x.getImageData(0,0,W,H), d=im.data; const N=W*H; const g=new Uint8Array(N);
+  for(let i=0;i<N;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])<450?1:0;
+  for(let y=2;y<H-2;y++) for(let i=2;i<W-2;i++){ const k=y*W+i; if(!g[k]) continue;
+    // macchiolina più piccola di 3×3 circondata da bianco
+    let ring=0; for(let a=-2;a<=2;a++){ ring+=g[(y-2)*W+i+a]+g[(y+2)*W+i+a]; } for(let a=-1;a<=1;a++){ ring+=g[(y+a)*W+i-2]+g[(y+a)*W+i+2]; }
+    if(!ring){ for(let a=-1;a<=1;a++) for(let b=-1;b<=1;b++){ const q=((y+a)*W+i+b)*4; d[q]=d[q+1]=d[q+2]=255; } } }
+  x.putImageData(im,0,0); return c;
+}
+
+const FIX_DEF={on:false, straighten:true, crop:true, sharpen:true, mode:'gray', clean:28};
 function fixOf(sc){ return Object.assign({},FIX_DEF,sc&&sc.fix||{}); }
+function fixOfPage(sc,p){ return Object.assign({},fixOf(sc),sc&&sc.pfix&&sc.pfix[p]||{}); }
+
+// Analisi della pagina (inclinazione e zona della musica) a bassa risoluzione, ricordata nello spartito.
+async function autoAnalyze(sc,p,pg){
+  sc.auto=sc.auto||{}; if(sc.auto[p]) return sc.auto[p];
+  const vp1=pg.getViewport({scale:1}); const k=1100/Math.max(vp1.width,vp1.height); const vp=pg.getViewport({scale:k});
+  const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+  const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
+  const skew=detectSkew(c); const r=rotateCanvas(c,skew); let box=null; try{ box=contentBox(r); }catch(e){}
+  sc.auto[p]={skew,box:box||{l:0,t:0,r:0,b:0}}; DB.putScore(sc); return sc.auto[p];
+}
+// Applica le correzioni alla pagina disegnata (la zona da mostrare la decide drawPageTo con il ritaglio).
 function fixPage(off,sc,p){
-  const f=fixOf(sc); if(!f.on) return off;
-  sc.skew=sc.skew||{};
-  if(f.straighten){ if(sc.skew[p]==null){ sc.skew[p]=detectSkew(off); DB.putScore(sc); } off=rotateCanvas(off,sc.skew[p]); }
+  const f=fixOfPage(sc,p); if(!f.on) return off;
+  const a=sc.auto&&sc.auto[p];
+  if(f.straighten){ const s=a?a.skew:detectSkew(off); off=rotateCanvas(off,s); }
   if(f.sharpen){
-    // elaborazione a risoluzione contenuta: veloce e leggera anche su iPhone
     const lim=2400, k=Math.min(1,lim/Math.max(off.width,off.height));
     let w=off; if(k<1){ w=document.createElement('canvas'); w.width=Math.round(off.width*k); w.height=Math.round(off.height*k); const x=w.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(off,0,0,w.width,w.height); }
-    const e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:f.mode==='bw'?55:55});
+    let e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55});
+    e=cleanCanvas(e,f.crop&&a?a.box:null,f.clean>0);
     if(k<1){ const c=document.createElement('canvas'); c.width=off.width; c.height=off.height; const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(e,0,0,c.width,c.height); off=c; } else off=e;
-  }
+  } else if(f.crop&&a) off=cleanCanvas(off,a.box,false);
   return off;
 }
 
 const Fix = {
-  // dopo ogni pagina: se è storta e il miglioramento è spento, il pulsante si accende per avvisare
+  scope:'all',
   async check(){
     const b=$$('[data-act="fix"]'); if(!ST.cur||!pageCanvas.width) return;
-    const f=fixOf(ST.cur); b.forEach(x=>x.classList.toggle('on',f.on));
+    const f=fixOfPage(ST.cur,ST.page); b.forEach(x=>x.classList.toggle('on',f.on));
     if(f.on){ b.forEach(x=>x.classList.remove('pulse')); return; }
-    const a=detectSkew(pageCanvas); ST.cur._lastSkew=a;
-    b.forEach(x=>x.classList.toggle('pulse',Math.abs(a)>=.5));
-    if(Math.abs(a)>=.5 && !this._told){ this._told=true; toast(`Questa pagina è storta di ${Math.abs(a).toFixed(1).replace('.',',')}°: tocca Migliora per raddrizzarla`,3600); }
+    const a=detectSkew(pageCanvas); let box=null; try{ box=contentBox(pageCanvas); }catch(e){}
+    const margin=box?Math.max(box.l+box.r,box.t+box.b):0; ST.cur._last={a,margin};
+    const bad=Math.abs(a)>=.5||margin>.16;
+    b.forEach(x=>x.classList.toggle('pulse',bad));
+    if(bad && !this._told){ this._told=true; toast(Math.abs(a)>=.5?`Pagina storta di ${Math.abs(a).toFixed(1).replace('.',',')}°: tocca Migliora per raddrizzarla e ingrandirla`:'Margini molto grandi: tocca Migliora per ritagliare i bordi e ingrandire la musica',3800); }
   },
   open(el){
     if(!ST.cur) return toast('Apri prima uno spartito');
-    const sc=ST.cur, f=fixOf(sc); const a=sc.skew&&sc.skew[ST.page]!=null?sc.skew[ST.page]:(sc._lastSkew??detectSkew(pageCanvas));
-    const p=popover(el,`<h4>Migliora pagina</h4><div style="width:300px;display:flex;flex-direction:column;gap:10px">
-      <div class="hint" style="font-size:13.5px">${Math.abs(a)>=.1?`Questa pagina è storta di <b>${Math.abs(a).toFixed(1).replace('.',',')}°</b>.`:'Questa pagina è dritta.'} Vale per tutte le pagine di questo spartito, mentre leggi.</div>
-      ${switchRow('fxOn','Migliora automaticamente',f.on,'Ogni pagina viene raddrizzata e resa nitida appena la apri.')}
-      ${switchRow('fxStr','Raddrizza pagine e righi',f.straighten)}
-      ${switchRow('fxSharp','Messa a fuoco e pulizia',f.sharpen,'Note e righi più netti, sfondo bianco, niente ombre.')}
+    const sc=ST.cur, p=ST.page; const scopeAll=this.scope==='all';
+    const f=scopeAll?fixOf(sc):fixOfPage(sc,p);
+    const last=sc._last||{}; const a=sc.auto&&sc.auto[p]?sc.auto[p].skew:(last.a??0);
+    const pop=popover(el,`<h4>Migliora pagina</h4><div style="width:310px;display:flex;flex-direction:column;gap:10px">
+      <div class="seg" id="fxScope"><button data-s="page" class="${!scopeAll?'on':''}">Questa pagina (${p+1})</button><button data-s="all" class="${scopeAll?'on':''}">Tutto lo spartito</button></div>
+      <div class="hint" style="font-size:13px">${Math.abs(a)>=.1?`Pagina storta di <b>${Math.abs(a).toFixed(1).replace('.',',')}°</b>. `:''}${last.margin>.16?'Margini grandi: si può ingrandire la musica.':''}</div>
+      ${switchRow('fxOn','Migliora automaticamente',f.on,scopeAll?'Ogni pagina appena la apri.':'Solo questa pagina.')}
+      ${switchRow('fxStr','Raddrizza pagina e righi',f.straighten)}
+      ${switchRow('fxCrop','Ritaglia i bordi e ingrandisci',f.crop,'Tiene solo la musica: via margini, ombre del dorso, dita e scritte lontane.')}
+      ${switchRow('fxSharp','Pulizia e messa a fuoco',f.sharpen,'Sfondo bianco, puntini tolti, note e righi netti.')}
       <div class="seg" id="fxMode"><button data-m="gray" class="${f.mode!=='bw'?'on':''}">Grigi nitidi</button><button data-m="bw" class="${f.mode==='bw'?'on':''}">Bianco e nero</button></div>
-      <div class="sl"><span>Pulizia sfondo<em id="fxCv">${f.clean}</em></span><input type="range" id="fxClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
-      <button class="goldBtn block" id="fxBake">${iconSvg('wand')}Correggi per sempre nel PDF</button>
-      <div class="hint" style="font-size:12px">“Per sempre” riscrive le pagine raddrizzate e pulite nello spartito: utile prima di condividerlo. Le annotazioni restano al loro posto.</div></div>`,{above:true,id:'fixPop'});
-    const upd=()=>{ sc.fix=f; DB.putScore(sc); pageCache.clear(); renderPage(0,{noPrefetch:false}); $$('[data-act="fix"]').forEach(x=>{x.classList.toggle('on',f.on); if(f.on) x.classList.remove('pulse');}); };
-    const sw=(id,k)=>{const b=$('#'+id);b.onclick=()=>{f[k]=!f[k];b.classList.toggle('on',f[k]);if(k!=='on'&&!f.on){f.on=true;$('#fxOn').classList.add('on')}upd()}};
-    sw('fxOn','on'); sw('fxStr','straighten'); sw('fxSharp','sharpen');
-    $('#fxMode').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;f.mode=b.dataset.m;$$('#fxMode button').forEach(x=>x.classList.toggle('on',x===b));f.on=true;$('#fxOn').classList.add('on');upd()};
-    const cl=$('#fxClean'); const updD=debounce(upd,250); cl.oninput=()=>{f.clean=+cl.value;$('#fxCv').textContent=cl.value;cl.style.setProperty('--v',cl.value+'%');f.on=true;$('#fxOn').classList.add('on');updD()};
-    $('#fxBake').onclick=()=>{ closeLayers(); this.bake(); };
+      <div class="sl"><span>Intensità della pulizia<em id="fxCv">${f.clean}</em></span><input type="range" id="fxClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
+      <button class="goldBtn block" id="fxBake">${iconSvg('wand')}Correggi per sempre: ${scopeAll?'tutto lo spartito':'questa pagina'}</button>
+      ${!scopeAll&&sc.pfix&&sc.pfix[p]?`<button class="ghostBtn" id="fxReset">Usa le impostazioni di tutto lo spartito</button>`:''}
+      <div class="hint" style="font-size:12px">“Per sempre” riscrive le pagine pulite, dritte e ritagliate nel PDF. Le annotazioni si spostano con la musica.</div></div>`,{above:true,id:'fixPop'});
+    const apply=()=>{ if(scopeAll){ sc.fix=f; sc.pfix={}; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]=f; }
+      DB.putScore(sc); pageCache.clear(); renderPage(0); $$('[data-act="fix"]').forEach(x=>{x.classList.toggle('on',f.on); if(f.on) x.classList.remove('pulse');}); };
+    const sw=(id,k)=>{const b=$('#'+id);b.onclick=()=>{f[k]=!f[k];b.classList.toggle('on',f[k]);if(k!=='on'&&!f.on){f.on=true;$('#fxOn').classList.add('on')}apply()}};
+    sw('fxOn','on'); sw('fxStr','straighten'); sw('fxCrop','crop'); sw('fxSharp','sharpen');
+    $('#fxScope').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;this.scope=b.dataset.s;this.open(el)};
+    $('#fxMode').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;f.mode=b.dataset.m;$$('#fxMode button').forEach(x=>x.classList.toggle('on',x===b));f.on=true;$('#fxOn').classList.add('on');apply()};
+    const cl=$('#fxClean'); const later=debounce(apply,300); cl.oninput=()=>{f.clean=+cl.value;$('#fxCv').textContent=cl.value;cl.style.setProperty('--v',cl.value+'%');f.on=true;$('#fxOn').classList.add('on');later()};
+    $('#fxBake').onclick=()=>{ closeLayers(); if(scopeAll){ sc.fix={...f,on:true}; sc.pfix={}; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]={...f,on:true}; } this.bake(scopeAll?null:[p]); };
+    const rs=$('#fxReset'); if(rs) rs.onclick=()=>{ delete sc.pfix[p]; DB.putScore(sc); pageCache.clear(); renderPage(0); closeLayers(); };
   },
-  // Riscrive il PDF con le pagine corrette (una immagine nitida per pagina, stessa misura dell'originale).
-  async bake(){
-    const sc=ST.cur; const f=fixOf(sc); f.on=true; sc.fix=f;
+  // Riscrive nel PDF le pagine corrette: dritte, pulite e ritagliate (la pagina nuova ha la misura della musica).
+  async bake(pages){
+    const sc=ST.cur;
     try{
       const bytes=await getBytes(sc); const src=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
-      const out=await PDFLib.PDFDocument.create();
-      for(let i=0;i<src.numPages;i++){
-        busy(`Correggo la pagina ${i+1} di ${src.numPages}…`); await sleep(10);
-        const pg=await src.getPage(i+1); const vp1=pg.getViewport({scale:1}); const k=Math.min(3,2200/Math.max(vp1.width,vp1.height));
-        const vp=pg.getViewport({scale:k}); const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+      const doc=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true});
+      const list=pages||[...Array(src.numPages).keys()]; const ann=ST.ann;
+      for(const i of list){
+        busy(`Correggo la pagina ${i+1}${pages?'':' di '+src.numPages}…`); await sleep(10);
+        const f=fixOfPage(sc,i); f.on=true;
+        const pg=await src.getPage(i+1); const a=await autoAnalyze(sc,i,pg); const vp1=pg.getViewport({scale:1});
+        const k=Math.min(3,2000/Math.max(vp1.width,vp1.height)); const vp=pg.getViewport({scale:k});
+        const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
         const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
-        const fixed=fixPage(c,sc,i); const bw=f.sharpen&&f.mode==='bw';
-        const blob=await new Promise(r=>fixed.toBlob(r,bw?'image/png':'image/jpeg',bw?undefined:.88));
-        const img=bw?await out.embedPng(await blob.arrayBuffer()):await out.embedJpg(await blob.arrayBuffer());
-        const np=out.addPage([vp1.width,vp1.height]); np.drawImage(img,{x:0,y:0,width:vp1.width,height:vp1.height});
+        sc.pfix=sc.pfix||{}; const keep=sc.pfix[i]; sc.pfix[i]=f; let fixed=fixPage(c,sc,i); if(keep) sc.pfix[i]=keep; else delete sc.pfix[i];
+        const bx=f.crop?a.box:{l:0,t:0,r:0,b:0};
+        const cw=Math.max(1,Math.round(fixed.width*(1-bx.l-bx.r))), ch=Math.max(1,Math.round(fixed.height*(1-bx.t-bx.b)));
+        const out=document.createElement('canvas'); out.width=cw; out.height=ch; out.getContext('2d').drawImage(fixed,bx.l*fixed.width,bx.t*fixed.height,cw,ch,0,0,cw,ch);
+        const bw=f.sharpen&&f.mode==='bw'; const blob=await new Promise(r=>out.toBlob(r,bw?'image/png':'image/jpeg',bw?undefined:.8));
+        const img=bw?await doc.embedPng(await blob.arrayBuffer()):await doc.embedJpg(await blob.arrayBuffer());
+        const pw=vp1.width*(1-bx.l-bx.r), ph=vp1.height*(1-bx.t-bx.b);
+        doc.removePage(i); const np=doc.insertPage(i,[pw,ph]); np.drawImage(img,{x:0,y:0,width:pw,height:ph});
+        // le annotazioni seguono il ritaglio
+        const sx=1-bx.l-bx.r, sy=1-bx.t-bx.b;
+        if(ann[i]&&(sx<1||sy<1)) ann[i]=ann[i].map(s=>{ if(s.t==='img') return s; const q=JSON.parse(JSON.stringify(s)); const X=v=>(v-bx.l)/sx, Y=v=>(v-bx.t)/sy;
+          if(q.pts) q.pts=q.pts.map(p2=>[X(p2[0]),Y(p2[1]),p2[2]]).map(p2=>p2[2]==null?[p2[0],p2[1]]:p2); if(q.a){q.a=[X(q.a[0]),Y(q.a[1])];q.b=[X(q.b[0]),Y(q.b[1])];} if(q.x!=null){q.x=X(q.x);q.y=Y(q.y);}
+          if(q.w) q.w/=sx; if(q.size) q.size/=sx; return q; });
+        if(sc.auto) delete sc.auto[i]; if(sc.pfix) delete sc.pfix[i];
       }
       src.destroy();
-      sc.fix={...f,on:false}; sc.skew={};
-      await replaceBytes(sc,(await out.save()).buffer,null); busy(); toast('Spartito corretto: pagine dritte e nitide salvate nel PDF',3200);
+      if(!pages){ sc.fix={...fixOf(sc),on:false}; sc.auto={}; sc.pfix={}; }
+      await replaceBytes(sc,(await doc.save()).buffer,ann); busy(); toast(pages?'Pagina corretta e salvata nel PDF':'Spartito corretto: pagine dritte, pulite e ingrandite',3200);
     }catch(e){ busy(); toast('Correzione non riuscita: '+(e.message||e)); }
   },
 };

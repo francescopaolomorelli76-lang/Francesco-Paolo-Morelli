@@ -92,6 +92,10 @@ body.night #hlCanvas{mix-blend-mode:screen}
 #textEntry.lybox{gap:4px;padding:5px;box-shadow:var(--shadow)}
 #textEntry.lybox input{width:190px}
 #textEntry input,#textEntry textarea{-webkit-user-select:text;user-select:text}
+/* Migliora pagina */
+.fixBtn.on{box-shadow:0 0 0 3px rgba(255,255,255,.85),0 6px 18px rgba(214,168,78,.5)}
+.pulse{animation:fixPulse 1.6s ease-in-out infinite}
+@keyframes fixPulse{50%{box-shadow:0 0 0 6px rgba(242,211,130,.55),0 0 24px rgba(242,211,130,.8)}}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
@@ -477,6 +481,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <div id="pageNum">1 / 1</div>
       <button class="ib" data-act="bright" title="Luminosità" aria-label="Luminosità" data-i="sun"></button>
     </div>
+    <button class="goldBtn fixBtn" data-act="fix" title="Migliora pagina: raddrizza e metti a fuoco"><svg class="i" data-i="wand"></svg><span class="lbl">Migliora</span></button>
     <button class="goldBtn" data-act="scanInsert" title="Scatta una foto e aggiungila come pagina"><svg class="i" data-i="camera"></svg><span class="lbl">Foto → pagina</span></button>
   </footer>
 
@@ -522,6 +527,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
         <button class="toolRow" data-act="stampsOpen"><svg class="i" data-i="clef"></svg>Segni musicali</button>
         <button class="toolRow" data-act="bookmarks"><svg class="i" data-i="book"></svg>Segnalibri</button>
         <button class="toolRow" data-act="reorder"><svg class="i" data-i="grid"></svg>Riordina pagine</button>
+        <button class="toolRow" data-act="fix"><svg class="i" data-i="wand"></svg>Migliora pagina<small>raddrizza · nitida</small></button>
         <button class="toolRow" data-act="crop"><svg class="i" data-i="crop"></svg>Ritaglia margini</button>
         <button class="toolRow" data-act="info"><svg class="i" data-i="info"></svg>Informazioni</button>
         <button class="toolRow" data-act="share"><svg class="i" data-i="airdrop"></svg>Invia (AirDrop, WhatsApp…)</button>
@@ -973,7 +979,7 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOf(ST.cur))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
   const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
@@ -985,7 +991,8 @@ async function drawPageTo(p,W,H,dpr){
   const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
   const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
   await pg.render({canvasContext:x,viewport:vp}).promise;
-  const v={off,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
+  let fixed=off; try{ fixed=fixPage(off,ST.cur,p); }catch(e){}
+  const v={off:fixed,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
   pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
   return v;
 }
@@ -1007,6 +1014,7 @@ async function renderPage(dir,opts={}){
   $('#ribbon').hidden = !(ST.cur.bookmarks||[]).some(b=>b.p===ST.page);
   updateChrome();
   if(!opts.noPrefetch) setTimeout(()=>prefetch(seq),60);
+  setTimeout(()=>{ if(seq===renderSeq) Fix.check(); },400);
 }
 function prefetch(seq){
   const W=stage.clientWidth,H=stage.clientHeight,d=baseDpr();
@@ -1173,6 +1181,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
   pron:()=>{closeSides();Pron.open()},
   fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
@@ -2076,7 +2085,9 @@ const Scan = {
       const modes=[['score','Partitura B/N'],['gray','Grigi nitidi'],['color','Colore vivo'],['orig','Originale']];
       const sl=(k,l,min,max)=>`<div class="sl"><span>${l}<em id="sv-${k}">${this.p[k]}</em></span><input type="range" id="sp-${k}" min="${min}" max="${max}" value="${this.p[k]}" style="--v:${(this.p[k]-min)/(max-min)*100}%"></div>`;
       T.innerHTML=`<div class="seg" id="scModes">${modes.map(([k,l])=>`<button data-m="${k}" class="${this.mode===k?'on':''}">${l}</button>`).join('')}</div>
-        <div class="sliders">${sl('clean','Pulizia sfondo',0,100)}${sl('ink','Intensità segni',0,100)}${sl('sharp','Nitidezza dettagli',0,100)}${sl('contrast','Contrasto',-50,100)}</div>`;
+        <div class="sliders">${sl('clean','Pulizia sfondo',0,100)}${sl('ink','Intensità segni',0,100)}${sl('sharp','Nitidezza dettagli',0,100)}${sl('contrast','Contrasto',-50,100)}</div>
+        ${switchRow('scDesk','Raddrizza i righi automaticamente',this.deskew!==false,'Corregge l\'inclinazione dei pentagrammi.')}`;
+      $('#scDesk').onclick=()=>{this.deskew=this.deskew===false;$('#scDesk').classList.toggle('on',this.deskew!==false);this.process(false)};
       $('#scModes').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;this.mode=b.dataset.m;$$('#scModes button').forEach(x=>x.classList.toggle('on',x===b));this.process(false)};
       const upd=debounce(()=>this.process(false),90);
       ['clean','ink','sharp','contrast'].forEach(k=>{const i=$('#sp-'+k);i.oninput=()=>{this.p[k]=+i.value;$('#sv-'+k).textContent=i.value;i.style.setProperty('--v',(i.value-i.min)/(i.max-i.min)*100+'%');upd()}});
@@ -2103,7 +2114,9 @@ const Scan = {
   },
   process(full){
     const maxSide=full?2400:1100;
-    const warped=warpQuad(this.src,this.quad,maxSide);
+    let warped=warpQuad(this.src,this.quad,maxSide);
+    // raddrizza anche i righi (la foto può restare un po' inclinata dentro il foglio)
+    if(this.deskew!==false){ const a=detectSkew(warped); this.lastSkew=a; if(Math.abs(a)>=.1) warped=rotateCanvas(warped,a); }
     this.warped=warped; this.result=this.mode==='orig'?warped:enhance(warped,this.mode,this.p);
     if(!full) this.drawResult(); return this.result;
   },
@@ -3344,6 +3357,103 @@ async function ocrBrowser(canvas){
     return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W})); }
   finally{ w.terminate(); }
 }
+
+// ================= Migliora pagina: raddrizza pagine e righi storti, mette a fuoco, pulisce lo sfondo =================
+
+// Angolo dei righi (gradi; positivo = salgono verso destra… nel verso dello schermo, ruotare di -angolo).
+// Cerca l'inclinazione per cui le righe scure si "impilano" meglio: è quella dei pentagrammi.
+function detectSkew(src){
+  const w=Math.min(700,src.width), h=Math.round(src.height*w/src.width);
+  const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true});
+  x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(src,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data; const px=[], py=[];
+  for(let y=0;y<h;y++) for(let i=0;i<w;i++){ const k=(y*w+i)*4; if(d[k]+d[k+1]+d[k+2]<330){ px.push(i-w/2); py.push(y); } }
+  if(px.length<200) return 0;
+  // al massimo ~40.000 punti per restare veloce
+  const step=Math.max(1,Math.floor(px.length/40000));
+  const score=a=>{ const tn=Math.tan(a*Math.PI/180), M=h+w; const bins=new Float32Array(M*2); let s=0;
+    for(let j=0;j<px.length;j+=step){ const b=Math.round(py[j]-px[j]*tn)+M; bins[b]++; }
+    for(let j=0;j<bins.length;j++) s+=bins[j]*bins[j]; return s; };
+  let best=0, bs=-1;
+  for(let a=-6;a<=6.001;a+=.25){ const s=score(a); if(s>bs){bs=s;best=a;} }
+  for(let a=best-.25;a<=best+.25;a+=.03){ const s=score(a); if(s>bs){bs=s;best=a;} }
+  return Math.abs(best)<.08?0:+best.toFixed(2);
+}
+function rotateCanvas(src,deg){
+  if(!deg) return src;
+  const c=document.createElement('canvas'); c.width=src.width; c.height=src.height; const x=c.getContext('2d');
+  x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+  x.translate(c.width/2,c.height/2); x.rotate(-deg*Math.PI/180); x.imageSmoothingQuality='high'; x.drawImage(src,-src.width/2,-src.height/2);
+  return c;
+}
+// Applica raddrizzamento e miglioramento a una pagina già disegnata (in lettura).
+const FIX_DEF={on:false, straighten:true, sharpen:true, mode:'gray', clean:28};
+function fixOf(sc){ return Object.assign({},FIX_DEF,sc&&sc.fix||{}); }
+function fixPage(off,sc,p){
+  const f=fixOf(sc); if(!f.on) return off;
+  sc.skew=sc.skew||{};
+  if(f.straighten){ if(sc.skew[p]==null){ sc.skew[p]=detectSkew(off); DB.putScore(sc); } off=rotateCanvas(off,sc.skew[p]); }
+  if(f.sharpen){
+    // elaborazione a risoluzione contenuta: veloce e leggera anche su iPhone
+    const lim=2400, k=Math.min(1,lim/Math.max(off.width,off.height));
+    let w=off; if(k<1){ w=document.createElement('canvas'); w.width=Math.round(off.width*k); w.height=Math.round(off.height*k); const x=w.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(off,0,0,w.width,w.height); }
+    const e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:f.mode==='bw'?55:55});
+    if(k<1){ const c=document.createElement('canvas'); c.width=off.width; c.height=off.height; const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(e,0,0,c.width,c.height); off=c; } else off=e;
+  }
+  return off;
+}
+
+const Fix = {
+  // dopo ogni pagina: se è storta e il miglioramento è spento, il pulsante si accende per avvisare
+  async check(){
+    const b=$$('[data-act="fix"]'); if(!ST.cur||!pageCanvas.width) return;
+    const f=fixOf(ST.cur); b.forEach(x=>x.classList.toggle('on',f.on));
+    if(f.on){ b.forEach(x=>x.classList.remove('pulse')); return; }
+    const a=detectSkew(pageCanvas); ST.cur._lastSkew=a;
+    b.forEach(x=>x.classList.toggle('pulse',Math.abs(a)>=.5));
+    if(Math.abs(a)>=.5 && !this._told){ this._told=true; toast(`Questa pagina è storta di ${Math.abs(a).toFixed(1).replace('.',',')}°: tocca Migliora per raddrizzarla`,3600); }
+  },
+  open(el){
+    if(!ST.cur) return toast('Apri prima uno spartito');
+    const sc=ST.cur, f=fixOf(sc); const a=sc.skew&&sc.skew[ST.page]!=null?sc.skew[ST.page]:(sc._lastSkew??detectSkew(pageCanvas));
+    const p=popover(el,`<h4>Migliora pagina</h4><div style="width:300px;display:flex;flex-direction:column;gap:10px">
+      <div class="hint" style="font-size:13.5px">${Math.abs(a)>=.1?`Questa pagina è storta di <b>${Math.abs(a).toFixed(1).replace('.',',')}°</b>.`:'Questa pagina è dritta.'} Vale per tutte le pagine di questo spartito, mentre leggi.</div>
+      ${switchRow('fxOn','Migliora automaticamente',f.on,'Ogni pagina viene raddrizzata e resa nitida appena la apri.')}
+      ${switchRow('fxStr','Raddrizza pagine e righi',f.straighten)}
+      ${switchRow('fxSharp','Messa a fuoco e pulizia',f.sharpen,'Note e righi più netti, sfondo bianco, niente ombre.')}
+      <div class="seg" id="fxMode"><button data-m="gray" class="${f.mode!=='bw'?'on':''}">Grigi nitidi</button><button data-m="bw" class="${f.mode==='bw'?'on':''}">Bianco e nero</button></div>
+      <div class="sl"><span>Pulizia sfondo<em id="fxCv">${f.clean}</em></span><input type="range" id="fxClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
+      <button class="goldBtn block" id="fxBake">${iconSvg('wand')}Correggi per sempre nel PDF</button>
+      <div class="hint" style="font-size:12px">“Per sempre” riscrive le pagine raddrizzate e pulite nello spartito: utile prima di condividerlo. Le annotazioni restano al loro posto.</div></div>`,{above:true,id:'fixPop'});
+    const upd=()=>{ sc.fix=f; DB.putScore(sc); pageCache.clear(); renderPage(0,{noPrefetch:false}); $$('[data-act="fix"]').forEach(x=>{x.classList.toggle('on',f.on); if(f.on) x.classList.remove('pulse');}); };
+    const sw=(id,k)=>{const b=$('#'+id);b.onclick=()=>{f[k]=!f[k];b.classList.toggle('on',f[k]);if(k!=='on'&&!f.on){f.on=true;$('#fxOn').classList.add('on')}upd()}};
+    sw('fxOn','on'); sw('fxStr','straighten'); sw('fxSharp','sharpen');
+    $('#fxMode').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;f.mode=b.dataset.m;$$('#fxMode button').forEach(x=>x.classList.toggle('on',x===b));f.on=true;$('#fxOn').classList.add('on');upd()};
+    const cl=$('#fxClean'); const updD=debounce(upd,250); cl.oninput=()=>{f.clean=+cl.value;$('#fxCv').textContent=cl.value;cl.style.setProperty('--v',cl.value+'%');f.on=true;$('#fxOn').classList.add('on');updD()};
+    $('#fxBake').onclick=()=>{ closeLayers(); this.bake(); };
+  },
+  // Riscrive il PDF con le pagine corrette (una immagine nitida per pagina, stessa misura dell'originale).
+  async bake(){
+    const sc=ST.cur; const f=fixOf(sc); f.on=true; sc.fix=f;
+    try{
+      const bytes=await getBytes(sc); const src=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
+      const out=await PDFLib.PDFDocument.create();
+      for(let i=0;i<src.numPages;i++){
+        busy(`Correggo la pagina ${i+1} di ${src.numPages}…`); await sleep(10);
+        const pg=await src.getPage(i+1); const vp1=pg.getViewport({scale:1}); const k=Math.min(3,2200/Math.max(vp1.width,vp1.height));
+        const vp=pg.getViewport({scale:k}); const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
+        const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
+        const fixed=fixPage(c,sc,i); const bw=f.sharpen&&f.mode==='bw';
+        const blob=await new Promise(r=>fixed.toBlob(r,bw?'image/png':'image/jpeg',bw?undefined:.88));
+        const img=bw?await out.embedPng(await blob.arrayBuffer()):await out.embedJpg(await blob.arrayBuffer());
+        const np=out.addPage([vp1.width,vp1.height]); np.drawImage(img,{x:0,y:0,width:vp1.width,height:vp1.height});
+      }
+      src.destroy();
+      sc.fix={...f,on:false}; sc.skew={};
+      await replaceBytes(sc,(await out.save()).buffer,null); busy(); toast('Spartito corretto: pagine dritte e nitide salvate nel PDF',3200);
+    }catch(e){ busy(); toast('Correzione non riuscita: '+(e.message||e)); }
+  },
+};
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

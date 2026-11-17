@@ -142,7 +142,9 @@ const Scan = {
       const modes=[['score','Partitura B/N'],['gray','Grigi nitidi'],['color','Colore vivo'],['orig','Originale']];
       const sl=(k,l,min,max)=>`<div class="sl"><span>${l}<em id="sv-${k}">${this.p[k]}</em></span><input type="range" id="sp-${k}" min="${min}" max="${max}" value="${this.p[k]}" style="--v:${(this.p[k]-min)/(max-min)*100}%"></div>`;
       T.innerHTML=`<div class="seg" id="scModes">${modes.map(([k,l])=>`<button data-m="${k}" class="${this.mode===k?'on':''}">${l}</button>`).join('')}</div>
-        <div class="sliders">${sl('clean','Pulizia sfondo',0,100)}${sl('ink','Intensità segni',0,100)}${sl('sharp','Nitidezza dettagli',0,100)}${sl('contrast','Contrasto',-50,100)}</div>`;
+        <div class="sliders">${sl('clean','Pulizia sfondo',0,100)}${sl('ink','Intensità segni',0,100)}${sl('sharp','Nitidezza dettagli',0,100)}${sl('contrast','Contrasto',-50,100)}</div>
+        ${switchRow('scDesk','Raddrizza i righi automaticamente',this.deskew!==false,'Corregge l\'inclinazione dei pentagrammi.')}`;
+      $('#scDesk').onclick=()=>{this.deskew=this.deskew===false;$('#scDesk').classList.toggle('on',this.deskew!==false);this.process(false)};
       $('#scModes').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;this.mode=b.dataset.m;$$('#scModes button').forEach(x=>x.classList.toggle('on',x===b));this.process(false)};
       const upd=debounce(()=>this.process(false),90);
       ['clean','ink','sharp','contrast'].forEach(k=>{const i=$('#sp-'+k);i.oninput=()=>{this.p[k]=+i.value;$('#sv-'+k).textContent=i.value;i.style.setProperty('--v',(i.value-i.min)/(i.max-i.min)*100+'%');upd()}});
@@ -169,7 +171,9 @@ const Scan = {
   },
   process(full){
     const maxSide=full?2400:1100;
-    const warped=warpQuad(this.src,this.quad,maxSide);
+    let warped=warpQuad(this.src,this.quad,maxSide);
+    // raddrizza anche i righi (la foto può restare un po' inclinata dentro il foglio)
+    if(this.deskew!==false){ const a=detectSkew(warped); this.lastSkew=a; if(Math.abs(a)>=.1) warped=rotateCanvas(warped,a); }
     this.warped=warped; this.result=this.mode==='orig'?warped:enhance(warped,this.mode,this.p);
     if(!full) this.drawResult(); return this.result;
   },

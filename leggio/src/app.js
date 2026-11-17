@@ -79,7 +79,7 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOf(ST.cur))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
   const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
@@ -91,7 +91,8 @@ async function drawPageTo(p,W,H,dpr){
   const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
   const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
   await pg.render({canvasContext:x,viewport:vp}).promise;
-  const v={off,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
+  let fixed=off; try{ fixed=fixPage(off,ST.cur,p); }catch(e){}
+  const v={off:fixed,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
   pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
   return v;
 }
@@ -113,6 +114,7 @@ async function renderPage(dir,opts={}){
   $('#ribbon').hidden = !(ST.cur.bookmarks||[]).some(b=>b.p===ST.page);
   updateChrome();
   if(!opts.noPrefetch) setTimeout(()=>prefetch(seq),60);
+  setTimeout(()=>{ if(seq===renderSeq) Fix.check(); },400);
 }
 function prefetch(seq){
   const W=stage.clientWidth,H=stage.clientHeight,d=baseDpr();
@@ -279,6 +281,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
   pron:()=>{closeSides();Pron.open()},
   fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},

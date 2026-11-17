@@ -2,275 +2,277 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@600;800;900&display=swap">
 <style>
-/* Layout: one-screen app — top bar with mode switch, content area, one big 3D push button centred at the bottom, language pair under it. Single deliberate comic look (ink on paper). */
-:root{
-  --ink:#111111; --paper:#FFF8E7; --yellow:#FFD60A; --yellow-side:#C79A00; --red:#E63946; --red-side:#9E1B26;
-  --cyan:#00B4D8; --cyan-side:#00708A; --white:#ffffff; --muted:#111111aa; --night:#222222;
-  --display:'Bangers','Impact','Arial Black',sans-serif;
-  --body:'Nunito',system-ui,-apple-system,sans-serif;
-  color-scheme:light;
-}
+/* Layout: app a schermo intero come sul telefono — introduzione a slide, poi pagina Voce con due pulsanti 3D, pannelli a comparsa per lingue e opzioni. Un solo look fumetto, scelto apposta. */
+:root{--ink:#111;--paper:#FFF8E7;--yellow:#FFD60A;--yside:#C79A00;--red:#E63946;--cyan:#00B4D8;--cside:#00708A;--blue:#1E6FE8;--white:#fff;--muted:#111111aa;
+  --display:'Bangers','Impact','Arial Black',sans-serif;--body:'Nunito',system-ui,-apple-system,sans-serif;color-scheme:light}
 html,body{height:100%}
-body{background:var(--paper);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 :focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
-.app{height:100%;display:flex;flex-direction:column;position:relative;
-  background-color:var(--paper);background-image:radial-gradient(circle,#0000001c 1.3px,transparent 1.7px);background-size:12px 12px}
-.app.scan{background-color:var(--night);background-image:radial-gradient(circle,#ffffff22 1.3px,transparent 1.7px)}
-.app.live::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background:repeating-conic-gradient(from 0deg at 50% 78%,#0000 0 3deg,#00000020 3deg 4deg)}
-.notice{position:relative;font-size:12px;font-weight:800;text-align:center;background:var(--yellow);border-bottom:3px solid var(--ink);
-  padding-block:5px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
-.notice.err{background:var(--red);color:var(--white)}
-.top{position:relative;display:flex;align-items:center;gap:8px;
-  padding-block:8px 0;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
-.logo{font-family:var(--display);font-size:30px;letter-spacing:2px;color:var(--yellow);
-  -webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink)}
+.dots-bg{background-color:var(--paper);background-image:radial-gradient(circle,#0000001c 1.3px,transparent 1.7px);background-size:12px 12px}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.pad{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.panel{background:var(--white);border:3.5px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink)}
+.cbtn{font-family:var(--display);font-size:17px;letter-spacing:1px;padding:7px 12px;border:3.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink);background:var(--white)}
+.cbtn.y{background:var(--yellow)}.cbtn.r{background:var(--red);color:var(--white)}.cbtn.c{background:var(--cyan)}
+.cbtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:60;max-width:92vw;font-weight:800;padding:10px 14px;border:3.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 var(--ink);background:var(--yellow)}
+.toast.err{background:var(--red);color:var(--white)}
+/* ── Introduzione ── */
+#intro{z-index:40;background:var(--paper)}
+.ibar{display:flex;justify-content:space-between;align-items:center;padding-block:6px}
+.ibar button{font-family:var(--display);font-size:20px;letter-spacing:1px}
+.slides{flex:1;min-height:0;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 14px;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s}
+.slide .img{max-width:100%;max-height:100%;min-height:0;flex:0 1 auto;border-radius:14px;overflow:hidden}
+.slide img{display:block;max-width:100%;max-height:calc(100vh - 260px);object-fit:contain;animation:kb 7s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1) translate(0,0)}to{transform:scale(1.05) translate(4px,-3px)}}
+.cap{font-weight:900;font-style:italic;font-size:24px;text-align:center;line-height:1.1;background:var(--yellow);border:3.5px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:8px 16px;border-radius:6px;transform:rotate(-2deg);animation:pop .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.4) rotate(-2deg)}to{transform:scale(1) rotate(-2deg)}}
+@media (prefers-reduced-motion:reduce){.slide img,.cap{animation:none}}
+.idots{display:flex;justify-content:center;gap:8px;padding:8px 0}
+.idots i{width:14px;height:14px;border:2.5px solid var(--ink);border-radius:10px;background:var(--white);transition:width .25s}
+.idots i.on{width:26px;background:var(--blue)}
+.bluebtn{width:100%;height:60px;border-radius:40px;background:var(--blue);color:var(--white);font-weight:900;font-size:24px;letter-spacing:1px;border:4px solid var(--ink);box-shadow:0 6px 0 var(--ink)}
+.bluebtn:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
+/* ── App ── */
+.top{display:flex;align-items:center;gap:6px;padding-block:8px 0}
+.logo{font-family:var(--display);font-size:26px;letter-spacing:1.5px;color:var(--yellow);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink);cursor:pointer}
 .spacer{flex:1}
-.switch{display:flex;padding:2px;background:var(--white);border:3.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
-.switch button{width:46px;height:36px;border-radius:3px;font-size:20px;display:grid;place-items:center}
-.switch button[aria-pressed="true"]{background:var(--ink)}
-.content{position:relative;flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;
-  padding-block:12px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.sw{display:flex;padding:2px;background:var(--white);border:3.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
+.sw button{width:42px;height:32px;border-radius:3px;font-size:18px;display:grid;place-items:center}
+.sw button[aria-pressed="true"]{background:var(--ink)}
+.ico{width:40px;height:40px;font-size:22px;display:grid;place-items:center}
+.notice{font-size:12px;font-weight:800;text-align:center;background:var(--yellow);border-bottom:3px solid var(--ink);padding-block:4px}
+.notice.err{background:var(--red);color:var(--white)}
+.content{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-block:10px}
 .content.center{justify-content:center}
-.bubble{position:relative;max-width:88%;background:var(--white);border:3.5px solid var(--ink);border-radius:24px;
-  padding:10px 16px;margin-bottom:16px;filter:drop-shadow(4px 4px 0 var(--ink))}
-.bubble.mine{align-self:flex-end}
-.bubble.theirs{align-self:flex-start;background:var(--yellow)}
-.bubble.hero{align-self:center;max-width:100%;text-align:center}
-.bubble::after{content:"";position:absolute;bottom:-17px;left:20%;width:22px;height:18px;background:inherit;
-  border-left:3.5px solid var(--ink);border-bottom:3.5px solid var(--ink);transform:skewX(-35deg)}
-.bubble.mine::after{left:auto;right:20%;transform:skewX(35deg);border-left:0;border-right:3.5px solid var(--ink)}
-.bubble .meta{font-size:14px;display:flex;align-items:center;gap:6px}
-.bubble .big{font-weight:900;font-size:22px;line-height:1.2;overflow-wrap:anywhere}
-.bubble .small{font-style:italic;font-size:13.5px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
-.hero h2{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:1px;margin:0 0 4px}
-.hero p{margin:0 0 6px;font-weight:700;font-size:15px;text-wrap:balance}
-.flags{font-size:22px;letter-spacing:6px}
-.panel{background:var(--paper);border:3.5px solid var(--ink);border-radius:6px;box-shadow:5px 5px 0 var(--ink);padding:12px}
-.photo{width:100%;max-height:30vh;object-fit:cover;border-radius:3px;display:block}
-.pair{padding:6px 0;border-bottom:2px solid var(--ink)}
-.pair:last-child{border-bottom:0}
-.pair .big{font-weight:900;font-size:19px;overflow-wrap:anywhere}
-.pair .small{font-style:italic;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
-.hint-on-dark{color:var(--white);font-weight:800;text-align:center;text-wrap:balance}
-/* dictation field (web stand-in for hold-to-talk) */
-.dictate{position:relative;display:flex;gap:8px;
-  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
-.dictate textarea{flex:1;min-width:0;height:52px;resize:none;font:800 17px/1.25 var(--body);color:var(--ink);background:var(--white);
-  border:3.5px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);padding:8px 10px;-webkit-user-select:text;user-select:text}
-/* the 3D button */
-.stage{position:relative;display:grid;place-items:center;padding-top:14px}
-.push{--face:var(--yellow);--side:var(--yellow-side);--fg:var(--ink);--d:24px;--p:3px;
-  position:relative;width:min(52vw,210px);aspect-ratio:1;border-radius:50%;margin-bottom:var(--d)}
-.push .ring{position:absolute;inset:-14%;border-radius:50%;pointer-events:none;opacity:0}
-.push .shadow{position:absolute;inset:0;border-radius:50%;background:var(--ink);transform:translate(8px,calc(var(--d) + 8px))}
-.push .body{position:absolute;left:0;right:0;top:50%;height:calc(50% + var(--d));background:var(--side);
-  border:5px solid var(--ink);border-top:0;border-radius:0 0 999px 999px / 0 0 calc(50% + 2px) calc(50% + 2px);
-  background-image:repeating-linear-gradient(90deg,#00000033 0 2px,transparent 2px 9px)}
-.push .face{position:absolute;inset:0;border-radius:50%;border:5px solid var(--ink);display:grid;place-items:center;
-  transform:translateY(var(--p));transition:transform 80ms ease-out;
-  background:
-    radial-gradient(circle,#00000022 1.2px,transparent 1.6px) 0 0/10px 10px,
-    radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--face) 50%,white),var(--face) 55%,color-mix(in srgb,var(--face) 88%,black));
-  -webkit-mask:none}
-.push .face::before{content:"";position:absolute;inset:11%;border-radius:50%;border:2px solid #00000055;
-  border-top-color:#ffffffdd;border-left-color:#ffffffaa;border-width:5px 2px 2px 5px}
-.push .label{position:relative;font-family:var(--display);font-size:clamp(18px,5.4vw,23px);letter-spacing:1px;line-height:1;color:var(--fg);text-align:center}
-.push .label .ico{display:block;font-size:clamp(30px,10vw,46px);margin-bottom:6px}
-.push.down .face,.push:active .face{--p:calc(var(--d) - 4px)}
-.push.rec{--face:var(--red);--side:var(--red-side);--fg:var(--white)}
-.push.busy{--face:var(--cyan);--side:var(--cyan-side)}
-.push.rec .ring,.push.busy .ring{animation:ring 1.1s infinite;border:6px solid var(--red)}
-.push.busy .ring{border-color:var(--cyan)}
-@keyframes ring{from{opacity:.9;transform:scale(.85)}to{opacity:0;transform:scale(1.15)}}
-@media (prefers-reduced-motion:reduce){.push .ring{animation:none!important}}
-.langs{position:relative;display:flex;justify-content:center;align-items:center;gap:10px;
-  padding-block:2px 10px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
-.chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--display);font-size:18px;letter-spacing:1px;
-  padding:4px 10px;border:3.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink);background:var(--yellow);color:var(--ink)}
-.chip.partner{background:var(--cyan)}
-.chip small{font-size:12px;color:var(--white);-webkit-text-stroke:0}
-.chip select{position:absolute;inset:0;opacity:0;width:100%}
-.mine-wrap{position:relative}
-.swap{font-size:22px;font-weight:900}
-.app.scan .swap{color:var(--white)}
+.bubble{position:relative;max-width:86%;border:3.5px solid var(--ink);border-radius:22px;padding:9px 14px;margin-bottom:14px;filter:drop-shadow(4px 4px 0 var(--ink));background:var(--white)}
+.bubble.me{align-self:flex-end;background:var(--yellow)}.bubble.them{align-self:flex-start;background:var(--cyan)}.bubble.hero{align-self:center;max-width:100%}
+.bubble::after{content:"";position:absolute;bottom:-15px;left:20%;width:20px;height:16px;background:inherit;border-left:3.5px solid var(--ink);border-bottom:3.5px solid var(--ink);transform:skewX(-35deg)}
+.bubble.me::after{left:auto;right:20%;transform:skewX(35deg);border-left:0;border-right:3.5px solid var(--ink)}
+.bubble .meta{font-size:13px}.bubble .big{font-weight:900;font-size:21px;line-height:1.2;overflow-wrap:anywhere}.bubble .small{font-style:italic;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.hero h2{font-family:var(--display);font-weight:400;letter-spacing:1px;font-size:24px;margin:0 0 6px;text-align:center}
+.hero p{margin:0;font-weight:700;font-size:14.5px;line-height:1.4}
+.dictate{display:flex;gap:8px;padding-bottom:8px}
+.dictate textarea{flex:1;min-width:0;height:54px;resize:none;font:800 16px/1.25 var(--body);color:var(--ink);background:var(--white);border:3.5px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);padding:8px 10px;-webkit-user-select:text;user-select:text}
+.btns{display:flex;justify-content:space-around;align-items:flex-end;padding-bottom:4px;position:relative}
+.col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.push{--face:var(--yellow);--side:var(--yside);--d:18px;position:relative;width:min(36vw,150px);aspect-ratio:1;margin-bottom:var(--d)}
+.push.them{--face:var(--cyan);--side:var(--cside)}
+.push .sh{position:absolute;inset:0;border-radius:50%;background:var(--ink);transform:translate(7px,calc(var(--d) + 7px))}
+.push .bd{position:absolute;left:0;right:0;top:50%;height:calc(50% + var(--d));background:var(--side);border:4px solid var(--ink);border-top:0;border-radius:0 0 999px 999px/0 0 calc(50% + 2px) calc(50% + 2px);background-image:repeating-linear-gradient(90deg,#00000033 0 2px,transparent 2px 9px)}
+.push .fc{position:absolute;inset:0;border-radius:50%;border:4px solid var(--ink);display:grid;place-items:center;transform:translateY(3px);transition:transform 80ms;
+  background:radial-gradient(circle,#00000022 1.2px,transparent 1.6px) 0 0/9px 9px,radial-gradient(circle at 32% 26%,color-mix(in srgb,var(--face) 50%,white),var(--face) 55%,color-mix(in srgb,var(--face) 88%,black))}
+.push .fc::before{content:"";position:absolute;inset:11%;border-radius:50%;border:2px solid #00000044;border-top:5px solid #ffffffcc}
+.push.down .fc,.push:active .fc{transform:translateY(calc(var(--d) - 3px))}
+.push.rec{--face:var(--red);--side:#9E1B26;color:var(--white)}
+.push.busy{--face:#9adbe8}
+.push.dis{opacity:.45}
+.push .lb{position:relative;font-family:var(--display);font-size:clamp(15px,4.3vw,19px);letter-spacing:1px;line-height:1.05;text-align:center}
+.push .lb .e{display:block;font-size:clamp(24px,7vw,34px);margin-bottom:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-weight:900;font-size:13.5px;padding:3px 8px;border:3.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink);background:var(--yellow)}
+.chip.c{background:var(--cyan)}
+.fpm{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:32px;height:32px;border-radius:50%;cursor:pointer}
+.scanbox{flex:1;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding-block:10px;overflow:auto}
+.scanbox img.photo{max-width:100%;max-height:34vh;border:3.5px solid var(--ink);border-radius:6px}
+.pairs{width:100%}.pair{padding:6px 0;border-bottom:2px solid var(--ink)}.pair:last-child{border:0}.pair b{display:block;font-size:18px}.pair i{font-size:13px;color:var(--muted)}
+/* ── Fogli a comparsa ── */
+.sheet{position:fixed;inset:0;z-index:30;background:#00000077;display:flex;align-items:flex-end}
+.sheet .box{width:100%;max-height:88%;display:flex;flex-direction:column;background:var(--paper);border:4px solid var(--ink);border-bottom:0;border-radius:14px 14px 0 0;box-shadow:0 -4px 0 var(--ink);padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 12px)}
+.sheet h3{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:1.5px;margin:4px 0 10px;text-align:center;color:var(--yellow);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink)}
+.sheet .grab{width:48px;height:5px;border-radius:4px;background:var(--ink);margin:0 auto}
+.scroll{overflow:auto;min-height:0;flex:1;padding:4px 4px 8px}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lt{display:flex;align-items:center;gap:8px;text-align:left;background:var(--white);border:3.5px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink);padding:6px 8px;min-width:0}
+.lt.on{background:var(--yellow)}
+.lt .f{font-size:22px}.lt .t{min-width:0}.lt b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lt small{display:block;font-size:12px;color:var(--muted)}
+.row{display:flex;gap:10px;margin:10px 0}.row>*{flex:1}
+.sec{font-family:var(--display);font-size:22px;letter-spacing:1px;margin:14px 0 8px}
+.opt{padding:12px;display:flex;flex-direction:column;gap:8px}
+.lrow{display:flex;align-items:center;gap:10px;font-weight:800;padding:3px 0}
+.lrow span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+input[type=range]{width:100%;accent-color:var(--red)}
+.gold{background:#0B0B0B;color:#E9C77B;border:2px solid #D6AA5A;border-radius:8px;padding:18px;text-align:center;box-shadow:6px 6px 0 var(--ink)}
+.gold img{width:96px;height:96px}
 </style>
 
-<div class="app" id="app">
-  <div class="notice" id="notice">Anteprima web: nell'app vera tieni premuto e parli; qui detti col 🎤 della tastiera. Tutto offline solo nell'app.</div>
-  <div class="top">
-    <span class="logo">MANGA VOX</span>
-    <span class="spacer"></span>
-    <div class="switch" role="group" aria-label="Modalità">
-      <button id="m-talk" aria-pressed="true" aria-label="Voce">🎤</button>
-      <button id="m-scan" aria-pressed="false" aria-label="Scanner">📷</button>
+<div id="toast" class="toast" hidden></div>
+
+<!-- ───────── INTRODUZIONE ───────── -->
+<section id="intro" class="screen dots-bg pad">
+  <div class="ibar"><button id="mute" aria-label="Musica sì/no">🎵</button><button id="skip">SALTA ›</button></div>
+  <div class="slides" id="slides"></div>
+  <div class="idots" id="idots"></div>
+  <div style="padding:6px 12px calc(env(safe-area-inset-bottom,0px) + 14px)"><button class="bluebtn" id="next">INIZIA</button></div>
+  <audio id="music" src="media/jingle.mp3" loop preload="auto"></audio>
+</section>
+
+<!-- ───────── APP ───────── -->
+<section id="app" class="screen dots-bg" hidden>
+  <div class="notice pad" id="notice">Versione web di prova: traduce online. Nell'app vera funziona offline e col microfono.</div>
+  <div class="top pad">
+    <span class="logo" id="logo">MANGA VOX</span><span class="spacer"></span>
+    <div class="sw"><button id="m-talk" aria-pressed="true" aria-label="Voce">🎤</button><button id="m-scan" aria-pressed="false" aria-label="Scanner">📷</button></div>
+    <button class="ico" id="opt" aria-label="Opzioni">🎛</button>
+  </div>
+  <div class="content pad center" id="content"></div>
+  <div class="dictate pad" id="dictate" hidden><label class="vh" for="txt">Frase</label><textarea id="txt" enterkeyhint="send"></textarea></div>
+  <div class="btns pad" id="btns">
+    <div class="col" id="col-them">
+      <button class="push them" id="b-them"><span class="sh"></span><span class="bd"></span><span class="fc"><span class="lb" id="l-them"></span></span></button>
+      <button class="chip c" id="c-them"></button>
     </div>
+    <div class="col">
+      <button class="push" id="b-me"><span class="sh"></span><span class="bd"></span><span class="fc"><span class="lb" id="l-me"></span></span></button>
+      <button class="chip" id="c-me"></button>
+    </div>
+    <img class="fpm" id="fpm" src="media/fpm.png" alt="FPM web designer">
   </div>
-
-  <div class="content center" id="content"></div>
-
-  <div class="dictate" id="dictate" hidden>
-    <label class="vh" for="txt">Frase da tradurre</label>
-    <textarea id="txt" placeholder="Tocca 🎤 sulla tastiera e parla…" enterkeyhint="send"></textarea>
+  <div class="scanbox pad" id="scan" hidden>
+    <div id="scanout" style="width:100%"></div>
+    <label class="cbtn y" for="cam" style="font-size:24px">📷 SCATTA!</label>
+    <input type="file" id="cam" accept="image/*" capture="environment" class="vh">
+    <button class="chip" id="c-scan"></button>
   </div>
+  <div style="height:calc(env(safe-area-inset-bottom,0px) + 8px)"></div>
+</section>
 
-  <div class="stage">
-    <button class="push" id="push" aria-label="Pulsante principale">
-      <span class="ring"></span><span class="shadow"></span><span class="body"></span>
-      <span class="face"><span class="label" id="push-label"></span></span>
-    </button>
-    <input type="file" id="cam" accept="image/*" capture="environment" class="vh" tabindex="-1">
-  </div>
-
-  <div class="langs">
-    <span class="mine-wrap chip" id="mine-chip">
-      IO <span id="mine-flag"></span>
-      <label class="vh" for="mine-sel">La mia lingua</label>
-      <select id="mine-sel"></select>
-    </span>
-    <span class="swap" aria-hidden="true">⇄</span>
-    <span class="chip partner" id="partner-chip"></span>
-  </div>
-</div>
+<div class="sheet" id="sheet" hidden><div class="box" id="sheetbox"></div></div>
 
 <script>
-const LANGS = {
-  it:{flag:'🇮🇹',short:'IT',locale:'it-IT',name:'Italian',label:'Italiano'},
-  en:{flag:'🇬🇧',short:'EN',locale:'en-US',name:'English',label:'English'},
-  de:{flag:'🇩🇪',short:'DE',locale:'de-DE',name:'German',label:'Deutsch'},
-  fr:{flag:'🇫🇷',short:'FR',locale:'fr-FR',name:'French',label:'Français'},
-  ru:{flag:'🇷🇺',short:'RU',locale:'ru-RU',name:'Russian',label:'Русский'},
-  zh:{flag:'🇨🇳',short:'ZH',locale:'zh-CN',name:'Simplified Chinese',label:'中文'},
-};
+const LANGS=[{"c": "it", "n": "Italiano", "it": "Italiano", "f": "🇮🇹", "loc": "it-IT"}, {"c": "en", "n": "English", "it": "Inglese", "f": "🇬🇧", "loc": "en-US"}, {"c": "de", "n": "Deutsch", "it": "Tedesco", "f": "🇩🇪", "loc": "de-DE"}, {"c": "fr", "n": "Français", "it": "Francese", "f": "🇫🇷", "loc": "fr-FR"}, {"c": "ru", "n": "Русский", "it": "Russo", "f": "🇷🇺", "loc": "ru-RU"}, {"c": "zh", "n": "中文", "it": "Cinese", "f": "🇨🇳", "loc": "zh-CN"}, {"c": "af", "n": "Afrikaans", "it": "Afrikaans", "f": "🇿🇦", "loc": "af-ZA"}, {"c": "sq", "n": "Shqip", "it": "Albanese", "f": "🇦🇱", "loc": "sq-AL"}, {"c": "ar", "n": "العربية", "it": "Arabo", "f": "🇸🇦", "loc": "ar-SA"}, {"c": "be", "n": "Беларуская", "it": "Bielorusso", "f": "🇧🇾", "loc": "be-BY"}, {"c": "bn", "n": "বাংলা", "it": "Bengalese", "f": "🇧🇩", "loc": "bn-IN"}, {"c": "bg", "n": "Български", "it": "Bulgaro", "f": "🇧🇬", "loc": "bg-BG"}, {"c": "ca", "n": "Català", "it": "Catalano", "f": "🇦🇩", "loc": "ca-ES"}, {"c": "hr", "n": "Hrvatski", "it": "Croato", "f": "🇭🇷", "loc": "hr-HR"}, {"c": "cs", "n": "Čeština", "it": "Ceco", "f": "🇨🇿", "loc": "cs-CZ"}, {"c": "da", "n": "Dansk", "it": "Danese", "f": "🇩🇰", "loc": "da-DK"}, {"c": "nl", "n": "Nederlands", "it": "Olandese", "f": "🇳🇱", "loc": "nl-NL"}, {"c": "eo", "n": "Esperanto", "it": "Esperanto", "f": "🌍", "loc": "eo"}, {"c": "et", "n": "Eesti", "it": "Estone", "f": "🇪🇪", "loc": "et-EE"}, {"c": "fi", "n": "Suomi", "it": "Finlandese", "f": "🇫🇮", "loc": "fi-FI"}, {"c": "gl", "n": "Galego", "it": "Galiziano", "f": "🇪🇸", "loc": "gl-ES"}, {"c": "ka", "n": "ქართული", "it": "Georgiano", "f": "🇬🇪", "loc": "ka-GE"}, {"c": "el", "n": "Ελληνικά", "it": "Greco", "f": "🇬🇷", "loc": "el-GR"}, {"c": "gu", "n": "ગુજરાતી", "it": "Gujarati", "f": "🇮🇳", "loc": "gu-IN"}, {"c": "ht", "n": "Kreyòl ayisyen", "it": "Creolo haitiano", "f": "🇭🇹", "loc": "ht-HT"}, {"c": "he", "n": "עברית", "it": "Ebraico", "f": "🇮🇱", "loc": "he-IL"}, {"c": "hi", "n": "हिन्दी", "it": "Hindi", "f": "🇮🇳", "loc": "hi-IN"}, {"c": "hu", "n": "Magyar", "it": "Ungherese", "f": "🇭🇺", "loc": "hu-HU"}, {"c": "is", "n": "Íslenska", "it": "Islandese", "f": "🇮🇸", "loc": "is-IS"}, {"c": "id", "n": "Bahasa Indonesia", "it": "Indonesiano", "f": "🇮🇩", "loc": "id-ID"}, {"c": "ga", "n": "Gaeilge", "it": "Irlandese", "f": "🇮🇪", "loc": "ga-IE"}, {"c": "ja", "n": "日本語", "it": "Giapponese", "f": "🇯🇵", "loc": "ja-JP"}, {"c": "kn", "n": "ಕನ್ನಡ", "it": "Kannada", "f": "🇮🇳", "loc": "kn-IN"}, {"c": "ko", "n": "한국어", "it": "Coreano", "f": "🇰🇷", "loc": "ko-KR"}, {"c": "lv", "n": "Latviešu", "it": "Lettone", "f": "🇱🇻", "loc": "lv-LV"}, {"c": "lt", "n": "Lietuvių", "it": "Lituano", "f": "🇱🇹", "loc": "lt-LT"}, {"c": "mk", "n": "Македонски", "it": "Macedone", "f": "🇲🇰", "loc": "mk-MK"}, {"c": "ms", "n": "Bahasa Melayu", "it": "Malese", "f": "🇲🇾", "loc": "ms-MY"}, {"c": "mt", "n": "Malti", "it": "Maltese", "f": "🇲🇹", "loc": "mt-MT"}, {"c": "mr", "n": "मराठी", "it": "Marathi", "f": "🇮🇳", "loc": "mr-IN"}, {"c": "no", "n": "Norsk", "it": "Norvegese", "f": "🇳🇴", "loc": "nb-NO"}, {"c": "fa", "n": "فارسی", "it": "Persiano", "f": "🇮🇷", "loc": "fa-IR"}, {"c": "pl", "n": "Polski", "it": "Polacco", "f": "🇵🇱", "loc": "pl-PL"}, {"c": "pt", "n": "Português", "it": "Portoghese", "f": "🇵🇹", "loc": "pt-PT"}, {"c": "ro", "n": "Română", "it": "Rumeno", "f": "🇷🇴", "loc": "ro-RO"}, {"c": "sk", "n": "Slovenčina", "it": "Slovacco", "f": "🇸🇰", "loc": "sk-SK"}, {"c": "sl", "n": "Slovenščina", "it": "Sloveno", "f": "🇸🇮", "loc": "sl-SI"}, {"c": "es", "n": "Español", "it": "Spagnolo", "f": "🇪🇸", "loc": "es-ES"}, {"c": "sw", "n": "Kiswahili", "it": "Swahili", "f": "🇰🇪", "loc": "sw-KE"}, {"c": "sv", "n": "Svenska", "it": "Svedese", "f": "🇸🇪", "loc": "sv-SE"}, {"c": "tl", "n": "Tagalog", "it": "Tagalog", "f": "🇵🇭", "loc": "fil-PH"}, {"c": "ta", "n": "தமிழ்", "it": "Tamil", "f": "🇱🇰", "loc": "ta-IN"}, {"c": "te", "n": "తెలుగు", "it": "Telugu", "f": "🇮🇳", "loc": "te-IN"}, {"c": "th", "n": "ไทย", "it": "Thailandese", "f": "🇹🇭", "loc": "th-TH"}, {"c": "tr", "n": "Türkçe", "it": "Turco", "f": "🇹🇷", "loc": "tr-TR"}, {"c": "uk", "n": "Українська", "it": "Ucraino", "f": "🇺🇦", "loc": "uk-UA"}, {"c": "ur", "n": "اردو", "it": "Urdu", "f": "🇵🇰", "loc": "ur-PK"}, {"c": "vi", "n": "Tiếng Việt", "it": "Vietnamita", "f": "🇻🇳", "loc": "vi-VN"}, {"c": "cy", "n": "Cymraeg", "it": "Gallese", "f": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "loc": "cy-GB"}];
+const BY={};LANGS.forEach(l=>BY[l.c]=l);
 const store={get(k,d){try{return localStorage.getItem(k)??d}catch{return d}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
-const deviceLang=(navigator.languages||[navigator.language||'en']).map(l=>l.slice(0,2).toLowerCase()).find(l=>LANGS[l])||'en';
-const S={
-  mode:'talk', btn:'idle', msgs:[], scan:null,
-  mine: store.get('mv2_mine',deviceLang),
-  partner: store.get('mv2_partner',deviceLang==='en'?'it':'en'),
-};
+const devl=(navigator.language||'it').slice(0,2);
+const S={mine:store.get('mv3_mine',BY[devl]?devl:'it'),partner:store.get('mv3_partner','')||null,mode:'talk',active:null,busy:false,msgs:[],
+  vol:+store.get('mv3_vol','1'),speakOn:store.get('mv3_speak','1')==='1'};
 let sample=null;
 const $=id=>document.getElementById(id);
+function toast(t,err){const d=$('toast');d.textContent=t;d.className='toast'+(err?' err':'');d.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>d.hidden=true,4200)}
+const ERR={not_granted:'Serve il permesso per usare Claude: senza, la prova web non può tradurre.',rate_limited:'Troppe richieste: riprova tra poco.',session_expired:'Sessione scaduta: accedi di nuovo.',image_rejected:'Foto non valida o troppo grande.'};
 
-/* same routing as the app: my language -> partner; anything else becomes the partner and goes -> mine */
-function route(detected,commit){
-  if(detected===S.mine){ if(S.partner===S.mine) S.partner=S.mine==='en'?'it':'en'; return [S.mine,S.partner]; }
-  if(commit){ S.partner=detected; store.set('mv2_partner',S.partner); }
-  return [detected,S.mine];
+/* ───── Introduzione ───── */
+const SLIDES=[{i:'media/intro1.jpg',c:'TRADUCI IN 59 LINGUE!'},{i:'media/intro2.jpg'},{i:'media/intro3.jpg'},{i:'media/intro4.jpg'},{i:'media/intro5.jpg',c:'BASTA STRESS.<br>TRADUCI ANCHE OFFLINE!'}];
+let page=0,muted=false;const music=$('music');music.volume=.75;
+function renderSlides(){
+  $('slides').innerHTML=SLIDES.map((s,i)=>`<div class="slide" style="transform:translateX(${(i-page)*100}%) scale(${i===page?1:.92});opacity:${i===page?1:0}"><div class="img"><img src="${s.i}" alt="Introduzione ${i+1}"></div>${s.c&&i===page?`<div class="cap">${s.c}</div>`:''}</div>`).join('');
+  $('idots').innerHTML=SLIDES.map((_,i)=>`<i class="${i===page?'on':''}"></i>`).join('');
+  $('next').textContent=page===SLIDES.length-1?"ENTRA NELL'APP!":(page===0?'INIZIA':'CONTINUA');
 }
+function startMusic(){if(!muted&&music.paused)music.play().catch(()=>{})}
+function go(n){page=Math.max(0,Math.min(SLIDES.length-1,n));renderSlides()}
+function finish(){let v=music.volume;const f=setInterval(()=>{v-=.08;if(v<=0){clearInterval(f);music.pause()}else music.volume=v},45);
+  $('intro').hidden=true;$('app').hidden=false;render();}
+$('next').onclick=()=>{startMusic();page===SLIDES.length-1?finish():go(page+1)};
+$('skip').onclick=finish;
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🎵';muted?music.pause():startMusic()};
+document.addEventListener('pointerdown',function f(){startMusic();document.removeEventListener('pointerdown',f,true)},true);
+let sx=null;$('slides').addEventListener('pointerdown',e=>sx=e.clientX);
+$('slides').addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>40)go(page+(dx<0?1:-1))});
+renderSlides();startMusic();
 
-function primeSpeech(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch{}}
-function speak(text,code){
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=LANGS[code].locale;u.rate=.95;
-    const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').toLowerCase().startsWith(code));if(v)u.voice=v;speechSynthesis.speak(u)}catch{}
-}
-function notice(msg,err){const n=$('notice');n.textContent=msg;n.classList.toggle('err',!!err)}
-const ERR={not_granted:'Serve il permesso per usare Claude: senza, l\'anteprima non può tradurre.',rate_limited:'Troppe richieste: riprova tra poco.',
-  session_expired:'Sessione scaduta: accedi di nuovo a Claude.',image_rejected:'Foto non valida o troppo grande.'};
-
+/* ───── Voce ───── */
+function speak(t,code){if(!S.speakOn||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=BY[code].loc;u.volume=S.vol;u.rate=.95;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith(code));if(v)u.voice=v;speechSynthesis.speak(u)}catch{}}
+function prime(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch{}}
+function setPartner(c){S.partner=c&&c!==S.mine?c:null;store.set('mv3_partner',S.partner||'')}
 function render(){
-  const app=$('app'); app.classList.toggle('scan',S.mode==='scan'); app.classList.toggle('live',S.btn==='rec');
-  $('m-talk').setAttribute('aria-pressed',S.mode==='talk'); $('m-scan').setAttribute('aria-pressed',S.mode==='scan');
-  $('m-talk').style.filter=S.mode==='talk'?'':'grayscale(1)'; $('m-scan').style.filter=S.mode==='scan'?'':'grayscale(1)';
-  const push=$('push'); push.classList.toggle('rec',S.btn==='rec'); push.classList.toggle('busy',S.btn==='busy');
-  const label = S.btn==='busy' ? '<span class="ico">⏳</span>TRADUCO…'
-    : S.mode==='scan' ? '<span class="ico">📷</span>SCATTA!'
-    : S.btn==='rec' ? '<span class="ico">🎙</span>TOCCA PER<br>TRADURRE' : '<span class="ico">🎤</span>TOCCA<br>E PARLA';
-  $('push-label').innerHTML=label;
-  $('dictate').hidden=!(S.mode==='talk'&&S.btn==='rec');
-  $('mine-flag').textContent=LANGS[S.mine].flag+' '+LANGS[S.mine].short;
-  $('partner-chip').innerHTML=`${LANGS[S.partner].flag} ${LANGS[S.partner].short} <small>AUTO</small>`;
-  const c=$('content'); c.innerHTML='';
-  if(S.mode==='talk'){
-    c.classList.toggle('center',!S.msgs.length);
-    if(!S.msgs.length){
-      c.innerHTML=`<div class="bubble hero"><h2>PARLA IN QUALSIASI LINGUA!</h2><p>La riconosco da sola: se parli ${LANGS[S.mine].label} traduco per l'altro, se l'altro risponde traduco per te.</p><div class="flags">${Object.values(LANGS).map(l=>l.flag).join(' ')}</div></div>`;
-    }
-    for(const m of S.msgs){
-      const b=document.createElement('div'); const mine=m.from===S.mine;
-      b.className='bubble '+(mine?'mine':'theirs');
-      b.innerHTML=`<div class="meta">${LANGS[m.from].flag} ➜ ${LANGS[m.to].flag} 🔊</div><div class="big"></div><div class="small"></div>`;
-      b.querySelector('.big').textContent=m.t; b.querySelector('.small').textContent=m.o;
-      b.onclick=()=>speak(m.t,m.to); c.append(b);
-    }
-    c.scrollTop=c.scrollHeight;
-  } else {
-    c.classList.add('center');
-    if(S.btn==='busy'&&S.scan?.img){c.innerHTML=`<div class="panel"><img class="photo" src="${S.scan.img}" alt="Foto"></div><p class="hint-on-dark">Leggo e riconosco la lingua… ⚡</p>`;return}
-    if(!S.scan){c.innerHTML='<p class="hint-on-dark">Fotografa un cartello, un menù o un documento: riconosco la lingua e traduco.</p>';return}
-    const p=document.createElement('div'); p.className='panel';
-    p.innerHTML=`${S.scan.img?`<img class="photo" src="${S.scan.img}" alt="Foto">`:''}<div class="meta" style="margin:8px 0;font-size:16px">${LANGS[S.scan.from].flag} ➜ ${LANGS[S.scan.to].flag}</div>`;
-    for(const it of S.scan.items){const d=document.createElement('div');d.className='pair';d.innerHTML='<div class="big"></div><div class="small"></div>';
-      d.querySelector('.big').textContent=it.t;d.querySelector('.small').textContent=it.o;d.onclick=()=>speak(it.t,S.scan.to);p.append(d)}
-    c.append(p);
-  }
+  const isTalk=S.mode==='talk';
+  $('m-talk').setAttribute('aria-pressed',isTalk);$('m-scan').setAttribute('aria-pressed',!isTalk);
+  $('content').hidden=!isTalk;$('btns').hidden=!isTalk;$('scan').hidden=isTalk;$('dictate').hidden=!(isTalk&&S.active);
+  const me=BY[S.mine],p=S.partner?BY[S.partner]:null;
+  $('l-me').innerHTML=S.busy&&S.active==='me'?'<span class="e">⏳</span>TRADUCO…':(S.active==='me'?'<span class="e">🎙</span>TOCCA PER<br>TRADURRE':`<span class="e">👤</span>IO<br>${me.f}`);
+  $('l-them').innerHTML=S.busy&&S.active==='them'?'<span class="e">⏳</span>TRADUCO…':(S.active==='them'?'<span class="e">🎙</span>TOCCA PER<br>TRADURRE':`<span class="e">🗣</span>LUI/LEI<br>${p?p.f:'AUTO'}`);
+  for(const s of ['me','them']){const b=$('b-'+s);b.classList.toggle('rec',S.active===s&&!S.busy);b.classList.toggle('busy',S.active===s&&S.busy);b.classList.toggle('dis',!!S.active&&S.active!==s);}
+  $('c-me').textContent=`${me.f} ${me.n} ▾`;$('c-them').textContent=p?`${p.f} ${p.n} ▾`:'✨ AUTO ▾';$('c-scan').textContent=`TRADUCO IN ${me.f} ${me.it.toUpperCase()} ▾`;
+  const c=$('content');c.innerHTML='';c.classList.toggle('center',!S.msgs.length);
+  if(!S.msgs.length)c.innerHTML=`<div class="bubble hero"><h2>DUE PULSANTI, PARLA!</h2><p>🔵 <b>LUI/LEI</b>: l'altra persona parla nella sua lingua, la riconosco da sola.<br>🟡 <b>IO</b>: parli tu in ${me.it}.<br>Nella prova web tocchi il pulsante e detti col 🎤 della tastiera.</p></div>`;
+  for(const m of S.msgs){const d=document.createElement('div');d.className='bubble '+m.side;
+    d.innerHTML=`<div class="meta">${BY[m.from].f} ➜ ${BY[m.to].f} 🔊</div><div class="big"></div><div class="small"></div>`;
+    d.querySelector('.big').textContent=m.t;d.querySelector('.small').textContent=m.o;d.onclick=()=>speak(m.t,m.to);c.append(d);}
+  c.scrollTop=c.scrollHeight;
 }
-
-async function translateTalk(){
-  const text=$('txt').value.trim();
-  if(!text){ $('txt').focus(); return; }
-  if(!sample){notice('Apri questa pagina dentro Claude per provare la traduzione.',true);return}
-  primeSpeech();
-  S.btn='busy'; render();
+async function press(side){
+  if(S.busy)return;
+  if(S.active&&S.active!==side)return;
+  if(!S.active){if(side==='me'&&!S.partner){toast('Prima fai parlare l\'altra persona (pulsante azzurro) o scegli la sua lingua.');return}
+    S.active=side;render();const t=$('txt');t.value='';t.placeholder=side==='me'?`Detta in ${BY[S.mine].it} col 🎤 della tastiera…`:'Detta la frase dell\'altra persona…';t.focus();return}
+  translate(side);
+}
+async function translate(side){
+  const text=$('txt').value.trim();if(!text){$('txt').focus();return}
+  if(!sample){toast('Apri questa pagina dentro Claude per tradurre.',true);return}
+  prime();S.busy=true;render();
   try{
-    const codes=Object.keys(LANGS).join(', ');
-    const r=await sample.json(
-      `Detect the language of the text below. Answer with its code among: ${codes} (or "xx" if none). `+
-      `If the code is "${S.mine}", translate it into ${LANGS[S.partner].name}; otherwise translate it into ${LANGS[S.mine].name}. `+
-      `It is spoken dialogue between travellers: keep it natural. Reply with only JSON like {"lang":"en","t":"translation"}.\n\nText:\n${text}`,
-      {modelTier:'quick'});
-    const lang=String(r?.lang||'');
-    if(!LANGS[lang]){notice('Lingua non riconosciuta: IT, EN, DE, FR, RU, ZH.',true);return}
-    const [from,to]=route(lang,true);
-    let t=String(r?.t||'').trim();
-    if(!t) throw {code:'empty'};
-    S.msgs.push({from,to,o:text,t}); $('txt').value='';
-    speak(t,to);
-  }catch(e){ if(e?.code!=='cancelled') notice(ERR[e?.code]||'Traduzione non riuscita. Riprova.',true); }
-  finally{ S.btn='idle'; render(); }
+    const codes=LANGS.map(l=>l.c).join(', ');let from,to,t;
+    if(side==='me'){from=S.mine;to=S.partner;
+      const r=await sample.json(`Translate this ${BY[from].it} (Italian name) spoken sentence into the language with code "${to}". Natural spoken style. Reply only JSON {"t":"translation"}.\n\n${text}`,{modelTier:'quick'});t=String(r?.t||'')}
+    else{const r=await sample.json(`Detect the language of the text (one of these ISO codes: ${codes}). Then translate it into the language with code "${S.mine}". Reply only JSON {"lang":"xx","t":"translation"}.\n\n${text}`,{modelTier:'quick'});
+      from=String(r?.lang||'');if(!BY[from]){toast('Lingua non riconosciuta.',true);return}
+      if(from===S.mine){toast(`Questa era ${BY[S.mine].it}: per la tua lingua usa il pulsante giallo IO.`);return}
+      setPartner(from);to=S.mine;t=String(r?.t||'')}
+    if(!t)throw{};S.msgs.push({side,from,to,o:text,t});speak(t,to);
+  }catch(e){toast(ERR[e?.code]||'Traduzione non riuscita, riprova.',true)}
+  finally{S.busy=false;S.active=null;render()}
 }
+for(const s of ['me','them']){const b=$('b-'+s);b.addEventListener('pointerdown',()=>b.classList.add('down'));
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>b.classList.remove('down')));b.onclick=()=>press(s);}
+$('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();translate(S.active)}});
 
-async function scanFile(file){
-  if(!file) return;
-  S.scan={img:URL.createObjectURL(file),items:[]}; S.btn='busy'; render();
-  if(!sample){notice('Apri questa pagina dentro Claude per provare lo scanner.',true);S.btn='idle';S.scan=null;render();return}
-  try{
-    const codes=Object.keys(LANGS).join(', ');
-    const r=await sample.json(
-      `The image is a photo of text (sign, menu, document). Detect the main language (one of: ${codes}, or "xx"). `+
-      `If it is "${S.mine}" translate into ${LANGS[S.partner].name}, otherwise into ${LANGS[S.mine].name}. `+
-      `Read every text block in reading order. Reply with only JSON like {"lang":"de","items":[{"o":"original","t":"translation"}]}. If there is no text, items is [].`,
-      {images:[file]});
-    const lang=String(r?.lang||''); const items=Array.isArray(r?.items)?r.items.filter(x=>x&&x.t).map(x=>({o:String(x.o??''),t:String(x.t)})):[];
-    if(!items.length||!LANGS[lang]){notice(items.length?'Lingua del testo non riconosciuta.':'Nessun testo trovato: avvicinati e riprova.',true);S.scan=null;return}
-    const [from,to]=route(lang,false);
-    S.scan={img:S.scan.img,from,to,items};
-  }catch(e){ notice(ERR[e?.code]||'Scansione non riuscita. Riprova.',true); S.scan=null; }
-  finally{ S.btn='idle'; render(); }
+/* ───── Selettore lingue ───── */
+function sheet(html){$('sheetbox').innerHTML='<div class="grab"></div>'+html;$('sheet').hidden=false}
+$('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('sheet').hidden=true});
+function langSheet(title,current,exclude,allowAuto,onPick){
+  const list=LANGS.filter(l=>l.c!==exclude).sort((a,b)=>a.it.localeCompare(b.it,'it'));
+  sheet(`<h3>${title}</h3>${allowAuto?`<button class="lt ${current?'':'on'}" data-c="" style="width:100%;margin-bottom:6px">✨ <span class="t"><b>AUTOMATICA: la riconosco io</b></span></button>`:''}
+    <div class="row"><button class="cbtn" id="sh-rep">🔧 RIPARA</button><button class="cbtn y" id="sh-world">🌍 ALTRE LINGUE</button></div>
+    <div class="sec">LINGUE DISPONIBILI (${list.length})</div>
+    <div class="scroll"><div class="lgrid">${list.map(l=>`<button class="lt ${l.c===current?'on':''}" data-c="${l.c}"><span class="f">${l.f}</span><span class="t"><b>${l.n}</b><small>${l.it}</small></span></button>`).join('')}</div></div>`);
+  $('sheetbox').querySelectorAll('.lt').forEach(b=>b.onclick=()=>{$('sheet').hidden=true;onPick(b.dataset.c||null)});
+  $('sh-rep').onclick=()=>toast('Nella prova web non serve: le lingue sono online. Nell\'app riscarica i pacchetti.');
+  $('sh-world').onclick=()=>toast('Nella prova web ci sono già tutte le 59 lingue. Nell\'app tocchi il paese e la scarichi.');
 }
+$('c-them').onclick=()=>{if(!S.active)langSheet("LINGUA DELL'ALTRO",S.partner,S.mine,true,c=>{setPartner(c);render()})};
+const pickMine=()=>{if(!S.active)langSheet('LA MIA LINGUA',S.mine,null,false,c=>{if(!c)return;S.mine=c;store.set('mv3_mine',c);if(S.partner===c)setPartner(null);render()})};
+$('c-me').onclick=pickMine;$('c-scan').onclick=pickMine;
+$('m-talk').onclick=()=>{S.mode='talk';render()};$('m-scan').onclick=()=>{S.mode='scan';render()};
 
-/* wiring */
-const push=$('push');
-push.addEventListener('pointerdown',()=>{push.classList.add('down');try{navigator.vibrate?.(15)}catch{}});
-for(const ev of ['pointerup','pointerleave','pointercancel']) push.addEventListener(ev,()=>push.classList.remove('down'));
-push.addEventListener('click',()=>{
-  if(S.btn==='busy') return;
-  if(S.mode==='scan'){ $('cam').click(); return; }
-  if(S.btn==='idle'){ S.btn='rec'; render(); $('txt').focus(); return; }
-  translateTalk();
-});
-$('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();translateTalk()}});
-$('cam').onchange=e=>{scanFile(e.target.files[0]);e.target.value=''};
-$('m-talk').onclick=()=>{if(S.btn==='busy')return;S.mode='talk';S.btn='idle';render()};
-$('m-scan').onclick=()=>{if(S.btn==='busy')return;S.mode='scan';S.btn='idle';render()};
-$('mine-sel').innerHTML=Object.entries(LANGS).map(([k,l])=>`<option value="${k}">${l.flag} ${l.label}</option>`).join('');
-$('mine-sel').value=S.mine;
-$('mine-sel').onchange=e=>{S.mine=e.target.value;store.set('mv2_mine',S.mine);if(S.partner===S.mine){S.partner=S.mine==='en'?'it':'en'}render()};
-render();
-try{speechSynthesis.getVoices()}catch{}
-(async()=>{try{sample=await window.claude?.use?.('sample')}catch{sample=null}
-  if(!sample) notice('Apri questa pagina dentro Claude per provare la traduzione.',true)})();
+/* ───── Opzioni ───── */
+function info(){sheet(`<h3>INFO</h3><div class="scroll"><div class="gold"><img src="media/fpm.png" alt=""><div style="font-size:13px;color:#BFA36A;margin-top:8px">Progettata e realizzata da</div><div style="font-size:22px;font-weight:900">FPM web designer</div><hr style="border-color:#D6AA5A66"><div style="font-weight:800">© 2026 FPM web designer<br>Tutti i diritti riservati.</div></div></div>`)}
+$('fpm').onclick=info;$('logo').onclick=info;
+$('opt').onclick=()=>{
+  const list=LANGS.slice().sort((a,b)=>a.it.localeCompare(b.it,'it'));
+  sheet(`<h3>OPZIONI</h3><div class="scroll">
+    <div class="sec">🌍 LINGUE</div><div class="panel opt"><b>✅ ${list.length} lingue disponibili nella prova web</b>
+      <div style="max-height:200px;overflow:auto">${list.map(l=>`<div class="lrow"><span>${l.f}</span><span>${l.it} · ${l.n}</span><span>✅</span></div>`).join('')}</div>
+      <div class="row"><button class="cbtn" id="o-rep">🔧 RIPARA</button><button class="cbtn y" id="o-world">🌍 MONDO</button></div>
+      <small>Nell'app: lingue scaricate con lo stato, scarica mancanti, ripara e lingue del mondo.</small></div>
+    <div class="sec">🔊 VOCE</div><div class="panel opt"><label for="o-vol"><b>Volume della traduzione</b></label><input id="o-vol" type="range" min="0" max="1" step="0.05" value="${S.vol}">
+      <label style="display:flex;gap:8px;align-items:center;font-weight:800"><input id="o-sp" type="checkbox" ${S.speakOn?'checked':''}> Leggi ad alta voce la traduzione</label>
+      <button class="cbtn y" id="o-test">🔊 PROVA VOCE</button></div>
+    <div class="sec">🎧 CUFFIE E MICROFONO</div><div class="panel opt"><small>Nell'app vera: microfono in tempo reale, modalità cuffie (parli in cuffia, l'altro sente dall'altoparlante) e collegamento tra due iPhone. Nella prova web si detta con la tastiera.</small></div>
+    <div class="sec">ℹ️ INFO</div><button class="cbtn" id="o-info" style="width:100%">INFO E CREDITI</button></div>`);
+  $('o-vol').oninput=e=>{S.vol=+e.target.value;store.set('mv3_vol',S.vol)};
+  $('o-sp').onchange=e=>{S.speakOn=e.target.checked;store.set('mv3_speak',S.speakOn?'1':'0')};
+  $('o-test').onclick=()=>speak({it:'Ciao! Mi senti bene?',en:'Hello! Can you hear me?'}[S.mine]||'OK',S.mine);
+  $('o-rep').onclick=()=>toast('Nella prova web non serve: le lingue sono online.');$('o-world').onclick=()=>toast('Nella prova web ci sono già tutte le 59 lingue.');
+  $('o-info').onclick=info;
+};
+
+/* ───── Scanner (foto) ───── */
+$('cam').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  const out=$('scanout');out.innerHTML=`<img class="photo" src="${URL.createObjectURL(f)}" alt="Foto"><p style="font-weight:900;text-align:center">Leggo e traduco… ⚡</p>`;
+  if(!sample){toast('Apri questa pagina dentro Claude per tradurre.',true);return}
+  try{const r=await sample.json(`The image is a photo of text. Read every text block in reading order, detect its language and translate each block into the language with code "${S.mine}". Reply only JSON {"lang":"xx","items":[{"o":"original","t":"translation"}]}; items [] if no text.`,{images:[f]});
+    const items=(r?.items||[]).filter(x=>x&&x.t);if(!items.length){out.innerHTML='<p style="font-weight:900">Nessun testo trovato.</p>';return}
+    const from=BY[r.lang]?BY[r.lang].f:'';out.innerHTML=`<div class="panel" style="padding:12px"><b>${from} ➜ ${BY[S.mine].f}</b><div class="pairs"></div></div>`;
+    const box=out.querySelector('.pairs');items.forEach(it=>{const d=document.createElement('div');d.className='pair';d.innerHTML='<b></b><i></i>';d.querySelector('b').textContent=it.t;d.querySelector('i').textContent=it.o||'';d.onclick=()=>speak(it.t,S.mine);box.append(d)});
+  }catch(err){out.innerHTML='';toast(ERR[err?.code]||'Scansione non riuscita.',true)}};
+
+render();try{speechSynthesis.getVoices()}catch{}
+(async()=>{try{sample=await window.claude?.use?.('sample')}catch{sample=null}if(!sample){$('notice').textContent='Apri questa pagina dentro Claude per provare la traduzione.';$('notice').classList.add('err')}})();
 </script>

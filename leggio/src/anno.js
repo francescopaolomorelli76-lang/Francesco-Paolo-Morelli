@@ -68,7 +68,7 @@ const Anno = {
       const b=e.target.closest('[data-t]'); if(!b) return; const k=b.dataset.t;
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
-      else if(['lasso','text','eraser','lyric'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
+      else if(['lasso','text','eraser','lyric'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);

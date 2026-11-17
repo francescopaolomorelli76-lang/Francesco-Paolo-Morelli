@@ -76,6 +76,8 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .fixBtn.on{box-shadow:0 0 0 3px rgba(255,255,255,.85),0 6px 18px rgba(214,168,78,.5)}
 .pulse{animation:fixPulse 1.6s ease-in-out infinite}
 @keyframes fixPulse{50%{box-shadow:0 0 0 6px rgba(242,211,130,.55),0 0 24px rgba(242,211,130,.8)}}
+.handle.edge{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:8px}
+#pvStage .compare{left:50%;transform:translateX(-50%);top:auto;bottom:10px;z-index:4}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}

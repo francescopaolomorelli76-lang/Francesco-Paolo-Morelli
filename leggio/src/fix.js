@@ -115,15 +115,16 @@ function fixPage(off,sc,p){
     const lim=2400, k=Math.min(1,lim/Math.max(off.width,off.height));
     let w=off; if(k<1){ w=document.createElement('canvas'); w.width=Math.round(off.width*k); w.height=Math.round(off.height*k); const x=w.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(off,0,0,w.width,w.height); }
     let e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55});
-    e=cleanCanvas(e,f.crop&&a?a.box:null,f.clean>0);
+    e=cleanCanvas(e,f.crop&&a?(f.box||a.box):null,f.clean>0);
     if(k<1){ const c=document.createElement('canvas'); c.width=off.width; c.height=off.height; const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(e,0,0,c.width,c.height); off=c; } else off=e;
-  } else if(f.crop&&a) off=cleanCanvas(off,a.box,false);
+  } else if(f.crop&&a) off=cleanCanvas(off,f.box||a.box,false);
   return off;
 }
 
 const Fix = {
   scope:'all',
   async check(){
+    await new Promise(r=>(window.requestIdleCallback||setTimeout)(r,{timeout:1500}));
     const b=$$('[data-act="fix"]'); if(!ST.cur||!pageCanvas.width) return;
     const f=fixOfPage(ST.cur,ST.page); b.forEach(x=>x.classList.toggle('on',f.on));
     if(f.on){ b.forEach(x=>x.classList.remove('pulse')); return; }
@@ -147,7 +148,7 @@ const Fix = {
       ${switchRow('fxSharp','Pulizia e messa a fuoco',f.sharpen,'Sfondo bianco, puntini tolti, note e righi netti.')}
       <div class="seg" id="fxMode"><button data-m="gray" class="${f.mode!=='bw'?'on':''}">Grigi nitidi</button><button data-m="bw" class="${f.mode==='bw'?'on':''}">Bianco e nero</button></div>
       <div class="sl"><span>Intensità della pulizia<em id="fxCv">${f.clean}</em></span><input type="range" id="fxClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
-      <button class="goldBtn block" id="fxBake">${iconSvg('wand')}Correggi per sempre: ${scopeAll?'tutto lo spartito':'questa pagina'}</button>
+      <button class="goldBtn block" id="fxBake">${iconSvg('wand')}Prima / dopo e bordi…</button>
       ${!scopeAll&&sc.pfix&&sc.pfix[p]?`<button class="ghostBtn" id="fxReset">Usa le impostazioni di tutto lo spartito</button>`:''}
       <div class="hint" style="font-size:12px">“Per sempre” riscrive le pagine pulite, dritte e ritagliate nel PDF. Le annotazioni si spostano con la musica.</div></div>`,{above:true,id:'fixPop'});
     const apply=()=>{ if(scopeAll){ sc.fix=f; sc.pfix={}; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]=f; }
@@ -157,7 +158,7 @@ const Fix = {
     $('#fxScope').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;this.scope=b.dataset.s;this.open(el)};
     $('#fxMode').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;f.mode=b.dataset.m;$$('#fxMode button').forEach(x=>x.classList.toggle('on',x===b));f.on=true;$('#fxOn').classList.add('on');apply()};
     const cl=$('#fxClean'); const later=debounce(apply,300); cl.oninput=()=>{f.clean=+cl.value;$('#fxCv').textContent=cl.value;cl.style.setProperty('--v',cl.value+'%');f.on=true;$('#fxOn').classList.add('on');later()};
-    $('#fxBake').onclick=()=>{ closeLayers(); if(scopeAll){ sc.fix={...f,on:true}; sc.pfix={}; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]={...f,on:true}; } this.bake(scopeAll?null:[p]); };
+    $('#fxBake').onclick=()=>{ closeLayers(); this.preview(scopeAll,f); };
     const rs=$('#fxReset'); if(rs) rs.onclick=()=>{ delete sc.pfix[p]; DB.putScore(sc); pageCache.clear(); renderPage(0); closeLayers(); };
   },
   // Riscrive nel PDF le pagine corrette: dritte, pulite e ritagliate (la pagina nuova ha la misura della musica).
@@ -175,7 +176,7 @@ const Fix = {
         const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
         const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
         sc.pfix=sc.pfix||{}; const keep=sc.pfix[i]; sc.pfix[i]=f; let fixed=fixPage(c,sc,i); if(keep) sc.pfix[i]=keep; else delete sc.pfix[i];
-        const bx=f.crop?a.box:{l:0,t:0,r:0,b:0};
+        const bx=f.crop?(f.box||a.box):{l:0,t:0,r:0,b:0};
         const cw=Math.max(1,Math.round(fixed.width*(1-bx.l-bx.r))), ch=Math.max(1,Math.round(fixed.height*(1-bx.t-bx.b)));
         const out=document.createElement('canvas'); out.width=cw; out.height=ch; out.getContext('2d').drawImage(fixed,bx.l*fixed.width,bx.t*fixed.height,cw,ch,0,0,cw,ch);
         const bw=f.sharpen&&f.mode==='bw'; const blob=await new Promise(r=>out.toBlob(r,bw?'image/png':'image/jpeg',bw?undefined:.8));
@@ -194,4 +195,75 @@ const Fix = {
       await replaceBytes(sc,(await doc.save()).buffer,ann); busy(); toast(pages?'Pagina corretta e salvata nel PDF':'Spartito corretto: pagine dritte, pulite e ingrandite',3200);
     }catch(e){ busy(); toast('Correzione non riuscita: '+(e.message||e)); }
   },
+};
+
+// ---- Anteprima prima/dopo con bordi da regolare, poi "Correggi per sempre" ----
+Fix.preview=async function(scopeAll,f0){
+  const sc=ST.cur, p=ST.page; const f={...fixOfPage(sc,p),...f0,on:true};
+  busy('Preparo l\'anteprima…');
+  const pg=await ST.doc.getPage(p+1); const a=await autoAnalyze(sc,p,pg);
+  const vp1=pg.getViewport({scale:1}); const k=1500/Math.max(vp1.width,vp1.height); const vp=pg.getViewport({scale:k});
+  const orig=document.createElement('canvas'); orig.width=Math.round(vp.width); orig.height=Math.round(vp.height);
+  const ox=orig.getContext('2d'); ox.fillStyle='#fff'; ox.fillRect(0,0,orig.width,orig.height); await pg.render({canvasContext:ox,viewport:vp}).promise;
+  busy();
+  let box={...(f.box||a.box)};
+  const make=()=>{ // pagina migliorata senza ritaglio (il ritaglio si vede con il riquadro)
+    let c=f.straighten?rotateCanvas(orig,a.skew):orig;
+    if(f.sharpen) c=enhance(c,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55});
+    return c; };
+  let after=make(), view='after';
+  const m2=modal('Prima e dopo',`
+    <div class="scanStage" id="pvStage"><canvas id="pvC"></canvas><div class="scanOverlay" id="pvOv"></div>
+      <div class="seg compare" id="pvView"><button data-v="before">Prima</button><button data-v="after" class="on">Dopo</button><button data-v="result">Risultato</button></div></div>
+    <div class="scanCtl">
+      <div class="hint" style="font-size:13px">Trascina i quattro angoli d'oro per decidere i bordi: tutto quello che è fuori dal riquadro viene tolto e la musica si ingrandisce. Tieni premuto <b>Prima</b> per confrontare.</div>
+      <div class="seg"><button id="pvAuto">${iconSvg('wand')} Bordi automatici</button><button id="pvAll">Tutta la pagina</button>
+        <button id="pvBw" class="${f.mode==='bw'?'on':''}">Bianco e nero</button><button id="pvStr" class="${f.straighten?'on':''}">Raddrizza</button><button id="pvSh" class="${f.sharpen?'on':''}">Pulizia</button></div>
+      <div class="sl"><span>Intensità della pulizia<em id="pvCv">${f.clean}</em></span><input type="range" id="pvClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
+    </div>`,
+    `<button class="ghostBtn" data-no>Annulla</button><button class="ghostBtn" id="pvRead">${iconSvg('eye')}Usa in lettura</button><button class="goldBtn" id="pvBake">${iconSvg('check')}Correggi per sempre${scopeAll?': tutto lo spartito':''}</button>`,
+    {full:true,id:'scanModal',sticky:true,eyebrow:`${sc.title} · pagina ${p+1}`});
+  m2.querySelector('.mBody').style.cssText='padding:0;flex:1;overflow:hidden;display:flex;flex-direction:column';
+  const C=$('#pvC'), ov=$('#pvOv'), stg=$('#pvStage'); let scale=1, offx=0, offy=0;
+  const draw=()=>{
+    const src=view==='before'?orig:after;
+    if(view==='result'){ const cw=Math.round(after.width*(1-box.l-box.r)), ch=Math.round(after.height*(1-box.t-box.b));
+      C.width=Math.max(1,cw); C.height=Math.max(1,ch); const x=C.getContext('2d'); x.drawImage(after,box.l*after.width,box.t*after.height,cw,ch,0,0,cw,ch);
+      if(f.clean>0) cleanCanvas(C,null,true); }
+    else { C.width=src.width; C.height=src.height; C.getContext('2d').drawImage(src,0,0); }
+    const W=stg.clientWidth-24, H=stg.clientHeight-24; scale=Math.min(W/C.width,H/C.height);
+    C.style.width=C.width*scale+'px'; C.style.height=C.height*scale+'px';
+    requestAnimationFrame(overlay);
+  };
+  const overlay=()=>{
+    if(view==='result'){ ov.innerHTML=''; return; }
+    const sr=stg.getBoundingClientRect(), cr=C.getBoundingClientRect(); offx=cr.left-sr.left; offy=cr.top-sr.top; const w=cr.width,h=cr.height;
+    const L=offx+box.l*w, T=offy+box.t*h, R=offx+w-box.r*w, B=offy+h-box.b*h;
+    ov.innerHTML=`<svg><path d="M0 0H${sr.width}V${sr.height}H0Z M${L} ${T}H${R}V${B}H${L}Z" fill="rgba(0,0,0,.5)" fill-rule="evenodd"/><rect x="${L}" y="${T}" width="${R-L}" height="${B-T}" fill="none" stroke="#f2d382" stroke-width="2.5"/></svg>`+
+      [[L,T,'lt'],[R,T,'rt'],[R,B,'rb'],[L,B,'lb']].map(([x,y,k2])=>`<div class="handle" data-h="${k2}" style="left:${x}px;top:${y}px"></div>`).join('')+
+      [[(L+R)/2,T,'t'],[R,(T+B)/2,'r'],[(L+R)/2,B,'b'],[L,(T+B)/2,'l']].map(([x,y,k2])=>`<div class="handle edge" data-h="${k2}" style="left:${x}px;top:${y}px"></div>`).join('');
+  };
+  ov.onpointerdown=e=>{ const hd=e.target.closest('[data-h]'); if(!hd) return; hd.setPointerCapture(e.pointerId); const k2=hd.dataset.h;
+    const mv=ev=>{ const cr=C.getBoundingClientRect(); const fx=clamp((ev.clientX-cr.left)/cr.width,0,1), fy=clamp((ev.clientY-cr.top)/cr.height,0,1);
+      if(k2.includes('l')) box.l=Math.min(fx,1-box.r-.1); if(k2.includes('r')) box.r=Math.min(1-fx,1-box.l-.1);
+      if(k2.includes('t')) box.t=Math.min(fy,1-box.b-.1); if(k2.includes('b')) box.b=Math.min(1-fy,1-box.t-.1); overlay(); };
+    const up=()=>{ hd.removeEventListener('pointermove',mv); hd.removeEventListener('pointerup',up); };
+    hd.addEventListener('pointermove',mv); hd.addEventListener('pointerup',up); };
+  const vbtn=$('#pvView');
+  vbtn.onclick=e=>{ const b=e.target.closest('[data-v]'); if(!b) return; view=b.dataset.v; vbtn.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw(); };
+  const pb=vbtn.querySelector('[data-v="before"]'); pb.onpointerdown=()=>{ if(view!=='before'){ pb._back=view; view='before'; draw(); } };
+  pb.onpointerup=pb.onpointerleave=()=>{ if(pb._back){ view=pb._back; pb._back=null; draw(); } };
+  const redo=()=>{ busy('Aggiorno…'); setTimeout(()=>{ after=make(); busy(); draw(); },20); };
+  $('#pvAuto').onclick=()=>{ box={...a.box}; overlay(); if(view==='result') draw(); };
+  $('#pvAll').onclick=()=>{ box={l:0,t:0,r:0,b:0}; overlay(); if(view==='result') draw(); };
+  const tg=(id,fn)=>{ const b=$('#'+id); b.onclick=()=>{ fn(); b.classList.toggle('on'); redo(); }; };
+  tg('pvBw',()=>f.mode=f.mode==='bw'?'gray':'bw'); tg('pvStr',()=>f.straighten=!f.straighten); tg('pvSh',()=>f.sharpen=!f.sharpen);
+  const cl=$('#pvClean'), later=debounce(redo,300); cl.oninput=()=>{ f.clean=+cl.value; $('#pvCv').textContent=cl.value; cl.style.setProperty('--v',cl.value+'%'); later(); };
+  const save=()=>{ const crop=box.l+box.r+box.t+box.b>0.001; const ff={...f,crop,box:crop?{...box}:undefined};
+    if(scopeAll){ const {box:_b,...rest}=ff; sc.fix=rest; sc.pfix={}; sc.pfix[p]=ff; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]=ff; } DB.putScore(sc); };
+  m2.querySelector('[data-no]').onclick=closeLayers;
+  $('#pvRead').onclick=()=>{ save(); closeLayers(); pageCache.clear(); renderPage(0); toast('Applicato in lettura: puoi renderlo definitivo quando vuoi',2600); };
+  $('#pvBake').onclick=()=>{ save(); closeLayers(); Fix.bake(scopeAll?null:[p]); };
+  this._rsz=debounce(draw,120); addEventListener('resize',this._rsz);
+  setTimeout(draw,30);
 };

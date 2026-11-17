@@ -99,6 +99,7 @@ function detectNotes(st){
 const LyricType = {
   st:null, notes:[], i:0, y:0,
   start(p){
+    ocrWarmup().catch(()=>{});
     const staves=detectStaves(); if(!staves.length){ toast('Non trovo i pentagrammi in questa pagina'); return; }
     // il rigo sopra il punto toccato
     const st=[...staves].filter(s=>s.top<p[1]).pop()||staves[0]; this.st=st;
@@ -157,7 +158,10 @@ const LyricType = {
 // Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; nel browser non disponibile).
 async function readLyrics(st){
   const c=pageCanvas, W=c.width, H=c.height; const y0=Math.round((st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.bottom+st.gap*3.5)*H));
-  const cut=document.createElement('canvas'); cut.width=W; cut.height=Math.max(1,y1-y0); cut.getContext('2d').drawImage(c,0,y0,W,y1-y0,0,0,W,y1-y0);
+  // solo la striscia del testo, alla misura che serve alla lettura (caratteri alti ~24 px), in bianco e nero
+  const gapPx=st.gap*H, k=Math.min(1.5,Math.max(.25,24/Math.max(1,gapPx)));
+  const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
+  const cx=cut.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.filter='grayscale(1) contrast(1.6)'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height); cx.filter='none';
   let res;
   if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
   else res=await ocrBrowser(cut);
@@ -168,12 +172,23 @@ async function readLyrics(st){
 }
 
 // Nel browser: Tesseract (scaricato la prima volta, poi in cache). Restituisce parole con posizione 0…1.
+// Nel browser: Tesseract, caricato UNA volta e tenuto pronto (prima veniva ricreato a ogni lettura: lentissimo).
+let _ocrWorker=null;
+function ocrWarmup(){
+  if(window.MozartNative&&MozartNative.ocr) return Promise.resolve(null);
+  if(_ocrWorker) return _ocrWorker;
+  _ocrWorker=(async()=>{
+    if(!window.Tesseract) await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); });
+    const w=await Tesseract.createWorker('ita+fra+lat');
+    await w.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
+    return w;
+  })();
+  _ocrWorker.catch(()=>{ _ocrWorker=null; });
+  return _ocrWorker;
+}
 async function ocrBrowser(canvas){
-  if(!window.Tesseract){ busy('Preparo la lettura del testo (solo la prima volta)…');
-    await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); }); }
-  busy('Leggo il testo stampato…');
-  const w=await Tesseract.createWorker('ita+fra+deu+lat');
-  try{ const {data}=await w.recognize(canvas); const W=canvas.width;
-    return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W})); }
-  finally{ w.terminate(); }
+  if(!_ocrWorker) busy('Preparo la lettura del testo (solo la prima volta)…');
+  const w=await ocrWarmup(); busy('Leggo il testo stampato…');
+  const {data}=await w.recognize(canvas); const W=canvas.width;
+  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W}));
 }

@@ -167,7 +167,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
                     start = r.upperBound
                     if let box = try? cand.boundingBox(for: r) {
                         let b = box.boundingBox
-                        words.append(["text": String(part), "x": Double(b.minX), "w": Double(b.width)])
+                        words.append(["text": String(part), "x": Double(b.minX), "w": Double(b.width), "y": 1 - Double(b.maxY)])
                     }
                 }
             }

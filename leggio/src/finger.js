@@ -17,7 +17,7 @@ const Finger = {
     if(!s.moved&&Math.hypot(dx,dy)<.006) return;
     if(!s.moved){ s.moved=true; Anno.push(); }
     // la riga si sposta in su o in giù; un testo libero si sposta anche di lato
-    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; if(s.single) t.x=s.orig[j].x+dx; });
+    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; t.x=s.orig[j].x+dx; });
     Anno.updSelBox(); Anno.redraw();
   },
   up(){
@@ -33,7 +33,7 @@ const Finger = {
       <div style="display:flex;gap:6px;align-items:center"><input id="fgTxt" value="${esc(s.text)}" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:0 10px;font-size:17px;outline:none"><button class="goldBtn sm" id="fgOk">${iconSvg('check')}</button></div>
       <div class="seg" id="fgFont"><button data-f="sans">Aa</button><button data-f="serif" style="font-family:var(--f-display)">Aa</button><button data-f="music" style="font-family:var(--f-display);font-style:italic">rit.</button>
         <button id="fgB" style="font-weight:900">G</button><button id="fgI" style="font-style:italic">C</button><button id="fgM">A−</button><button id="fgP">A+</button></div>
-      <div class="seg"><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button>
+      <div class="seg"><button id="fgLt">${iconSvg('chevLeft')}</button><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button><button id="fgRt">${iconSvg('chevRight')}</button>
         ${lyric?`<button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
       <div class="hint" style="font-size:12px">${lyric?`Riga di ${this.line.length} sillabe: formato, spostamento e copia valgono per tutta la riga; il testo in alto cambia solo la sillaba toccata.`:'Trascina con il dito per spostarlo.'}</div></div>`;
     $('#app').appendChild(b);
@@ -51,7 +51,7 @@ const Finger = {
       else if(x.id==='fgP') ch(t=>t.size=Math.min(.08,t.size*1.1));
       mark(); };
     const step=.004;
-    $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step);
+    $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step); $('#fgLt').onclick=()=>ch(t=>t.x-=step); $('#fgRt').onclick=()=>ch(t=>t.x+=step);
     const save=()=>{ const v=$('#fgTxt').value.trim(); if(v===s.text) return; A.push(); if(!v){ A.strokes.splice(this.idx,1); b.remove(); A.clearSel(); } else s.text=v; A.redraw(); saveAnn(); A.buildBar(); };
     $('#fgOk').onclick=()=>{ save(); b.remove(); A.clearSel(); };
     $('#fgTxt').onkeydown=e=>{ if(e.key==='Enter'){ save(); this.nextSyl(); } if(e.key==='Escape'){ b.remove(); A.clearSel(); } };
@@ -61,7 +61,8 @@ const Finger = {
   },
   // Invio: passa alla sillaba successiva della riga
   nextSyl(){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); if(j>=0&&j<ord.length-1){ this.idx=ord[j+1]; this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); } else { $('#fgBar')?.remove(); A.clearSel(); } },
-  guessLang(t){ t=t.toLowerCase(); if(/sch|ß|[äöü]|\b(und|der|die|das|ich|nicht|mein)\b/.test(t)) return 'de'; if(/[éèêàçœ]|qu'|\b(les|je|vous|dans|pour|mon|votre|avec|nous|est)\b/.test(t)) return 'fr'; return 'la'; },
+  guessLang(t){ return detectLang(t)||'la'; },
+  guessLangOld(t){ t=t.toLowerCase(); if(/sch|ß|[äöü]|\b(und|der|die|das|ich|nicht|mein)\b/.test(t)) return 'de'; if(/[éèêàçœ]|qu'|\b(les|je|vous|dans|pour|mon|votre|avec|nous|est)\b/.test(t)) return 'fr'; return 'la'; },
   translit(bar){
     const A=Anno; const L=this.line.map(k=>A.strokes[k]).filter(Boolean); const all=L.map(t=>t.text).join(' ');
     let lang=this.guessLang(all), where='up';
@@ -75,9 +76,27 @@ const Finger = {
       p.querySelector('#ftW').onclick=e=>{const x=e.target.closest('[data-w]');if(x){where=x.dataset.w;draw()}};
       p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
         A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
-        L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',italic:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+        L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
         p.remove(); bar&&bar.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Traslitterazione scritta sul rigo',2200); };
     };
     draw(); $('#app').appendChild(p); const br=bar.getBoundingClientRect(); p.style.left=br.left+'px'; p.style.top=Math.max(70,Math.min(br.top,innerHeight-p.offsetHeight-10))+'px';
+  },
+  // Dopo una copia: se il testo è in lingua straniera chiede se traslitterare, e lo fa da solo.
+  offerTranslit(idx){
+    const A=Anno; const L=idx.map(k=>A.strokes[k]).filter(Boolean); if(!L.length) return;
+    const lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
+    const name=PRON.names[lang].split(' ')[0].toLowerCase();
+    const p=document.createElement('div'); p.className='pop'; p.id='fgTrPop';
+    p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:300px"><b>Testo in ${esc(name)}</b><div class="hint">Vuoi la pronuncia all'italiana sopra le parole?</div>
+      <div style="display:flex;gap:8px"><button class="ghostBtn" data-n style="flex:1">No</button><button class="goldBtn" data-y style="flex:1">${iconSvg('voice')}Traslittera</button></div></div>`;
+    $('#app').appendChild(p); p.style.left='50%'; p.style.transform='translateX(-50%)'; p.style.bottom='calc(env(safe-area-inset-bottom,0px) + 170px)'; p.style.top='auto';
+    p.querySelector('[data-n]').onclick=()=>p.remove();
+    p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
+  },
+  writeTranslit(L,lang,where){
+    const A=Anno; A.push(); const sz=(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+    A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
+    L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+    A.redraw(); saveAnn(); A.buildBar();
   },
 };

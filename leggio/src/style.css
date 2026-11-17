@@ -79,6 +79,10 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .handle.edge{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:8px}
 #pvStage .compare{left:50%;transform:translateX(-50%);top:auto;bottom:10px;z-index:4}
 #fgBar,#fgTrPop{position:fixed;z-index:60}
+.rdBand{position:absolute;left:-6px;right:-6px;border:2px solid #1f5fd6;background:rgba(31,95,214,.16);border-radius:10px;touch-action:none;cursor:ns-resize;display:flex;align-items:flex-start;justify-content:flex-end}
+.rdBand span{font-size:11px;font-weight:800;color:#1f5fd6;padding:1px 8px;background:rgba(255,255,255,.85);border-radius:0 8px 0 8px;pointer-events:none}
+.rdH{position:absolute;width:60px;height:22px;margin-left:-30px;border-radius:11px;background:#1f5fd6;box-shadow:0 0 0 2px #fff}
+.rdH[data-e="t"]{top:-12px;left:30%}.rdH[data-e="b"]{bottom:-12px;left:70%}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}

@@ -127,7 +127,7 @@ const LyricType = {
     const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
     place(); this._place=place;
     const inp=$('#lyIn');
-    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
+    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
       inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
@@ -143,21 +143,46 @@ const LyricType = {
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=staves.map((st,i)=>st===me?'':`<button data-st="${i}" class="lcBand${st.printed?' ref':''}" style="top:${(st.bottom+st.gap*.3)*100}%;height:${st.gap*3.2*100}%">${st.printed?'Copia questo testo':'(senza testo)'}</button>`).join('')+`<div class="lcBar pill"><span class="hint" style="padding:0 10px">Tocca il testo stampato da copiare</span><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L);
-    L.onclick=async e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove();
-      const src=staves[+b.dataset.st]; busy('Leggo il testo…');
-      try{ const words=await readLyrics(src); busy();
-        if(!words.length) return toast('Non riesco a leggere il testo di quel rigo');
-        Anno.push(); const n=target.notes; let k=0;
+    L.onclick=e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove(); this.adjustBand(staves[+b.dataset.st]); };
+  },
+  // La fascia blu si sposta (su/giù) e si allarga/stringe: legge solo la riga di testo che contiene.
+  adjustBand(src){
+    const target=this; const r=inkCanvas.getBoundingClientRect(); const g=src.gap;
+    const all=detectStaves(); const nx=all.find(s=>s.top>src.bottom+g); const lim=nx?nx.top-g*.25:1;
+    const band={y0:src.bottom+g*.35,y1:Math.max(src.bottom+g*1.6,Math.min(lim,src.bottom+g*2.9))};
+    const L=document.createElement('div'); L.id='lcLayer';
+    L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
+    L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    $('#app').appendChild(L); const B=L.querySelector('.rdBand');
+    const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
+    B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
+      const mv=ev=>{ const d=(ev.clientY-y)/r.height;
+        if(edge==='t') band.y0=Math.min(a0.y1-g*.8,a0.y0+d); else if(edge==='b') band.y1=Math.max(a0.y0+g*.8,a0.y1+d); else { band.y0=a0.y0+d; band.y1=a0.y1+d; }
+        band.y0=clamp(band.y0,0,.98); band.y1=clamp(band.y1,band.y0+.01,1); place(); };
+      const up=()=>{ B.removeEventListener('pointermove',mv); B.removeEventListener('pointerup',up); };
+      B.addEventListener('pointermove',mv); B.addEventListener('pointerup',up); };
+    L.onclick=async e=>{
+      if(e.target.closest('[data-x]')){ L.remove(); return; }
+      const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      if(!e.target.closest('[data-ok]')) return;
+      L.remove(); busy('Leggo il testo…');
+      try{ const words=await readLyrics({...band,gap:g}); busy();
+        if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600);
+        Anno.push(); const n=target.notes; const added=[];
         for(const w of words){ let x=w.x; if(n&&n.length){ let b2=0,bd=9; n.forEach((v,j)=>{const d=Math.abs(v-x); if(d<bd){bd=d;b2=j}}); if(bd<.03) x=n[b2]; }
-          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}); k++; }
-        saveAnn(); Anno.redraw(); Anno.buildBar(); toast(`${k} sillabe copiate sotto il rigo · correggi toccando una sillaba con il lazo`,3400);
+          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}); added.push(Anno.strokes.length-1); }
+        saveAnn(); Anno.redraw(); Anno.buildBar(); LyricType.close();
+        toast(`${added.length} sillabe copiate · con il Dito ✋ le sposti e le correggi`,3200);
+        Finger.offerTranslit(added);
       }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); } };
   },
 };
 
 // Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; nel browser non disponibile).
 async function readLyrics(st){
-  const c=pageCanvas, W=c.width, H=c.height; const y0=Math.round((st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.bottom+st.gap*3.5)*H));
+  const c=pageCanvas, W=c.width, H=c.height;
+  const y0=Math.round((st.y0!=null?st.y0:st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.y1!=null?st.y1:st.bottom+st.gap*3.5)*H));
   // solo la striscia del testo, alla misura che serve alla lettura (caratteri alti ~24 px), in bianco e nero
   const gapPx=st.gap*H, k=Math.min(1.5,Math.max(.25,24/Math.max(1,gapPx)));
   const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
@@ -165,6 +190,8 @@ async function readLyrics(st){
   let res;
   if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
   else res=await ocrBrowser(cut);
+  // se la fascia contiene due righe (es. italiano e traduzione) si tiene la prima
+  if(res.length&&res[0].y!=null){ const ym=Math.min(...res.map(w=>w.y)); res=res.filter(w=>w.y<ym+.22); }
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
     parts.forEach((t,i)=>{ if(t==='-'||t==='—') return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
@@ -190,5 +217,6 @@ async function ocrBrowser(canvas){
   if(!_ocrWorker) busy('Preparo la lettura del testo (solo la prima volta)…');
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W}));
+  const Hh=canvas.height;
+  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh}));
 }

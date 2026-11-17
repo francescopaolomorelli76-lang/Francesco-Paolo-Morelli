@@ -99,6 +99,10 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .handle.edge{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:8px}
 #pvStage .compare{left:50%;transform:translateX(-50%);top:auto;bottom:10px;z-index:4}
 #fgBar,#fgTrPop{position:fixed;z-index:60}
+.rdBand{position:absolute;left:-6px;right:-6px;border:2px solid #1f5fd6;background:rgba(31,95,214,.16);border-radius:10px;touch-action:none;cursor:ns-resize;display:flex;align-items:flex-start;justify-content:flex-end}
+.rdBand span{font-size:11px;font-weight:800;color:#1f5fd6;padding:1px 8px;background:rgba(255,255,255,.85);border-radius:0 8px 0 8px;pointer-events:none}
+.rdH{position:absolute;width:60px;height:22px;margin-left:-30px;border-radius:11px;background:#1f5fd6;box-shadow:0 0 0 2px #fff}
+.rdH[data-e="t"]{top:-12px;left:30%}.rdH[data-e="b"]{bottom:-12px;left:70%}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
@@ -3120,14 +3124,23 @@ const PRON = {
     s=s.replace(/^s(?=[aeiouäöü])/,'ṡ').replace(/c§/g,'c').replace(/ī/g,'i');
     return s; },
   fr(w){ let s=w.toLowerCase();
-    s=s.replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/oi/g,'ua').replace(/ou/g,'Ů').replace(/(?<![aeo])u(?![aeio])/g,'ü').replace(/Ů/g,'u');
+    s=s.replace(/œu|oeu|eu/g,'ö').replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/oi/g,'ua').replace(/ou/g,'Ů').replace(/(?<![aeo])u(?![aeio])/g,'ü').replace(/Ů/g,'u');
     s=s.replace(/(ain|ein|in|im|ym|yn)(?![aeiouyn])/g,'ẽ').replace(/(an|en|am|em)(?![aeiouyn])/g,'ã').replace(/(on|om)(?![aeiouyn])/g,'õ').replace(/(un|um)(?![aeiouyn])/g,'œ̃');
     s=s.replace(/ai|ei|ê|è/g,'è').replace(/é|er$|ez$/g,'é').replace(/ch/g,'sc').replace(/gn/g,'gn').replace(/qu/g,'k');
     s=s.replace(/ç/g,'s').replace(/c(?=[eiy])/g,'s').replace(/g(?=[eiy])/g,'j').replace(/ill/g,'i').replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'');
     s=s.replace(/(?<=[aeiouéèü])s(?=[aeiouéèü])/g,'ṡ').replace(/[stdxzp]+$/,'').replace(/([^aeiouéèü])e$/,'$1(e)').replace(/y/g,'i');
     return s; },
   conv(text,lang){ return String(text).replace(/[A-Za-zÀ-ÿßæœ]+/g,w=>{const r=this[lang](w);return w[0]===w[0].toUpperCase()&&w[0]!==w[0].toLowerCase()?r.charAt(0).toUpperCase()+r.slice(1):r}); },
-  names:{la:'Latino (ecclesiastico)',de:'Tedesco',fr:'Francese'},
+  es(w){ let s=w.toLowerCase();
+    s=s.replace(/ll/g,'gl').replace(/ñ/g,'gn').replace(/j/g,'kh').replace(/g(?=[ei])/g,'kh').replace(/gu(?=[ei])/g,'gh').replace(/qu(?=[ei])/g,'k');
+    s=s.replace(/c(?=[ei])/g,'θ').replace(/z/g,'θ').replace(/h/g,'').replace(/v/g,'b').replace(/y$/,'i').replace(/[áà]/g,'a').replace(/[éè]/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/[úü]/g,'u');
+    return s; },
+  en(w){ let s=w.toLowerCase();
+    const dict={the:'de',and:'end',you:'iu',your:'ior',are:'ar',love:'lav',heart:'hart',my:'mai',life:'laif',with:'uid',for:'for',ever:'ever',all:'ol',we:'ui',our:'auar',free:'fri',me:'mi',be:'bi',sweet:'suit',night:'nait',light:'lait',song:'song',sing:'sing',come:'kam',home:'hom',lord:'lord',god:'god',holy:'holi',glory:'glori',joy:'gioi'};
+    if(dict[s]) return dict[s];
+    s=s.replace(/igh/g,'ai').replace(/ee|ea/g,'i').replace(/oo/g,'u').replace(/ou/g,'au').replace(/ow$/,'au').replace(/sh/g,'sc').replace(/ch/g,'c').replace(/th/g,'d').replace(/w/g,'u').replace(/y(?=[aeiou])/g,'i').replace(/y$/,'i').replace(/ph/g,'f').replace(/([^aeiou])e$/,'$1').replace(/ck/g,'k').replace(/j/g,'gi');
+    return s; },
+  names:{la:'Latino (ecclesiastico)',de:'Tedesco',fr:'Francese',es:'Spagnolo',en:'Inglese'},
 };
 const Pron = {
   lang:'la',
@@ -3158,6 +3171,24 @@ const Pron = {
     m2.querySelector('[data-ok]').onclick=()=>{ const t=$('#prOut').textContent.trim(); if(!t) return toast('Scrivi prima il testo'); closeLayers(); if(!ST.annotate) Anno.enter(); Anno.mode='text'; Anno.textMode='free'; Anno.buildBar(); Anno.pendingText=t; toast('Tocca la pagina dove scrivere la pronuncia',2600); };
   },
 };
+
+// Riconosce la lingua del testo (italiano, latino, francese, tedesco, spagnolo, inglese…).
+function detectLang(text){
+  const t=' '+String(text).toLowerCase().replace(/[-–—_.,;:!?¡¿"“”()]/g,' ').replace(/\s+/g,' ')+' ';
+  const W={
+    it:['il','lo','la','di','che','non','per','un','una','sono','mio','mia','amore','cuore','con','del','della','più','ti','mi','si','ha','ho','gli','ciel','io','tu','è'],
+    la:['et','in','est','dei','deus','domine','dominus','qui','quae','quod','ad','cum','sanctus','gloria','agnus','pacem','nobis','tuam','tua','mundi','miserere','kyrie','eleison','christe','excelsis','amen','ave','maria','gratia','plena','tecum','benedictus','venit','nomine','spiritu','pater','filii','coeli','caeli','terra','sunt'],
+    fr:['le','les','des','je','tu','vous','nous','est','et','une','dans','pour','mon','ma','votre','avec','qui','que','pas','ne','sur','au','aux','du','ce','cette','mes','tes','son','sa','ses','toi','moi','coeur','amour','ciel'],
+    de:['der','die','das','und','ich','du','nicht','ist','ein','eine','mein','dein','mit','auf','zu','von','sich','wie','so','herz','liebe','gott','wir','ihr','sie','den','dem','des'],
+    es:['el','los','las','y','que','de','en','un','una','mi','tu','con','por','para','es','no','corazón','amor','yo','te','se','del','al','muy','como'],
+    en:['the','and','you','your','are','is','of','to','in','my','with','for','we','our','be','me','love','heart','all','this','that','will','shall','thy','thee','lord'],
+  };
+  const sc={}; for(const k in W){ sc[k]=0; for(const w of W[k]) if(t.includes(' '+w+' ')) sc[k]++; }
+  if(/[éèêàçœ]/.test(t)) sc.fr+=2; if(/[äöüß]|sch/.test(t)) sc.de+=2; if(/[ñ¡¿]|[áíóú]/.test(t)) sc.es+=2; if(/[òù]/.test(t)) sc.it+=1;
+  if(/\b\w+(ae|um|us|is|orum|ibus)\b/.test(t)) sc.la+=1; if(/\bth|w\w/.test(t)) sc.en+=1;
+  const best=Object.entries(sc).sort((a,b)=>b[1]-a[1])[0];
+  return best&&best[1]>0?best[0]:null;
+}
 
 // ================= Zoom con due dita su pannelli, menu e finestre (anche Per Cantanti) =================
 const UIZoom = {
@@ -3315,7 +3346,7 @@ const LyricType = {
     const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
     place(); this._place=place;
     const inp=$('#lyIn');
-    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
+    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
       inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
@@ -3331,21 +3362,46 @@ const LyricType = {
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=staves.map((st,i)=>st===me?'':`<button data-st="${i}" class="lcBand${st.printed?' ref':''}" style="top:${(st.bottom+st.gap*.3)*100}%;height:${st.gap*3.2*100}%">${st.printed?'Copia questo testo':'(senza testo)'}</button>`).join('')+`<div class="lcBar pill"><span class="hint" style="padding:0 10px">Tocca il testo stampato da copiare</span><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L);
-    L.onclick=async e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove();
-      const src=staves[+b.dataset.st]; busy('Leggo il testo…');
-      try{ const words=await readLyrics(src); busy();
-        if(!words.length) return toast('Non riesco a leggere il testo di quel rigo');
-        Anno.push(); const n=target.notes; let k=0;
+    L.onclick=e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove(); this.adjustBand(staves[+b.dataset.st]); };
+  },
+  // La fascia blu si sposta (su/giù) e si allarga/stringe: legge solo la riga di testo che contiene.
+  adjustBand(src){
+    const target=this; const r=inkCanvas.getBoundingClientRect(); const g=src.gap;
+    const all=detectStaves(); const nx=all.find(s=>s.top>src.bottom+g); const lim=nx?nx.top-g*.25:1;
+    const band={y0:src.bottom+g*.35,y1:Math.max(src.bottom+g*1.6,Math.min(lim,src.bottom+g*2.9))};
+    const L=document.createElement('div'); L.id='lcLayer';
+    L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
+    L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    $('#app').appendChild(L); const B=L.querySelector('.rdBand');
+    const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
+    B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
+      const mv=ev=>{ const d=(ev.clientY-y)/r.height;
+        if(edge==='t') band.y0=Math.min(a0.y1-g*.8,a0.y0+d); else if(edge==='b') band.y1=Math.max(a0.y0+g*.8,a0.y1+d); else { band.y0=a0.y0+d; band.y1=a0.y1+d; }
+        band.y0=clamp(band.y0,0,.98); band.y1=clamp(band.y1,band.y0+.01,1); place(); };
+      const up=()=>{ B.removeEventListener('pointermove',mv); B.removeEventListener('pointerup',up); };
+      B.addEventListener('pointermove',mv); B.addEventListener('pointerup',up); };
+    L.onclick=async e=>{
+      if(e.target.closest('[data-x]')){ L.remove(); return; }
+      const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      if(!e.target.closest('[data-ok]')) return;
+      L.remove(); busy('Leggo il testo…');
+      try{ const words=await readLyrics({...band,gap:g}); busy();
+        if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600);
+        Anno.push(); const n=target.notes; const added=[];
         for(const w of words){ let x=w.x; if(n&&n.length){ let b2=0,bd=9; n.forEach((v,j)=>{const d=Math.abs(v-x); if(d<bd){bd=d;b2=j}}); if(bd<.03) x=n[b2]; }
-          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}); k++; }
-        saveAnn(); Anno.redraw(); Anno.buildBar(); toast(`${k} sillabe copiate sotto il rigo · correggi toccando una sillaba con il lazo`,3400);
+          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}); added.push(Anno.strokes.length-1); }
+        saveAnn(); Anno.redraw(); Anno.buildBar(); LyricType.close();
+        toast(`${added.length} sillabe copiate · con il Dito ✋ le sposti e le correggi`,3200);
+        Finger.offerTranslit(added);
       }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); } };
   },
 };
 
 // Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; nel browser non disponibile).
 async function readLyrics(st){
-  const c=pageCanvas, W=c.width, H=c.height; const y0=Math.round((st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.bottom+st.gap*3.5)*H));
+  const c=pageCanvas, W=c.width, H=c.height;
+  const y0=Math.round((st.y0!=null?st.y0:st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.y1!=null?st.y1:st.bottom+st.gap*3.5)*H));
   // solo la striscia del testo, alla misura che serve alla lettura (caratteri alti ~24 px), in bianco e nero
   const gapPx=st.gap*H, k=Math.min(1.5,Math.max(.25,24/Math.max(1,gapPx)));
   const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
@@ -3353,6 +3409,8 @@ async function readLyrics(st){
   let res;
   if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
   else res=await ocrBrowser(cut);
+  // se la fascia contiene due righe (es. italiano e traduzione) si tiene la prima
+  if(res.length&&res[0].y!=null){ const ym=Math.min(...res.map(w=>w.y)); res=res.filter(w=>w.y<ym+.22); }
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
     parts.forEach((t,i)=>{ if(t==='-'||t==='—') return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
@@ -3378,7 +3436,8 @@ async function ocrBrowser(canvas){
   if(!_ocrWorker) busy('Preparo la lettura del testo (solo la prima volta)…');
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W}));
+  const Hh=canvas.height;
+  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh}));
 }
 
 // ================= Migliora pagina: raddrizza, ritaglia i bordi e ingrandisce, pulisce, mette a fuoco =================
@@ -3670,7 +3729,7 @@ const Finger = {
     if(!s.moved&&Math.hypot(dx,dy)<.006) return;
     if(!s.moved){ s.moved=true; Anno.push(); }
     // la riga si sposta in su o in giù; un testo libero si sposta anche di lato
-    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; if(s.single) t.x=s.orig[j].x+dx; });
+    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; t.x=s.orig[j].x+dx; });
     Anno.updSelBox(); Anno.redraw();
   },
   up(){
@@ -3686,7 +3745,7 @@ const Finger = {
       <div style="display:flex;gap:6px;align-items:center"><input id="fgTxt" value="${esc(s.text)}" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:0 10px;font-size:17px;outline:none"><button class="goldBtn sm" id="fgOk">${iconSvg('check')}</button></div>
       <div class="seg" id="fgFont"><button data-f="sans">Aa</button><button data-f="serif" style="font-family:var(--f-display)">Aa</button><button data-f="music" style="font-family:var(--f-display);font-style:italic">rit.</button>
         <button id="fgB" style="font-weight:900">G</button><button id="fgI" style="font-style:italic">C</button><button id="fgM">A−</button><button id="fgP">A+</button></div>
-      <div class="seg"><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button>
+      <div class="seg"><button id="fgLt">${iconSvg('chevLeft')}</button><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button><button id="fgRt">${iconSvg('chevRight')}</button>
         ${lyric?`<button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
       <div class="hint" style="font-size:12px">${lyric?`Riga di ${this.line.length} sillabe: formato, spostamento e copia valgono per tutta la riga; il testo in alto cambia solo la sillaba toccata.`:'Trascina con il dito per spostarlo.'}</div></div>`;
     $('#app').appendChild(b);
@@ -3704,7 +3763,7 @@ const Finger = {
       else if(x.id==='fgP') ch(t=>t.size=Math.min(.08,t.size*1.1));
       mark(); };
     const step=.004;
-    $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step);
+    $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step); $('#fgLt').onclick=()=>ch(t=>t.x-=step); $('#fgRt').onclick=()=>ch(t=>t.x+=step);
     const save=()=>{ const v=$('#fgTxt').value.trim(); if(v===s.text) return; A.push(); if(!v){ A.strokes.splice(this.idx,1); b.remove(); A.clearSel(); } else s.text=v; A.redraw(); saveAnn(); A.buildBar(); };
     $('#fgOk').onclick=()=>{ save(); b.remove(); A.clearSel(); };
     $('#fgTxt').onkeydown=e=>{ if(e.key==='Enter'){ save(); this.nextSyl(); } if(e.key==='Escape'){ b.remove(); A.clearSel(); } };
@@ -3714,7 +3773,8 @@ const Finger = {
   },
   // Invio: passa alla sillaba successiva della riga
   nextSyl(){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); if(j>=0&&j<ord.length-1){ this.idx=ord[j+1]; this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); } else { $('#fgBar')?.remove(); A.clearSel(); } },
-  guessLang(t){ t=t.toLowerCase(); if(/sch|ß|[äöü]|\b(und|der|die|das|ich|nicht|mein)\b/.test(t)) return 'de'; if(/[éèêàçœ]|qu'|\b(les|je|vous|dans|pour|mon|votre|avec|nous|est)\b/.test(t)) return 'fr'; return 'la'; },
+  guessLang(t){ return detectLang(t)||'la'; },
+  guessLangOld(t){ t=t.toLowerCase(); if(/sch|ß|[äöü]|\b(und|der|die|das|ich|nicht|mein)\b/.test(t)) return 'de'; if(/[éèêàçœ]|qu'|\b(les|je|vous|dans|pour|mon|votre|avec|nous|est)\b/.test(t)) return 'fr'; return 'la'; },
   translit(bar){
     const A=Anno; const L=this.line.map(k=>A.strokes[k]).filter(Boolean); const all=L.map(t=>t.text).join(' ');
     let lang=this.guessLang(all), where='up';
@@ -3728,10 +3788,28 @@ const Finger = {
       p.querySelector('#ftW').onclick=e=>{const x=e.target.closest('[data-w]');if(x){where=x.dataset.w;draw()}};
       p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
         A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
-        L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',italic:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+        L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
         p.remove(); bar&&bar.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Traslitterazione scritta sul rigo',2200); };
     };
     draw(); $('#app').appendChild(p); const br=bar.getBoundingClientRect(); p.style.left=br.left+'px'; p.style.top=Math.max(70,Math.min(br.top,innerHeight-p.offsetHeight-10))+'px';
+  },
+  // Dopo una copia: se il testo è in lingua straniera chiede se traslitterare, e lo fa da solo.
+  offerTranslit(idx){
+    const A=Anno; const L=idx.map(k=>A.strokes[k]).filter(Boolean); if(!L.length) return;
+    const lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
+    const name=PRON.names[lang].split(' ')[0].toLowerCase();
+    const p=document.createElement('div'); p.className='pop'; p.id='fgTrPop';
+    p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:300px"><b>Testo in ${esc(name)}</b><div class="hint">Vuoi la pronuncia all'italiana sopra le parole?</div>
+      <div style="display:flex;gap:8px"><button class="ghostBtn" data-n style="flex:1">No</button><button class="goldBtn" data-y style="flex:1">${iconSvg('voice')}Traslittera</button></div></div>`;
+    $('#app').appendChild(p); p.style.left='50%'; p.style.transform='translateX(-50%)'; p.style.bottom='calc(env(safe-area-inset-bottom,0px) + 170px)'; p.style.top='auto';
+    p.querySelector('[data-n]').onclick=()=>p.remove();
+    p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
+  },
+  writeTranslit(L,lang,where){
+    const A=Anno; A.push(); const sz=(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+    A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
+    L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+    A.redraw(); saveAnn(); A.buildBar();
   },
 };
 

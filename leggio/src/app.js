@@ -79,10 +79,11 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOf(ST.cur))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${JSON.stringify(fixOfPage(ST.cur,p))}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
-  const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  const pg=await ST.doc.getPage(p+1); let crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
+  { const f=fixOfPage(ST.cur,p); if(f.on){ try{ const a=await autoAnalyze(ST.cur,p,pg); if(f.crop&&a.box) crop=a.box; }catch(e){} } }
   const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
   const scale=Math.min((W-16)/cw,(H-16)/ch);
   // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)

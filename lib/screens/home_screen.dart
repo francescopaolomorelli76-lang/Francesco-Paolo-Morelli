@@ -21,6 +21,7 @@ import '../ui/manga.dart';
 import '../ui/push_button.dart';
 import 'audio_screen.dart';
 import 'info_screen.dart';
+import 'lang_sheet.dart';
 import 'language_screen.dart';
 import 'pair_screen.dart';
 import 'setup_screen.dart';
@@ -312,91 +313,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _pickPartner() async {
     if (_active != null) return;
-    final l = await showModalBottomSheet<Object>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(12),
-        child: ComicPanel(
-          color: MC.paper,
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const OutlinedTitle('LINGUA DELL\'ALTRO', size: 26),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => Navigator.pop(ctx, 'auto'),
-                  child: ComicPanel(
-                    color: _partner == null ? MC.cyan : MC.white,
-                    shadow: 3,
-                    child: const Row(
-                      children: [
-                        Icon(Icons.auto_awesome, size: 26),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'AUTOMATICA: la riconosco io',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final l in Langs.installed.where((l) => l != _mine))
-                      GestureDetector(
-                        onTap: () => Navigator.pop(ctx, l),
-                        child: ComicPanel(
-                          color: l == _partner ? MC.cyan : MC.white,
-                          shadow: 3,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          child: Text(
-                            '${l.flag} ${l.label}',
-                            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => Navigator.pop(ctx, 'world'),
-                  child: const ComicPanel(
-                    color: MC.yellow,
-                    shadow: 3,
-                    child: Row(
-                      children: [
-                        Text('🌍', style: TextStyle(fontSize: 24)),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'ALTRE LINGUE DEL MONDO: tocca il paese e la scarico',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final l = await showLanguageSheet(
+      context,
+      title: 'LINGUA DELL\'ALTRO',
+      current: _partner,
+      exclude: _mine,
+      allowAuto: true,
     );
-    if (l == 'world') {
-      await _openWorld();
-      return;
-    }
-    if (l == 'auto') _setPartner(null);
+    _memo.clear();
+    if (!mounted) return;
+    if (l == kAutoLanguage) _setPartner(null);
     if (l is Lang) _setPartner(l);
+    setState(() {});
   }
 
   void _missing(MissingLanguage e) => _toast(
@@ -883,7 +811,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const Spacer(),
           _modeSwitch(),
           IconButton(
-            tooltip: 'Audio e microfono',
+            tooltip: 'Opzioni: lingue, audio, cuffie, voci',
             onPressed: _active == null ? _openAudio : null,
             icon: Icon(Icons.tune, size: 28, color: iconColor),
           ),

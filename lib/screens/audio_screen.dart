@@ -9,8 +9,11 @@ import '../services/langs.dart';
 import '../services/live_speech.dart';
 import '../services/pitch.dart';
 import '../services/speech_service.dart';
+import '../services/translator_service.dart';
 import '../ui/manga.dart';
 import 'info_screen.dart';
+import 'setup_screen.dart';
+import 'world_screen.dart';
 
 /// Pannello AUDIO: tutto quello che serve per sentire e farsi sentire,
 /// senza passare dalle impostazioni dell'iPhone.
@@ -89,6 +92,110 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
     } catch (_) {}
     final h = await AudioRoute.status();
     if (mounted) setState(() => _headset = h);
+    await _loadLangStatus();
+  }
+
+  // ───── Lingue scaricate
+  Map<Lang, bool>? _langReady;
+
+  Future<void> _loadLangStatus() async {
+    final out = <Lang, bool>{};
+    for (final l in Langs.installed) {
+      try {
+        out[l] = await TranslatorService.instance.isDownloaded(l);
+      } catch (_) {
+        out[l] = false;
+      }
+    }
+    if (mounted) setState(() => _langReady = out);
+  }
+
+  Future<void> _open(Widget page) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+    await _loadLangStatus();
+  }
+
+  Widget _languagesPanel() {
+    final st = _langReady;
+    final langs = Langs.installed.toList()..sort((a, b) => a.itName.toLowerCase().compareTo(b.itName.toLowerCase()));
+    final missing = st == null ? 0 : st.values.where((v) => !v).length;
+    return ComicPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            st == null
+                ? 'Controllo le lingue…'
+                : missing == 0
+                ? '✅ ${langs.length} lingue pronte anche offline'
+                : '⚠️ ${langs.length - missing} pronte · $missing da scaricare',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final l in langs)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Text(l.flag, style: const TextStyle(fontSize: 22)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '${l.itName} · ${l.label}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        if (st == null)
+                          const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: MC.black),
+                          )
+                        else if (st[l] == true)
+                          const Icon(Icons.check_circle, color: Color(0xFF2A9D3F), size: 22)
+                        else
+                          const Icon(Icons.download_for_offline, color: MC.red, size: 22),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ComicButton(
+                label: missing > 0 ? '⬇ SCARICA MANCANTI' : '⬇ DOWNLOAD',
+                size: 15,
+                color: missing > 0 ? MC.red : MC.white,
+                textColor: missing > 0 ? MC.white : MC.black,
+                onTap: () => _open(const SetupScreen()),
+              ),
+              ComicButton(
+                label: '🔧 RIPARA LE LINGUE',
+                size: 15,
+                color: MC.white,
+                onTap: () => _open(const SetupScreen(autoRepair: true)),
+              ),
+              ComicButton(label: '🌍 LINGUE DEL MONDO', size: 15, onTap: () => _open(const WorldScreen())),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Se una traduzione dà errore, usa RIPARA LE LINGUE con il Wi-Fi: riscarica i pacchetti da zero.',
+            style: TextStyle(fontSize: 12.5, color: Color(0xAA111111), fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _headsetPanel() {
@@ -215,12 +322,17 @@ class _AudioScreenState extends State<AudioScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         backgroundColor: MC.black,
         foregroundColor: MC.yellow,
-        title: const OutlinedTitle('AUDIO', size: 28, stroke: 4),
+        title: const OutlinedTitle('OPZIONI', size: 28, stroke: 4),
       ),
       body: HalftoneBackground(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // ───── Lingue
+            _section('🌍 LINGUE'),
+            _languagesPanel(),
+            const SizedBox(height: 20),
+
             // ───── Microfono
             _section('🎤 MICROFONO'),
             ComicPanel(

@@ -10,7 +10,10 @@ import 'world_screen.dart';
 
 /// Preparazione offline: un solo pulsante scarica voce + lingue.
 class SetupScreen extends StatefulWidget {
-  const SetupScreen({super.key});
+  const SetupScreen({super.key, this.autoRepair = false});
+
+  /// Apre la pagina e avvia subito "Ripara le lingue".
+  final bool autoRepair;
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -27,6 +30,7 @@ class _SetupScreenState extends State<SetupScreen> {
   void initState() {
     super.initState();
     _refresh();
+    if (widget.autoRepair) WidgetsBinding.instance.addPostFrameCallback((_) => _repairAll());
   }
 
   Future<void> _refresh() async {

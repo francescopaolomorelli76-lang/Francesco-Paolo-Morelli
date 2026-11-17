@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../ui/manga.dart';
 
 /// Versione mostrata nella pagina Info (allineata a pubspec.yaml).
-const kAppVersion = '1.0.0 (14)';
+const kAppVersion = '1.0.0 (15)';
 
 /// Pagina INFO: cos'è l'app, versione, crediti e diritti riservati.
 class InfoScreen extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../languages.dart';
-import '../services/langs.dart';
+import '../screens/lang_sheet.dart';
 
 /// MC = "Manga Colors". Kit grafico "manga / fumetto action": inchiostro nero, carta,
 /// retini a puntini, linee cinetiche, esplosioni e nuvolette.
@@ -415,58 +415,10 @@ class LangPicker extends StatelessWidget {
   );
 }
 
-Future<Lang?> pickLanguage(BuildContext context, Lang current) => showModalBottomSheet<Lang>(
-  context: context,
-  backgroundColor: Colors.transparent,
-  builder: (ctx) => Padding(
-    padding: const EdgeInsets.all(12),
-    child: ComicPanel(
-      color: MC.paper,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const OutlinedTitle('SCEGLI LA LINGUA!', size: 28),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              childAspectRatio: 2.6,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (final l in Langs.installed)
-                  GestureDetector(
-                    onTap: () => Navigator.pop(ctx, l),
-                    child: ComicPanel(
-                      color: l == current ? MC.yellow : MC.white,
-                      shadow: 3,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          Text(l.flag, style: const TextStyle(fontSize: 26)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l.label,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
-  ),
-);
+Future<Lang?> pickLanguage(BuildContext context, Lang current) async {
+  final r = await showLanguageSheet(context, title: 'LA MIA LINGUA', current: current);
+  return r is Lang ? r : null;
+}
 
 void comicToast(BuildContext context, String msg, {Color color = MC.yellow}) {
   ScaffoldMessenger.of(context)

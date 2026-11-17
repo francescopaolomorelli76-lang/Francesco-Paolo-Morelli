@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manga_vox/languages.dart';
 import 'package:manga_vox/screens/home_screen.dart';
 import 'package:manga_vox/screens/info_screen.dart';
+import 'package:manga_vox/screens/lang_sheet.dart';
 import 'package:manga_vox/screens/language_screen.dart';
 import 'package:manga_vox/screens/onboarding_screen.dart';
 import 'package:manga_vox/screens/setup_screen.dart';
@@ -233,6 +234,32 @@ void main() {
     expect(find.textContaining('© 2026 FPM web designer'), findsOneWidget);
     expect(find.textContaining('Tutti i diritti riservati'), findsOneWidget);
     await _shot(tester, find.byType(InfoScreen), 'info');
+  });
+
+  testWidgets('selettore lingua: elenco ordinato che scorre, con ripara e altre lingue', (tester) async {
+    _phone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => showLanguageSheet(ctx, title: 'LINGUA DELL\'ALTRO', exclude: Lang.it, allowAuto: true),
+                child: const Text('apri'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('apri'));
+    await tester.pumpAndSettle();
+    expect(find.text('🔧 RIPARA'), findsOneWidget);
+    expect(find.text('🌍 ALTRE LINGUE'), findsOneWidget);
+    expect(find.textContaining('LINGUE SCARICATE'), findsOneWidget);
+    expect(find.text('Cinese'), findsOneWidget); // ordinate per nome italiano
+    await _shot(tester, find.byType(MaterialApp), 'lang-sheet');
   });
 
   testWidgets('primo avvio: scelta della mia lingua, italiano preselezionato', (tester) async {

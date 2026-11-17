@@ -72,6 +72,21 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .lcBand.on{background:rgba(57,255,20,.22);border-color:#1d8a4a;border-style:solid}
 .lcBand.ref{background:rgba(31,95,214,.14);border-color:#1f5fd6;border-style:solid}
 .lcBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);gap:8px;padding:6px}
+/* Zoom dell'interfaccia (pizzico su pannelli e finestre) */
+:root{--uiz:1}
+.modal>.mHead,.modal>.mBody,.modal>.mFoot,.side>.sideHead,.side>.sideBody,.side>.sideFoot,.pop>*,#annobar>*,#pianoSheet>*,.bar>*,#textEntry,#selBar,.lcBar{zoom:var(--uiz)}
+.modal{width:min(calc(620px * var(--uiz)),calc(100% - 24px))}
+.side{width:min(calc(420px * var(--uiz)),94vw)}
+#tools{width:min(calc(360px * var(--uiz)),94vw)}
+/* casella di testo libera */
+#textEntry.tbox{flex-direction:column;align-items:stretch;gap:8px;width:330px;padding:10px;box-shadow:var(--shadow)}
+#textEntry.tbox textarea{width:100%;min-height:64px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;font-size:17px;outline:none;resize:vertical;-webkit-user-select:text;user-select:text}
+.tbRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tbRow .seg button{height:34px;padding:0 11px}
+/* testo sulle note */
+#textEntry.lybox{gap:4px;padding:5px;box-shadow:var(--shadow)}
+#textEntry.lybox input{width:190px}
+#textEntry input,#textEntry textarea{-webkit-user-select:text;user-select:text}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
@@ -550,6 +565,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const SQLJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/";
 // Archivio locale (IndexedDB) con ripiego in memoria.
 const DB = {
   db:null, mem:{scores:new Map(), kv:new Map()},
@@ -569,8 +585,14 @@ const DB = {
       try{const t=this.db.transaction(store,mode);const r=fn(t.objectStore(store));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>res(undefined);t.onabort=()=>res(undefined);}catch(e){res(undefined)}
     });
   },
-  async allScores(){ if(!this.db) return [...this.mem.scores.values()]; return (await this._req('scores','readonly',s=>s.getAll()))||[]; },
-  async putScore(o){ this.mem.scores.set(o.id,o); return this._req('scores','readwrite',s=>s.put(o)); },
+  // Le schede degli spartiti (leggere) sono separate dai PDF (pesanti, in 'pdf:<id>'):
+  // la libreria non tiene in memoria tutti i PDF, così l'app non si blocca con tanti spartiti.
+  async allScores(){
+    const all = !this.db ? [...this.mem.scores.values()] : ((await this._req('scores','readonly',s=>s.getAll()))||[]);
+    for(const sc of all){ if(sc.bytes){ await this.set('pdf:'+sc.id, sc.bytes); sc.size=sc.bytes.byteLength; delete sc.bytes; await this.putScore(sc); } }
+    return all;
+  },
+  async putScore(o){ const {_bytes, bytes, ...meta}=o; this.mem.scores.set(o.id,o); return this._req('scores','readwrite',s=>s.put(meta)); },
   async delScore(id){ this.mem.scores.delete(id); return this._req('scores','readwrite',s=>s.delete(id)); },
   async get(k){ if(!this.db) return this.mem.kv.get(k); return this._req('kv','readonly',s=>s.get(k)); },
   async set(k,v){ this.mem.kv.set(k,v); return this._req('kv','readwrite',s=>s.put(v,k)); },
@@ -679,6 +701,7 @@ const STAMP_CATS = [
     it('cresc.'),it('decresc.'),it('dim.'),it('sub.'),it('subito p'),it('più f'),it('meno f'),it('poco'),it('molto'),it('poco a poco'),it('sempre'),it('niente'),
   ]},
   {id:'art', name:'Articolazioni', items:[
+    vx('slurUp','legatura ⌒ (trascina)'),vx('slurDown','legatura ⌣ (trascina)'),vx('tie','legatura di valore'),vx('hairCresc','crescendo < (trascina)'),vx('hairDim','diminuendo > (trascina)'),
     vx('stacc','staccato'),vx('staccis','staccatissimo'),vx('tenuto','tenuto'),vx('portato','portato'),vx('accent','accento'),
     vx('accStacc','accento + stacc.'),vx('marcato','marcato'),vx('marcStacc','marcato + stacc.'),vx('marcDown','marcato giù'),vx('tenAcc','tenuto + accento'),
     m(U(0x1D110),'corona'),m(U(0x1D111),'corona sotto'),vx('fermSq','corona lunga'),vx('fermTri','corona breve'),m(U(0x1D112),'respiro'),
@@ -715,7 +738,7 @@ const STAMP_CATS = [
     m(U(0x1D135),'C tagliato'),vx('ts:2/4','2/4'),vx('ts:3/4','3/4'),vx('ts:4/4','4/4'),vx('ts:5/4','5/4'),
     vx('ts:6/4','6/4'),vx('ts:2/2','2/2'),vx('ts:3/8','3/8'),vx('ts:6/8','6/8'),vx('ts:9/8','9/8'),
     vx('ts:12/8','12/8'),vx('ts:5/8','5/8'),vx('ts:7/8','7/8'),m(U(0x1D136),'8va'),m(U(0x1D137),'8vb'),
-    m(U(0x1D138),'15ma'),m(U(0x1D139),'15mb'),it('8va'),it('8vb'),it('loco'),
+    m(U(0x1D138),'15ma'),m(U(0x1D139),'15mb'),vx('octLine','8va ---- (trascina)'),it('8va'),it('8vb'),it('loco'),
   ]},
   {id:'rep', name:'Ripetizioni e struttura', items:[
     m(U(0x1D100),'stanghetta'),m(U(0x1D101),'doppia'),m(U(0x1D102),'finale'),m(U(0x1D103),'finale inversa'),m(U(0x1D104),'tratteggiata'),
@@ -806,6 +829,10 @@ const VDRAW = {
   hairDim:(c,s)=>{ln(c,s*.06,[[-s*.48,-s*.2],[s*.48,0],[-s*.48,s*.2]])},
   volta1:(c,s)=>{volta(c,s,'1.')}, volta2:(c,s)=>{volta(c,s,'2.')},
   pedLine:(c,s)=>{ln(c,s*.06,[[-s*.48,-s*.25],[-s*.48,s*.2],[-s*.05,s*.2],[s*.1,-s*.05],[s*.25,s*.2],[s*.48,s*.2],[s*.48,-s*.25]])},
+  slurUp:(c,s)=>{c.beginPath();c.moveTo(-s*.45,s*.12);c.quadraticCurveTo(0,-s*.32,s*.45,s*.12);c.quadraticCurveTo(0,-s*.22,-s*.45,s*.12);c.fill()},
+  slurDown:(c,s)=>{c.beginPath();c.moveTo(-s*.45,-s*.12);c.quadraticCurveTo(0,s*.32,s*.45,-s*.12);c.quadraticCurveTo(0,s*.22,-s*.45,-s*.12);c.fill()},
+  tie:(c,s)=>{c.beginPath();c.moveTo(-s*.4,0);c.quadraticCurveTo(0,-s*.18,s*.4,0);c.quadraticCurveTo(0,-s*.12,-s*.4,0);c.fill()},
+  octLine:(c,s)=>{c.font=`700 italic ${s*.34}px ${css('--f-display')}`;c.textAlign='left';c.textBaseline='middle';c.fillText('8va',-s*.48,0);c.setLineDash([s*.05,s*.05]);ln(c,s*.03,[[-s*.05,0],[s*.46,0],[s*.46,s*.15]]);c.setLineDash([])},
   vowelLink:(c,s)=>{curve(c,s*.06,[-s*.45,-s*.05],[0,s*.35],[s*.45,-s*.05])},
 };
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}
@@ -883,14 +910,24 @@ async function addScore(bytes, meta={}){
     if(t && !/^(untitled|senza titolo|microsoft|document|documento|\d+)/i.test(t) && t.length<140) meta.title=t;
     if(a && !meta.composer && a.length<80 && !/scanner|adobe|microsoft|camscanner/i.test(a)) meta.composer=a; }catch(e){} }
   const sc = {id:uid(), title:meta.title||'Senza titolo', file:meta.file||'', composer:meta.composer||'', genre:meta.genre||'', tags:meta.tags||[], key:meta.key||'',
-    added:Date.now(), opened:0, pages:doc.numPages, bookmarks:[], crop:{l:0,t:0,r:0,b:0}, bytes};
+    added:Date.now(), opened:0, pages:doc.numPages, bookmarks:[], crop:{l:0,t:0,r:0,b:0}, size:bytes.byteLength};
+  try{ sc.thumb=await thumbOf(doc); }catch(e){}
   doc.destroy();
+  await DB.set('pdf:'+sc.id, bytes);
   ST.scores.push(sc); await DB.putScore(sc); return sc;
 }
+// PDF di uno spartito: in memoria solo quello aperto.
+async function getBytes(sc){ if(sc._bytes) return sc._bytes; const b=await DB.get('pdf:'+sc.id); if(!b) throw new Error('PDF mancante'); if(ST.cur===sc) sc._bytes=b; return b; }
+async function thumbOf(doc){
+  const pg=await doc.getPage(1); const vp=pg.getViewport({scale:1}); const v2=pg.getViewport({scale:120/vp.height});
+  const c=document.createElement('canvas');c.width=Math.round(v2.width);c.height=Math.round(v2.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:x,viewport:v2}).promise; return c.toDataURL('image/jpeg',.7);
+}
 async function replaceBytes(sc, bytes, annMap){
-  sc.bytes=bytes; thumbCache.delete(sc.id); pageCache.clear();
+  sc._bytes=bytes; sc.size=bytes.byteLength; thumbCache.delete(sc.id); pageCache.clear();
   const doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; sc.pages=doc.numPages;
-  await DB.putScore(sc);
+  try{ sc.thumb=await thumbOf(doc); }catch(e){}
+  await DB.set('pdf:'+sc.id, bytes); await DB.putScore(sc);
   if(ST.cur && ST.cur.id===sc.id){ if(ST.doc) ST.doc.destroy(); ST.doc=doc; if(annMap){ST.ann=annMap; DB.set('ann:'+sc.id,annMap);} ST.page=clamp(ST.page,0,sc.pages-1); await renderPage(); updateChrome(); }
   else { doc.destroy(); if(annMap) DB.set('ann:'+sc.id,annMap); }
 }
@@ -900,8 +937,11 @@ async function openScore(id, page=0, opts={}){
   const sc = ST.scores.find(s=>s.id===id); if(!sc) return;
   if(ST.annotate) Anno.exit(true);
   if(ST.doc){ try{ST.doc.destroy()}catch(e){} }
-  ST.cur=sc; sc.opened=Date.now(); DB.putScore(sc);
-  ST.doc = await pdfjsLib.getDocument({data:sc.bytes.slice(0)}).promise;
+  if(ST.cur && ST.cur!==sc) ST.cur._bytes=null;
+  let bytes; try{ bytes=await DB.get('pdf:'+sc.id); }catch(e){}
+  if(!bytes){ toast('Non trovo il PDF di questo spartito'); return; }
+  ST.cur=sc; sc._bytes=bytes; sc.opened=Date.now(); DB.putScore(sc); pageCache.clear();
+  ST.doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
   sc.pages=ST.doc.numPages;
   ST.ann = (await DB.get('ann:'+id))||{};
   ST.page = clamp(page,0,sc.pages-1);
@@ -913,7 +953,7 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.bytes.byteLength}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
   const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
@@ -1242,14 +1282,14 @@ function libMenu(el){
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
-  let url=thumbCache.get(id);
+  let url=sc.thumb||thumbCache.get(id);
   if(!url){
-    try{
-      const doc=await pdfjsLib.getDocument({data:sc.bytes.slice(0)}).promise; const pg=await doc.getPage(1);
-      const vp=pg.getViewport({scale:1}); const s=120/vp.height; const v2=pg.getViewport({scale:s});
-      const c=document.createElement('canvas');c.width=v2.width;c.height=v2.height;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
-      await pg.render({canvasContext:x,viewport:v2}).promise; url=c.toDataURL('image/jpeg',.7); thumbCache.set(id,url); doc.destroy();
-    }catch(e){return}
+    // una miniatura alla volta, poi salvata: la libreria non ricarica più tutti i PDF
+    if(drawThumb.busy) { drawThumb.q=(drawThumb.q||[]); drawThumb.q.push([id,el]); return; }
+    drawThumb.busy=true;
+    try{ const doc=await pdfjsLib.getDocument({data:(await getBytes(sc)).slice(0)}).promise; url=await thumbOf(doc); doc.destroy(); sc.thumb=url; DB.putScore(sc); }catch(e){}
+    drawThumb.busy=false; const nx=(drawThumb.q||[]).shift(); if(nx) setTimeout(()=>drawThumb(...nx),30);
+    if(!url) return;
   }
   el.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
 }
@@ -1360,11 +1400,13 @@ function showSettings(){
     <div><button class="ghostBtn" id="setFs">${iconSvg('expand')}Tutto schermo</button></div>
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
+    <div class="field"><label>Dimensione di pannelli e finestre (anche pizzicando con due dita)</label><div class="seg" id="setUiz">${[[.8,'Piccola'],[1,'Normale'],[1.2,'Grande'],[1.45,'Molto grande']].map(([v,l])=>`<button data-z="${v}" class="${Math.abs((s.uiz||1)-v)<.04?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="sl"><span>Durata della pressione sui bordi<em id="lpv">${s.longPress} ms</em></span><input type="range" id="setLp" min="250" max="1000" step="50" value="${s.longPress}" style="--v:${(s.longPress-250)/7.5}%"></div>
     <div class="hint">Tieni premuto sul <b>bordo alto</b> per la barra superiore, sul <b>bordo basso</b> per le pagine, a <b>sinistra</b> per la libreria e a <b>destra</b> per gli attrezzi.</div>`,
     `<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
   const tg=(id,key,after)=>{const b=$('#'+id);b.onclick=()=>{s[key]=!s[key];b.classList.toggle('on',s[key]);b.setAttribute('aria-checked',s[key]);saveSettings();after&&after()}};
   tg('setPencil','pencilOnly'); s.autoPencil=s.autoPencil!==false; tg('setAuto','autoPencil');
+  $('#setUiz').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;UIZoom.apply(+b.dataset.z);saveSettings();$$('#setUiz button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setTurn').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;s.turnAnim=k!=='none';if(k!=='none')s.turnStyle=k;saveSettings();$$('#setTurn button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
@@ -1381,7 +1423,7 @@ async function showDashboard(){
   const pages=ST.scores.reduce((a,s)=>a+s.pages,0);
   const comp=new Set(ST.scores.map(s=>s.composer).filter(Boolean)).size;
   const tile=(n,l)=>`<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:14px"><div style="font-family:var(--f-display);font-size:34px;font-weight:700;color:var(--gold-hi);font-variant-numeric:tabular-nums">${n}</div><div class="hint">${l}</div></div>`;
-  modal('Cruscotto',`<div class="grid2">${tile(ST.scores.length,'spartiti')}${tile(pages,'pagine')}${tile(ST.setlists.length,'setlist')}${tile(comp,'compositori')}${tile(anns,'annotazioni e segni')}${tile((ST.scores.reduce((a,s)=>a+s.bytes.byteLength,0)/1048576).toFixed(1)+' MB','spazio usato')}</div>`);
+  modal('Cruscotto',`<div class="grid2">${tile(ST.scores.length,'spartiti')}${tile(pages,'pagine')}${tile(ST.setlists.length,'setlist')}${tile(comp,'compositori')}${tile(anns,'annotazioni e segni')}${tile((ST.scores.reduce((a,s)=>a+(s.size||0),0)/1048576).toFixed(1)+' MB','spazio usato')}</div>`);
 }
 function showBackup(){
   const m2=modal('Backup',`<div class="hint">Salva tutta la libreria (spartiti, annotazioni, setlist, segnalibri) in un unico file, oppure ripristinala da un backup.</div>
@@ -1390,9 +1432,9 @@ function showBackup(){
     <div><button class="goldBtn" id="bkFs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div><div id="bkOut"></div>`);
   $('#bkFs').onclick=()=>{closeLayers();FS4.pick()};
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
-    for(const s of ST.scores){const {bytes,...meta}=s;let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
+    for(const s of ST.scores){const {_bytes,bytes:_b,...meta}=s;const bytes=await getBytes(s);let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
     busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
-  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,bytes:u8.buffer};if(!ST.scores.some(x=>x.id===sc.id)){ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
+  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};if(!ST.scores.some(x=>x.id===sc.id)){await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
       for(const sl of data.setlists||[]) if(!ST.setlists.some(x=>x.id===sl.id)) ST.setlists.push(sl); saveSetlists(); busy(); closeLayers(); renderLibrary(); toast('Backup ripristinato')}catch(e){busy();toast('File di backup non valido')}};f.click()};
 }
 function offerDownload(blob,name,where){
@@ -1414,7 +1456,7 @@ async function mergeSelected(){
   try{
     const ids=[...ST.selected]; const scs=ids.map(id=>ST.scores.find(s=>s.id===id));
     const out=await PDFLib.PDFDocument.create(); const ann={}; let off=0;
-    for(const s of scs){const src=await PDFLib.PDFDocument.load(s.bytes,{ignoreEncryption:true});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
+    for(const s of scs){const src=await PDFLib.PDFDocument.load(await getBytes(s),{ignoreEncryption:true});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
       const a=(await DB.get('ann:'+s.id))||{};for(const k in a)ann[+k+off]=a[k];off+=pages.length}
     const bytes=(await out.save()).buffer;
     const sc=await addScore(bytes,{title:scs.map(s=>s.title).join(' + '),composer:scs[0].composer,genre:scs[0].genre});
@@ -1500,7 +1542,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build(); Zoom.init(); Bright.apply();
+  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);
@@ -1511,11 +1553,13 @@ async function boot(){
 // ================= Annotazioni =================
 const NEON=['#fff200','#39ff14','#ff3cac','#00e5ff','#ff9f1c','#b388ff','#ff5252','#7dffd4'];
 const SWATCHES=['#111111','#d23b2f','#1f5fd6','#1d8a4a','#c8962e','#7a4a2a','#8b3fc4','#f4e04d','#ff8a3d','#5fd0e6','#ff6fae','#ffffff'];
+// Segni dei pannelli che si disegnano trascinando (lunghezza a piacere)
+const STRETCH={hairCresc:'cresc',hairDim:'dim',slurUp:'slurUp',slurDown:'slurDown',tie:'tie',vowelLink:'slurDown',trillLine:'trill',vibrato:'wavy',volta1:'volta',volta2:'volta',pedLine:'ped',octLine:'octave',lineH:'line',dashedH:'dashed'};
 const SHAPES=[
   {id:'cresc',n:'Crescendo'},{id:'dim',n:'Diminuendo'},{id:'slurUp',n:'Legatura sopra'},{id:'slurDown',n:'Legatura sotto'},
   {id:'line',n:'Linea'},{id:'arrow',n:'Freccia'},{id:'ellipse',n:'Cerchio'},{id:'rect',n:'Riquadro'},
   {id:'bracketL',n:'Parentesi ['},{id:'bracketR',n:'Parentesi ]'},{id:'wavy',n:'Linea ondulata (trillo)'},{id:'dashed',n:'Linea tratteggiata (8va)'},
-  {id:'volta',n:'Casella di volta'},{id:'cut',n:'Taglio (vi-de)'},
+  {id:'volta',n:'Casella di volta'},{id:'tie',n:'Legatura di valore'},{id:'trill',n:'Trillo con linea'},{id:'octave',n:'8va con linea'},{id:'ped',n:'Linea del pedale'},{id:'cut',n:'Taglio (vi-de)'},
 ];
 const Anno = {
   presets:[
@@ -1564,7 +1608,7 @@ const Anno = {
     let h=this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Testo',this.mode==='text')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('undo','undo','Annulla',false,!hs.u.length)+t('redo','redo','Ripeti',false,!hs.r.length)+t('layers','layers','Livelli');
     bar.innerHTML=h;
     bar.querySelectorAll('[data-p]').forEach(b=>this.drawPresetIcon(b.querySelector('canvas'),this.presets[+b.dataset.p]));
@@ -1574,7 +1618,7 @@ const Anno = {
       const b=e.target.closest('[data-t]'); if(!b) return; const k=b.dataset.t;
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
-      else if(['lasso','text','eraser'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel()}
+      else if(['lasso','text','eraser','lyric'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
@@ -1606,16 +1650,26 @@ const Anno = {
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
+    if(this.mode==='lyric'){ LyricType.start(p); return; }
     if(this.mode==='lasso'){
       if(this.selBox && p[0]>=this.selBox.x0&&p[0]<=this.selBox.x1&&p[1]>=this.selBox.y0&&p[1]<=this.selBox.y1){ this.push(); this.live={t:'drag',from:p}; return; }
       this.clearSel(); this.live={t:'lasso',pts:[p]}; return;
     }
+    const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
+    if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016,color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';
     this.live={t:pr.k,color:pr.k==='mask'?'#ffffff':pr.color,alpha:pr.alpha,w:this.W(pr),pts:[pen?[p[0],p[1],+(e.pressure||.5).toFixed(3)]:[p[0],p[1]]],layer:this.layer};
     if(pen) this.live.pr=1;
     if(pr.k==='hl'&&pr.rainbow) this.live.rainbow=1;
+  },
+  // Tocco vicino all'estremo di una legatura/forcella già disegnata: la si allunga o accorcia trascinando.
+  grabEnd(p){
+    const pr=this.presets[this.sel]; const stretchy=pr.k==='shape'||(pr.k==='stamp'&&pr.g&&STRETCH[pr.g.v]); if(!stretchy) return null;
+    let best=null, bd=.018;
+    this.strokes.forEach((s,i)=>{ if(s.t!=='shape'||(s.layer||0)!==this.layer) return; for(const end of ['a','b']){ const d=Math.hypot(s[end][0]-p[0],s[end][1]-p[1]); if(d<bd){ bd=d; best={idx:i,end}; } } });
+    return best;
   },
   touchNavigates(){ return ST.settings.pencilOnly || (ST.settings.autoPencil && ST.pencilSeen); },
   cancelTouchStroke(){ if(this.live && this.livePointer==='touch'){ this.live=null; this.redraw(); } },
@@ -1630,6 +1684,7 @@ const Anno = {
     if(L.t==='drag'){ const dx=p[0]-L.from[0], dy=p[1]-L.from[1]; L.from=p; this.selIdx.forEach(i=>moveStroke(this.strokes[i],dx,dy)); this.selBox.x0+=dx;this.selBox.x1+=dx;this.selBox.y0+=dy;this.selBox.y1+=dy; this.redraw(); return; }
     if(L.t==='stamp'){ L.x=p[0]; L.y=p[1]; this.redraw(); return; }
     if(L.t==='shape'){ L.b=[p[0],p[1]]; this.redraw(); return; }
+    if(L.t==='reshape'){ const s=this.strokes[L.idx]; if(s) s[L.end]=[p[0],p[1]]; this.redraw(); return; }
     if(this.ruler){ L.pts=[L.pts[0],[p[0],p[1]]]; }
     else for(const ev of evs){ const q=this.pt(ev); const last=L.pts[L.pts.length-1]; if(Math.hypot(q[0]-last[0],q[1]-last[1])>.0009) L.pts.push(L.pr?[q[0],q[1],+(ev.pressure||.5).toFixed(3)]:[q[0],q[1]]); }
     this.redraw();
@@ -1643,6 +1698,7 @@ const Anno = {
     if(L.t==='erase'){ if(!L.hit){ const h=this.hist[ST.page]; h&&h.u.pop(); } saveAnn(); this.buildBar(); return; }
     if(L.t==='lasso'){ this.selectLasso(L.pts); this.redraw(); return; }
     if(L.t==='drag'){ saveAnn(); this.showSelBar(); this.buildBar(); return; }
+    if(L.t==='reshape'){ saveAnn(); this.redraw(); this.buildBar(); return; }
     if(L.t==='shape' && Math.hypot(L.b[0]-L.a[0],L.b[1]-L.a[1])<.01){ this.redraw(); return; }
     if((L.t==='pen'||L.t==='hl'||L.t==='mask') && L.pts.length===1) L.pts.push([L.pts[0][0]+.0005,L.pts[0][1]+.0005]);
     this.push(); this.strokes.push(L); this.redraw(); saveAnn(); this.buildBar();
@@ -1655,18 +1711,7 @@ const Anno = {
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
     if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:.017,align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
-    const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry';
-    box.innerHTML=`<div class="seg" id="teMode" style="flex-wrap:nowrap"><button data-tm="lyric" class="${this.textMode!=='free'?'on':''}" title="Sillaba centrata sotto la nota, allineata al rigo">Sotto la nota</button><button data-tm="free" class="${this.textMode==='free'?'on':''}">Libero</button></div><input id="teIn" placeholder="${this.textMode==='free'?'es. rit., respira':'sillaba, es. glo-'}" enterkeyhint="done" autocapitalize="off"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
-    $('#app').appendChild(box);
-    box.style.left=clamp(r.left+p[0]*r.width-10,8,innerWidth-320)+'px'; box.style.top=clamp(r.top+p[1]*r.height-26,70,innerHeight-120)+'px';
-    const commit=()=>{const v=$('#teIn').value.trim(); box.remove(); if(!v) return; this.push();
-      const lyric=this.textMode!=='free';
-      // sotto la nota: centrato sul punto toccato e sulla stessa riga degli altri testi vicini
-      let y=p[1]; if(lyric){ const near=this.strokes.filter(t=>t.t==='text'&&Math.abs(t.y-p[1])<.02).sort((a,b)=>Math.abs(a.y-p[1])-Math.abs(b.y-p[1]))[0]; if(near) y=near.y; }
-      const size=lyric?(this.strokes.find(t=>t.t==='text'&&t.lyric&&Math.abs(t.y-y)<.002)?.size||Math.max(.016,pr.size*.0011)):Math.max(.018,pr.size*.0012);
-      this.strokes.push({t:'text',text:v,x:p[0],y,size,align:lyric?'c':'l',lyric:lyric?1:0,color:pr.k==='mask'||pr.k==='hl'?'#111':pr.color,alpha:1,layer:this.layer}); this.redraw(); saveAnn(); this.buildBar(); };
-    box.querySelector('#teMode').onclick=e=>{const b=e.target.closest('[data-tm]');if(!b)return;this.textMode=b.dataset.tm;box.querySelectorAll('#teMode button').forEach(x=>x.classList.toggle('on',x===b));$('#teIn').focus()};
-    $('#teOk').onclick=commit; $('#teIn').onkeydown=e=>{if(e.key==='Enter')commit();if(e.key==='Escape')box.remove()}; setTimeout(()=>$('#teIn').focus(),20);
+    TextBox.open(p);
   },
   selectLasso(poly){
     if(poly.length<3) return; const idx=[];
@@ -1701,6 +1746,10 @@ const Anno = {
     const L=this.live;
     if(L && !['erase','lasso','drag'].includes(L.t)) this.paint(L.t==='hl'?hx:x,[L],W,H,true);
     if(L && L.t==='lasso'){ x.save(); x.setLineDash([8,6]); x.strokeStyle='#c8962e'; x.lineWidth=2; x.beginPath(); L.pts.forEach((p,i)=>i?x.lineTo(p[0]*W,p[1]*H):x.moveTo(p[0]*W,p[1]*H)); x.stroke(); x.restore(); }
+    const prs=this.presets[this.sel]; if(ST.annotate && this.mode==='preset' && prs && (prs.k==='shape'||(prs.k==='stamp'&&prs.g&&STRETCH[prs.g.v]))){
+      x.save(); x.fillStyle='rgba(214,168,78,.9)'; x.strokeStyle='#fff'; x.lineWidth=2;
+      for(const s of (ST.ann[ST.page]||[])){ if(s.t!=='shape'||(s.layer||0)!==this.layer) continue; for(const q of [s.a,s.b]){ x.beginPath(); x.arc(q[0]*W,q[1]*H,Math.max(7,W*.007),0,7); x.fill(); x.stroke(); } }
+      x.restore(); }
     if(this.selBox){ const b=this.selBox; x.save(); x.setLineDash([10,6]); x.strokeStyle='#c8962e'; x.lineWidth=2.5; x.strokeRect(b.x0*W,b.y0*H,(b.x1-b.x0)*W,(b.y1-b.y0)*H); x.restore(); }
   },
   paint(x,strokes,W,H,all){
@@ -1724,7 +1773,10 @@ const Anno = {
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
       } else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
-      else if(s.t==='text'){ x.fillStyle=s.color; x.font=`${s.lyric?'500':'italic 600'} ${s.size*W}px ${css(s.lyric?'--f-body':'--f-display')}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left'; x.fillText(s.text,s.x*W,s.y*H); }
+      else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
+        const style=s.lyric?'500':s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
+        x.font=`${style} ${s.size*W}px ${s.lyric?css('--f-body'):fam}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left';
+        String(s.text).split('\n').forEach((ln2,i)=>x.fillText(ln2,s.x*W,s.y*H+i*s.size*W*1.25)); }
       x.restore();
     }
   },
@@ -1826,9 +1878,15 @@ function drawShape(x,s){
   const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len;
   x.beginPath();
   switch(s.shape){
-    case 'cresc':{const my=(ay+by)/2,hh=Math.max(Math.abs(by-ay)/2,Math.abs(bx-ax)*.07);x.moveTo(bx,my-hh);x.lineTo(ax,my);x.lineTo(bx,my+hh);break}
-    case 'dim':{const my=(ay+by)/2,hh=Math.max(Math.abs(by-ay)/2,(Math.abs(bx-ax))*.07);x.moveTo(ax,my-hh);x.lineTo(bx,my);x.lineTo(ax,my+hh);break}
-    case 'slurUp': case 'slurDown':{const up=s.shape==='slurUp'?-1:1;const sg=dx>=0?1:-1;const h=len*.25*up*sg;const mx=(ax+bx)/2,my=(ay+by)/2;x.moveTo(ax,ay);x.quadraticCurveTo(mx+nx*h,my+ny*h,bx,by);break}
+    case 'cresc': case 'dim':{ const hh=Math.max(s.w*2.5,Math.min(len*.09,s.w*7+10)); const [tx,ty,ox,oy]=s.shape==='cresc'?[ax,ay,bx,by]:[bx,by,ax,ay];
+      x.moveTo(ox+nx*hh,oy+ny*hh); x.lineTo(tx,ty); x.lineTo(ox-nx*hh,oy-ny*hh); break }
+    case 'slurUp': case 'slurDown': case 'tie':{ // legatura a falce: più spessa al centro, come quelle stampate
+      const up=s.shape==='slurDown'?1:-1; const sg=dx>=0?1:-1; const h=Math.min(len*(s.shape==='tie'?.12:.2),18+len*.07)*up*sg; const th=Math.max(1.2,s.w*1.6)*up*sg;
+      const mx=(ax+bx)/2,my=(ay+by)/2; x.moveTo(ax,ay); x.quadraticCurveTo(mx+nx*h,my+ny*h,bx,by); x.quadraticCurveTo(mx+nx*(h+th),my+ny*(h+th),ax,ay); x.closePath(); x.fill(); x.restore(); return; }
+    case 'trill':{ x.font=`700 italic ${Math.max(14,s.w*7)}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText('tr',ax-2,ay); const off=Math.max(14,s.w*7)*1.1; const L2=Math.max(0,len-off); const sx=ax+dx/len*off, sy=ay+dy/len*off; const n=Math.max(2,Math.round(L2/(s.w*4+6))); const st=L2/n;
+      x.lineWidth=Math.max(1,s.w*.8); x.moveTo(sx,sy); for(let i=0;i<n;i++){const t0=i*st; x.quadraticCurveTo(sx+dx/len*(t0+st/2)+nx*(i%2?1:-1)*st*.45, sy+dy/len*(t0+st/2)+ny*(i%2?1:-1)*st*.45, sx+dx/len*(t0+st), sy+dy/len*(t0+st))} break }
+    case 'octave':{ const f=Math.max(13,s.w*6); x.font=`700 italic ${f}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText('8va',ax,ay); const o=f*1.9; x.setLineDash([s.w*3,s.w*3]); x.moveTo(ax+dx/len*o,ay+dy/len*o); x.lineTo(bx,by); x.lineTo(bx,by+f*.7); break }
+    case 'ped':{ const f=Math.max(13,s.w*6); x.moveTo(ax,ay-f*.6); x.lineTo(ax,ay); x.lineTo(bx,by); x.lineTo(bx,by-f*.6); break }
     case 'line': x.moveTo(ax,ay);x.lineTo(bx,by);break;
     case 'dashed': x.setLineDash([s.w*3,s.w*3]);x.moveTo(ax,ay);x.lineTo(bx,by);x.lineTo(bx,by+s.w*5);break;
     case 'arrow':{x.moveTo(ax,ay);x.lineTo(bx,by);const a=Math.atan2(dy,dx),hl=Math.max(10,s.w*4);x.moveTo(bx,by);x.lineTo(bx-hl*Math.cos(a-.45),by-hl*Math.sin(a-.45));x.moveTo(bx,by);x.lineTo(bx-hl*Math.cos(a+.45),by-hl*Math.sin(a+.45));break}
@@ -1896,7 +1954,7 @@ const Insert = {
   // Esegue l'inserimento nel PDF aperto e sposta le annotazioni.
   async insertPages(builder){
     const sc=ST.cur; const at=this.posIndex();
-    const doc=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true});
+    const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true});
     const count=await builder(doc,at);
     const bytes=(await doc.save()).buffer;
     const ann={}; for(const k in ST.ann){ const i=+k; ann[i>=at?i+count:i]=ST.ann[k]; }
@@ -2157,7 +2215,7 @@ const Reorder = {
     const keep=this.items.filter(i=>!i.del); if(!keep.length) return toast('Deve restare almeno una pagina');
     busy('Riordino…');
     try{
-      const sc=ST.cur; const src=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true}); const out=await PDFLib.PDFDocument.create();
+      const sc=ST.cur; const src=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const out=await PDFLib.PDFDocument.create();
       const pages=await out.copyPages(src,keep.map(k=>k.src));
       pages.forEach((p,i)=>{ if(keep[i].rot) p.setRotation(PDFLib.degrees((p.getRotation().angle+keep[i].rot)%360)); out.addPage(p); });
       const ann={}; keep.forEach((k,i)=>{ if(ST.ann[k.src] && !k.rot) ann[i]=ST.ann[k.src]; });
@@ -2314,30 +2372,13 @@ const FS4 = {
     f.click();
   },
   async run(files){
-    const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false};
+    const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false,diag:[]};
     const metas=[]; const added=[];
     for(const file of files){
-      try{
-        busy(`Leggo “${file.name}”…`);
-        const head=new Uint8Array(await file.slice(0,16).arrayBuffer());
-        const txt=String.fromCharCode(...head);
-        let entries=null;
-        if(head[0]===0x50&&head[1]===0x4B) entries=await zipEntries(file);
-        if(entries){
-          const pdfE=entries.filter(e=>/\.pdf$/i.test(e.name)&&!/(^|\/)__MACOSX\//.test(e.name));
-          for(const e of entries){ if(/\.pdf$/i.test(e.name)||e.size<=0||e.size>40e6) continue; try{ const u=await e.bytes(); const h=String.fromCharCode(...u.subarray(0,16)).trimStart(); if(/^(bplist|<\?xml|<plist|<!DOCTYPE plist|\{|\[)/.test(h)||/\.(plist|json|xml)$/i.test(e.name)){ const m=parseMetaBytes(u); if(m) metas.push(m); } }catch(err){} }
-          let i=0; for(const e of pdfE){ i++; busy(`Importo ${i}/${pdfE.length}: ${baseName(e.name)}`); await this.addPdf(await e.bytes(), baseName(e.name), rep, added); }
-          if(!pdfE.length) rep.metaOnly=true;
-        } else if(txt.startsWith('bplist')||txt.startsWith('<?xml')||txt.startsWith('<plist')||txt.trim().startsWith('{')){
-          const m=parseMetaBytes(new Uint8Array(await file.arrayBuffer())); if(m) metas.push(m); rep.metaOnly=true;
-        } else {
-          const found=await scanPdfs(file,(n)=>busy(`Cerco gli spartiti nel file… ${n} trovati`));
-          for(let i=0;i<found.length;i++){ busy(`Importo ${i+1}/${found.length}`); await this.addPdf(found[i].bytes, found[i].name||`${file.name.replace(/\.4sb$/i,'')} ${i+1}`, rep, added); }
-          if(file.size<60e6){ const m=scanPlists(new Uint8Array(await file.arrayBuffer())); metas.push(...m); }
-          if(!found.length) rep.metaOnly=true;
-        }
-      }catch(err){ rep.errors.push(file.name); }
+      try{ busy(`Leggo “${file.name}”…`); await this.processBlob(file,file.name,0,rep,metas,added); }
+      catch(err){ rep.errors.push(file.name+' ('+(err&&err.message||err)+')'); }
     }
+    if(!rep.pdfs && !rep.dups) rep.metaOnly=true;
     // Metadati: titolo, compositore, genere, etichette, setlist
     const recs=[], sls=[]; metas.forEach(m=>harvest(m,recs,sls));
     rep.meta=recs.length;
@@ -2353,9 +2394,68 @@ const FS4 = {
     if(added[0]) await openScore(added[0]);
     this.report(rep);
   },
+  // Riconosce il contenuto dal suo inizio (non dal nome): ZIP, gzip, SQLite, plist, JSON, PDF, o PDF nascosti nel file.
+  async processBlob(blob,name,depth,rep,metas,added){
+    if(depth>4) return;
+    const head=new Uint8Array(await blob.slice(0,32).arrayBuffer()); const txt=new TextDecoder('latin1').decode(head);
+    const hex=[...head.subarray(0,8)].map(b=>b.toString(16).padStart(2,'0')).join(' ');
+    rep.diag.push(`${'  '.repeat(depth)}${name} · ${(blob.size/1048576).toFixed(2)} MB · inizio: ${hex} “${txt.slice(0,12).replace(/[^\x20-\x7e]/g,'·')}”`);
+    if(txt.startsWith('%PDF')){ await this.addPdf(new Uint8Array(await blob.arrayBuffer()), /\.pdf$/i.test(name)?baseName(name):baseName(name).replace(/\.[^.]*$/,'')+'.pdf', rep, added); return; }
+    if(head[0]===0x50&&head[1]===0x4B){
+      const entries=await zipEntries(blob);
+      if(entries){
+        rep.diag.push(`${'  '.repeat(depth)}  ZIP con ${entries.length} file: ${entries.slice(0,25).map(e=>`${e.name} (${(e.size/1024).toFixed(0)} KB${e.method&&e.method!==8&&e.method!==0?', compr. '+e.method:''})`).join(' · ')}${entries.length>25?' …':''}`);
+        const skip=e=>/(^|\/)(__MACOSX|\.DS_Store)/.test(e.name)||e.size<=0;
+        // prima i metadati piccoli, poi i documenti
+        const ord=[...entries].filter(e=>!skip(e)).sort((x,y)=>(/\.pdf$/i.test(x.name)?1:0)-(/\.pdf$/i.test(y.name)?1:0));
+        let i=0;
+        for(const e of ord){ i++;
+          busy(`Leggo ${i}/${ord.length}: ${baseName(e.name)}`);
+          let u; try{ u=await e.bytes(); }catch(err){ rep.diag.push(`  non letto ${e.name}: ${err.message}`); continue; }
+          await this.processBlob(new Blob([u]), e.name, depth+1, rep, metas, added);
+        }
+        return;
+      }
+    }
+    if(head[0]===0x1f&&head[1]===0x8b && window.DecompressionStream){
+      const out=new Blob([await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()]);
+      return this.processBlob(out,name.replace(/\.gz$/i,''),depth+1,rep,metas,added);
+    }
+    if(txt.startsWith('SQLite format 3')){ await this.sqlite(blob,name,depth,rep,metas,added); return; }
+    if(txt.startsWith('bplist')||/^\s*(<\?xml|<plist|<!DOCTYPE plist|\{|\[)/.test(txt)){
+      if(blob.size<80e6){ try{ const m=parseMetaBytes(new Uint8Array(await blob.arrayBuffer())); if(m){ metas.push(m); await this.embeddedPdfs(m,rep,added); } return; }catch(err){ rep.diag.push('  metadati non leggibili: '+err.message); } }
+    }
+    // altrimenti: cerca PDF contenuti nel file
+    const found=await scanPdfs(blob,(n)=>busy(`Cerco gli spartiti nel file… ${n} trovati`));
+    for(let k=0;k<found.length;k++){ busy(`Importo ${k+1}/${found.length}`); await this.addPdf(found[k].bytes, found[k].name||`${baseName(name).replace(/\.\w+$/,'')} ${k+1}.pdf`, rep, added); }
+    if(blob.size<60e6){ const m=scanPlists(new Uint8Array(await blob.arrayBuffer())); metas.push(...m); }
+  },
+  // PDF salvati come dati dentro plist/NSKeyedArchiver
+  async embeddedPdfs(root,rep,added){
+    const seen=new Set(); const list=[];
+    const walk=(v,hint)=>{ if(!v||typeof v!=='object'||seen.has(v)) return; seen.add(v);
+      if(v instanceof Uint8Array){ if(v.length>8&&v[0]===0x25&&v[1]===0x50&&v[2]===0x44&&v[3]===0x46) list.push({u:v,name:hint}); return; }
+      if(Array.isArray(v)){ v.forEach(x=>walk(x,hint)); return; }
+      const nm=Object.values(v).find(x=>typeof x==='string'&&/\.pdf$/i.test(x))||v.title||v.name||hint;
+      for(const k in v) walk(v[k],typeof nm==='string'?nm:hint); };
+    walk(root,'');
+    for(let i=0;i<list.length;i++){ busy(`Importo ${i+1}/${list.length}`); await this.addPdf(list[i].u, list[i].name?baseName(String(list[i].name)):`forScore ${i+1}.pdf`, rep, added); }
+  },
+  // Database SQLite (alcune versioni salvano così la libreria): testi → metadati, BLOB → PDF o plist
+  async sqlite(blob,name,depth,rep,metas,added){
+    if(!window.initSqlJs){ await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=SQLJS_URL+'sql-wasm.js'; sc.onload=res; sc.onerror=()=>rej(new Error('lettore SQLite non disponibile')); document.head.appendChild(sc); }); }
+    const SQL=await initSqlJs({locateFile:f=>SQLJS_URL+f});
+    const db=new SQL.Database(new Uint8Array(await blob.arrayBuffer()));
+    const tables=db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0]?.values.map(r=>r[0])||[];
+    rep.diag.push(`  SQLite con tabelle: ${tables.join(', ')}`);
+    const rows=[];
+    for(const t of tables){ let r; try{ r=db.exec(`SELECT * FROM "${t.replace(/"/g,'""')}"`)[0]; }catch(e){ continue; } if(!r) continue;
+      for(const v of r.values){ const o={}; r.columns.forEach((c,k)=>{ let x=v[k]; if(x instanceof Uint8Array && x.length>8 && String.fromCharCode(...x.subarray(0,6)).startsWith('bplist')){ try{ x=parseBplist(x); }catch(e){} } o[c.replace(/^Z/,'').toLowerCase()]=x; }); o.__table=t; rows.push(o); } }
+    db.close(); metas.push(rows); await this.embeddedPdfs(rows,rep,added);
+  },
   async addPdf(bytes,name,rep,added){
     const buf=bytes.buffer?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes;
-    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&s.bytes.byteLength===buf.byteLength)){ rep.dups++; return; }
+    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&(s.size||0)===buf.byteLength)){ rep.dups++; return; }
     try{ const sc=await addScore(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); added.push(sc.id); rep.pdfs++; }
     catch(e){ rep.errors.push(name); }
   },
@@ -2364,6 +2464,7 @@ const FS4 = {
     let h=li(r.pdfs,'spartiti importati')+(r.dups?li(r.dups,'già presenti, saltati'):'')+li(r.matched,'spartiti con titolo, compositore o etichette da forScore')+li(r.setlists,'setlist ricreate');
     if(r.errors.length) h+=`<div class="hint" style="color:var(--danger)">Non letti: ${esc(r.errors.slice(0,6).join(', '))}</div>`;
     if(r.metaOnly&&!r.pdfs) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
+    if(r.diag&&r.diag.length) h+=`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer"><b>Dettagli tecnici del file</b> (fai una foto dello schermo e mandala a Claude se qualcosa non è stato importato)</summary><pre id="fsDiag" style="white-space:pre-wrap;font-size:11.5px;line-height:1.45;color:var(--muted);max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text">${esc(r.diag.join('\n'))}</pre></details>`;
     h+=`<div class="hint" style="font-size:13px">Le annotazioni a mano di forScore restano nel formato privato di forScore e non si possono trasferire. Se il PDF era stato esportato da forScore con le annotazioni, le vedrai già stampate sulla pagina.</div>`;
     const m2=modal('Import da forScore',h,`<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
     m2.querySelector('[data-ok]').onclick=()=>{closeLayers();openSide('library')};
@@ -2389,12 +2490,12 @@ async function zipEntries(file){
     let q=p+46+nl; const qe=q+el; while(q+4<=qe){ const id=cd.getUint16(q,true), sz=cd.getUint16(q+2,true); if(id===1){ let r=q+4; if(usize===0xFFFFFFFF){usize=Number(cd.getBigUint64(r,true));r+=8} if(csize===0xFFFFFFFF){csize=Number(cd.getBigUint64(r,true));r+=8} if(lho===0xFFFFFFFF){lho=Number(cd.getBigUint64(r,true))} } q+=4+sz; }
     p=qe+cl;
     if(name.endsWith('/')) continue;
-    out.push({name,size:usize,bytes:async()=>{
+    out.push({name,size:usize,method,bytes:async()=>{
       const lh=new DataView(await file.slice(lho,lho+30).arrayBuffer()); const start=lho+30+lh.getUint16(26,true)+lh.getUint16(28,true);
       const blob=file.slice(start,start+csize);
       if(method===0) return new Uint8Array(await blob.arrayBuffer());
       if(method===8){ if(!window.DecompressionStream) throw new Error('deflate non supportato'); const s=blob.stream().pipeThrough(new DecompressionStream('deflate-raw')); return new Uint8Array(await new Response(s).arrayBuffer()); }
-      throw new Error('compressione non supportata');
+      throw new Error('compressione non supportata ('+method+')');
     }});
   }
   return out;
@@ -2613,7 +2714,7 @@ const Bright = {
 
 // ---------- Invia (AirDrop, Messaggi, WhatsApp, Mail…) ----------
 async function buildAnnotatedPdf(sc, ann){
-  const doc=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true}); const pages=doc.getPages();
+  const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const pages=doc.getPages();
   for(let i=0;i<pages.length;i++){
     const strokes=ann[i]; if(!strokes||!strokes.length) continue;
     const pg=pages[i]; const {width,height}=pg.getSize(); const k=3;
@@ -2639,7 +2740,7 @@ function shareScore(){
     <button class="srcCard" data-w="orig">${iconSvg('file')}<b>PDF originale</b><span>Senza segni</span></button></div>
     <div class="hint" style="font-size:13px">Sull'altro dispositivo: il PDF arriva in File o Download. Apri Mozart → Importa → PDF dai File.</div>`,null,{eyebrow:sc.title});
   m2.querySelector('.srcCards').onclick=async e=>{const b=e.target.closest('[data-w]');if(!b)return;closeLayers();busy('Preparo il PDF…');
-    try{ const bytes=b.dataset.w==='ann'?await buildAnnotatedPdf(sc,ST.ann):new Uint8Array(sc.bytes); busy();
+    try{ const bytes=b.dataset.w==='ann'?await buildAnnotatedPdf(sc,ST.ann):new Uint8Array(await getBytes(sc)); busy();
       await shareFile(new Blob([bytes],{type:'application/pdf'}),(sc.title||'spartito').replace(/[\\/:*?"<>|]+/g,' ')+(b.dataset.w==='ann'?' (annotato)':'')+'.pdf',sc.title); }
     catch(err){ busy(); toast('Invio non riuscito'); }};
 }
@@ -2926,6 +3027,224 @@ const Pron = {
     m2.querySelector('[data-ok]').onclick=()=>{ const t=$('#prOut').textContent.trim(); if(!t) return toast('Scrivi prima il testo'); closeLayers(); if(!ST.annotate) Anno.enter(); Anno.mode='text'; Anno.textMode='free'; Anno.buildBar(); Anno.pendingText=t; toast('Tocca la pagina dove scrivere la pronuncia',2600); };
   },
 };
+
+// ================= Zoom con due dita su pannelli, menu e finestre (anche Per Cantanti) =================
+const UIZoom = {
+  ptrs:new Map(), start:null,
+  sel:'.modal,.side,.pop,#annobar,#pianoSheet,.bar,#textEntry,#selBar,.lcBar',
+  apply(z){ ST.settings.uiz=clamp(+z||1,.6,1.8); document.documentElement.style.setProperty('--uiz',ST.settings.uiz.toFixed(3)); },
+  init(){
+    this.apply(ST.settings.uiz||1);
+    const save=debounce(()=>saveSettings(),400);
+    document.addEventListener('pointerdown',e=>{
+      if(e.pointerType!=='touch'||!e.target.closest||!e.target.closest(this.sel)) return;
+      this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(this.ptrs.size===2){ const [a,b]=[...this.ptrs.values()]; this.start={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:ST.settings.uiz||1}; }
+    },true);
+    document.addEventListener('pointermove',e=>{
+      const p=this.ptrs.get(e.pointerId); if(!p) return; p.x=e.clientX; p.y=e.clientY;
+      if(this.ptrs.size>=2&&this.start){ const [a,b]=[...this.ptrs.values()]; this.apply(this.start.z*Math.hypot(a.x-b.x,a.y-b.y)/this.start.d); save(); e.preventDefault(); }
+    },{capture:true,passive:false});
+    const up=e=>{ this.ptrs.delete(e.pointerId); if(this.ptrs.size<2) this.start=null; };
+    document.addEventListener('pointerup',up,true); document.addEventListener('pointercancel',up,true);
+    // iPhone/iPad (Safari e app): gesto nativo di pizzico, più fluido
+    let g0=null;
+    document.addEventListener('gesturestart',e=>{ if(e.target.closest&&e.target.closest(this.sel)) g0=ST.settings.uiz||1; },true);
+    document.addEventListener('gesturechange',e=>{ if(g0!=null&&e.scale){ this.apply(g0*e.scale); save(); } },true);
+    document.addEventListener('gestureend',()=>{ g0=null; },true);
+  },
+};
+
+// ================= Casella di testo libera · Testo sulle note (sillaba per sillaba) · lettura del testo stampato =================
+
+// ---- T: casella di testo per scrivere qualsiasi cosa (appunti, indicazioni, testo, note) ----
+const TextBox = {
+  opt:{size:22, font:'sans', bold:false, italic:false},
+  open(p){
+    const A=Anno; $('#textEntry')?.remove();
+    // tocco su un testo già scritto: lo si modifica
+    const idx=A.strokes.findIndex(s=>s.t==='text'&&!s.lyric&&hitStroke(s,p[0],p[1],.01));
+    const ed=idx>=0?A.strokes[idx]:null;
+    if(ed) Object.assign(this.opt,{size:Math.round(ed.size*1100),font:ed.font||'sans',bold:!!ed.bold,italic:!!ed.italic});
+    const pr=A.presets[A.sel]; const color=ed?ed.color:(pr.k==='mask'||pr.k==='hl'?'#111111':pr.color);
+    const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry'; box.className='tbox';
+    const o=this.opt;
+    box.innerHTML=`<textarea id="teIn" rows="2" placeholder="Scrivi qui: appunti, indicazioni, testo…" autocapitalize="sentences"></textarea>
+      <div class="tbRow"><div class="seg" id="tbFont"><button data-f="sans" class="${o.font==='sans'?'on':''}">Aa</button><button data-f="serif" class="${o.font==='serif'?'on':''}" style="font-family:var(--f-display)">Aa</button><button data-f="music" class="${o.font==='music'?'on':''}" style="font-family:var(--f-display);font-style:italic">rit.</button></div>
+        <div class="seg"><button id="tbB" class="${o.bold?'on':''}" style="font-weight:900">G</button><button id="tbI" class="${o.italic?'on':''}" style="font-style:italic">C</button></div>
+        <div class="seg"><button id="tbMinus" aria-label="Più piccolo">A−</button><button id="tbPlus" aria-label="Più grande">A+</button></div></div>
+      <div class="tbRow">${ed?`<button class="ghostBtn danger" id="tbDel">${iconSvg('trash')}</button>`:''}<span style="flex:1"></span><button class="ghostBtn" id="tbX">Annulla</button><button class="goldBtn sm" id="teOk">${iconSvg('check')}Fatto</button></div>`;
+    $('#app').appendChild(box);
+    const ta=$('#teIn'); ta.value=ed?ed.text:'';
+    box.style.left=clamp(r.left+p[0]*r.width-12,8,innerWidth-340)+'px'; box.style.top=clamp(r.top+p[1]*r.height+18,60,innerHeight-230)+'px';
+    // anteprima dal vivo sulla pagina
+    const tmp=ed||{t:'text',text:'',x:p[0],y:p[1],align:'l',color,alpha:1,layer:A.layer};
+    const sync=()=>{ Object.assign(tmp,{text:ta.value||'',size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic}); if(!ed) A.live=ta.value?tmp:null; A.redraw(); };
+    const seg=(id,fn)=>$('#'+id).onclick=e=>{const b=e.target.closest('button');if(!b)return;fn(b);sync();ta.focus()};
+    seg('tbFont',b=>{o.font=b.dataset.f;$$('#tbFont button').forEach(x=>x.classList.toggle('on',x===b))});
+    $('#tbB').onclick=()=>{o.bold=!o.bold;$('#tbB').classList.toggle('on',o.bold);sync()};
+    $('#tbI').onclick=()=>{o.italic=!o.italic;$('#tbI').classList.toggle('on',o.italic);sync()};
+    $('#tbMinus').onclick=()=>{o.size=Math.max(10,o.size-3);sync()}; $('#tbPlus').onclick=()=>{o.size=Math.min(90,o.size+3);sync()};
+    ta.oninput=sync; sync();
+    const close=()=>{ A.live=null; box.remove(); A.redraw(); };
+    const commit=()=>{ const v=ta.value.replace(/\s+$/,''); A.live=null; box.remove();
+      if(ed){ A.push(); if(!v) A.strokes.splice(idx,1); else Object.assign(ed,{text:v}); }
+      else if(v){ A.push(); A.strokes.push({...tmp,text:v}); }
+      A.redraw(); saveAnn(); A.buildBar(); };
+    const orig=ed?JSON.parse(JSON.stringify(ed)):null;
+    $('#teOk').onclick=commit; $('#tbX').onclick=()=>{ if(ed) Object.assign(ed,orig); close(); };
+    if(ed) $('#tbDel').onclick=()=>{ A.push(); A.strokes.splice(idx,1); close(); saveAnn(); A.buildBar(); };
+    ta.onkeydown=e=>{ if(e.key==='Escape') close(); if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) commit(); };
+    setTimeout(()=>ta.focus(),20);
+  },
+};
+
+// ---- Riconoscimento delle teste delle note su un rigo ----
+function pageGray(){
+  const c=pageCanvas, W=c.width, H=c.height, s=Math.min(1,1400/W), w=Math.round(W*s), h=Math.round(H*s);
+  const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true}); x.drawImage(c,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data; const g=new Uint8Array(w*h); for(let i=0;i<w*h;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3<150?1:0;
+  return {g,w,h};
+}
+function detectNotes(st){
+  // 1) fascia del rigo  2) tolgo righe del pentagramma e gambi sottili  3) le macchie della misura di una testa di nota sono note
+  const {g,w,h}=pageGray(); const gap=Math.max(3,st.gap*h);
+  const top=Math.max(2,Math.round(st.top*h-gap*1.8)), bot=Math.min(h-3,Math.round(st.bottom*h+gap*1.3)), bh=bot-top+1;
+  // teste vuote (minime, semibrevi): riempio i piccoli buchi chiusi, così non spariscono come righe sottili
+  { const vis=new Uint8Array(w*bh), q=[];
+    for(let y=top;y<=bot;y++) for(let x=0;x<w;x++){ const k=(y-top)*w+x; if(g[y*w+x]||vis[k]) continue;
+      let n=0; const pix=[]; q.push(k); vis[k]=1; let border=false;
+      while(q.length){ const c=q.pop(); n++; if(pix.length<=gap*gap) pix.push(c); const cx=c%w, cy=(c/w)|0; if(cx===0||cx===w-1||cy===0||cy===bh-1) border=true;
+        for(const d of [1,-1,w,-w]){ const t=c+d; if(t<0||t>=w*bh) continue; if((d===1&&cx===w-1)||(d===-1&&cx===0)) continue; if(!vis[t]&&!g[(((t/w)|0)+top)*w+(t%w)]){ vis[t]=1; q.push(t); } } }
+      if(!border&&n<=gap*gap*.7) for(const c of pix) g[(((c/w)|0)+top)*w+(c%w)]=1; } }
+  const m=new Uint8Array(w*bh);
+  for(let y=top;y<=bot;y++) for(let x=2;x<w-2;x++){ const i=y*w+x; if(!g[i]) continue;
+    const vthin = !g[i-2*w]&&!g[i+2*w] && (!g[i-w]||!g[i+w]);                 // riga orizzontale sottile
+    const hthin = !g[i-2]&&!g[i+2] && (!g[i-1]||!g[i+1]);                       // gambo o stanghetta sottile
+    if(!vthin&&!hthin) m[(y-top)*w+x]=1; }
+  const seen=new Uint8Array(w*bh), out=[], stack=[]; const x0=Math.round(w*.03);
+  for(let start=0;start<w*bh;start++){ if(!m[start]||seen[start]) continue;
+    let minx=w,maxx=0,miny=bh,maxy=0,n=0; stack.push(start); seen[start]=1;
+    while(stack.length){ const k=stack.pop(), x=k%w, y=(k/w)|0; n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
+      for(const d of [1,-1,w,-w]){ const q=k+d; if(q>=0&&q<w*bh&&m[q]&&!seen[q]){ seen[q]=1; stack.push(q); } } }
+    const cw=maxx-minx+1, ch=maxy-miny+1;
+    if(minx<x0) continue;
+    if(cw>=gap*.75&&cw<=gap*2.4&&ch>=gap*.45&&ch<=gap*1.6&&n>=gap*gap*.25) out.push((minx+maxx)/2/w);
+    else if(cw>gap*2.4&&ch>=gap*.45&&ch<=gap*1.6&&n>=cw*gap*.35){ const k2=Math.round(cw/(gap*1.35)); for(let j=0;j<k2;j++) out.push((minx+(j+.5)*cw/k2)/w); } // teste attaccate (accordi, seconde)
+  }
+  out.sort((a,b)=>a-b); const res=[]; for(const v of out){ if(!res.length||v-res[res.length-1]>gap*.6/w) res.push(v); }
+  return res;
+}
+
+// ---- Testo sulle note: tocchi sotto un rigo, scrivi una sillaba, Invio → passa alla nota successiva ----
+const LyricType = {
+  st:null, notes:[], i:0, y:0,
+  start(p){
+    const staves=detectStaves(); if(!staves.length){ toast('Non trovo i pentagrammi in questa pagina'); return; }
+    // il rigo sopra il punto toccato
+    const st=[...staves].filter(s=>s.top<p[1]).pop()||staves[0]; this.st=st;
+    let notes=[]; try{ notes=detectNotes(st); }catch(e){}
+    this.notes=notes.length?notes:null;
+    // riga del testo: allineata a sillabe già scritte sotto questo rigo, altrimenti sotto il rigo
+    const nx=staves[staves.indexOf(st)+1]; const lim=nx?nx.top:1;
+    const ex=Anno.strokes.find(s=>s.t==='text'&&s.lyric&&s.y>st.bottom&&s.y<lim);
+    this.y=ex?ex.y:Math.min(lim-st.gap*.6, Math.max(p[1], st.bottom+st.gap*2.2));
+    this.size=ex?ex.size:Math.max(.014,st.gap*1.9);
+    this.i=this.notes?this.nearest(p[0]):0; this.x=this.notes?this.notes[this.i]:p[0];
+    this.box(); Anno.redraw(); this.marks();
+  },
+  nearest(x){ let b=0,bd=9; this.notes.forEach((n,k)=>{const d=Math.abs(n-x); if(d<bd){bd=d;b=k}}); return b; },
+  marks(){ // segnini sulle note riconosciute, la nota corrente in oro
+    const L=$('#lyMarks')||Object.assign(document.createElement('div'),{id:'lyMarks'}); if(!L.parentNode) $('#app').appendChild(L);
+    const r=inkCanvas.getBoundingClientRect(); L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;pointer-events:none;z-index:24`;
+    L.innerHTML=(this.notes||[this.x]).map((n,k)=>`<i style="position:absolute;left:${n*100}%;top:${this.y*100}%;width:${k===this.i?12:6}px;height:${k===this.i?12:6}px;margin:-${k===this.i?6:3}px 0 0 -${k===this.i?6:3}px;border-radius:50%;background:${k===this.i?'#d6a84e':'rgba(31,95,214,.55)'};box-shadow:0 0 0 2px #fff"></i>`).join('');
+  },
+  box(){
+    $('#textEntry')?.remove(); const r=inkCanvas.getBoundingClientRect(); const b=document.createElement('div'); b.id='textEntry'; b.className='lybox';
+    b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Salta nota">${iconSvg('chevRight')}</button>
+      <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
+    $('#app').appendChild(b);
+    const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
+    place(); this._place=place;
+    const inp=$('#lyIn');
+    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
+      inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
+    inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
+    $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
+    $('#lyX').onclick=()=>this.close(); $('#lyOcr').onclick=()=>this.ocrPick();
+    setTimeout(()=>inp.focus(),20);
+  },
+  step(d){ if(this.notes){ this.i=clamp(this.i+d,0,this.notes.length-1); this.x=this.notes[this.i]; } else this.x=clamp(this.x+d*.05,.02,.98); this._place&&this._place(); this.marks(); },
+  close(){ $('#textEntry')?.remove(); $('#lyMarks')?.remove(); this.st=null; },
+  // Omoritmia: legge il testo stampato sotto un altro rigo e lo scrive sotto questo, alla stessa altezza delle note.
+  async ocrPick(){
+    const staves=detectStaves(); const me=this.st; const target=this;
+    const L=document.createElement('div'); L.id='lcLayer'; const r=inkCanvas.getBoundingClientRect();
+    L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
+    L.innerHTML=staves.map((st,i)=>st===me?'':`<button data-st="${i}" class="lcBand${st.printed?' ref':''}" style="top:${(st.bottom+st.gap*.3)*100}%;height:${st.gap*3.2*100}%">${st.printed?'Copia questo testo':'(senza testo)'}</button>`).join('')+`<div class="lcBar pill"><span class="hint" style="padding:0 10px">Tocca il testo stampato da copiare</span><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    $('#app').appendChild(L);
+    L.onclick=async e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove();
+      const src=staves[+b.dataset.st]; busy('Leggo il testo…');
+      try{ const words=await readLyrics(src); busy();
+        if(!words.length) return toast('Non riesco a leggere il testo di quel rigo');
+        Anno.push(); const n=target.notes; let k=0;
+        for(const w of words){ let x=w.x; if(n&&n.length){ let b2=0,bd=9; n.forEach((v,j)=>{const d=Math.abs(v-x); if(d<bd){bd=d;b2=j}}); if(bd<.03) x=n[b2]; }
+          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,color:'#111111',alpha:1,layer:Anno.layer}); k++; }
+        saveAnn(); Anno.redraw(); Anno.buildBar(); toast(`${k} sillabe copiate sotto il rigo · correggi toccando una sillaba con il lazo`,3400);
+      }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); } };
+  },
+};
+
+// Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; nel browser non disponibile).
+async function readLyrics(st){
+  const c=pageCanvas, W=c.width, H=c.height; const y0=Math.round((st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.bottom+st.gap*3.5)*H));
+  const cut=document.createElement('canvas'); cut.width=W; cut.height=Math.max(1,y1-y0); cut.getContext('2d').drawImage(c,0,y0,W,y1-y0,0,0,W,y1-y0);
+  if(!(window.MozartNative&&MozartNative.ocr)) throw new Error('La lettura del testo stampato funziona nell\'app Mozart per iPad e iPhone');
+  const res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
+  // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
+  const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
+    parts.forEach((t,i)=>{ if(t==='-'||t==='—') return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
+  return out;
+}
+
+// ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
+// Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),
+// lettura del testo stampato con Vision di Apple, file aperti da File/AirDrop ("Apri con Mozart").
+(function(){
+  const h = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.mozart;
+  if(!h) return;
+  const call = msg => h.postMessage(msg);
+  const b64 = async blob => { const u8=new Uint8Array(await blob.arrayBuffer()); let s=''; for(let i=0;i<u8.length;i+=32768) s+=String.fromCharCode.apply(null,u8.subarray(i,i+32768)); return btoa(s); };
+  window.MozartNative = {
+    app:true,
+    // invia un file al foglio di condivisione di iOS, a pezzi per i PDF grandi
+    async shareBlob(blob,name){
+      const id=Math.random().toString(36).slice(2), CH=3<<20;
+      await call({cmd:'fileBegin',id,name});
+      for(let o=0;o<blob.size;o+=CH) await call({cmd:'fileChunk',id,data:await b64(blob.slice(o,o+CH))});
+      return call({cmd:'fileShare',id});
+    },
+    async ocr(dataUrl){ return call({cmd:'ocr',image:dataUrl}); },
+    keepAwake(on){ return call({cmd:'keepAwake',on:!!on}); },
+    // file arrivati da fuori: l'app li serve su mozart://localhost/__inbox/...
+    async receive(list){
+      for(const f of list){
+        try{
+          busy(`Apro “${f.name}”…`);
+          const blob=await (await fetch(f.url)).blob(); const file=new File([blob],f.name,{type:blob.type});
+          busy();
+          if(/\.pdf$/i.test(f.name)){ const sc=await addScore(await file.arrayBuffer(),{title:f.name.replace(/\.pdf$/i,'').replace(/_+/g,' '),file:f.name,fromFile:true}); renderLibrary(); await openScore(sc.id); toast('Spartito importato'); }
+          else if(/\.(png|jpe?g|heic|heif|tiff?)$/i.test(f.name)){ Scan.start([file], ST.cur?'insert':'new'); }
+          else await FS4.run([file]);
+        }catch(e){ busy(); toast('Non riesco ad aprire '+f.name); }
+      }
+    },
+  };
+  // nell'app: condivisione e salvataggi passano dal foglio nativo
+  window.shareFile = async (blob,name)=>{ try{ await MozartNative.shareBlob(blob,name); return true; }catch(e){ toast('Condivisione non riuscita'); return false; } };
+  window.offerDownload = (blob,name)=>{ MozartNative.shareBlob(blob,name).catch(()=>toast('Salvataggio non riuscito')); };
+  document.documentElement.classList.add('in-app');
+})();
 
 boot();
 </script>

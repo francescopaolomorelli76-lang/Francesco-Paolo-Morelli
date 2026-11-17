@@ -55,39 +55,8 @@ const LyricCopy = {
 
 // ---------- Pronuncia italianizzata (latino ecclesiastico, tedesco, francese) ----------
 const PRON = {
-  la(w){ let s=w.toLowerCase();
-    s=s.replace(/^mihi$/,'michi').replace(/^nihil$/,'nichil').replace(/ae|æ|oe|œ/g,'e').replace(/j/g,'i').replace(/y/g,'i').replace(/z/g,'dz');
-    s=s.replace(/([^stx])ti(?=[aeiou])/g,'$1zi').replace(/^ti(?=[aeiou])/,'zi');
-    s=s.replace(/xc(?=[ei])/g,'csc').replace(/x/g,'cs').replace(/ph/g,'f').replace(/th/g,'t').replace(/rh/g,'r');
-    s=s.replace(/ch(?=[aou]|$)/g,'c').replace(/h/g,'');
-    return s; },
-  de(w){ let s=w.toLowerCase();
-    s=s.replace(/tsch/g,'c§').replace(/sch(?=[ei])/g,'sc').replace(/sch(?=[aouäöü])/g,'sci').replace(/sch/g,'sh');
-    s=s.replace(/^st/,'sht').replace(/^sp/,'shp').replace(/ß/g,'ss').replace(/ck/g,'k').replace(/qu/g,'kv');
-    s=s.replace(/ie/g,'ī').replace(/ei|ai/g,'ai').replace(/eu|äu/g,'oi').replace(/ä/g,'è');
-    s=s.replace(/([aou])ch/g,'$1kh').replace(/ch/g,'ç').replace(/([aeiouäöü])h/g,'$1').replace(/^h/,'h');
-    s=s.replace(/w/g,'§v§').replace(/v/g,'f').replace(/§f§/g,'v').replace(/j/g,'i').replace(/z/g,'z');
-    s=s.replace(/k(?=[eiīè])/g,'ch').replace(/g(?=[eiīè])/g,'gh').replace(/c(?=[ei])/g,'z');
-    s=s.replace(/ig$/,'iç').replace(/b$/,'p').replace(/d$/,'t').replace(/g$/,'k');
-    s=s.replace(/^s(?=[aeiouäöü])/,'ṡ').replace(/c§/g,'c').replace(/ī/g,'i');
-    return s; },
-  fr(w){ let s=w.toLowerCase();
-    s=s.replace(/œu|oeu|eu/g,'ö').replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/oi/g,'ua').replace(/ou/g,'Ů').replace(/(?<![aeo])u(?![aeio])/g,'ü').replace(/Ů/g,'u');
-    s=s.replace(/(ain|ein|in|im|ym|yn)(?![aeiouyn])/g,'ẽ').replace(/(an|en|am|em)(?![aeiouyn])/g,'ã').replace(/(on|om)(?![aeiouyn])/g,'õ').replace(/(un|um)(?![aeiouyn])/g,'œ̃');
-    s=s.replace(/ai|ei|ê|è/g,'è').replace(/é|er$|ez$/g,'é').replace(/ch/g,'sc').replace(/gn/g,'gn').replace(/qu/g,'k');
-    s=s.replace(/ç/g,'s').replace(/c(?=[eiy])/g,'s').replace(/g(?=[eiy])/g,'j').replace(/ill/g,'i').replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'');
-    s=s.replace(/(?<=[aeiouéèü])s(?=[aeiouéèü])/g,'ṡ').replace(/[stdxzp]+$/,'').replace(/([^aeiouéèü])e$/,'$1(e)').replace(/y/g,'i');
-    return s; },
+  la:w=>RULES.la(w), de:w=>RULES.de(w), fr:w=>RULES.fr(w), es:w=>RULES.es(w), en:w=>RULES.en(w),
   conv(text,lang){ return String(text).replace(/[A-Za-zÀ-ÿßæœ]+/g,w=>{const r=this[lang](w);return w[0]===w[0].toUpperCase()&&w[0]!==w[0].toLowerCase()?r.charAt(0).toUpperCase()+r.slice(1):r}); },
-  es(w){ let s=w.toLowerCase();
-    s=s.replace(/ll/g,'gl').replace(/ñ/g,'gn').replace(/j/g,'kh').replace(/g(?=[ei])/g,'kh').replace(/gu(?=[ei])/g,'gh').replace(/qu(?=[ei])/g,'k');
-    s=s.replace(/c(?=[ei])/g,'θ').replace(/z/g,'θ').replace(/h/g,'').replace(/v/g,'b').replace(/y$/,'i').replace(/[áà]/g,'a').replace(/[éè]/g,'e').replace(/í/g,'i').replace(/ó/g,'o').replace(/[úü]/g,'u');
-    return s; },
-  en(w){ let s=w.toLowerCase();
-    const dict={the:'de',and:'end',you:'iu',your:'ior',are:'ar',love:'lav',heart:'hart',my:'mai',life:'laif',with:'uid',for:'for',ever:'ever',all:'ol',we:'ui',our:'auar',free:'fri',me:'mi',be:'bi',sweet:'suit',night:'nait',light:'lait',song:'song',sing:'sing',come:'kam',home:'hom',lord:'lord',god:'god',holy:'holi',glory:'glori',joy:'gioi'};
-    if(dict[s]) return dict[s];
-    s=s.replace(/igh/g,'ai').replace(/ee|ea/g,'i').replace(/oo/g,'u').replace(/ou/g,'au').replace(/ow$/,'au').replace(/sh/g,'sc').replace(/ch/g,'c').replace(/th/g,'d').replace(/w/g,'u').replace(/y(?=[aeiou])/g,'i').replace(/y$/,'i').replace(/ph/g,'f').replace(/([^aeiou])e$/,'$1').replace(/ck/g,'k').replace(/j/g,'gi');
-    return s; },
   names:{la:'Latino (ecclesiastico)',de:'Tedesco',fr:'Francese',es:'Spagnolo',en:'Inglese'},
 };
 const Pron = {
@@ -98,7 +67,7 @@ const Pron = {
     if(!src.length) return toast('Seleziona con il lazo il testo da pronunciare');
     const m2=modal('Pronuncia italianizzata',`<div class="field"><label>Lingua del testo</label><div class="seg" id="prLang">${Object.entries(PRON.names).map(([k,l])=>`<button data-l="${k}" class="${this.lang===k?'on':''}">${l}</button>`).join('')}</div></div>
       <div id="prPrev" class="hint" style="font-size:16px;line-height:1.7"></div>
-      <div class="hint" style="font-size:12.5px">ṡ = s sonora (come in “rosa”) · sh = “sc” di “scena” · ç = suono di “ich” tedesco · ã õ ẽ = vocali nasali francesi · ü ö = vocali turbate · (e) = e muta.</div>`,
+      <div class="hint" style="font-size:12.5px">ṡ = s sonora (come in “rosa”) · sc' c' g' = suono dolce senza vocale (sc' come in “scena”) · kh = h aspirata · ç = suono di “ich” tedesco · ã õ ẽ = vocali nasali francesi · ü ö = vocali turbate · (e) = e muta.</div>`,
       `<button class="ghostBtn" data-no>Annulla</button><button class="goldBtn" data-ok>${iconSvg('check')}Scrivi sotto il testo</button>`);
     const upd=()=>{$('#prPrev').innerHTML=src.map(s=>`<b>${esc(s.text)}</b> → <span style="color:var(--gold-hi)">${esc(PRON.conv(s.text,this.lang))}</span>`).join(' &nbsp; ')};
     $('#prLang').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;this.lang=b.dataset.l;$$('#prLang button').forEach(x=>x.classList.toggle('on',x===b));upd()}; upd();
@@ -111,7 +80,7 @@ const Pron = {
     const m2=modal('Pronuncia italianizzata',`<div class="field"><label>Lingua</label><div class="seg" id="prLang">${Object.entries(PRON.names).map(([k,l])=>`<button data-l="${k}" class="${this.lang===k?'on':''}">${l}</button>`).join('')}</div></div>
       <div class="field"><label for="prIn">Testo da cantare</label><textarea id="prIn" placeholder="Scrivi o incolla qui il testo in lingua"></textarea></div>
       <div class="field"><label>Come si legge</label><div id="prOut" style="font-size:19px;line-height:1.6;color:var(--gold-hi);min-height:30px"></div></div>
-      <div class="hint" style="font-size:12.5px">ṡ = s sonora · sh = “sc” di “scena” · ç = “ich” tedesco · ã õ ẽ = nasali francesi · ü ö = vocali turbate · (e) = e muta. È una guida: per i casi dubbi fa fede il maestro del coro.</div>`,
+      <div class="hint" style="font-size:12.5px">ṡ = s sonora · sc' c' g' = suono dolce senza vocale · kh = h aspirata · ç = “ich” tedesco · ã õ ẽ = nasali francesi · ü ö = vocali turbate · (e) = e muta. È una guida: per i casi dubbi fa fede il maestro del coro.</div>`,
       `<button class="goldBtn" data-ok>${iconSvg('text')}Metti sulla pagina</button>`,{eyebrow:'Per Cantanti'});
     const upd=()=>{$('#prOut').textContent=PRON.conv($('#prIn').value,this.lang)};
     $('#prLang').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;this.lang=b.dataset.l;$$('#prLang button').forEach(x=>x.classList.toggle('on',x===b));upd()};
@@ -120,20 +89,3 @@ const Pron = {
   },
 };
 
-// Riconosce la lingua del testo (italiano, latino, francese, tedesco, spagnolo, inglese…).
-function detectLang(text){
-  const t=' '+String(text).toLowerCase().replace(/[-–—_.,;:!?¡¿"“”()]/g,' ').replace(/\s+/g,' ')+' ';
-  const W={
-    it:['il','lo','la','di','che','non','per','un','una','sono','mio','mia','amore','cuore','con','del','della','più','ti','mi','si','ha','ho','gli','ciel','io','tu','è'],
-    la:['et','in','est','dei','deus','domine','dominus','qui','quae','quod','ad','cum','sanctus','gloria','agnus','pacem','nobis','tuam','tua','mundi','miserere','kyrie','eleison','christe','excelsis','amen','ave','maria','gratia','plena','tecum','benedictus','venit','nomine','spiritu','pater','filii','coeli','caeli','terra','sunt'],
-    fr:['le','les','des','je','tu','vous','nous','est','et','une','dans','pour','mon','ma','votre','avec','qui','que','pas','ne','sur','au','aux','du','ce','cette','mes','tes','son','sa','ses','toi','moi','coeur','amour','ciel'],
-    de:['der','die','das','und','ich','du','nicht','ist','ein','eine','mein','dein','mit','auf','zu','von','sich','wie','so','herz','liebe','gott','wir','ihr','sie','den','dem','des'],
-    es:['el','los','las','y','que','de','en','un','una','mi','tu','con','por','para','es','no','corazón','amor','yo','te','se','del','al','muy','como'],
-    en:['the','and','you','your','are','is','of','to','in','my','with','for','we','our','be','me','love','heart','all','this','that','will','shall','thy','thee','lord'],
-  };
-  const sc={}; for(const k in W){ sc[k]=0; for(const w of W[k]) if(t.includes(' '+w+' ')) sc[k]++; }
-  if(/[éèêàçœ]/.test(t)) sc.fr+=2; if(/[äöüß]|sch/.test(t)) sc.de+=2; if(/[ñ¡¿]|[áíóú]/.test(t)) sc.es+=2; if(/[òù]/.test(t)) sc.it+=1;
-  if(/\b\w+(ae|um|us|is|orum|ibus)\b/.test(t)) sc.la+=1; if(/\bth|w\w/.test(t)) sc.en+=1;
-  const best=Object.entries(sc).sort((a,b)=>b[1]-a[1])[0];
-  return best&&best[1]>0?best[0]:null;
-}

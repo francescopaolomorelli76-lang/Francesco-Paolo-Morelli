@@ -84,13 +84,17 @@ const Finger = {
   // Dopo una copia: se il testo è in lingua straniera chiede se traslitterare, e lo fa da solo.
   offerTranslit(idx){
     const A=Anno; const L=idx.map(k=>A.strokes[k]).filter(Boolean); if(!L.length) return;
-    const lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
-    const name=PRON.names[lang].split(' ')[0].toLowerCase();
+    let lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
     const p=document.createElement('div'); p.className='pop'; p.id='fgTrPop';
-    p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:300px"><b>Testo in ${esc(name)}</b><div class="hint">Vuoi la pronuncia all'italiana sopra le parole?</div>
+    const prev=()=>L.slice().sort((a,b)=>a.x-b.x).slice(0,6).map(t=>`<b>${esc(t.text)}</b> → <span style="color:#5aa0ff">${esc(PRON.conv(t.text,lang))}</span>`).join(' · ');
+    p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:320px"><b>Testo in ${esc(PRON.names[lang].split(' ')[0].toLowerCase())}: vuoi la pronuncia all'italiana sopra le parole?</b>
+      <div class="hint" style="font-size:12.5px">Se la lingua è sbagliata, sceglila:</div>
+      <div class="seg" id="otL">${Object.entries(PRON.names).map(([k,l])=>`<button data-l="${k}" class="${k===lang?'on':''}">${l.split(' ')[0]}</button>`).join('')}</div>
+      <div class="hint" id="otP" style="font-size:14px;line-height:1.6">${prev()}</div>
       <div style="display:flex;gap:8px"><button class="ghostBtn" data-n style="flex:1">No</button><button class="goldBtn" data-y style="flex:1">${iconSvg('voice')}Traslittera</button></div></div>`;
     $('#app').appendChild(p); p.style.left='50%'; p.style.transform='translateX(-50%)'; p.style.bottom='calc(env(safe-area-inset-bottom,0px) + 170px)'; p.style.top='auto';
     p.querySelector('[data-n]').onclick=()=>p.remove();
+    p.querySelector('#otL').onclick=e=>{const x=e.target.closest('[data-l]');if(!x)return;lang=x.dataset.l;p.querySelectorAll('#otL button').forEach(y=>y.classList.toggle('on',y===x));p.querySelector('#otP').innerHTML=prev();};
     p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
   },
   writeTranslit(L,lang,where){

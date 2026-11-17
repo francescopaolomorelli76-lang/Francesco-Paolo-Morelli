@@ -3,18 +3,38 @@
 // Trova i pentagrammi nella pagina: righe orizzontali scure lunghe, raggruppate a 5 con passo regolare.
 function detectStaves(){
   const c=pageCanvas, W=c.width, H=c.height; if(!W) return [];
-  const s=Math.min(1,900/W), w=Math.round(W*s), h=Math.round(H*s);
+  const s=Math.min(1,1100/W), w=Math.round(W*s), h=Math.round(H*s);
   const t=document.createElement('canvas'); t.width=w; t.height=h; const x=t.getContext('2d',{willReadFrequently:true}); x.drawImage(c,0,0,w,h);
   const d=x.getImageData(0,0,w,h).data; const prof=new Float32Array(h);
-  // una riga sottile può cadere a cavallo di due righe di pixel: si guarda il più scuro tra le due
-  for(let y=0;y<h;y++){ let run=0,best=0,dark=0; for(let i=0;i<w;i++){ const k=(y*w+i)*4, k2=k+(y<h-1?w*4:0); const v=Math.min(d[k]+d[k+1]+d[k+2],d[k2]+d[k2+1]+d[k2+2]); if(v<470){run++;dark++;if(run>best)best=run}else run=0; } prof[y]=Math.max(best,dark*.8)/w; }
-  // righe del pentagramma: profilo alto e massimo locale
-  const lines=[]; for(let y=1;y<h-1;y++) if(prof[y]>.38&&prof[y]>=prof[y-1]&&prof[y]>=prof[y+1]){ if(lines.length&&y-lines[lines.length-1]<=2){ continue; } lines.push(y); }
-  const staves=[]; let i=0;
-  while(i+4<lines.length){
-    const g=lines.slice(i,i+5), gaps=g.slice(1).map((v,k)=>v-g[k]); const avg=gaps.reduce((a,b)=>a+b,0)/4;
-    if(avg>2&&gaps.every(v=>Math.abs(v-avg)<=Math.max(1.6,avg*.35))){ staves.push({top:g[0]/h,bottom:g[4]/h,gap:avg/h}); i+=5; } else i++;
-  }
+  // scuro = più scuro della media della pagina; si contano solo i tratti SOTTILI e LUNGHI (le righe):
+  // teste di note, travature e testo sono spessi o corti e non contano
+  let tot=0; for(let i=0;i<w*h;i++) tot+=d[i*4]+d[i*4+1]+d[i*4+2]; const thr=Math.min(600,tot/(w*h)*.82);
+  const g=new Uint8Array(w*h); for(let i=0;i<w*h;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])<thr?1:0;
+  const T=Math.max(2,Math.round(h/450)), runMin=Math.round(w*.02);
+  for(let y=T;y<h-T;y++){ let st=-1,n=0;
+    for(let i=0;i<=w;i++){ const on=i<w&&(g[y*w+i]||g[(y+1)*w+i])&&!(g[(y-T)*w+i]&&g[(y+T+1<h?y+T+1:y)*w+i]);
+      if(on){ if(st<0) st=i; } else if(st>=0){ if(i-st>=runMin) n+=i-st; st=-1; } }
+    prof[y]=n/w; }
+  const lines=[]; for(let y=1;y<h-1;y++) if(prof[y]>.22&&prof[y]>=prof[y-1]&&prof[y]>=prof[y+1]){ if(lines.length&&y-lines[lines.length-1]<=2){ continue; } lines.push(y); }
+  // cinque righe equidistanti, anche se in mezzo ci sono altre linee (tagli addizionali, 8va, forcelle)
+  const staves=[], used=new Set();
+  const near=(y,tol)=>{ let b=-1,bd=tol+1; for(let k=0;k<lines.length;k++){ const dd=Math.abs(lines[k]-y); if(dd<bd&&!used.has(k)){bd=dd;b=k;} } return bd<=tol?b:-1; };
+  for(let a=0;a<lines.length;a++){ if(used.has(a)) continue;
+    let best=null;
+    for(let b=a+1;b<lines.length&&lines[b]-lines[a]<=h/22;b++){ if(used.has(b)) continue; const d=lines[b]-lines[a]; if(d<3) continue;
+      // tolleranza larga: nelle scansioni le righe non sono perfette; una riga su cinque può mancare
+      const ks=[a,b]; let miss=0, err=0, last=lines[b], dd=d;
+      for(let m=2;m<=4;m++){ const pred=last+dd, tol=Math.max(2,dd*.3); const k=near(pred,tol);
+        if(k<0){ miss++; last=pred; } else { ks.push(k); err+=Math.abs(lines[k]-pred); last=lines[k]; dd=(lines[k]-lines[a])/m; } }
+      if(miss>1) continue;
+      const sc=miss*100+d+err/d*2;
+      if(!best||sc<best.sc) best={sc,ks,d,miss}; }
+    if(!best) continue;
+    const ys=best.ks.map(k=>lines[k]).sort((x,y)=>x-y), top=ys[0], bot=top+4*best.d;
+    if(staves.some(st=>Math.abs(st.top*h-top)<best.d*2)) continue;
+    best.ks.forEach(k=>used.add(k));
+    staves.push({top:top/h,bottom:(best.miss?bot:ys[ys.length-1])/h,gap:best.d/h}); }
+  staves.sort((x,y)=>x.top-y.top);
   // testo stampato sotto il rigo: molte colonne con segni nella fascia delle sillabe (gambi e note isolate ne toccano poche)
   staves.forEach((st,k)=>{ const g=st.gap*h, y0=Math.round(st.bottom*h+g*.45), lim=staves[k+1]?staves[k+1].top*h-g*.3:h, y1=Math.round(Math.min(lim,st.bottom*h+g*3.2)); let cols=0;
     if(y1>y0) for(let i=0;i<w;i++){ for(let y=y0;y<y1;y++){ const q=(y*w+i)*4; if(d[q]+d[q+1]+d[q+2]<540){cols++;break} } }

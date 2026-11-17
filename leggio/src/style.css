@@ -58,6 +58,11 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .modal{width:min(calc(620px * var(--uiz)),calc(100% - 24px))}
 .side{width:min(calc(420px * var(--uiz)),94vw)}
 #tools{width:min(calc(360px * var(--uiz)),94vw)}
+/* casella di testo sulla pagina (come forScore) */
+#textEntry.tinline{display:flex;align-items:flex-start;gap:6px;background:none;border:0;padding:0;box-shadow:none;zoom:1}
+#textEntry.tinline #teIn{min-width:140px;max-width:min(70vw,640px);min-height:1.25em;padding:4px 8px;border-radius:6px;background:rgba(200,200,200,.35);outline:2px solid rgba(31,95,214,.55);white-space:pre-wrap;-webkit-user-select:text;user-select:text;caret-color:#1f5fd6}
+#textEntry.tinline .tmore{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#1f8fd6;background:rgba(255,255,255,.9);box-shadow:0 0 0 2px #1f8fd6;flex:none}
+#tbMenu{position:fixed;z-index:60}
 /* casella di testo libera */
 #textEntry.tbox{flex-direction:column;align-items:stretch;gap:8px;width:330px;padding:10px;box-shadow:var(--shadow)}
 #textEntry.tbox textarea{width:100%;min-height:64px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;font-size:17px;outline:none;resize:vertical;-webkit-user-select:text;user-select:text}

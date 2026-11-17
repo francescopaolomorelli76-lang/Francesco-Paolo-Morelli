@@ -89,7 +89,7 @@ const Bright = {
 async function buildAnnotatedPdf(sc, ann){
   const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const pages=doc.getPages();
   for(let i=0;i<pages.length;i++){
-    const strokes=ann[i]; if(!strokes||!strokes.length) continue;
+    const strokes=ann[i]; if(!strokes||!strokes.length) continue; await preloadAnnImgs(strokes);
     const pg=pages[i]; const {width,height}=pg.getSize(); const k=3;
     const c=document.createElement('canvas'); c.width=Math.round(width*k); c.height=Math.round(height*k);
     Anno.paint(c.getContext('2d'),strokes,c.width,c.height,true);

@@ -2,43 +2,59 @@
 
 // ---- T: casella di testo per scrivere qualsiasi cosa (appunti, indicazioni, testo, note) ----
 const TextBox = {
-  opt:{size:22, font:'sans', bold:false, italic:false},
+  opt:{size:22, font:'sans', bold:false, italic:false, color:null},
+  // Casella sulla pagina, come in forScore: tocchi, scrivi lì; ⋯ per formato ed elimina.
   open(p){
-    const A=Anno; $('#textEntry')?.remove();
-    // tocco su un testo già scritto: lo si modifica
-    const idx=A.strokes.findIndex(s=>s.t==='text'&&!s.lyric&&hitStroke(s,p[0],p[1],.01));
+    const A=Anno; this.close(true);
+    const idx=A.strokes.findIndex(s=>s.t==='text'&&!s.lyric&&hitStroke(s,p[0],p[1],.012));
     const ed=idx>=0?A.strokes[idx]:null;
-    if(ed) Object.assign(this.opt,{size:Math.round(ed.size*1100),font:ed.font||'sans',bold:!!ed.bold,italic:!!ed.italic});
-    const pr=A.presets[A.sel]; const color=ed?ed.color:(pr.k==='mask'||pr.k==='hl'?'#111111':pr.color);
-    const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry'; box.className='tbox';
-    const o=this.opt;
-    box.innerHTML=`<textarea id="teIn" rows="2" placeholder="Scrivi qui: appunti, indicazioni, testo…" autocapitalize="sentences"></textarea>
-      <div class="tbRow"><div class="seg" id="tbFont"><button data-f="sans" class="${o.font==='sans'?'on':''}">Aa</button><button data-f="serif" class="${o.font==='serif'?'on':''}" style="font-family:var(--f-display)">Aa</button><button data-f="music" class="${o.font==='music'?'on':''}" style="font-family:var(--f-display);font-style:italic">rit.</button></div>
-        <div class="seg"><button id="tbB" class="${o.bold?'on':''}" style="font-weight:900">G</button><button id="tbI" class="${o.italic?'on':''}" style="font-style:italic">C</button></div>
-        <div class="seg"><button id="tbMinus" aria-label="Più piccolo">A−</button><button id="tbPlus" aria-label="Più grande">A+</button></div></div>
-      <div class="tbRow">${ed?`<button class="ghostBtn danger" id="tbDel">${iconSvg('trash')}</button>`:''}<span style="flex:1"></span><button class="ghostBtn" id="tbX">Annulla</button><button class="goldBtn sm" id="teOk">${iconSvg('check')}Fatto</button></div>`;
-    $('#app').appendChild(box);
-    const ta=$('#teIn'); ta.value=ed?ed.text:'';
-    box.style.left=clamp(r.left+p[0]*r.width-12,8,innerWidth-340)+'px'; box.style.top=clamp(r.top+p[1]*r.height+18,60,innerHeight-230)+'px';
-    // anteprima dal vivo sulla pagina
-    const tmp=ed||{t:'text',text:'',x:p[0],y:p[1],align:'l',color,alpha:1,layer:A.layer};
-    const sync=()=>{ Object.assign(tmp,{text:ta.value||'',size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic}); if(!ed) A.live=ta.value?tmp:null; A.redraw(); };
-    const seg=(id,fn)=>$('#'+id).onclick=e=>{const b=e.target.closest('button');if(!b)return;fn(b);sync();ta.focus()};
-    seg('tbFont',b=>{o.font=b.dataset.f;$$('#tbFont button').forEach(x=>x.classList.toggle('on',x===b))});
-    $('#tbB').onclick=()=>{o.bold=!o.bold;$('#tbB').classList.toggle('on',o.bold);sync()};
-    $('#tbI').onclick=()=>{o.italic=!o.italic;$('#tbI').classList.toggle('on',o.italic);sync()};
-    $('#tbMinus').onclick=()=>{o.size=Math.max(10,o.size-3);sync()}; $('#tbPlus').onclick=()=>{o.size=Math.min(90,o.size+3);sync()};
-    ta.oninput=sync; sync();
-    const close=()=>{ A.live=null; box.remove(); A.redraw(); };
-    const commit=()=>{ const v=ta.value.replace(/\s+$/,''); A.live=null; box.remove();
-      if(ed){ A.push(); if(!v) A.strokes.splice(idx,1); else Object.assign(ed,{text:v}); }
-      else if(v){ A.push(); A.strokes.push({...tmp,text:v}); }
-      A.redraw(); saveAnn(); A.buildBar(); };
+    const pr=A.presets[A.sel];
+    const o=this.opt; if(ed) Object.assign(o,{size:Math.round(ed.size*1100),font:ed.font||'sans',bold:!!ed.bold,italic:!!ed.italic,color:ed.color});
+    else o.color=(pr.k==='mask'||pr.k==='hl')?'#111111':(pr.color||'#111111');
     const orig=ed?JSON.parse(JSON.stringify(ed)):null;
-    $('#teOk').onclick=commit; $('#tbX').onclick=()=>{ if(ed) Object.assign(ed,orig); close(); };
-    if(ed) $('#tbDel').onclick=()=>{ A.push(); A.strokes.splice(idx,1); close(); saveAnn(); A.buildBar(); };
-    ta.onkeydown=e=>{ if(e.key==='Escape') close(); if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) commit(); };
-    setTimeout(()=>ta.focus(),20);
+    const st=ed||{t:'text',text:'',x:p[0],y:p[1],align:'l',alpha:1,layer:A.layer};
+    if(ed) ed._editing=true; A.redraw();
+    const r=inkCanvas.getBoundingClientRect();
+    const box=document.createElement('div'); box.id='textEntry'; box.className='tinline';
+    box.innerHTML=`<div id="teIn" contenteditable="true" spellcheck="false" autocapitalize="sentences"></div><button class="tmore" id="tbMore" aria-label="Formato ed elimina">${iconSvg('dots')}</button>`;
+    $('#app').appendChild(box);
+    const ce=$('#teIn'); ce.innerText=ed?ed.text:'';
+    const style=()=>{ const px=o.size/1100*r.width; ce.style.fontSize=px+'px'; ce.style.lineHeight='1.25';
+      ce.style.fontFamily=o.font==='sans'?'var(--f-body)':'var(--f-display)'; ce.style.fontWeight=o.bold?'700':(o.font==='music'?'600':'500');
+      ce.style.fontStyle=(o.italic||o.font==='music')?'italic':'normal'; ce.style.color=o.color;
+      box.style.left=(r.left+st.x*r.width-8)+'px'; box.style.top=(r.top+st.y*r.height-px*.625-6)+'px'; };
+    style();
+    const save=()=>{ const v=ce.innerText.replace(/\s+$/,''); if(ed) delete ed._editing;
+      const props={size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic,color:o.color};
+      if(ed){ const changed=v!==orig.text||Object.keys(props).some(k=>props[k]!==(orig[k]??(k==='font'?'sans':k==='bold'||k==='italic'?false:undefined))); if(!v){ A.push(); A.strokes.splice(A.strokes.indexOf(ed),1); } else if(changed){ A.push(); Object.assign(ed,{text:v},props); } }
+      else if(v){ A.push(); A.strokes.push({...st,text:v,size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic,color:o.color}); }
+      A.redraw(); saveAnn(); A.buildBar(); };
+    this._close=(cancel)=>{ if(!box.parentNode) return; if(cancel){ if(ed){ delete ed._editing; } A.redraw(); } else save(); box.remove(); $('#tbMenu')?.remove(); document.removeEventListener('pointerdown',outside,true); };
+    // tocco fuori dalla casella: salva (come forScore)
+    const outside=e=>{ if(e.target.closest('#textEntry,#tbMenu')) return; e.stopPropagation(); e.preventDefault(); this._close(false); };
+    setTimeout(()=>document.addEventListener('pointerdown',outside,true),50);
+    ce.onkeydown=e=>{ if(e.key==='Escape') this._close(true); };
+    $('#tbMore').onclick=e=>{ e.stopPropagation(); this.menu(box,o,style,()=>{ ce.innerText=''; this._close(false); }); };
+    setTimeout(()=>{ ce.focus(); const sel=getSelection(); sel.selectAllChildren(ce); sel.collapseToEnd(); },30);
+  },
+  close(silent){ if(this._close) this._close(false); this._close=null; },
+  menu(box,o,style,del){
+    $('#tbMenu')?.remove(); const m=document.createElement('div'); m.id='tbMenu'; m.className='pop';
+    m.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;min-width:250px">
+      <div class="eyebrow">Formato</div>
+      <div class="seg" id="tbFont"><button data-f="sans" class="${o.font==='sans'?'on':''}">Aa</button><button data-f="serif" class="${o.font==='serif'?'on':''}" style="font-family:var(--f-display)">Aa</button><button data-f="music" class="${o.font==='music'?'on':''}" style="font-family:var(--f-display);font-style:italic">rit.</button></div>
+      <div class="seg"><button id="tbB" class="${o.bold?'on':''}" style="font-weight:900">G</button><button id="tbI" class="${o.italic?'on':''}" style="font-style:italic">C</button><button id="tbMinus">A−</button><button id="tbPlus">A+</button></div>
+      <div class="swatches" id="tbCol">${['#111111','#d23b2f','#1f5fd6','#1d8a4a','#8b3fc4','#c8962e','#ff8a3d','#ffffff'].map(c=>`<button class="sw${c===o.color?' on':''}" style="background:${c};width:28px;height:28px" data-c="${c}" aria-label="Colore"></button>`).join('')}</div>
+      <button class="ghostBtn danger" id="tbDel">${iconSvg('trash')}Elimina</button></div>`;
+    $('#app').appendChild(m); const b=box.getBoundingClientRect();
+    m.style.left=clamp(b.right-260,8,innerWidth-280)+'px'; m.style.top=(b.bottom+8+m.offsetHeight>innerHeight-10?Math.max(10,b.top-m.offsetHeight-8):b.bottom+8)+'px';
+    const keep=()=>$('#teIn')?.focus();
+    m.querySelector('#tbFont').onclick=e=>{const x=e.target.closest('[data-f]');if(!x)return;o.font=x.dataset.f;m.querySelectorAll('#tbFont button').forEach(y=>y.classList.toggle('on',y===x));style();keep()};
+    m.querySelector('#tbB').onclick=()=>{o.bold=!o.bold;m.querySelector('#tbB').classList.toggle('on',o.bold);style();keep()};
+    m.querySelector('#tbI').onclick=()=>{o.italic=!o.italic;m.querySelector('#tbI').classList.toggle('on',o.italic);style();keep()};
+    m.querySelector('#tbMinus').onclick=()=>{o.size=Math.max(10,o.size-3);style();keep()}; m.querySelector('#tbPlus').onclick=()=>{o.size=Math.min(90,o.size+3);style();keep()};
+    m.querySelector('#tbCol').onclick=e=>{const x=e.target.closest('[data-c]');if(!x)return;o.color=x.dataset.c;m.querySelectorAll('#tbCol .sw').forEach(y=>y.classList.toggle('on',y===x));style();keep()};
+    m.querySelector('#tbDel').onclick=()=>{ m.remove(); del(); };
   },
 };
 
@@ -142,10 +158,22 @@ const LyricType = {
 async function readLyrics(st){
   const c=pageCanvas, W=c.width, H=c.height; const y0=Math.round((st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.bottom+st.gap*3.5)*H));
   const cut=document.createElement('canvas'); cut.width=W; cut.height=Math.max(1,y1-y0); cut.getContext('2d').drawImage(c,0,y0,W,y1-y0,0,0,W,y1-y0);
-  if(!(window.MozartNative&&MozartNative.ocr)) throw new Error('La lettura del testo stampato funziona nell\'app Mozart per iPad e iPhone');
-  const res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
+  let res;
+  if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
+  else res=await ocrBrowser(cut);
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
     parts.forEach((t,i)=>{ if(t==='-'||t==='—') return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
   return out;
+}
+
+// Nel browser: Tesseract (scaricato la prima volta, poi in cache). Restituisce parole con posizione 0…1.
+async function ocrBrowser(canvas){
+  if(!window.Tesseract){ busy('Preparo la lettura del testo (solo la prima volta)…');
+    await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); }); }
+  busy('Leggo il testo stampato…');
+  const w=await Tesseract.createWorker('ita+fra+deu+lat');
+  try{ const {data}=await w.recognize(canvas); const W=canvas.width;
+    return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W})); }
+  finally{ w.terminate(); }
 }

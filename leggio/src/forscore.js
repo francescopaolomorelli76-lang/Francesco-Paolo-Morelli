@@ -37,6 +37,7 @@ const FS4 = {
     const head=new Uint8Array(await blob.slice(0,32).arrayBuffer()); const txt=new TextDecoder('latin1').decode(head);
     const hex=[...head.subarray(0,8)].map(b=>b.toString(16).padStart(2,'0')).join(' ');
     rep.diag.push(`${'  '.repeat(depth)}${name} · ${(blob.size/1048576).toFixed(2)} MB · inizio: ${hex} “${txt.slice(0,12).replace(/[^\x20-\x7e]/g,'·')}”`);
+    if(txt.startsWith('<--4SBV')){ await this.container4sb(blob,depth,rep,metas,added); return; }
     if(txt.startsWith('%PDF')){ await this.addPdf(new Uint8Array(await blob.arrayBuffer()), /\.pdf$/i.test(name)?baseName(name):baseName(name).replace(/\.[^.]*$/,'')+'.pdf', rep, added); return; }
     if(head[0]===0x50&&head[1]===0x4B){
       const entries=await zipEntries(blob);
@@ -66,6 +67,56 @@ const FS4 = {
     const found=await scanPdfs(blob,(n)=>busy(`Cerco gli spartiti nel file… ${n} trovati`));
     for(let k=0;k<found.length;k++){ busy(`Importo ${k+1}/${found.length}`); await this.addPdf(found[k].bytes, found[k].name||`${baseName(name).replace(/\.\w+$/,'')} ${k+1}.pdf`, rep, added); }
     if(blob.size<60e6){ const m=scanPlists(new Uint8Array(await blob.arrayBuffer())); metas.push(...m); }
+  },
+  // Formato vero dei backup forScore: "<--4SBV02-->" poi, per ogni file: lunghezza del nome (16 caratteri),
+  // dimensione (16 caratteri), nome, dati compressi gzip. Il file principale "*.4sb" è la libreria (plist);
+  // "Brano.pdf|271.png" sono i disegni della pagina 271; "Brano.pdf" (negli archivi) sono gli spartiti.
+  async container4sb(blob,depth,rep,metas,added){
+    const dec=new TextDecoder(); let p=12, n=0;
+    const fs=this.fs={texts:{},imgs:{},files:new Set()};
+    while(p+32<=blob.size){
+      const hd=dec.decode(await blob.slice(p,p+32).arrayBuffer());
+      const nl=parseInt(hd.slice(0,16),10), sz=parseInt(hd.slice(16,32),10);
+      if(!(nl>=0)||!(sz>=0)) { rep.diag.push(`  struttura interrotta a ${p}`); break; }
+      const name=dec.decode(await blob.slice(p+32,p+32+nl).arrayBuffer());
+      let data=blob.slice(p+32+nl,p+32+nl+sz); p=p+32+nl+sz; n++;
+      busy(`Leggo ${n}: ${name}`);
+      data=await gunzipAll(data);
+      rep.diag.push(`  ${name} · ${(data.size/1024).toFixed(0)} KB`);
+      const m2=name.match(/^(.+?)\|(\d+)\.png$/i);
+      if(m2){ const u=await blobToDataURL(new Blob([data],{type:'image/png'})); (fs.imgs[m2[1]]=fs.imgs[m2[1]]||{})[+m2[2]-1]=u; fs.files.add(m2[1]); continue; }
+      const head=new TextDecoder('latin1').decode(new Uint8Array(await data.slice(0,8).arrayBuffer()));
+      if(head.startsWith('bplist')){ const m=parseBplist(new Uint8Array(await data.arrayBuffer())); if(m&&typeof m==='object'){ this.flat(m,metas,fs); metas.push(m); } continue; }
+      await this.processBlob(data,name,depth+1,rep,metas,added);
+    }
+    // testi e disegni: subito sugli spartiti già presenti, oppure appena importi il PDF con lo stesso nome
+    const pend=(await DB.get('fs4pending'))||{};
+    for(const f of fs.files){ const k=normName(f); pend[k]={texts:fs.texts[f]||{},imgs:fs.imgs[f]||{},file:f}; }
+    await DB.set('fs4pending',pend);
+    rep.fsFiles=[...fs.files]; rep.annFiles=Object.keys(pend).length;
+    rep.annApplied=0; for(const sc of ST.scores){ if(await applyForscoreAnn(sc)) rep.annApplied++; }
+  },
+  // libreria forScore: chiavi "Brano.pdf|title", "Brano.pdf|3|textAnnotations", "&SYS;setlists"…
+  flat(m,metas,fs){
+    const recs={};
+    for(const k in m){
+      if(k.startsWith('&SYS;')) continue; const parts=k.split('|'); if(parts.length<2) continue;
+      const f=parts[0]; if(!/\.pdf$/i.test(f)) continue; fs.files.add(f);
+      const r=recs[f]=recs[f]||{file:f};
+      if(parts.length===2){ const fld=parts[1].toLowerCase(), v=m[k];
+        if(fld==='title'&&typeof v==='string') r.title=v;
+        else if(/^(composer|artist|composers)$/.test(fld)) r.composer=Array.isArray(v)?v.join(', '):String(v||'');
+        else if(/^(genre|genres)$/.test(fld)) r.genre=Array.isArray(v)?v.join(', '):String(v||'');
+        else if(/^(keywords|labels|tags)$/.test(fld)) r.tags=Array.isArray(v)?v.map(String):String(v||'').split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+        else if(fld==='key'&&v!=null&&typeof v!=='object') r.key=String(v); }
+      else if(parts.length===3&&parts[2]==='textAnnotations'&&Array.isArray(m[k])){
+        const pg=(+parts[1]||1)-1; const list=(fs.texts[f]=fs.texts[f]||{})[pg]=[];
+        for(const t of m[k]){ if(!t||typeof t.text!=='string') continue;
+          const fsz=+t.fontSize||16; list.push({t:'text',text:t.text.replace(/\s+$/,''),x:+t['origin.x']||0,y:(+t['origin.y']||0)+fsz*.00068,size:fsz/740,align:'l',
+            font:/times|georgia|serif/i.test(t.fontFace||'')?'serif':'sans',bold:+t.fontWeight>0,color:fsColor(t.fontColor),alpha:1,layer:0,fs:1}); } }
+    }
+    const sl=m['&SYS;setlists'];
+    metas.push({forscoreFlat:Object.values(recs),setlists:Array.isArray(sl)?sl:[]});
   },
   // PDF salvati come dati dentro plist/NSKeyedArchiver
   async embeddedPdfs(root,rep,added){
@@ -99,10 +150,12 @@ const FS4 = {
   report(r){
     const li=(n,t)=>`<div class="item" style="min-height:48px"><span class="chk" style="border-color:var(--gold);color:var(--gold-hi);font-weight:800;font-size:12px;width:auto;min-width:26px;padding:0 6px;border-radius:13px">${n}</span><div class="tx"><div class="tt" style="font-size:15.5px">${t}</div></div></div>`;
     let h=li(r.pdfs,'spartiti importati')+(r.dups?li(r.dups,'già presenti, saltati'):'')+li(r.matched,'spartiti con titolo, compositore o etichette da forScore')+li(r.setlists,'setlist ricreate');
+    if(r.annFiles) h+=li(r.annApplied||0,`spartiti con testi e disegni di forScore applicati`);
+    if(r.fsFiles&&r.fsFiles.length){ const have=new Set(ST.scores.map(s=>normName(s.file||s.title))); const miss=r.fsFiles.filter(f=>!have.has(normName(f)));
+      if(miss.length) h+=`<div class="hint"><b>Mancano i PDF di:</b> ${miss.map(esc).join(', ')}.<br>Importali (Importa → PDF dai File, dalla cartella di forScore): testi, disegni e titoli di forScore verranno messi <b>automaticamente</b> sulle pagine giuste.</div>`; }
     if(r.errors.length) h+=`<div class="hint" style="color:var(--danger)">Non letti: ${esc(r.errors.slice(0,6).join(', '))}</div>`;
-    if(r.metaOnly&&!r.pdfs) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
+    if(r.metaOnly&&!r.pdfs&&!(r.fsFiles&&r.fsFiles.length)) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
     if(r.diag&&r.diag.length) h+=`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer"><b>Dettagli tecnici del file</b> (fai una foto dello schermo e mandala a Claude se qualcosa non è stato importato)</summary><pre id="fsDiag" style="white-space:pre-wrap;font-size:11.5px;line-height:1.45;color:var(--muted);max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text">${esc(r.diag.join('\n'))}</pre></details>`;
-    h+=`<div class="hint" style="font-size:13px">Le annotazioni a mano di forScore restano nel formato privato di forScore e non si possono trasferire. Se il PDF era stato esportato da forScore con le annotazioni, le vedrai già stampate sulla pagina.</div>`;
     const m2=modal('Import da forScore',h,`<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
     m2.querySelector('[data-ok]').onclick=()=>{closeLayers();openSide('library')};
   },
@@ -242,6 +295,11 @@ function unarchive(o){
 
 // Raccoglie dai metadati: schede degli spartiti (abbinate per nome del file) e setlist.
 function harvest(root,recs,sls){
+  if(root&&root.forscoreFlat){ recs.push(...root.forscoreFlat);
+    for(const s of root.setlists||[]){ if(!s||typeof s!=='object') continue; const name=s.title||s.name||s.Title||''; const arr=Object.values(s).find(v=>Array.isArray(v))||[];
+      const files=arr.map(x=>typeof x==='string'?x:(x&&(x.path||x.file||x.filename||Object.values(x).find(v=>typeof v==='string'&&/\.pdf$/i.test(v))))).filter(v=>typeof v==='string'&&/\.pdf$/i.test(v));
+      if(files.length) sls.push({name,files}); }
+    return; }
   const seen=new Set();
   const pdfRef=d=>{ for(const k of ['path','file','filename','fileName','filePath','relativePath','url','URL','document','name']) if(typeof d[k]==='string'&&/\.pdf$/i.test(d[k])) return d[k];
     for(const k in d) if(typeof d[k]==='string'&&/\.pdf$/i.test(d[k])) return d[k]; return null; };
@@ -260,4 +318,27 @@ function harvest(root,recs,sls){
     for(const k in v) walk(v[k],k);
   };
   walk(root,'');
+}
+
+// gzip anche annidato (forScore comprime due volte i disegni)
+async function gunzipAll(blob){
+  for(let i=0;i<4;i++){
+    const h=new Uint8Array(await blob.slice(0,2).arrayBuffer());
+    if(!(h[0]===0x1f&&h[1]===0x8b)) return blob;
+    if(!window.DecompressionStream) throw new Error('Questo iPad è troppo vecchio per aprire i backup forScore (serve iPadOS 16.4)');
+    blob=new Blob([await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()]);
+  }
+  return blob;
+}
+function blobToDataURL(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(b); }); }
+function fsColor(c){ const m={black:'#111111',red:'#d23b2f',blue:'#1f5fd6',green:'#1d8a4a',orange:'#ff8a3d',purple:'#8b3fc4',yellow:'#c8962e',gray:'#666666',grey:'#666666',white:'#ffffff',brown:'#7a4a2a'}; return m[String(c||'').toLowerCase()]||(/^#/.test(c||'')?c:'#111111'); }
+// Mette testi e disegni di forScore sullo spartito con lo stesso nome di file (una volta sola).
+async function applyForscoreAnn(sc){
+  const pend=(await DB.get('fs4pending'))||{}; const k=normName(sc.file||sc.title); const a=pend[k]; if(!a) return false;
+  const ann=(ST.cur&&ST.cur.id===sc.id)?ST.ann:((await DB.get('ann:'+sc.id))||{});
+  for(const pg in a.imgs){ if(+pg>=sc.pages) continue; (ann[pg]=ann[pg]||[]).unshift({t:'img',src:a.imgs[pg],layer:0,fs:1}); }
+  for(const pg in a.texts){ if(+pg>=sc.pages) continue; (ann[pg]=ann[pg]||[]).push(...a.texts[pg]); }
+  await DB.set('ann:'+sc.id,ann); delete pend[k]; await DB.set('fs4pending',pend);
+  if(ST.cur&&ST.cur.id===sc.id){ ST.ann=ann; Anno.redraw(); }
+  return true;
 }

@@ -38,7 +38,9 @@ async function addScore(bytes, meta={}){
   try{ sc.thumb=await thumbOf(doc); }catch(e){}
   doc.destroy();
   await DB.set('pdf:'+sc.id, bytes);
-  ST.scores.push(sc); await DB.putScore(sc); return sc;
+  ST.scores.push(sc); await DB.putScore(sc);
+  try{ if(typeof applyForscoreAnn==='function' && await applyForscoreAnn(sc)) toast('Testi e disegni di forScore aggiunti a “'+sc.title+'”',3200); }catch(e){}
+  return sc;
 }
 // PDF di uno spartito: in memoria solo quello aperto.
 async function getBytes(sc){ if(sc._bytes) return sc._bytes; const b=await DB.get('pdf:'+sc.id); if(!b) throw new Error('PDF mancante'); if(ST.cur===sc) sc._bytes=b; return b; }
@@ -241,7 +243,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   stage.addEventListener('pointercancel',()=>{clearTimeout(timer);clearGlow();st=null});
   // Anche sopra le barre: tenere premuto sul bordo apre il pannello corrispondente
   addEventListener('keydown',e=>{
-    if(e.target.matches('input,textarea,select')) return;
+    if(e.target.matches('input,textarea,select')||e.target.isContentEditable) return;
     if(['ArrowRight','PageDown',' ','ArrowDown'].includes(e.key)){e.preventDefault();nextPage()}
     else if(['ArrowLeft','PageUp','ArrowUp'].includes(e.key)){e.preventDefault();prevPage()}
     else if(e.key==='Escape'){closeLayers();closeSides()}

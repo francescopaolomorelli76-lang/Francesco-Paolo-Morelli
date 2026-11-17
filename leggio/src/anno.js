@@ -203,6 +203,7 @@ const Anno = {
   paint(x,strokes,W,H,all){
     for(const s of strokes){
       if(!all && this.layers[s.layer||0] && !this.layers[s.layer||0].vis) continue;
+      if(s._editing) continue;
       x.save(); x.globalAlpha=s.alpha??1;
       if(s.t==='pen'||s.t==='hl'||s.t==='mask'){
         x.strokeStyle=s.color; x.lineWidth=s.w*W; x.lineCap=s.t==='hl'?'butt':'round'; x.lineJoin='round';
@@ -219,7 +220,8 @@ const Anno = {
         x.beginPath(); x.moveTo(P2[0][0],P2[0][1]);
         for(let i=1;i<P2.length-1;i++){const mx=(P2[i][0]+P2[i+1][0])/2,my=(P2[i][1]+P2[i+1][1])/2;x.quadraticCurveTo(P2[i][0],P2[i][1],mx,my)}
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
-      } else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
+      } else if(s.t==='img'){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,0,0,W,H); }
+      else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
       else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
         const style=s.lyric?'500':s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
@@ -310,9 +312,13 @@ const Anno = {
   },
 };
 function sameGlyph(a,b){return a&&b&&a.c===b.c&&a.v===b.v&&a.f===b.f}
-function strokePts(s){ if(s.pts) return s.pts; if(s.t==='shape') return [s.a,s.b]; return [[s.x,s.y]]; }
+const _annImgs=new Map();
+function annImg(src){ let im=_annImgs.get(src); if(!im){ im=new Image(); im.onload=()=>Anno.redraw(); im.src=src; _annImgs.set(src,im); } return im; }
+function preloadAnnImgs(strokes){ return Promise.all((strokes||[]).filter(s=>s.t==='img').map(s=>{ const im=annImg(s.src); return im.complete?0:new Promise(r=>{im.addEventListener('load',r,{once:true});im.addEventListener('error',r,{once:true})}); })); }
+function strokePts(s){ if(s.t==='img') return []; if(s.pts) return s.pts; if(s.t==='shape') return [s.a,s.b]; return [[s.x,s.y]]; }
 function moveStroke(s,dx,dy){ if(s.pts) s.pts=s.pts.map(p=>[p[0]+dx,p[1]+dy]); else if(s.t==='shape'){s.a=[s.a[0]+dx,s.a[1]+dy];s.b=[s.b[0]+dx,s.b[1]+dy]} else {s.x+=dx;s.y+=dy} }
 function hitStroke(s,x,y,r){
+  if(s.t==='img') return false;
   if(s.t==='stamp') return Math.hypot(s.x-x,s.y-y)<Math.max(r,s.size*.5);
   if(s.t==='text'){ const w=s.size*s.text.length*.55, x0=s.align==='c'?s.x-w/2:s.x; return x>=x0-r&&x<=x0+w+r&&Math.abs(y-s.y)<s.size*.7+r; }
   const pts=strokePts(s);

@@ -287,8 +287,20 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .annoTop{display:flex;align-items:center;gap:8px;height:54px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 .annoTop .ttl{flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .annoTop .ttl span{color:var(--gold)}
-.annoTools{display:flex;align-items:center;height:60px;overflow-x:auto;border-top:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));scrollbar-width:none}
-.annoTools::-webkit-scrollbar{display:none}
+.annoTools{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+/* strumenti di disegno: scorrono; attrezzi: sempre tutti visibili */
+.presetScroll{flex:1;min-width:0;display:flex;align-items:center;height:60px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.presetScroll::-webkit-scrollbar{display:none}
+.toolFixed{flex:none;display:flex;align-items:center;border-left:1px solid var(--line)}
+.undoGrp{display:flex;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-pill);padding:2px}
+.undoBtn{color:var(--gold-hi)}
+.undoBtn.dis{opacity:.35}
+@media (max-width:1100px){
+  .annoTools{flex-direction:column}
+  .toolFixed{border-left:0;border-top:1px solid var(--line);justify-content:space-around;height:52px}
+  .toolFixed .atool{width:auto;flex:1;height:52px;max-width:72px}
+}
+@media (max-width:520px){ .annoTop .goldBtn .lbl{display:none} .annoTop{gap:4px} .undoGrp .ib{width:40px;height:40px} }
 .annoTools .sep{width:1px;height:34px;background:var(--line);margin:0 4px;flex:none}
 .preset{position:relative;width:56px;height:60px;flex:none;display:grid;place-items:center}
 .preset.on{background:rgba(214,168,78,.16)}
@@ -540,6 +552,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
     <div class="annoTop">
       <button class="ib" data-act="annoCancel" aria-label="Annulla modifiche" data-i="close"></button>
       <button class="goldBtn sm" data-act="insert" title="Inserisci pagine"><svg class="i" data-i="plusDoc"></svg><span class="lbl">Pagine</span></button>
+      <div class="undoGrp"><button class="ib undoBtn" id="annoUndo" data-act="annoUndo" aria-label="Annulla l'ultima azione" title="Annulla l'ultima azione" data-i="undo"></button><button class="ib undoBtn" id="annoRedo" data-act="annoRedo" aria-label="Ripeti" title="Ripeti" data-i="redo"></button></div>
       <div class="ttl" id="annoTitle">Pagina 1 <span>(Livello 1)</span></div>
       <button class="ib" data-act="prev" aria-label="Pagina precedente" data-i="chevLeft"></button>
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
@@ -1160,6 +1173,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
   pron:()=>{closeSides();Pron.open()},
   fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
   forscore:()=>{closeSides();FS4.pick()},
@@ -1612,12 +1626,14 @@ const Anno = {
   // ---- barra strumenti ----
   buildBar(){
     const bar=$('#annoTools'); if(!bar) return;
-    let h=this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
+    let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
-      +t('clear','trash','Cancella la pagina')+t('undo','undo','Annulla',false,!hs.u.length)+t('redo','redo','Ripeti',false,!hs.r.length)+t('layers','layers','Livelli');
+    h+=`</div><div class="toolFixed">`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
+      +t('clear','trash','Cancella la pagina')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
+    // Annulla / Ripeti sempre in vista nella barra in alto
+    $('#annoUndo')?.classList.toggle('dis',!hs.u.length); $('#annoRedo')?.classList.toggle('dis',!hs.r.length);
     bar.querySelectorAll('[data-p]').forEach(b=>this.drawPresetIcon(b.querySelector('canvas'),this.presets[+b.dataset.p]));
     bar.onclick=e=>{
       const p=e.target.closest('[data-p]');

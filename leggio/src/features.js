@@ -87,7 +87,7 @@ const Bright = {
 
 // ---------- Invia (AirDrop, Messaggi, WhatsApp, Mail…) ----------
 async function buildAnnotatedPdf(sc, ann){
-  const doc=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true}); const pages=doc.getPages();
+  const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const pages=doc.getPages();
   for(let i=0;i<pages.length;i++){
     const strokes=ann[i]; if(!strokes||!strokes.length) continue;
     const pg=pages[i]; const {width,height}=pg.getSize(); const k=3;
@@ -113,7 +113,7 @@ function shareScore(){
     <button class="srcCard" data-w="orig">${iconSvg('file')}<b>PDF originale</b><span>Senza segni</span></button></div>
     <div class="hint" style="font-size:13px">Sull'altro dispositivo: il PDF arriva in File o Download. Apri Mozart → Importa → PDF dai File.</div>`,null,{eyebrow:sc.title});
   m2.querySelector('.srcCards').onclick=async e=>{const b=e.target.closest('[data-w]');if(!b)return;closeLayers();busy('Preparo il PDF…');
-    try{ const bytes=b.dataset.w==='ann'?await buildAnnotatedPdf(sc,ST.ann):new Uint8Array(sc.bytes); busy();
+    try{ const bytes=b.dataset.w==='ann'?await buildAnnotatedPdf(sc,ST.ann):new Uint8Array(await getBytes(sc)); busy();
       await shareFile(new Blob([bytes],{type:'application/pdf'}),(sc.title||'spartito').replace(/[\\/:*?"<>|]+/g,' ')+(b.dataset.w==='ann'?' (annotato)':'')+'.pdf',sc.title); }
     catch(err){ busy(); toast('Invio non riuscito'); }};
 }

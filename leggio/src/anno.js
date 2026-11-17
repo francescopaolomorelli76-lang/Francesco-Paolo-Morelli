@@ -1,11 +1,13 @@
 // ================= Annotazioni =================
 const NEON=['#fff200','#39ff14','#ff3cac','#00e5ff','#ff9f1c','#b388ff','#ff5252','#7dffd4'];
 const SWATCHES=['#111111','#d23b2f','#1f5fd6','#1d8a4a','#c8962e','#7a4a2a','#8b3fc4','#f4e04d','#ff8a3d','#5fd0e6','#ff6fae','#ffffff'];
+// Segni dei pannelli che si disegnano trascinando (lunghezza a piacere)
+const STRETCH={hairCresc:'cresc',hairDim:'dim',slurUp:'slurUp',slurDown:'slurDown',tie:'tie',vowelLink:'slurDown',trillLine:'trill',vibrato:'wavy',volta1:'volta',volta2:'volta',pedLine:'ped',octLine:'octave',lineH:'line',dashedH:'dashed'};
 const SHAPES=[
   {id:'cresc',n:'Crescendo'},{id:'dim',n:'Diminuendo'},{id:'slurUp',n:'Legatura sopra'},{id:'slurDown',n:'Legatura sotto'},
   {id:'line',n:'Linea'},{id:'arrow',n:'Freccia'},{id:'ellipse',n:'Cerchio'},{id:'rect',n:'Riquadro'},
   {id:'bracketL',n:'Parentesi ['},{id:'bracketR',n:'Parentesi ]'},{id:'wavy',n:'Linea ondulata (trillo)'},{id:'dashed',n:'Linea tratteggiata (8va)'},
-  {id:'volta',n:'Casella di volta'},{id:'cut',n:'Taglio (vi-de)'},
+  {id:'volta',n:'Casella di volta'},{id:'tie',n:'Legatura di valore'},{id:'trill',n:'Trillo con linea'},{id:'octave',n:'8va con linea'},{id:'ped',n:'Linea del pedale'},{id:'cut',n:'Taglio (vi-de)'},
 ];
 const Anno = {
   presets:[
@@ -54,7 +56,7 @@ const Anno = {
     let h=this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Testo',this.mode==='text')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('undo','undo','Annulla',false,!hs.u.length)+t('redo','redo','Ripeti',false,!hs.r.length)+t('layers','layers','Livelli');
     bar.innerHTML=h;
     bar.querySelectorAll('[data-p]').forEach(b=>this.drawPresetIcon(b.querySelector('canvas'),this.presets[+b.dataset.p]));
@@ -64,7 +66,7 @@ const Anno = {
       const b=e.target.closest('[data-t]'); if(!b) return; const k=b.dataset.t;
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
-      else if(['lasso','text','eraser'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel()}
+      else if(['lasso','text','eraser','lyric'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
@@ -96,16 +98,26 @@ const Anno = {
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
+    if(this.mode==='lyric'){ LyricType.start(p); return; }
     if(this.mode==='lasso'){
       if(this.selBox && p[0]>=this.selBox.x0&&p[0]<=this.selBox.x1&&p[1]>=this.selBox.y0&&p[1]<=this.selBox.y1){ this.push(); this.live={t:'drag',from:p}; return; }
       this.clearSel(); this.live={t:'lasso',pts:[p]}; return;
     }
+    const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
+    if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016,color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';
     this.live={t:pr.k,color:pr.k==='mask'?'#ffffff':pr.color,alpha:pr.alpha,w:this.W(pr),pts:[pen?[p[0],p[1],+(e.pressure||.5).toFixed(3)]:[p[0],p[1]]],layer:this.layer};
     if(pen) this.live.pr=1;
     if(pr.k==='hl'&&pr.rainbow) this.live.rainbow=1;
+  },
+  // Tocco vicino all'estremo di una legatura/forcella già disegnata: la si allunga o accorcia trascinando.
+  grabEnd(p){
+    const pr=this.presets[this.sel]; const stretchy=pr.k==='shape'||(pr.k==='stamp'&&pr.g&&STRETCH[pr.g.v]); if(!stretchy) return null;
+    let best=null, bd=.018;
+    this.strokes.forEach((s,i)=>{ if(s.t!=='shape'||(s.layer||0)!==this.layer) return; for(const end of ['a','b']){ const d=Math.hypot(s[end][0]-p[0],s[end][1]-p[1]); if(d<bd){ bd=d; best={idx:i,end}; } } });
+    return best;
   },
   touchNavigates(){ return ST.settings.pencilOnly || (ST.settings.autoPencil && ST.pencilSeen); },
   cancelTouchStroke(){ if(this.live && this.livePointer==='touch'){ this.live=null; this.redraw(); } },
@@ -120,6 +132,7 @@ const Anno = {
     if(L.t==='drag'){ const dx=p[0]-L.from[0], dy=p[1]-L.from[1]; L.from=p; this.selIdx.forEach(i=>moveStroke(this.strokes[i],dx,dy)); this.selBox.x0+=dx;this.selBox.x1+=dx;this.selBox.y0+=dy;this.selBox.y1+=dy; this.redraw(); return; }
     if(L.t==='stamp'){ L.x=p[0]; L.y=p[1]; this.redraw(); return; }
     if(L.t==='shape'){ L.b=[p[0],p[1]]; this.redraw(); return; }
+    if(L.t==='reshape'){ const s=this.strokes[L.idx]; if(s) s[L.end]=[p[0],p[1]]; this.redraw(); return; }
     if(this.ruler){ L.pts=[L.pts[0],[p[0],p[1]]]; }
     else for(const ev of evs){ const q=this.pt(ev); const last=L.pts[L.pts.length-1]; if(Math.hypot(q[0]-last[0],q[1]-last[1])>.0009) L.pts.push(L.pr?[q[0],q[1],+(ev.pressure||.5).toFixed(3)]:[q[0],q[1]]); }
     this.redraw();
@@ -133,6 +146,7 @@ const Anno = {
     if(L.t==='erase'){ if(!L.hit){ const h=this.hist[ST.page]; h&&h.u.pop(); } saveAnn(); this.buildBar(); return; }
     if(L.t==='lasso'){ this.selectLasso(L.pts); this.redraw(); return; }
     if(L.t==='drag'){ saveAnn(); this.showSelBar(); this.buildBar(); return; }
+    if(L.t==='reshape'){ saveAnn(); this.redraw(); this.buildBar(); return; }
     if(L.t==='shape' && Math.hypot(L.b[0]-L.a[0],L.b[1]-L.a[1])<.01){ this.redraw(); return; }
     if((L.t==='pen'||L.t==='hl'||L.t==='mask') && L.pts.length===1) L.pts.push([L.pts[0][0]+.0005,L.pts[0][1]+.0005]);
     this.push(); this.strokes.push(L); this.redraw(); saveAnn(); this.buildBar();
@@ -145,18 +159,7 @@ const Anno = {
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
     if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:.017,align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
-    const r=inkCanvas.getBoundingClientRect(); const box=document.createElement('div'); box.id='textEntry';
-    box.innerHTML=`<div class="seg" id="teMode" style="flex-wrap:nowrap"><button data-tm="lyric" class="${this.textMode!=='free'?'on':''}" title="Sillaba centrata sotto la nota, allineata al rigo">Sotto la nota</button><button data-tm="free" class="${this.textMode==='free'?'on':''}">Libero</button></div><input id="teIn" placeholder="${this.textMode==='free'?'es. rit., respira':'sillaba, es. glo-'}" enterkeyhint="done" autocapitalize="off"><button class="goldBtn sm" id="teOk">${iconSvg('check')}</button>`;
-    $('#app').appendChild(box);
-    box.style.left=clamp(r.left+p[0]*r.width-10,8,innerWidth-320)+'px'; box.style.top=clamp(r.top+p[1]*r.height-26,70,innerHeight-120)+'px';
-    const commit=()=>{const v=$('#teIn').value.trim(); box.remove(); if(!v) return; this.push();
-      const lyric=this.textMode!=='free';
-      // sotto la nota: centrato sul punto toccato e sulla stessa riga degli altri testi vicini
-      let y=p[1]; if(lyric){ const near=this.strokes.filter(t=>t.t==='text'&&Math.abs(t.y-p[1])<.02).sort((a,b)=>Math.abs(a.y-p[1])-Math.abs(b.y-p[1]))[0]; if(near) y=near.y; }
-      const size=lyric?(this.strokes.find(t=>t.t==='text'&&t.lyric&&Math.abs(t.y-y)<.002)?.size||Math.max(.016,pr.size*.0011)):Math.max(.018,pr.size*.0012);
-      this.strokes.push({t:'text',text:v,x:p[0],y,size,align:lyric?'c':'l',lyric:lyric?1:0,color:pr.k==='mask'||pr.k==='hl'?'#111':pr.color,alpha:1,layer:this.layer}); this.redraw(); saveAnn(); this.buildBar(); };
-    box.querySelector('#teMode').onclick=e=>{const b=e.target.closest('[data-tm]');if(!b)return;this.textMode=b.dataset.tm;box.querySelectorAll('#teMode button').forEach(x=>x.classList.toggle('on',x===b));$('#teIn').focus()};
-    $('#teOk').onclick=commit; $('#teIn').onkeydown=e=>{if(e.key==='Enter')commit();if(e.key==='Escape')box.remove()}; setTimeout(()=>$('#teIn').focus(),20);
+    TextBox.open(p);
   },
   selectLasso(poly){
     if(poly.length<3) return; const idx=[];
@@ -191,6 +194,10 @@ const Anno = {
     const L=this.live;
     if(L && !['erase','lasso','drag'].includes(L.t)) this.paint(L.t==='hl'?hx:x,[L],W,H,true);
     if(L && L.t==='lasso'){ x.save(); x.setLineDash([8,6]); x.strokeStyle='#c8962e'; x.lineWidth=2; x.beginPath(); L.pts.forEach((p,i)=>i?x.lineTo(p[0]*W,p[1]*H):x.moveTo(p[0]*W,p[1]*H)); x.stroke(); x.restore(); }
+    const prs=this.presets[this.sel]; if(ST.annotate && this.mode==='preset' && prs && (prs.k==='shape'||(prs.k==='stamp'&&prs.g&&STRETCH[prs.g.v]))){
+      x.save(); x.fillStyle='rgba(214,168,78,.9)'; x.strokeStyle='#fff'; x.lineWidth=2;
+      for(const s of (ST.ann[ST.page]||[])){ if(s.t!=='shape'||(s.layer||0)!==this.layer) continue; for(const q of [s.a,s.b]){ x.beginPath(); x.arc(q[0]*W,q[1]*H,Math.max(7,W*.007),0,7); x.fill(); x.stroke(); } }
+      x.restore(); }
     if(this.selBox){ const b=this.selBox; x.save(); x.setLineDash([10,6]); x.strokeStyle='#c8962e'; x.lineWidth=2.5; x.strokeRect(b.x0*W,b.y0*H,(b.x1-b.x0)*W,(b.y1-b.y0)*H); x.restore(); }
   },
   paint(x,strokes,W,H,all){
@@ -214,7 +221,10 @@ const Anno = {
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
       } else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
-      else if(s.t==='text'){ x.fillStyle=s.color; x.font=`${s.lyric?'500':'italic 600'} ${s.size*W}px ${css(s.lyric?'--f-body':'--f-display')}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left'; x.fillText(s.text,s.x*W,s.y*H); }
+      else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
+        const style=s.lyric?'500':s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
+        x.font=`${style} ${s.size*W}px ${s.lyric?css('--f-body'):fam}`; x.textBaseline='middle'; x.textAlign=s.align==='c'?'center':'left';
+        String(s.text).split('\n').forEach((ln2,i)=>x.fillText(ln2,s.x*W,s.y*H+i*s.size*W*1.25)); }
       x.restore();
     }
   },
@@ -316,9 +326,15 @@ function drawShape(x,s){
   const dx=bx-ax, dy=by-ay, len=Math.hypot(dx,dy)||1, nx=-dy/len, ny=dx/len;
   x.beginPath();
   switch(s.shape){
-    case 'cresc':{const my=(ay+by)/2,hh=Math.max(Math.abs(by-ay)/2,Math.abs(bx-ax)*.07);x.moveTo(bx,my-hh);x.lineTo(ax,my);x.lineTo(bx,my+hh);break}
-    case 'dim':{const my=(ay+by)/2,hh=Math.max(Math.abs(by-ay)/2,(Math.abs(bx-ax))*.07);x.moveTo(ax,my-hh);x.lineTo(bx,my);x.lineTo(ax,my+hh);break}
-    case 'slurUp': case 'slurDown':{const up=s.shape==='slurUp'?-1:1;const sg=dx>=0?1:-1;const h=len*.25*up*sg;const mx=(ax+bx)/2,my=(ay+by)/2;x.moveTo(ax,ay);x.quadraticCurveTo(mx+nx*h,my+ny*h,bx,by);break}
+    case 'cresc': case 'dim':{ const hh=Math.max(s.w*2.5,Math.min(len*.09,s.w*7+10)); const [tx,ty,ox,oy]=s.shape==='cresc'?[ax,ay,bx,by]:[bx,by,ax,ay];
+      x.moveTo(ox+nx*hh,oy+ny*hh); x.lineTo(tx,ty); x.lineTo(ox-nx*hh,oy-ny*hh); break }
+    case 'slurUp': case 'slurDown': case 'tie':{ // legatura a falce: più spessa al centro, come quelle stampate
+      const up=s.shape==='slurDown'?1:-1; const sg=dx>=0?1:-1; const h=Math.min(len*(s.shape==='tie'?.12:.2),18+len*.07)*up*sg; const th=Math.max(1.2,s.w*1.6)*up*sg;
+      const mx=(ax+bx)/2,my=(ay+by)/2; x.moveTo(ax,ay); x.quadraticCurveTo(mx+nx*h,my+ny*h,bx,by); x.quadraticCurveTo(mx+nx*(h+th),my+ny*(h+th),ax,ay); x.closePath(); x.fill(); x.restore(); return; }
+    case 'trill':{ x.font=`700 italic ${Math.max(14,s.w*7)}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText('tr',ax-2,ay); const off=Math.max(14,s.w*7)*1.1; const L2=Math.max(0,len-off); const sx=ax+dx/len*off, sy=ay+dy/len*off; const n=Math.max(2,Math.round(L2/(s.w*4+6))); const st=L2/n;
+      x.lineWidth=Math.max(1,s.w*.8); x.moveTo(sx,sy); for(let i=0;i<n;i++){const t0=i*st; x.quadraticCurveTo(sx+dx/len*(t0+st/2)+nx*(i%2?1:-1)*st*.45, sy+dy/len*(t0+st/2)+ny*(i%2?1:-1)*st*.45, sx+dx/len*(t0+st), sy+dy/len*(t0+st))} break }
+    case 'octave':{ const f=Math.max(13,s.w*6); x.font=`700 italic ${f}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText('8va',ax,ay); const o=f*1.9; x.setLineDash([s.w*3,s.w*3]); x.moveTo(ax+dx/len*o,ay+dy/len*o); x.lineTo(bx,by); x.lineTo(bx,by+f*.7); break }
+    case 'ped':{ const f=Math.max(13,s.w*6); x.moveTo(ax,ay-f*.6); x.lineTo(ax,ay); x.lineTo(bx,by); x.lineTo(bx,by-f*.6); break }
     case 'line': x.moveTo(ax,ay);x.lineTo(bx,by);break;
     case 'dashed': x.setLineDash([s.w*3,s.w*3]);x.moveTo(ax,ay);x.lineTo(bx,by);x.lineTo(bx,by+s.w*5);break;
     case 'arrow':{x.moveTo(ax,ay);x.lineTo(bx,by);const a=Math.atan2(dy,dx),hl=Math.max(10,s.w*4);x.moveTo(bx,by);x.lineTo(bx-hl*Math.cos(a-.45),by-hl*Math.sin(a-.45));x.moveTo(bx,by);x.lineTo(bx-hl*Math.cos(a+.45),by-hl*Math.sin(a+.45));break}

@@ -17,8 +17,14 @@ const DB = {
       try{const t=this.db.transaction(store,mode);const r=fn(t.objectStore(store));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>res(undefined);t.onabort=()=>res(undefined);}catch(e){res(undefined)}
     });
   },
-  async allScores(){ if(!this.db) return [...this.mem.scores.values()]; return (await this._req('scores','readonly',s=>s.getAll()))||[]; },
-  async putScore(o){ this.mem.scores.set(o.id,o); return this._req('scores','readwrite',s=>s.put(o)); },
+  // Le schede degli spartiti (leggere) sono separate dai PDF (pesanti, in 'pdf:<id>'):
+  // la libreria non tiene in memoria tutti i PDF, così l'app non si blocca con tanti spartiti.
+  async allScores(){
+    const all = !this.db ? [...this.mem.scores.values()] : ((await this._req('scores','readonly',s=>s.getAll()))||[]);
+    for(const sc of all){ if(sc.bytes){ await this.set('pdf:'+sc.id, sc.bytes); sc.size=sc.bytes.byteLength; delete sc.bytes; await this.putScore(sc); } }
+    return all;
+  },
+  async putScore(o){ const {_bytes, bytes, ...meta}=o; this.mem.scores.set(o.id,o); return this._req('scores','readwrite',s=>s.put(meta)); },
   async delScore(id){ this.mem.scores.delete(id); return this._req('scores','readwrite',s=>s.delete(id)); },
   async get(k){ if(!this.db) return this.mem.kv.get(k); return this._req('kv','readonly',s=>s.get(k)); },
   async set(k,v){ this.mem.kv.set(k,v); return this._req('kv','readwrite',s=>s.put(v,k)); },

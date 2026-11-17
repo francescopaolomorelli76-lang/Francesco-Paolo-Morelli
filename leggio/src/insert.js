@@ -49,7 +49,7 @@ const Insert = {
   // Esegue l'inserimento nel PDF aperto e sposta le annotazioni.
   async insertPages(builder){
     const sc=ST.cur; const at=this.posIndex();
-    const doc=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true});
+    const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true});
     const count=await builder(doc,at);
     const bytes=(await doc.save()).buffer;
     const ann={}; for(const k in ST.ann){ const i=+k; ann[i>=at?i+count:i]=ST.ann[k]; }
@@ -310,7 +310,7 @@ const Reorder = {
     const keep=this.items.filter(i=>!i.del); if(!keep.length) return toast('Deve restare almeno una pagina');
     busy('Riordino…');
     try{
-      const sc=ST.cur; const src=await PDFLib.PDFDocument.load(sc.bytes,{ignoreEncryption:true}); const out=await PDFLib.PDFDocument.create();
+      const sc=ST.cur; const src=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const out=await PDFLib.PDFDocument.create();
       const pages=await out.copyPages(src,keep.map(k=>k.src));
       pages.forEach((p,i)=>{ if(keep[i].rot) p.setRotation(PDFLib.degrees((p.getRotation().angle+keep[i].rot)%360)); out.addPage(p); });
       const ann={}; keep.forEach((k,i)=>{ if(ST.ann[k.src] && !k.rot) ann[i]=ST.ann[k.src]; });

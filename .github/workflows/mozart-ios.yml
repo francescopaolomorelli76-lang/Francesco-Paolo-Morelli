@@ -1,0 +1,53 @@
+# Compila l'app Mozart (iPad e iPhone) su un Mac di GitHub, SENZA firma.
+# Il file Mozart.ipa si scarica da Actions › Mozart iOS › Artifacts.
+# Per installarlo serve una firma: TestFlight (codemagic.yaml, workflow "mozart-testflight")
+# oppure Sideloadly/AltStore. Guida: mozart-ios/INSTALLA.md
+name: Mozart iOS (IPA non firmata)
+
+on:
+  push:
+    branches: [claude/fervent-sagan-xuja93]
+    paths: ['leggio/**', 'mozart-ios/**', '.github/workflows/mozart-ios.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: mozart-ios
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Contenuto dell'app (Mozart offline)
+        run: python3 leggio/build.py --ios mozart-ios/Web
+
+      - name: XcodeGen
+        run: |
+          brew install xcodegen
+          cd mozart-ios && xcodegen generate
+
+      - name: Compila (senza firma)
+        run: |
+          cd mozart-ios
+          xcodebuild -project Mozart.xcodeproj -scheme Mozart -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tail -n 60
+          test -d build/Build/Products/Release-iphoneos/Mozart.app
+
+      - name: Crea IPA
+        run: |
+          cd mozart-ios
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Mozart.app Payload/
+          zip -qry Mozart.ipa Payload
+          ls -lh Mozart.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mozart-iPad-iPhone-ipa
+          path: mozart-ios/Mozart.ipa
+          retention-days: 30

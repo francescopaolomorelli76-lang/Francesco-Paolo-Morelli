@@ -52,6 +52,21 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .lcBand.on{background:rgba(57,255,20,.22);border-color:#1d8a4a;border-style:solid}
 .lcBand.ref{background:rgba(31,95,214,.14);border-color:#1f5fd6;border-style:solid}
 .lcBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);gap:8px;padding:6px}
+/* Zoom dell'interfaccia (pizzico su pannelli e finestre) */
+:root{--uiz:1}
+.modal>.mHead,.modal>.mBody,.modal>.mFoot,.side>.sideHead,.side>.sideBody,.side>.sideFoot,.pop>*,#annobar>*,#pianoSheet>*,.bar>*,#textEntry,#selBar,.lcBar{zoom:var(--uiz)}
+.modal{width:min(calc(620px * var(--uiz)),calc(100% - 24px))}
+.side{width:min(calc(420px * var(--uiz)),94vw)}
+#tools{width:min(calc(360px * var(--uiz)),94vw)}
+/* casella di testo libera */
+#textEntry.tbox{flex-direction:column;align-items:stretch;gap:8px;width:330px;padding:10px;box-shadow:var(--shadow)}
+#textEntry.tbox textarea{width:100%;min-height:64px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;font-size:17px;outline:none;resize:vertical;-webkit-user-select:text;user-select:text}
+.tbRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tbRow .seg button{height:34px;padding:0 11px}
+/* testo sulle note */
+#textEntry.lybox{gap:4px;padding:5px;box-shadow:var(--shadow)}
+#textEntry.lybox input{width:190px}
+#textEntry input,#textEntry textarea{-webkit-user-select:text;user-select:text}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}

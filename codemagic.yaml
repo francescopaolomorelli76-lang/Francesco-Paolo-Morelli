@@ -128,3 +128,34 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+
+  # ── MOZART (leggio per iPad e iPhone) ───────────────────────────────────
+  # App firmata e inviata a TestFlight. Guida: mozart-ios/INSTALLA.md
+  mozart-testflight:
+    name: Mozart iOS → TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Mozart ASC
+    environment:
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.morelli.mozart
+    scripts:
+      - name: Contenuto dell'app (Mozart offline)
+        script: python3 leggio/build.py --ios mozart-ios/Web
+      - name: Progetto Xcode
+        script: brew install xcodegen && cd mozart-ios && xcodegen generate
+      - name: Profili di firma
+        script: xcode-project use-profiles --project mozart-ios/Mozart.xcodeproj
+      - name: Compila IPA firmata
+        script: |
+          xcode-project build-ipa --project mozart-ios/Mozart.xcodeproj --scheme Mozart \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$((BUILD_NUMBER + 1))"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

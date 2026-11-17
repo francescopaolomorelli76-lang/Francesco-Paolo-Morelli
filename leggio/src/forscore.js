@@ -9,30 +9,13 @@ const FS4 = {
     f.click();
   },
   async run(files){
-    const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false};
+    const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false,diag:[]};
     const metas=[]; const added=[];
     for(const file of files){
-      try{
-        busy(`Leggo “${file.name}”…`);
-        const head=new Uint8Array(await file.slice(0,16).arrayBuffer());
-        const txt=String.fromCharCode(...head);
-        let entries=null;
-        if(head[0]===0x50&&head[1]===0x4B) entries=await zipEntries(file);
-        if(entries){
-          const pdfE=entries.filter(e=>/\.pdf$/i.test(e.name)&&!/(^|\/)__MACOSX\//.test(e.name));
-          for(const e of entries){ if(/\.pdf$/i.test(e.name)||e.size<=0||e.size>40e6) continue; try{ const u=await e.bytes(); const h=String.fromCharCode(...u.subarray(0,16)).trimStart(); if(/^(bplist|<\?xml|<plist|<!DOCTYPE plist|\{|\[)/.test(h)||/\.(plist|json|xml)$/i.test(e.name)){ const m=parseMetaBytes(u); if(m) metas.push(m); } }catch(err){} }
-          let i=0; for(const e of pdfE){ i++; busy(`Importo ${i}/${pdfE.length}: ${baseName(e.name)}`); await this.addPdf(await e.bytes(), baseName(e.name), rep, added); }
-          if(!pdfE.length) rep.metaOnly=true;
-        } else if(txt.startsWith('bplist')||txt.startsWith('<?xml')||txt.startsWith('<plist')||txt.trim().startsWith('{')){
-          const m=parseMetaBytes(new Uint8Array(await file.arrayBuffer())); if(m) metas.push(m); rep.metaOnly=true;
-        } else {
-          const found=await scanPdfs(file,(n)=>busy(`Cerco gli spartiti nel file… ${n} trovati`));
-          for(let i=0;i<found.length;i++){ busy(`Importo ${i+1}/${found.length}`); await this.addPdf(found[i].bytes, found[i].name||`${file.name.replace(/\.4sb$/i,'')} ${i+1}`, rep, added); }
-          if(file.size<60e6){ const m=scanPlists(new Uint8Array(await file.arrayBuffer())); metas.push(...m); }
-          if(!found.length) rep.metaOnly=true;
-        }
-      }catch(err){ rep.errors.push(file.name); }
+      try{ busy(`Leggo “${file.name}”…`); await this.processBlob(file,file.name,0,rep,metas,added); }
+      catch(err){ rep.errors.push(file.name+' ('+(err&&err.message||err)+')'); }
     }
+    if(!rep.pdfs && !rep.dups) rep.metaOnly=true;
     // Metadati: titolo, compositore, genere, etichette, setlist
     const recs=[], sls=[]; metas.forEach(m=>harvest(m,recs,sls));
     rep.meta=recs.length;
@@ -48,9 +31,68 @@ const FS4 = {
     if(added[0]) await openScore(added[0]);
     this.report(rep);
   },
+  // Riconosce il contenuto dal suo inizio (non dal nome): ZIP, gzip, SQLite, plist, JSON, PDF, o PDF nascosti nel file.
+  async processBlob(blob,name,depth,rep,metas,added){
+    if(depth>4) return;
+    const head=new Uint8Array(await blob.slice(0,32).arrayBuffer()); const txt=new TextDecoder('latin1').decode(head);
+    const hex=[...head.subarray(0,8)].map(b=>b.toString(16).padStart(2,'0')).join(' ');
+    rep.diag.push(`${'  '.repeat(depth)}${name} · ${(blob.size/1048576).toFixed(2)} MB · inizio: ${hex} “${txt.slice(0,12).replace(/[^\x20-\x7e]/g,'·')}”`);
+    if(txt.startsWith('%PDF')){ await this.addPdf(new Uint8Array(await blob.arrayBuffer()), /\.pdf$/i.test(name)?baseName(name):baseName(name).replace(/\.[^.]*$/,'')+'.pdf', rep, added); return; }
+    if(head[0]===0x50&&head[1]===0x4B){
+      const entries=await zipEntries(blob);
+      if(entries){
+        rep.diag.push(`${'  '.repeat(depth)}  ZIP con ${entries.length} file: ${entries.slice(0,25).map(e=>`${e.name} (${(e.size/1024).toFixed(0)} KB${e.method&&e.method!==8&&e.method!==0?', compr. '+e.method:''})`).join(' · ')}${entries.length>25?' …':''}`);
+        const skip=e=>/(^|\/)(__MACOSX|\.DS_Store)/.test(e.name)||e.size<=0;
+        // prima i metadati piccoli, poi i documenti
+        const ord=[...entries].filter(e=>!skip(e)).sort((x,y)=>(/\.pdf$/i.test(x.name)?1:0)-(/\.pdf$/i.test(y.name)?1:0));
+        let i=0;
+        for(const e of ord){ i++;
+          busy(`Leggo ${i}/${ord.length}: ${baseName(e.name)}`);
+          let u; try{ u=await e.bytes(); }catch(err){ rep.diag.push(`  non letto ${e.name}: ${err.message}`); continue; }
+          await this.processBlob(new Blob([u]), e.name, depth+1, rep, metas, added);
+        }
+        return;
+      }
+    }
+    if(head[0]===0x1f&&head[1]===0x8b && window.DecompressionStream){
+      const out=new Blob([await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()]);
+      return this.processBlob(out,name.replace(/\.gz$/i,''),depth+1,rep,metas,added);
+    }
+    if(txt.startsWith('SQLite format 3')){ await this.sqlite(blob,name,depth,rep,metas,added); return; }
+    if(txt.startsWith('bplist')||/^\s*(<\?xml|<plist|<!DOCTYPE plist|\{|\[)/.test(txt)){
+      if(blob.size<80e6){ try{ const m=parseMetaBytes(new Uint8Array(await blob.arrayBuffer())); if(m){ metas.push(m); await this.embeddedPdfs(m,rep,added); } return; }catch(err){ rep.diag.push('  metadati non leggibili: '+err.message); } }
+    }
+    // altrimenti: cerca PDF contenuti nel file
+    const found=await scanPdfs(blob,(n)=>busy(`Cerco gli spartiti nel file… ${n} trovati`));
+    for(let k=0;k<found.length;k++){ busy(`Importo ${k+1}/${found.length}`); await this.addPdf(found[k].bytes, found[k].name||`${baseName(name).replace(/\.\w+$/,'')} ${k+1}.pdf`, rep, added); }
+    if(blob.size<60e6){ const m=scanPlists(new Uint8Array(await blob.arrayBuffer())); metas.push(...m); }
+  },
+  // PDF salvati come dati dentro plist/NSKeyedArchiver
+  async embeddedPdfs(root,rep,added){
+    const seen=new Set(); const list=[];
+    const walk=(v,hint)=>{ if(!v||typeof v!=='object'||seen.has(v)) return; seen.add(v);
+      if(v instanceof Uint8Array){ if(v.length>8&&v[0]===0x25&&v[1]===0x50&&v[2]===0x44&&v[3]===0x46) list.push({u:v,name:hint}); return; }
+      if(Array.isArray(v)){ v.forEach(x=>walk(x,hint)); return; }
+      const nm=Object.values(v).find(x=>typeof x==='string'&&/\.pdf$/i.test(x))||v.title||v.name||hint;
+      for(const k in v) walk(v[k],typeof nm==='string'?nm:hint); };
+    walk(root,'');
+    for(let i=0;i<list.length;i++){ busy(`Importo ${i+1}/${list.length}`); await this.addPdf(list[i].u, list[i].name?baseName(String(list[i].name)):`forScore ${i+1}.pdf`, rep, added); }
+  },
+  // Database SQLite (alcune versioni salvano così la libreria): testi → metadati, BLOB → PDF o plist
+  async sqlite(blob,name,depth,rep,metas,added){
+    if(!window.initSqlJs){ await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=SQLJS_URL+'sql-wasm.js'; sc.onload=res; sc.onerror=()=>rej(new Error('lettore SQLite non disponibile')); document.head.appendChild(sc); }); }
+    const SQL=await initSqlJs({locateFile:f=>SQLJS_URL+f});
+    const db=new SQL.Database(new Uint8Array(await blob.arrayBuffer()));
+    const tables=db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0]?.values.map(r=>r[0])||[];
+    rep.diag.push(`  SQLite con tabelle: ${tables.join(', ')}`);
+    const rows=[];
+    for(const t of tables){ let r; try{ r=db.exec(`SELECT * FROM "${t.replace(/"/g,'""')}"`)[0]; }catch(e){ continue; } if(!r) continue;
+      for(const v of r.values){ const o={}; r.columns.forEach((c,k)=>{ let x=v[k]; if(x instanceof Uint8Array && x.length>8 && String.fromCharCode(...x.subarray(0,6)).startsWith('bplist')){ try{ x=parseBplist(x); }catch(e){} } o[c.replace(/^Z/,'').toLowerCase()]=x; }); o.__table=t; rows.push(o); } }
+    db.close(); metas.push(rows); await this.embeddedPdfs(rows,rep,added);
+  },
   async addPdf(bytes,name,rep,added){
     const buf=bytes.buffer?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes;
-    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&s.bytes.byteLength===buf.byteLength)){ rep.dups++; return; }
+    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&(s.size||0)===buf.byteLength)){ rep.dups++; return; }
     try{ const sc=await addScore(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); added.push(sc.id); rep.pdfs++; }
     catch(e){ rep.errors.push(name); }
   },
@@ -59,6 +101,7 @@ const FS4 = {
     let h=li(r.pdfs,'spartiti importati')+(r.dups?li(r.dups,'già presenti, saltati'):'')+li(r.matched,'spartiti con titolo, compositore o etichette da forScore')+li(r.setlists,'setlist ricreate');
     if(r.errors.length) h+=`<div class="hint" style="color:var(--danger)">Non letti: ${esc(r.errors.slice(0,6).join(', '))}</div>`;
     if(r.metaOnly&&!r.pdfs) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
+    if(r.diag&&r.diag.length) h+=`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer"><b>Dettagli tecnici del file</b> (fai una foto dello schermo e mandala a Claude se qualcosa non è stato importato)</summary><pre id="fsDiag" style="white-space:pre-wrap;font-size:11.5px;line-height:1.45;color:var(--muted);max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text">${esc(r.diag.join('\n'))}</pre></details>`;
     h+=`<div class="hint" style="font-size:13px">Le annotazioni a mano di forScore restano nel formato privato di forScore e non si possono trasferire. Se il PDF era stato esportato da forScore con le annotazioni, le vedrai già stampate sulla pagina.</div>`;
     const m2=modal('Import da forScore',h,`<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
     m2.querySelector('[data-ok]').onclick=()=>{closeLayers();openSide('library')};
@@ -84,12 +127,12 @@ async function zipEntries(file){
     let q=p+46+nl; const qe=q+el; while(q+4<=qe){ const id=cd.getUint16(q,true), sz=cd.getUint16(q+2,true); if(id===1){ let r=q+4; if(usize===0xFFFFFFFF){usize=Number(cd.getBigUint64(r,true));r+=8} if(csize===0xFFFFFFFF){csize=Number(cd.getBigUint64(r,true));r+=8} if(lho===0xFFFFFFFF){lho=Number(cd.getBigUint64(r,true))} } q+=4+sz; }
     p=qe+cl;
     if(name.endsWith('/')) continue;
-    out.push({name,size:usize,bytes:async()=>{
+    out.push({name,size:usize,method,bytes:async()=>{
       const lh=new DataView(await file.slice(lho,lho+30).arrayBuffer()); const start=lho+30+lh.getUint16(26,true)+lh.getUint16(28,true);
       const blob=file.slice(start,start+csize);
       if(method===0) return new Uint8Array(await blob.arrayBuffer());
       if(method===8){ if(!window.DecompressionStream) throw new Error('deflate non supportato'); const s=blob.stream().pipeThrough(new DecompressionStream('deflate-raw')); return new Uint8Array(await new Response(s).arrayBuffer()); }
-      throw new Error('compressione non supportata');
+      throw new Error('compressione non supportata ('+method+')');
     }});
   }
   return out;

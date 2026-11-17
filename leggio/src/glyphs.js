@@ -21,6 +21,7 @@ const STAMP_CATS = [
     it('cresc.'),it('decresc.'),it('dim.'),it('sub.'),it('subito p'),it('più f'),it('meno f'),it('poco'),it('molto'),it('poco a poco'),it('sempre'),it('niente'),
   ]},
   {id:'art', name:'Articolazioni', items:[
+    vx('slurUp','legatura ⌒ (trascina)'),vx('slurDown','legatura ⌣ (trascina)'),vx('tie','legatura di valore'),vx('hairCresc','crescendo < (trascina)'),vx('hairDim','diminuendo > (trascina)'),
     vx('stacc','staccato'),vx('staccis','staccatissimo'),vx('tenuto','tenuto'),vx('portato','portato'),vx('accent','accento'),
     vx('accStacc','accento + stacc.'),vx('marcato','marcato'),vx('marcStacc','marcato + stacc.'),vx('marcDown','marcato giù'),vx('tenAcc','tenuto + accento'),
     m(U(0x1D110),'corona'),m(U(0x1D111),'corona sotto'),vx('fermSq','corona lunga'),vx('fermTri','corona breve'),m(U(0x1D112),'respiro'),
@@ -57,7 +58,7 @@ const STAMP_CATS = [
     m(U(0x1D135),'C tagliato'),vx('ts:2/4','2/4'),vx('ts:3/4','3/4'),vx('ts:4/4','4/4'),vx('ts:5/4','5/4'),
     vx('ts:6/4','6/4'),vx('ts:2/2','2/2'),vx('ts:3/8','3/8'),vx('ts:6/8','6/8'),vx('ts:9/8','9/8'),
     vx('ts:12/8','12/8'),vx('ts:5/8','5/8'),vx('ts:7/8','7/8'),m(U(0x1D136),'8va'),m(U(0x1D137),'8vb'),
-    m(U(0x1D138),'15ma'),m(U(0x1D139),'15mb'),it('8va'),it('8vb'),it('loco'),
+    m(U(0x1D138),'15ma'),m(U(0x1D139),'15mb'),vx('octLine','8va ---- (trascina)'),it('8va'),it('8vb'),it('loco'),
   ]},
   {id:'rep', name:'Ripetizioni e struttura', items:[
     m(U(0x1D100),'stanghetta'),m(U(0x1D101),'doppia'),m(U(0x1D102),'finale'),m(U(0x1D103),'finale inversa'),m(U(0x1D104),'tratteggiata'),
@@ -148,6 +149,10 @@ const VDRAW = {
   hairDim:(c,s)=>{ln(c,s*.06,[[-s*.48,-s*.2],[s*.48,0],[-s*.48,s*.2]])},
   volta1:(c,s)=>{volta(c,s,'1.')}, volta2:(c,s)=>{volta(c,s,'2.')},
   pedLine:(c,s)=>{ln(c,s*.06,[[-s*.48,-s*.25],[-s*.48,s*.2],[-s*.05,s*.2],[s*.1,-s*.05],[s*.25,s*.2],[s*.48,s*.2],[s*.48,-s*.25]])},
+  slurUp:(c,s)=>{c.beginPath();c.moveTo(-s*.45,s*.12);c.quadraticCurveTo(0,-s*.32,s*.45,s*.12);c.quadraticCurveTo(0,-s*.22,-s*.45,s*.12);c.fill()},
+  slurDown:(c,s)=>{c.beginPath();c.moveTo(-s*.45,-s*.12);c.quadraticCurveTo(0,s*.32,s*.45,-s*.12);c.quadraticCurveTo(0,s*.22,-s*.45,-s*.12);c.fill()},
+  tie:(c,s)=>{c.beginPath();c.moveTo(-s*.4,0);c.quadraticCurveTo(0,-s*.18,s*.4,0);c.quadraticCurveTo(0,-s*.12,-s*.4,0);c.fill()},
+  octLine:(c,s)=>{c.font=`700 italic ${s*.34}px ${css('--f-display')}`;c.textAlign='left';c.textBaseline='middle';c.fillText('8va',-s*.48,0);c.setLineDash([s*.05,s*.05]);ln(c,s*.03,[[-s*.05,0],[s*.46,0],[s*.46,s*.15]]);c.setLineDash([])},
   vowelLink:(c,s)=>{curve(c,s*.06,[-s*.45,-s*.05],[0,s*.35],[s*.45,-s*.05])},
 };
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v)}

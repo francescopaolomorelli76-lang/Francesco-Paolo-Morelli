@@ -34,14 +34,24 @@ async function addScore(bytes, meta={}){
     if(t && !/^(untitled|senza titolo|microsoft|document|documento|\d+)/i.test(t) && t.length<140) meta.title=t;
     if(a && !meta.composer && a.length<80 && !/scanner|adobe|microsoft|camscanner/i.test(a)) meta.composer=a; }catch(e){} }
   const sc = {id:uid(), title:meta.title||'Senza titolo', file:meta.file||'', composer:meta.composer||'', genre:meta.genre||'', tags:meta.tags||[], key:meta.key||'',
-    added:Date.now(), opened:0, pages:doc.numPages, bookmarks:[], crop:{l:0,t:0,r:0,b:0}, bytes};
+    added:Date.now(), opened:0, pages:doc.numPages, bookmarks:[], crop:{l:0,t:0,r:0,b:0}, size:bytes.byteLength};
+  try{ sc.thumb=await thumbOf(doc); }catch(e){}
   doc.destroy();
+  await DB.set('pdf:'+sc.id, bytes);
   ST.scores.push(sc); await DB.putScore(sc); return sc;
 }
+// PDF di uno spartito: in memoria solo quello aperto.
+async function getBytes(sc){ if(sc._bytes) return sc._bytes; const b=await DB.get('pdf:'+sc.id); if(!b) throw new Error('PDF mancante'); if(ST.cur===sc) sc._bytes=b; return b; }
+async function thumbOf(doc){
+  const pg=await doc.getPage(1); const vp=pg.getViewport({scale:1}); const v2=pg.getViewport({scale:120/vp.height});
+  const c=document.createElement('canvas');c.width=Math.round(v2.width);c.height=Math.round(v2.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+  await pg.render({canvasContext:x,viewport:v2}).promise; return c.toDataURL('image/jpeg',.7);
+}
 async function replaceBytes(sc, bytes, annMap){
-  sc.bytes=bytes; thumbCache.delete(sc.id); pageCache.clear();
+  sc._bytes=bytes; sc.size=bytes.byteLength; thumbCache.delete(sc.id); pageCache.clear();
   const doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; sc.pages=doc.numPages;
-  await DB.putScore(sc);
+  try{ sc.thumb=await thumbOf(doc); }catch(e){}
+  await DB.set('pdf:'+sc.id, bytes); await DB.putScore(sc);
   if(ST.cur && ST.cur.id===sc.id){ if(ST.doc) ST.doc.destroy(); ST.doc=doc; if(annMap){ST.ann=annMap; DB.set('ann:'+sc.id,annMap);} ST.page=clamp(ST.page,0,sc.pages-1); await renderPage(); updateChrome(); }
   else { doc.destroy(); if(annMap) DB.set('ann:'+sc.id,annMap); }
 }
@@ -51,8 +61,11 @@ async function openScore(id, page=0, opts={}){
   const sc = ST.scores.find(s=>s.id===id); if(!sc) return;
   if(ST.annotate) Anno.exit(true);
   if(ST.doc){ try{ST.doc.destroy()}catch(e){} }
-  ST.cur=sc; sc.opened=Date.now(); DB.putScore(sc);
-  ST.doc = await pdfjsLib.getDocument({data:sc.bytes.slice(0)}).promise;
+  if(ST.cur && ST.cur!==sc) ST.cur._bytes=null;
+  let bytes; try{ bytes=await DB.get('pdf:'+sc.id); }catch(e){}
+  if(!bytes){ toast('Non trovo il PDF di questo spartito'); return; }
+  ST.cur=sc; sc._bytes=bytes; sc.opened=Date.now(); DB.putScore(sc); pageCache.clear();
+  ST.doc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
   sc.pages=ST.doc.numPages;
   ST.ann = (await DB.get('ann:'+id))||{};
   ST.page = clamp(page,0,sc.pages-1);
@@ -64,7 +77,7 @@ async function openScore(id, page=0, opts={}){
 
 // Pagine già disegnate (corrente, precedente e successive) per un cambio pagina immediato.
 const pageCache=new Map();
-function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.bytes.byteLength}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
+function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.cur.size||0}|${p}|${W}x${H}|${dpr.toFixed(2)}|${c.l},${c.t},${c.r},${c.b}`}
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
   const pg=await ST.doc.getPage(p+1); const crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
@@ -393,14 +406,14 @@ function libMenu(el){
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
-  let url=thumbCache.get(id);
+  let url=sc.thumb||thumbCache.get(id);
   if(!url){
-    try{
-      const doc=await pdfjsLib.getDocument({data:sc.bytes.slice(0)}).promise; const pg=await doc.getPage(1);
-      const vp=pg.getViewport({scale:1}); const s=120/vp.height; const v2=pg.getViewport({scale:s});
-      const c=document.createElement('canvas');c.width=v2.width;c.height=v2.height;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
-      await pg.render({canvasContext:x,viewport:v2}).promise; url=c.toDataURL('image/jpeg',.7); thumbCache.set(id,url); doc.destroy();
-    }catch(e){return}
+    // una miniatura alla volta, poi salvata: la libreria non ricarica più tutti i PDF
+    if(drawThumb.busy) { drawThumb.q=(drawThumb.q||[]); drawThumb.q.push([id,el]); return; }
+    drawThumb.busy=true;
+    try{ const doc=await pdfjsLib.getDocument({data:(await getBytes(sc)).slice(0)}).promise; url=await thumbOf(doc); doc.destroy(); sc.thumb=url; DB.putScore(sc); }catch(e){}
+    drawThumb.busy=false; const nx=(drawThumb.q||[]).shift(); if(nx) setTimeout(()=>drawThumb(...nx),30);
+    if(!url) return;
   }
   el.innerHTML=`<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
 }
@@ -511,11 +524,13 @@ function showSettings(){
     <div><button class="ghostBtn" id="setFs">${iconSvg('expand')}Tutto schermo</button></div>
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
+    <div class="field"><label>Dimensione di pannelli e finestre (anche pizzicando con due dita)</label><div class="seg" id="setUiz">${[[.8,'Piccola'],[1,'Normale'],[1.2,'Grande'],[1.45,'Molto grande']].map(([v,l])=>`<button data-z="${v}" class="${Math.abs((s.uiz||1)-v)<.04?'on':''}">${l}</button>`).join('')}</div></div>
     <div class="sl"><span>Durata della pressione sui bordi<em id="lpv">${s.longPress} ms</em></span><input type="range" id="setLp" min="250" max="1000" step="50" value="${s.longPress}" style="--v:${(s.longPress-250)/7.5}%"></div>
     <div class="hint">Tieni premuto sul <b>bordo alto</b> per la barra superiore, sul <b>bordo basso</b> per le pagine, a <b>sinistra</b> per la libreria e a <b>destra</b> per gli attrezzi.</div>`,
     `<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
   const tg=(id,key,after)=>{const b=$('#'+id);b.onclick=()=>{s[key]=!s[key];b.classList.toggle('on',s[key]);b.setAttribute('aria-checked',s[key]);saveSettings();after&&after()}};
   tg('setPencil','pencilOnly'); s.autoPencil=s.autoPencil!==false; tg('setAuto','autoPencil');
+  $('#setUiz').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;UIZoom.apply(+b.dataset.z);saveSettings();$$('#setUiz button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setTurn').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;s.turnAnim=k!=='none';if(k!=='none')s.turnStyle=k;saveSettings();$$('#setTurn button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
@@ -532,7 +547,7 @@ async function showDashboard(){
   const pages=ST.scores.reduce((a,s)=>a+s.pages,0);
   const comp=new Set(ST.scores.map(s=>s.composer).filter(Boolean)).size;
   const tile=(n,l)=>`<div style="background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:14px"><div style="font-family:var(--f-display);font-size:34px;font-weight:700;color:var(--gold-hi);font-variant-numeric:tabular-nums">${n}</div><div class="hint">${l}</div></div>`;
-  modal('Cruscotto',`<div class="grid2">${tile(ST.scores.length,'spartiti')}${tile(pages,'pagine')}${tile(ST.setlists.length,'setlist')}${tile(comp,'compositori')}${tile(anns,'annotazioni e segni')}${tile((ST.scores.reduce((a,s)=>a+s.bytes.byteLength,0)/1048576).toFixed(1)+' MB','spazio usato')}</div>`);
+  modal('Cruscotto',`<div class="grid2">${tile(ST.scores.length,'spartiti')}${tile(pages,'pagine')}${tile(ST.setlists.length,'setlist')}${tile(comp,'compositori')}${tile(anns,'annotazioni e segni')}${tile((ST.scores.reduce((a,s)=>a+(s.size||0),0)/1048576).toFixed(1)+' MB','spazio usato')}</div>`);
 }
 function showBackup(){
   const m2=modal('Backup',`<div class="hint">Salva tutta la libreria (spartiti, annotazioni, setlist, segnalibri) in un unico file, oppure ripristinala da un backup.</div>
@@ -541,9 +556,9 @@ function showBackup(){
     <div><button class="goldBtn" id="bkFs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div><div id="bkOut"></div>`);
   $('#bkFs').onclick=()=>{closeLayers();FS4.pick()};
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
-    for(const s of ST.scores){const {bytes,...meta}=s;let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
+    for(const s of ST.scores){const {_bytes,bytes:_b,...meta}=s;const bytes=await getBytes(s);let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
     busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
-  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,bytes:u8.buffer};if(!ST.scores.some(x=>x.id===sc.id)){ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
+  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};if(!ST.scores.some(x=>x.id===sc.id)){await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
       for(const sl of data.setlists||[]) if(!ST.setlists.some(x=>x.id===sl.id)) ST.setlists.push(sl); saveSetlists(); busy(); closeLayers(); renderLibrary(); toast('Backup ripristinato')}catch(e){busy();toast('File di backup non valido')}};f.click()};
 }
 function offerDownload(blob,name,where){
@@ -565,7 +580,7 @@ async function mergeSelected(){
   try{
     const ids=[...ST.selected]; const scs=ids.map(id=>ST.scores.find(s=>s.id===id));
     const out=await PDFLib.PDFDocument.create(); const ann={}; let off=0;
-    for(const s of scs){const src=await PDFLib.PDFDocument.load(s.bytes,{ignoreEncryption:true});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
+    for(const s of scs){const src=await PDFLib.PDFDocument.load(await getBytes(s),{ignoreEncryption:true});const pages=await out.copyPages(src,src.getPageIndices());pages.forEach(p=>out.addPage(p));
       const a=(await DB.get('ann:'+s.id))||{};for(const k in a)ann[+k+off]=a[k];off+=pages.length}
     const bytes=(await out.save()).buffer;
     const sc=await addScore(bytes,{title:scs.map(s=>s.title).join(' + '),composer:scs[0].composer,genre:scs[0].genre});
@@ -651,7 +666,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build(); Zoom.init(); Bright.apply();
+  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);

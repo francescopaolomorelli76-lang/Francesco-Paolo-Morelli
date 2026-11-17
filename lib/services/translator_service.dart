@@ -132,8 +132,51 @@ class TranslatorService {
     }
     final key = '${from.name}>${to.name}';
     final translator = _cache[key] ??= OnDeviceTranslator(sourceLanguage: from.mlkit, targetLanguage: to.mlkit);
-    return translator.translateText(clean);
+    try {
+      return await translator.translateText(clean);
+    } on PlatformException catch (e) {
+      if (!isBrokenModelError(e)) rethrow;
+      // Il telefono crede che la lingua sia scaricata ma i file mancano o sono
+      // rovinati (download interrotto, aggiornamento): si cancella il modello,
+      // si riscarica e si ritraduce una volta.
+      _cache.remove(key);
+      await translator.close().catchError((_) {});
+      await _repair(from);
+      await _repair(to);
+      final fresh = _cache[key] = OnDeviceTranslator(sourceLanguage: from.mlkit, targetLanguage: to.mlkit);
+      return fresh.translateText(clean);
+    }
   }
+
+  /// Riscarica da zero il modello di una lingua (pulsante "Ripara le lingue").
+  Future<void> repair(Lang l) => _repair(l);
+
+  /// Errore di ML Kit "Translation model files not found" (codice 13) e simili.
+  static bool isBrokenModelError(PlatformException e) {
+    final m = '${e.code} ${e.message}'.toLowerCase();
+    return m.contains('model files not found') || m.contains('downloadmodelifneeded') || e.code == 'Error 13';
+  }
+
+  final Map<String, Future<void>> _repairing = {};
+
+  /// Cancella e riscarica il modello di una lingua (una sola volta anche se
+  /// richiesto da più traduzioni insieme). Senza internet → [MissingLanguage].
+  Future<void> _repair(Lang l) => _repairing[l.name] ??= () async {
+    try {
+      _ready.remove(l);
+      try {
+        await _manager.deleteModel(l.mlkit.bcpCode);
+      } catch (_) {}
+      var ok = false;
+      try {
+        ok = await _manager.downloadModel(l.mlkit.bcpCode, isWifiRequired: false).timeout(const Duration(minutes: 3));
+      } catch (_) {}
+      if (!ok) throw MissingLanguage(l);
+      _ready.add(l);
+    } finally {
+      _repairing.remove(l.name);
+    }
+  }();
 
   Future<void> dispose() async {
     for (final t in _cache.values) {

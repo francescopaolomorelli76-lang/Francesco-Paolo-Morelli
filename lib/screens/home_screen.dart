@@ -399,8 +399,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (l is Lang) _setPartner(l);
   }
 
-  void _missing(MissingLanguage e) =>
-      _toast('Manca il pacchetto ${e.lang.flag} ${e.lang.label}: tocca ⬇ in alto per scaricarlo.', error: true);
+  void _missing(MissingLanguage e) => _toast(
+    'Il pacchetto ${e.lang.flag} ${e.lang.label} va (ri)scaricato: collegati a internet e riprova, '
+    'oppure tocca ⬇ in alto › RIPARA LE LINGUE.',
+    error: true,
+  );
 
   void _toast(String msg, {bool error = false}) => comicToast(context, msg, color: error ? MC.red : MC.yellow);
 

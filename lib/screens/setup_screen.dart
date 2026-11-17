@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../languages.dart';
+
 import '../services/setup_service.dart';
 import '../services/langs.dart';
+import '../services/translator_service.dart';
 import '../ui/manga.dart';
 import 'world_screen.dart';
 
@@ -29,6 +32,39 @@ class _SetupScreenState extends State<SetupScreen> {
   Future<void> _refresh() async {
     final s = await SetupService.status();
     if (mounted) setState(() => _status = s);
+  }
+
+  /// Cancella e riscarica tutte le lingue (se una traduzione dà errore di modello).
+  Future<void> _repairAll() async {
+    final langs = Langs.installed;
+    setState(() {
+      _running = true;
+      _error = null;
+    });
+    final failed = <Lang>[];
+    for (var i = 0; i < langs.length; i++) {
+      final l = langs[i];
+      if (mounted) {
+        setState(() {
+          _step = '🔧 ${l.flag} ${l.label}';
+          _progress = i / langs.length;
+        });
+      }
+      try {
+        await TranslatorService.instance.repair(l);
+      } catch (_) {
+        failed.add(l);
+      }
+    }
+    await _refresh();
+    if (!mounted) return;
+    setState(() {
+      _running = false;
+      _error = failed.isEmpty
+          ? null
+          : 'Non riparate: ${failed.map((l) => '${l.flag} ${l.label}').join(', ')}. Controlla internet e riprova.';
+    });
+    if (failed.isEmpty) comicToast(context, 'Lingue riparate! ✅');
   }
 
   Future<void> _go() async {
@@ -108,6 +144,15 @@ class _SetupScreenState extends State<SetupScreen> {
                     if (s != null && s.appleAvailable)
                       _item('🍎', 'Traduttore Apple, qualità migliore (consigliato)', s.appleComplete),
                   ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Center(
+                child: ComicButton(
+                  label: '🔧 RIPARA LE LINGUE',
+                  color: MC.white,
+                  size: 18,
+                  onTap: _running ? null : _repairAll,
                 ),
               ),
               const SizedBox(height: 14),

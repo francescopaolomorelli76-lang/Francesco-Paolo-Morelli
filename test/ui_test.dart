@@ -14,6 +14,7 @@ import 'package:manga_vox/services/lang_detect.dart';
 import 'package:manga_vox/services/ocr_service.dart';
 import 'package:manga_vox/services/prefs.dart';
 import 'package:manga_vox/services/speech_service.dart';
+import 'package:manga_vox/services/translator_service.dart';
 import 'package:manga_vox/ui/manga.dart';
 import 'package:manga_vox/ui/push_button.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
@@ -107,6 +108,19 @@ void main() {
 
   test('trascrizione ripulita dalle annotazioni di Whisper', () {
     expect(SpeechService.cleanTranscript(' [musica] Ciao,  come stai? (ride) '), 'Ciao, come stai?');
+  });
+
+  test('errore ML Kit "model files not found" riconosciuto (si ripara da solo)', () {
+    expect(
+      TranslatorService.isBrokenModelError(
+        PlatformException(
+          code: 'Error 13',
+          message: 'Translation model files not found. Make sure to call downloadModelIfNeeded and if that fails, delete the models and retry.',
+        ),
+      ),
+      isTrue,
+    );
+    expect(TranslatorService.isBrokenModelError(PlatformException(code: 'other', message: 'timeout')), isFalse);
   });
 
   test('OCR: divisione in paragrafi', () {

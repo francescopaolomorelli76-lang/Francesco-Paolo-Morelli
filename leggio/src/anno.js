@@ -53,12 +53,14 @@ const Anno = {
   // ---- barra strumenti ----
   buildBar(){
     const bar=$('#annoTools'); if(!bar) return;
-    let h=this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
+    let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`<span class="sep"></span>`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
-      +t('clear','trash','Cancella la pagina')+t('undo','undo','Annulla',false,!hs.u.length)+t('redo','redo','Ripeti',false,!hs.r.length)+t('layers','layers','Livelli');
+    h+=`</div><div class="toolFixed">`+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
+      +t('clear','trash','Cancella la pagina')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
+    // Annulla / Ripeti sempre in vista nella barra in alto
+    $('#annoUndo')?.classList.toggle('dis',!hs.u.length); $('#annoRedo')?.classList.toggle('dis',!hs.r.length);
     bar.querySelectorAll('[data-p]').forEach(b=>this.drawPresetIcon(b.querySelector('canvas'),this.presets[+b.dataset.p]));
     bar.onclick=e=>{
       const p=e.target.closest('[data-p]');

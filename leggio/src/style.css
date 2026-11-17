@@ -267,8 +267,20 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .annoTop{display:flex;align-items:center;gap:8px;height:54px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 .annoTop .ttl{flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .annoTop .ttl span{color:var(--gold)}
-.annoTools{display:flex;align-items:center;height:60px;overflow-x:auto;border-top:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));scrollbar-width:none}
-.annoTools::-webkit-scrollbar{display:none}
+.annoTools{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+/* strumenti di disegno: scorrono; attrezzi: sempre tutti visibili */
+.presetScroll{flex:1;min-width:0;display:flex;align-items:center;height:60px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.presetScroll::-webkit-scrollbar{display:none}
+.toolFixed{flex:none;display:flex;align-items:center;border-left:1px solid var(--line)}
+.undoGrp{display:flex;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-pill);padding:2px}
+.undoBtn{color:var(--gold-hi)}
+.undoBtn.dis{opacity:.35}
+@media (max-width:1100px){
+  .annoTools{flex-direction:column}
+  .toolFixed{border-left:0;border-top:1px solid var(--line);justify-content:space-around;height:52px}
+  .toolFixed .atool{width:auto;flex:1;height:52px;max-width:72px}
+}
+@media (max-width:520px){ .annoTop .goldBtn .lbl{display:none} .annoTop{gap:4px} .undoGrp .ib{width:40px;height:40px} }
 .annoTools .sep{width:1px;height:34px;background:var(--line);margin:0 4px;flex:none}
 .preset{position:relative;width:56px;height:60px;flex:none;display:grid;place-items:center}
 .preset.on{background:rgba(214,168,78,.16)}

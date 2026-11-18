@@ -103,6 +103,12 @@ body.night #hlCanvas{mix-blend-mode:screen}
 .rdBand span{font-size:11px;font-weight:800;color:#1f5fd6;padding:1px 8px;background:rgba(255,255,255,.85);border-radius:0 8px 0 8px;pointer-events:none}
 .rdH{position:absolute;width:60px;height:22px;margin-left:-30px;border-radius:11px;background:#1f5fd6;box-shadow:0 0 0 2px #fff}
 .rdH[data-e="t"]{top:-12px;left:30%}.rdH[data-e="b"]{bottom:-12px;left:70%}
+#gifLayer{position:absolute;pointer-events:none;z-index:2}
+#gifLayer img{position:absolute;object-fit:contain}
+.gifGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:46vh;overflow:auto}
+.gifGrid button{border-radius:10px;overflow:hidden;background:var(--panel-2);aspect-ratio:1}
+.gifGrid img{width:100%;height:100%;object-fit:cover;display:block}
+#fgBar,#textEntry.lybox{max-width:calc(100vw - 16px);flex-wrap:wrap;justify-content:center}
 #dimmer,#warmer{position:fixed;inset:0;pointer-events:none;z-index:85}
 #warmer{mix-blend-mode:multiply}
 #penHover{position:fixed;z-index:30;border-radius:50%;border:2px solid;pointer-events:none;opacity:.8}
@@ -532,6 +538,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
         <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scatta e migliora<small>foto → pagina</small></button>
         <h3>Modifica questo spartito</h3>
         <button class="toolRow" data-act="annotate"><svg class="i" data-i="pen"></svg>Annota</button>
+        <button class="toolRow" data-act="gif"><svg class="i" data-i="image"></svg>GIF animate</button>
         <button class="toolRow" data-act="stampsOpen"><svg class="i" data-i="clef"></svg>Segni musicali</button>
         <button class="toolRow" data-act="bookmarks"><svg class="i" data-i="book"></svg>Segnalibri</button>
         <button class="toolRow" data-act="reorder"><svg class="i" data-i="grid"></svg>Riordina pagine</button>
@@ -1203,6 +1210,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  gif:()=>{closeSides();Gif.open()},
   zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
@@ -1662,7 +1670,7 @@ const Anno = {
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
     h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('eraser','eraser','Gomma',this.mode==='eraser')
-      +t('clear','trash','Cancella la pagina')+t('layers','layers','Livelli')+'</div>';
+      +t('clear','trash','Cancella la pagina')+t('gif','image','GIF animate')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
     // Annulla / Ripeti sempre in vista nella barra in alto
     $('#annoUndo')?.classList.toggle('dis',!hs.u.length); $('#annoRedo')?.classList.toggle('dis',!hs.r.length);
@@ -1677,6 +1685,7 @@ const Anno = {
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
+      else if(k==='gif'){ Gif.open(); return; }
       this.buildBar();
     };
   },
@@ -1798,6 +1807,7 @@ const Anno = {
   clearSel(){ this.selIdx=[]; this.selBox=null; $('#selBar')?.remove(); this.redraw&&ST.cur&&this.redraw(); },
 
   redraw(){
+    try{ Gif.sync(); }catch(e){}
     if(!inkCanvas.width) return; const x=inkCanvas.getContext('2d'); const W=inkCanvas.width,H=inkCanvas.height;
     const hx=hlCanvas.getContext('2d'); hx.clearRect(0,0,hlCanvas.width,hlCanvas.height);
     x.clearRect(0,0,W,H);
@@ -1833,7 +1843,8 @@ const Anno = {
         x.beginPath(); x.moveTo(P2[0][0],P2[0][1]);
         for(let i=1;i<P2.length-1;i++){const mx=(P2[i][0]+P2[i+1][0])/2,my=(P2[i][1]+P2[i+1][1])/2;x.quadraticCurveTo(P2[i][0],P2[i][1],mx,my)}
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
-      } else if(s.t==='img'){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,0,0,W,H); }
+      } else if(s.t==='gif'){ if(all){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,s.x*W,s.y*H,s.w*W,s.h*H); } }
+      else if(s.t==='img'){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,0,0,W,H); }
       else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
       else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
@@ -1928,10 +1939,11 @@ function sameGlyph(a,b){return a&&b&&a.c===b.c&&a.v===b.v&&a.f===b.f}
 const _annImgs=new Map();
 function annImg(src){ let im=_annImgs.get(src); if(!im){ im=new Image(); im.onload=()=>Anno.redraw(); im.src=src; _annImgs.set(src,im); } return im; }
 function preloadAnnImgs(strokes){ return Promise.all((strokes||[]).filter(s=>s.t==='img').map(s=>{ const im=annImg(s.src); return im.complete?0:new Promise(r=>{im.addEventListener('load',r,{once:true});im.addEventListener('error',r,{once:true})}); })); }
-function strokePts(s){ if(s.t==='img') return []; if(s.pts) return s.pts; if(s.t==='shape') return [s.a,s.b]; return [[s.x,s.y]]; }
+function strokePts(s){ if(s.t==='img') return []; if(s.t==='gif') return [[s.x,s.y],[s.x+s.w,s.y+s.h]]; if(s.pts) return s.pts; if(s.t==='shape') return [s.a,s.b]; return [[s.x,s.y]]; }
 function moveStroke(s,dx,dy){ if(s.pts) s.pts=s.pts.map(p=>[p[0]+dx,p[1]+dy]); else if(s.t==='shape'){s.a=[s.a[0]+dx,s.a[1]+dy];s.b=[s.b[0]+dx,s.b[1]+dy]} else {s.x+=dx;s.y+=dy} }
 function hitStroke(s,x,y,r){
   if(s.t==='img') return false;
+  if(s.t==='gif') return x>=s.x-r&&x<=s.x+s.w+r&&y>=s.y-r&&y<=s.y+s.h+r;
   if(s.t==='stamp') return Math.hypot(s.x-x,s.y-y)<Math.max(r,s.size*.5);
   if(s.t==='text'){ const w=s.size*s.text.length*.55, x0=s.align==='c'?s.x-w/2:s.x; return x>=x0-r&&x<=x0+w+r&&Math.abs(y-s.y)<s.size*.7+r; }
   const pts=strokePts(s);
@@ -3441,20 +3453,25 @@ const LyricType = {
   },
   box(){
     $('#textEntry')?.remove(); const r=inkCanvas.getBoundingClientRect(); const b=document.createElement('div'); b.id='textEntry'; b.className='lybox';
-    b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Salta nota">${iconSvg('chevRight')}</button>
+    b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Nota dopo">${iconSvg('chevRight')}</button><button class="ib" id="lyGap" title="Prossima nota senza parola" aria-label="Prossima nota senza parola">${iconSvg('skipFwd')}</button>
       <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ghostBtn" id="lyTr" title="Pronuncia all'italiana della riga">${iconSvg('voice')}Traslittera</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
     $('#app').appendChild(b);
-    const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
+    const place=()=>dockBar(b, r.top+this.y*r.height);
     place(); this._place=place;
     const inp=$('#lyIn');
     const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
       inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
+    $('#lyGap').onclick=()=>{ commit(0); this.nextGap(); inp.focus(); };
     $('#lyX').onclick=()=>this.close(); $('#lyOcr').onclick=()=>this.ocrPick();
     $('#lyTr').onclick=()=>{ const idx=Anno.strokes.map((s,k)=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004?k:-1).filter(k=>k>=0); if(!idx.length) return toast('Questa riga non ha ancora testo: scrivilo o copialo prima'); Finger.line=idx; Finger.idx=idx[0]; Finger.translit($('#textEntry')); };
     setTimeout(()=>inp.focus(),20);
   },
+  startAt(st,notes,y,size,i){ this.st=st; this.notes=notes; this.y=y; this.size=size; this.i=i; this.x=notes[i]; this.box(); Anno.redraw(); this.marks(); },
+  nextGap(){ if(!this.notes) return; const xs=Anno.strokes.filter(s=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004).map(s=>s.x); const tol=Math.max(.012,this.st.gap*1.2);
+    for(let k=1;k<=this.notes.length;k++){ const j=(this.i+k)%this.notes.length; if(!xs.some(x=>Math.abs(x-this.notes[j])<tol)){ this.i=j; this.x=this.notes[j]; this._place&&this._place(); this.marks(); return; } }
+    toast('Tutte le note hanno la loro sillaba',1800); },
   step(d){ if(this.notes){ this.i=clamp(this.i+d,0,this.notes.length-1); this.x=this.notes[this.i]; } else this.x=clamp(this.x+d*.05,.02,.98); this._place&&this._place(); this.marks(); },
   close(){ $('#textEntry')?.remove(); $('#lyMarks')?.remove(); this.st=null; },
   // Omoritmia: legge il testo stampato sotto un altro rigo e lo scrive sotto questo, alla stessa altezza delle note.
@@ -3474,7 +3491,7 @@ const LyricType = {
     const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
-      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-hl style="height:36px">${iconSvg('pen')}Evidenzia</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L); const B=L.querySelector('.rdBand');
     const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
     B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
@@ -3486,6 +3503,7 @@ const LyricType = {
     L.onclick=async e=>{
       if(e.target.closest('[data-x]')){ L.remove(); return; }
       const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      const hb=e.target.closest('[data-hl]'); if(hb){ AutoHL.pick(hb,c=>{ const sp=AutoHL.inkSpan(band.y0,band.y1); if(!sp) return toast('Niente da evidenziare in quella fascia'); L.remove(); AutoHL.rect(sp[0],band.y0,sp[1],band.y1,c); toast('Testo evidenziato',1500); }); return; }
       if(e.target.closest('[data-tr]')){ L.remove(); busy('Leggo il testo…');
         try{ const words=await readLyrics({...band,gap:g}); busy(); if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole',3200);
           const yy=(band.y0+band.y1)/2, sz=Math.max(.012,g*1.6); const pseudo=words.map(w=>({text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer}));
@@ -3862,11 +3880,10 @@ const Finger = {
       <div class="seg" id="fgFont"><button data-f="sans">Aa</button><button data-f="serif" style="font-family:var(--f-display)">Aa</button><button data-f="music" style="font-family:var(--f-display);font-style:italic">rit.</button>
         <button id="fgB" style="font-weight:900">G</button><button id="fgI" style="font-style:italic">C</button><button id="fgM">A−</button><button id="fgP">A+</button></div>
       <div class="seg"><button id="fgLt">${iconSvg('chevLeft')}</button><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button><button id="fgRt">${iconSvg('chevRight')}</button>
-        ${lyric?`<button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
+        ${lyric?`<button id="fgPrev" title="Sillaba precedente">${iconSvg('skipBack')}</button><button id="fgNext" title="Sillaba successiva">${iconSvg('skipFwd')}</button><button id="fgGap" title="Nota senza parola: scrivi la sillaba mancante sotto la nota">${iconSvg('plus')} Parola mancante</button><button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgHl">${iconSvg('pen')} Evidenzia</button><button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
       <div class="hint" style="font-size:12px">${lyric?`Riga di ${this.line.length} sillabe: formato, spostamento e copia valgono per tutta la riga; il testo in alto cambia solo la sillaba toccata.`:'Trascina con il dito per spostarlo.'}</div></div>`;
     $('#app').appendChild(b);
-    const by=r.top+(A.selBox?A.selBox.y1:s.y)*r.height+10;
-    b.style.left=clamp(r.left+s.x*r.width-160,8,innerWidth-340)+'px'; b.style.top=(by+b.offsetHeight>innerHeight-10?Math.max(70,r.top+(A.selBox?A.selBox.y0:s.y)*r.height-b.offsetHeight-10):by)+'px';
+    dockBar(b, r.top+s.y*r.height);
     const L=()=>this.line.map(k=>A.strokes[k]).filter(Boolean);
     const ch=fn=>{ A.push(); L().forEach(fn); A.redraw(); A.updSelBox(); saveAnn(); A.buildBar(); };
     const mark=()=>{ const t=L()[0]||s; b.querySelectorAll('#fgFont [data-f]').forEach(x=>x.classList.toggle('on',(t.font||'sans')===x.dataset.f)); $('#fgB').classList.toggle('on',!!t.bold); $('#fgI').classList.toggle('on',!!t.italic); };
@@ -3886,6 +3903,8 @@ const Finger = {
     $('#fgDel').onclick=()=>{ A.push(); const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); };
     const cp=$('#fgCopy'); if(cp) cp.onclick=()=>{ b.remove(); A.selIdx=[...this.line]; A.updSelBox(); LyricCopy.start(); };
     $('#fgTr').onclick=()=>this.translit(b);
+    $('#fgHl').onclick=e=>AutoHL.pick(e.currentTarget,c=>{ const bx=A.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0,bx.x1,bx.y1,c); b.remove(); A.clearSel(); toast('Riga evidenziata',1500); });
+    const pv=$('#fgPrev'); if(pv){ pv.onclick=()=>{ save(); this.stepSyl(-1); }; $('#fgNext').onclick=()=>{ save(); this.stepSyl(1); }; $('#fgGap').onclick=()=>{ save(); this.gapNote(); }; }
   },
   // Invio: passa alla sillaba successiva della riga
   nextSyl(){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); if(j>=0&&j<ord.length-1){ this.idx=ord[j+1]; this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); } else { $('#fgBar')?.remove(); A.clearSel(); } },
@@ -3935,17 +3954,33 @@ const Finger = {
   strokeBar(){
     $('#fgBar')?.remove(); const A=Anno; const r=inkCanvas.getBoundingClientRect(); const bx=A.selBox||{x0:.4,y0:.4,y1:.45};
     const b=document.createElement('div'); b.id='fgBar'; b.className='pill';
-    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
-    $('#app').appendChild(b); b.style.left=clamp(r.left+bx.x0*r.width,8,innerWidth-380)+'px'; b.style.top=clamp(r.top+bx.y0*r.height-60,70,innerHeight-60)+'px';
+    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="sm" aria-label="Più piccolo">${iconSvg('minus')}</button><button class="ib" data-a="lg" aria-label="Più grande">${iconSvg('plus')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); dockBar(b, r.top+(bx.y0+(bx.y1||bx.y0))/2*r.height);
     const st=.004;
     b.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return;
       if(a==='ok'){ b.remove(); A.clearSel(); return; }
       A.push();
       if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
       else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
+      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox(); }
       else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
       A.redraw(); saveAnn(); A.buildBar(); };
   },
+  stepSyl(d){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); const k=clamp(j+d,0,ord.length-1); this.idx=ord[k]; A.selIdx=[...this.line]; A.updSelBox(); A.redraw(); this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); },
+  // trova le note del rigo sopra la riga che non hanno sillaba e apre la scrittura esattamente sotto la prima
+  gapNote(){
+    const A=Anno, s=A.strokes[this.idx]; if(!s) return;
+    const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<s.y).pop(); if(!st) return toast('Non trovo il rigo sopra questa riga');
+    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(!notes.length) return toast('Non riconosco le note di questo rigo: tocca sotto la nota con "Testo sulle note"');
+    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,st.gap*1.2);
+    const free=notes.map((n,i)=>({n,i})).filter(o=>!xs.some(x=>Math.abs(x-o.n)<tol));
+    if(!free.length) return toast('Tutte le note di questo rigo hanno già la loro sillaba');
+    const next=free.find(o=>o.n>s.x)||free[0];
+    $('#fgBar')?.remove(); A.clearSel();
+    if(!ST.annotate) Anno.enter(); A.mode='lyric'; A.buildBar();
+    LyricType.startAt(st,notes,s.y,s.size,next.i);
+  },
+  strokeBar0(){},
 };
 
 // ================= Stabilità, zoom da pulsanti, conflitti d'importazione, emoticon =================
@@ -4006,6 +4041,78 @@ const ZoomPad = {
     e('💡','idea'),e('✏️','nota'),e('📌','qui'),e('🎯','intonazione'),e('🧘','rilassati'),e('😀','sorridi'),e('🤝','insieme'),e('👑','solista'),
   ]});
 })();
+
+// ================= Evidenziatura automatica · GIF animate · barre che non coprono il rigo · nota senza parola =================
+
+// Le barrette di modifica stanno in basso (o in alto se il rigo è in basso): il rigo resta sempre visibile.
+function dockBar(el,refY){
+  el.style.position='fixed'; el.style.left='50%'; el.style.transform='translateX(-50%)'; el.style.right='auto';
+  const bottomHalf=refY>innerHeight*.55;
+  if(bottomHalf){ const ab=$('#annobar'); const t=ab&&ab.classList.contains('open')?ab.getBoundingClientRect().bottom+8:70; el.style.top=t+'px'; el.style.bottom='auto'; }
+  else { el.style.top='auto'; el.style.bottom='calc(env(safe-area-inset-bottom,0px) + 14px)'; }
+}
+
+// ---------- Evidenzia in automatico (colori fluo) ----------
+const AutoHL = {
+  pick(anchor,cb){
+    $('#hlPick')?.remove(); const p=document.createElement('div'); p.id='hlPick'; p.className='pop';
+    p.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Evidenzia con</div><div class="swatches">${NEON.map(c=>`<button class="sw" style="background:${c};box-shadow:0 0 10px ${c}" data-c="${c}" aria-label="${c}"></button>`).join('')}</div>`;
+    document.body.appendChild(p); const r=anchor.getBoundingClientRect(); p.style.position='fixed'; p.style.zIndex=70;
+    p.style.left=clamp(r.left,8,innerWidth-330)+'px'; p.style.top=(r.top>innerHeight/2?r.top-p.offsetHeight-8:r.bottom+8)+'px';
+    p.onclick=e=>{ const s=e.target.closest('[data-c]'); if(!s) return; p.remove(); cb(s.dataset.c); };
+    setTimeout(()=>document.addEventListener('pointerdown',function f(ev){ if(!ev.target.closest('#hlPick')){ p.remove(); document.removeEventListener('pointerdown',f,true); } },true),30);
+  },
+  // rettangolo (frazioni della pagina) → tratto di evidenziatore
+  rect(x0,y0,x1,y1,color){
+    const A=Anno, ar=inkCanvas.height/inkCanvas.width, yc=(y0+y1)/2, w=(y1-y0)*ar*1.05;
+    A.push(); A.strokes.unshift({t:'hl',color,alpha:.45,w,pts:[[x0,yc],[x1,yc]],layer:A.layer}); A.redraw(); saveAnn(); A.buildBar();
+  },
+  // zona d'inchiostro dentro una fascia (testo stampato): da dove inizia a dove finisce
+  inkSpan(y0,y1){
+    const c=pageCanvas, W=c.width, H=c.height, s=Math.min(1,900/W), w=Math.round(W*s), hh=Math.max(1,Math.round((y1-y0)*H*s));
+    const t=document.createElement('canvas'); t.width=w; t.height=hh; const x=t.getContext('2d',{willReadFrequently:true}); x.drawImage(c,0,y0*H,W,(y1-y0)*H,0,0,w,hh);
+    const d=x.getImageData(0,0,w,hh).data; let a=-1,b=-1;
+    for(let i=0;i<w;i++){ let n=0; for(let y=0;y<hh;y++){ const k=(y*w+i)*4; if(d[k]+d[k+1]+d[k+2]<400) n++; } if(n>=1){ if(a<0) a=i; b=i; } }
+    return a<0?null:[a/w-.005,b/w+.005];
+  },
+};
+
+// ---------- GIF animate sulla pagina ----------
+const Gif = {
+  layer(){ let L=$('#gifLayer'); if(!L){ L=document.createElement('div'); L.id='gifLayer'; pageWrap.appendChild(L); } ['left','top','width','height'].forEach(k=>L.style[k]=inkCanvas.style[k]); return L; },
+  sync(){
+    const L=this.layer(), list=(ST.ann[ST.page]||[]).filter(s=>s.t==='gif'&&(!Anno.layers[s.layer||0]||Anno.layers[s.layer||0].vis));
+    L.innerHTML=list.map(s=>`<img src="${s.src}" alt="" style="left:${s.x*100}%;top:${s.y*100}%;width:${s.w*100}%;height:${s.h*100}%">`).join('');
+  },
+  async add(src){
+    const im=new Image(); im.src=src; try{ await im.decode(); }catch(e){}
+    const ar=(im.naturalHeight||1)/(im.naturalWidth||1), pr=inkCanvas.height/inkCanvas.width, w=.22, h=w*ar/pr;
+    if(!ST.annotate) Anno.enter();
+    Anno.push(); Anno.strokes.push({t:'gif',src,x:.5-w/2,y:.45-h/2,w,h,layer:Anno.layer}); Anno.redraw(); saveAnn(); Anno.buildBar();
+    Anno.mode='hand'; Anno.buildBar(); toast('GIF aggiunta: con il Dito ✋ la sposti e la ridimensioni',3000);
+  },
+  open(){
+    const key=ST.settings.giphyKey||'';
+    const m2=modal('GIF animate',`
+      <div style="display:flex;gap:8px"><label class="search" style="flex:1"><svg class="i" data-i="search"></svg><input id="gfQ" type="search" placeholder="Cerca: applausi, bravo, respira, coro…" autocomplete="off"></label><button class="goldBtn" id="gfGo">Cerca</button></div>
+      <div id="gfRes" class="gifGrid">${key?'':'<div class="hint">Per cercare le GIF su internet serve una chiave gratuita GIPHY (developers.giphy.com → Create an App → API). Incollala qui sotto una volta sola.</div>'}</div>
+      <div class="field"><label for="gfKey">Chiave GIPHY</label><input id="gfKey" value="${esc(key)}" placeholder="incolla la chiave API"></div>
+      <div><button class="ghostBtn" id="gfFile">${iconSvg('image')}Scegli una GIF dalle Foto o dai File</button></div>`,null,{eyebrow:'Inserisci'});
+    hydrateIcons(m2);
+    $('#gfKey').onchange=()=>{ ST.settings.giphyKey=$('#gfKey').value.trim(); saveSettings(); };
+    const search=async()=>{ const k=($('#gfKey').value||'').trim(); const q=$('#gfQ').value.trim()||'applause'; const R=$('#gfRes');
+      if(!k){ R.innerHTML='<div class="hint" style="color:var(--danger)">Manca la chiave GIPHY.</div>'; return; }
+      ST.settings.giphyKey=k; saveSettings(); R.innerHTML='<div class="hint">Cerco…</div>';
+      try{ const j=await (await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${encodeURIComponent(k)}&q=${encodeURIComponent(q)}&limit=24&rating=g&lang=it`)).json();
+        const items=(j.data||[]).map(g=>g.images&&(g.images.fixed_width_downsampled||g.images.fixed_width)).filter(Boolean);
+        R.innerHTML=items.length?items.map(it=>`<button data-u="${esc(it.url)}"><img src="${esc(it.url)}" alt="" loading="lazy"></button>`).join(''):'<div class="hint">Nessun risultato.</div>';
+      }catch(e){ R.innerHTML='<div class="hint" style="color:var(--danger)">Ricerca non riuscita: controlla la connessione e la chiave.</div>'; } };
+    $('#gfGo').onclick=search; $('#gfQ').onkeydown=e=>{ if(e.key==='Enter') search(); };
+    $('#gfRes').onclick=async e=>{ const b=e.target.closest('[data-u]'); if(!b) return; busy('Scarico la GIF…');
+      try{ const blob=await (await fetch(b.dataset.u)).blob(); const src=await blobToDataURL(blob); busy(); closeLayers(); this.add(src); }catch(err){ busy(); toast('Non riesco a scaricare questa GIF'); } };
+    $('#gfFile').onclick=()=>{ const f=$('#fileImg'); f.value=''; f.onchange=async()=>{ const file=f.files[0]; if(!file) return; const src=await blobToDataURL(file); closeLayers(); this.add(src); }; f.click(); };
+  },
+};
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

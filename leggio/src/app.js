@@ -293,6 +293,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  gif:()=>{closeSides();Gif.open()},
   zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),

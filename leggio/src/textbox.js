@@ -121,20 +121,25 @@ const LyricType = {
   },
   box(){
     $('#textEntry')?.remove(); const r=inkCanvas.getBoundingClientRect(); const b=document.createElement('div'); b.id='textEntry'; b.className='lybox';
-    b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Salta nota">${iconSvg('chevRight')}</button>
+    b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Nota dopo">${iconSvg('chevRight')}</button><button class="ib" id="lyGap" title="Prossima nota senza parola" aria-label="Prossima nota senza parola">${iconSvg('skipFwd')}</button>
       <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ghostBtn" id="lyTr" title="Pronuncia all'italiana della riga">${iconSvg('voice')}Traslittera</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
     $('#app').appendChild(b);
-    const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
+    const place=()=>dockBar(b, r.top+this.y*r.height);
     place(); this._place=place;
     const inp=$('#lyIn');
     const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
       inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
+    $('#lyGap').onclick=()=>{ commit(0); this.nextGap(); inp.focus(); };
     $('#lyX').onclick=()=>this.close(); $('#lyOcr').onclick=()=>this.ocrPick();
     $('#lyTr').onclick=()=>{ const idx=Anno.strokes.map((s,k)=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004?k:-1).filter(k=>k>=0); if(!idx.length) return toast('Questa riga non ha ancora testo: scrivilo o copialo prima'); Finger.line=idx; Finger.idx=idx[0]; Finger.translit($('#textEntry')); };
     setTimeout(()=>inp.focus(),20);
   },
+  startAt(st,notes,y,size,i){ this.st=st; this.notes=notes; this.y=y; this.size=size; this.i=i; this.x=notes[i]; this.box(); Anno.redraw(); this.marks(); },
+  nextGap(){ if(!this.notes) return; const xs=Anno.strokes.filter(s=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004).map(s=>s.x); const tol=Math.max(.012,this.st.gap*1.2);
+    for(let k=1;k<=this.notes.length;k++){ const j=(this.i+k)%this.notes.length; if(!xs.some(x=>Math.abs(x-this.notes[j])<tol)){ this.i=j; this.x=this.notes[j]; this._place&&this._place(); this.marks(); return; } }
+    toast('Tutte le note hanno la loro sillaba',1800); },
   step(d){ if(this.notes){ this.i=clamp(this.i+d,0,this.notes.length-1); this.x=this.notes[this.i]; } else this.x=clamp(this.x+d*.05,.02,.98); this._place&&this._place(); this.marks(); },
   close(){ $('#textEntry')?.remove(); $('#lyMarks')?.remove(); this.st=null; },
   // Omoritmia: legge il testo stampato sotto un altro rigo e lo scrive sotto questo, alla stessa altezza delle note.
@@ -154,7 +159,7 @@ const LyricType = {
     const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
-      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-hl style="height:36px">${iconSvg('pen')}Evidenzia</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L); const B=L.querySelector('.rdBand');
     const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
     B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
@@ -166,6 +171,7 @@ const LyricType = {
     L.onclick=async e=>{
       if(e.target.closest('[data-x]')){ L.remove(); return; }
       const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      const hb=e.target.closest('[data-hl]'); if(hb){ AutoHL.pick(hb,c=>{ const sp=AutoHL.inkSpan(band.y0,band.y1); if(!sp) return toast('Niente da evidenziare in quella fascia'); L.remove(); AutoHL.rect(sp[0],band.y0,sp[1],band.y1,c); toast('Testo evidenziato',1500); }); return; }
       if(e.target.closest('[data-tr]')){ L.remove(); busy('Leggo il testo…');
         try{ const words=await readLyrics({...band,gap:g}); busy(); if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole',3200);
           const yy=(band.y0+band.y1)/2, sz=Math.max(.012,g*1.6); const pseudo=words.map(w=>({text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer}));

@@ -40,11 +40,10 @@ const Finger = {
       <div class="seg" id="fgFont"><button data-f="sans">Aa</button><button data-f="serif" style="font-family:var(--f-display)">Aa</button><button data-f="music" style="font-family:var(--f-display);font-style:italic">rit.</button>
         <button id="fgB" style="font-weight:900">G</button><button id="fgI" style="font-style:italic">C</button><button id="fgM">A−</button><button id="fgP">A+</button></div>
       <div class="seg"><button id="fgLt">${iconSvg('chevLeft')}</button><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button><button id="fgRt">${iconSvg('chevRight')}</button>
-        ${lyric?`<button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
+        ${lyric?`<button id="fgPrev" title="Sillaba precedente">${iconSvg('skipBack')}</button><button id="fgNext" title="Sillaba successiva">${iconSvg('skipFwd')}</button><button id="fgGap" title="Nota senza parola: scrivi la sillaba mancante sotto la nota">${iconSvg('plus')} Parola mancante</button><button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgHl">${iconSvg('pen')} Evidenzia</button><button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
       <div class="hint" style="font-size:12px">${lyric?`Riga di ${this.line.length} sillabe: formato, spostamento e copia valgono per tutta la riga; il testo in alto cambia solo la sillaba toccata.`:'Trascina con il dito per spostarlo.'}</div></div>`;
     $('#app').appendChild(b);
-    const by=r.top+(A.selBox?A.selBox.y1:s.y)*r.height+10;
-    b.style.left=clamp(r.left+s.x*r.width-160,8,innerWidth-340)+'px'; b.style.top=(by+b.offsetHeight>innerHeight-10?Math.max(70,r.top+(A.selBox?A.selBox.y0:s.y)*r.height-b.offsetHeight-10):by)+'px';
+    dockBar(b, r.top+s.y*r.height);
     const L=()=>this.line.map(k=>A.strokes[k]).filter(Boolean);
     const ch=fn=>{ A.push(); L().forEach(fn); A.redraw(); A.updSelBox(); saveAnn(); A.buildBar(); };
     const mark=()=>{ const t=L()[0]||s; b.querySelectorAll('#fgFont [data-f]').forEach(x=>x.classList.toggle('on',(t.font||'sans')===x.dataset.f)); $('#fgB').classList.toggle('on',!!t.bold); $('#fgI').classList.toggle('on',!!t.italic); };
@@ -64,6 +63,8 @@ const Finger = {
     $('#fgDel').onclick=()=>{ A.push(); const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); };
     const cp=$('#fgCopy'); if(cp) cp.onclick=()=>{ b.remove(); A.selIdx=[...this.line]; A.updSelBox(); LyricCopy.start(); };
     $('#fgTr').onclick=()=>this.translit(b);
+    $('#fgHl').onclick=e=>AutoHL.pick(e.currentTarget,c=>{ const bx=A.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0,bx.x1,bx.y1,c); b.remove(); A.clearSel(); toast('Riga evidenziata',1500); });
+    const pv=$('#fgPrev'); if(pv){ pv.onclick=()=>{ save(); this.stepSyl(-1); }; $('#fgNext').onclick=()=>{ save(); this.stepSyl(1); }; $('#fgGap').onclick=()=>{ save(); this.gapNote(); }; }
   },
   // Invio: passa alla sillaba successiva della riga
   nextSyl(){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); if(j>=0&&j<ord.length-1){ this.idx=ord[j+1]; this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); } else { $('#fgBar')?.remove(); A.clearSel(); } },
@@ -113,15 +114,31 @@ const Finger = {
   strokeBar(){
     $('#fgBar')?.remove(); const A=Anno; const r=inkCanvas.getBoundingClientRect(); const bx=A.selBox||{x0:.4,y0:.4,y1:.45};
     const b=document.createElement('div'); b.id='fgBar'; b.className='pill';
-    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
-    $('#app').appendChild(b); b.style.left=clamp(r.left+bx.x0*r.width,8,innerWidth-380)+'px'; b.style.top=clamp(r.top+bx.y0*r.height-60,70,innerHeight-60)+'px';
+    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="sm" aria-label="Più piccolo">${iconSvg('minus')}</button><button class="ib" data-a="lg" aria-label="Più grande">${iconSvg('plus')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); dockBar(b, r.top+(bx.y0+(bx.y1||bx.y0))/2*r.height);
     const st=.004;
     b.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return;
       if(a==='ok'){ b.remove(); A.clearSel(); return; }
       A.push();
       if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
       else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
+      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox(); }
       else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
       A.redraw(); saveAnn(); A.buildBar(); };
   },
+  stepSyl(d){ const A=Anno; const ord=[...this.line].sort((a,b)=>A.strokes[a].x-A.strokes[b].x); const j=ord.indexOf(this.idx); const k=clamp(j+d,0,ord.length-1); this.idx=ord[k]; A.selIdx=[...this.line]; A.updSelBox(); A.redraw(); this.bar(); setTimeout(()=>{ const i=$('#fgTxt'); if(i){ i.focus(); i.select(); } },20); },
+  // trova le note del rigo sopra la riga che non hanno sillaba e apre la scrittura esattamente sotto la prima
+  gapNote(){
+    const A=Anno, s=A.strokes[this.idx]; if(!s) return;
+    const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<s.y).pop(); if(!st) return toast('Non trovo il rigo sopra questa riga');
+    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(!notes.length) return toast('Non riconosco le note di questo rigo: tocca sotto la nota con "Testo sulle note"');
+    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,st.gap*1.2);
+    const free=notes.map((n,i)=>({n,i})).filter(o=>!xs.some(x=>Math.abs(x-o.n)<tol));
+    if(!free.length) return toast('Tutte le note di questo rigo hanno già la loro sillaba');
+    const next=free.find(o=>o.n>s.x)||free[0];
+    $('#fgBar')?.remove(); A.clearSel();
+    if(!ST.annotate) Anno.enter(); A.mode='lyric'; A.buildBar();
+    LyricType.startAt(st,notes,s.y,s.size,next.i);
+  },
+  strokeBar0(){},
 };

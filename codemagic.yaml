@@ -63,6 +63,13 @@ workflows:
       flutter: 3.47.9
       xcode: latest
       cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: claude/offline-translation-app-32rsjv
+          include: true
+      cancel_previous_builds: true
     scripts:
       - name: Modello vocale da includere nell'app
         script: ./scripts/fetch_models.sh

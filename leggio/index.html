@@ -34,7 +34,7 @@
   --paper:#fbf8f1;
   --danger:#e0624f;
   --ok:#7bc47f;
-  --glass:rgba(18,15,10,.86);
+  --glass:rgba(18,15,10,.5);
   --f-display:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif;
   --f-body:"Manrope",-apple-system,"Helvetica Neue",Arial,sans-serif;
   --f-music:"Noto Music","Bravura","Apple Symbols","Segoe UI Symbol",serif;
@@ -129,7 +129,8 @@ body.night #pageWrap{background:#111}
 #stage::before{opacity:.16;background-size:min(96vw,900px)}
 .side::before{opacity:.07;background-position:center 62%}
 .modal::before,.pop::before{opacity:.06}
-#annobar::before,#pianoSheet::before{opacity:.05;background-size:auto 260%}
+#pianoSheet::before{opacity:.05;background-size:auto 260%}
+#annobar::before{display:none}
 .side>*,.modal>*,.pop>*,#annobar>*,#pianoSheet>*{position:relative;z-index:1}
 .pop>.dialWrap,.pop>*{position:relative}
 /* Copertina all'avvio */
@@ -162,7 +163,7 @@ body.night #pageWrap{background:#111}
 .ib:active{background:rgba(214,168,78,.18)}
 .ib.on{background:var(--gold);color:#1a1408}
 #titlePill{flex:1;min-width:0;justify-content:center;gap:10px;padding:5px 8px 5px 14px}
-#titlePill .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:15.5px}
+#titlePill .t{text-shadow:0 1px 3px rgba(0,0,0,.75);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:15.5px}
 #titlePill .t b{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.01em}
 #titlePill .t span{color:var(--muted);font-weight:500}
 .brandDot{width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none;box-shadow:0 0 0 1.5px var(--gold)}
@@ -299,10 +300,10 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .compare{position:absolute;left:12px;top:12px;z-index:3}
 
 /* ---------- Modalità annotazione ---------- */
-#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(22,19,14,.97);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(22,19,14,.45);-webkit-backdrop-filter:blur(7px) saturate(1.4);backdrop-filter:blur(7px) saturate(1.4);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 #annobar.open{transform:none}
 .annoTop{display:flex;align-items:center;gap:8px;height:54px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
-.annoTop .ttl{flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.annoTop .ttl{text-shadow:0 1px 3px rgba(0,0,0,.8);flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .annoTop .ttl span{color:var(--gold)}
 .annoTools{display:flex;align-items:stretch;border-top:1px solid var(--line);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
 /* strumenti di disegno: scorrono; attrezzi: sempre tutti visibili */

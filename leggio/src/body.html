@@ -127,6 +127,7 @@
       <button class="ib" data-act="annoCancel" aria-label="Annulla modifiche" data-i="close"></button>
       <button class="goldBtn sm" data-act="insert" title="Inserisci pagine"><svg class="i" data-i="plusDoc"></svg><span class="lbl">Pagine</span></button>
       <div class="undoGrp"><button class="ib undoBtn" id="annoUndo" data-act="annoUndo" aria-label="Annulla l'ultima azione" title="Annulla l'ultima azione" data-i="undo"></button><button class="ib undoBtn" id="annoRedo" data-act="annoRedo" aria-label="Ripeti" title="Ripeti" data-i="redo"></button></div>
+      <button class="ib" data-act="zoompad" title="Zoom e spostamento della pagina" aria-label="Zoom" data-i="search"></button>
       <div class="ttl" id="annoTitle">Pagina 1 <span>(Livello 1)</span></div>
       <button class="ib" data-act="prev" aria-label="Pagina precedente" data-i="chevLeft"></button>
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
@@ -137,7 +138,7 @@
 
   <div id="pianoSheet">
     <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b>
-      <div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
+      <button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
       <button class="ib" data-act="pianoClose" aria-label="Chiudi" data-i="close"></button></div>
     <div class="keys" id="keys"></div>
   </div>

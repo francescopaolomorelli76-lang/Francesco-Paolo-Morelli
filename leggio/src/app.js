@@ -252,6 +252,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   // Anche sopra le barre: tenere premuto sul bordo apre il pannello corrispondente
   addEventListener('keydown',e=>{
     if(e.target.matches('input,textarea,select')||e.target.isContentEditable) return;
+    if(ST.annotate&&$('#fgBar')&&Finger.line&&Finger.line.length&&e.key.startsWith('Arrow')){ e.preventDefault(); const st=e.shiftKey?.012:.003; const m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key]; Anno.push(); Finger.line.forEach(k=>Anno.strokes[k]&&moveStroke(Anno.strokes[k],m[0],m[1])); Anno.updSelBox(); Anno.redraw(); saveAnn(); return; }
     if(e.key==='+'||e.key==='='){e.preventDefault();ZoomPad.zoom(1.25);return}
     if(e.key==='-'||e.key==='_'){e.preventDefault();ZoomPad.zoom(1/1.25);return}
     if(Zoom.z>1.02&&e.key.startsWith('Arrow')){e.preventDefault();const m={ArrowLeft:[1,0],ArrowRight:[-1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key];ZoomPad.pan(m[0],m[1]);return}
@@ -293,6 +294,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  midi:()=>Midi.connect(),
   gif:()=>{closeSides();Gif.open()},
   zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),

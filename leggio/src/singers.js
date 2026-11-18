@@ -19,7 +19,10 @@ const midiHz=m=>Metro.A4*Math.pow(2,(m-69)/12);
 
 const Singers = {
   tab:'voc', sel:'scala5', start:48, steps:7, dir:'up', bpm:96, chord:true, playing:false, cur:0, saved:[], takes:[],
+  midiOn(n){ if(this.rec) this.rec.on.set('m'+n,{m:n,t:performance.now()}); const k=$(`#mkKeys [data-m="${n}"]`); if(k) k.classList.add('dn'); },
+  midiOff(n){ const k=$(`#mkKeys [data-m="${n}"]`); if(k) k.classList.remove('dn'); const r=this.rec&&this.rec.on.get('m'+n); if(r){ this.rec.on.delete('m'+n); this.rec.notes.push({m:r.m,t:r.t,e:performance.now()}); this.raw=this.rec.notes; this.drawRoll(true); } },
   async open(){
+    PianoS.preload(40,84);
     this.saved=(await DB.get('vocalizzi'))||[];
     try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
     const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
@@ -66,7 +69,8 @@ const Singers = {
     B.querySelector('.group').onclick=async e=>{const d=e.target.closest('[data-del]');if(d){e.stopPropagation();this.saved=this.saved.filter(x=>x.id!==d.dataset.del);await DB.set('vocalizzi',this.saved);this.render();return}
       const r=e.target.closest('[data-v]');if(r){this.stopAll();this.sel=r.dataset.v;this.render()}};
   },
-  tone(m,dur,when,vol=.32,stacc){ ac(); const t=when??AC.currentTime; const f=midiHz(m); const g=AC.createGain(); const len=stacc?Math.min(dur,.12):dur;
+  tone(m,dur,when,vol=.32,stacc){ ac(); const pv=PianoS.start(m,when,Math.min(.9,vol*1.9)); if(pv){ PianoS.stop(pv,(when??AC.currentTime)+(stacc?Math.min(dur,.14):dur),stacc?.08:.3); (this._nodes=this._nodes||[]).push(pv.src); return; }
+    const t=when??AC.currentTime; const f=midiHz(m); const g=AC.createGain(); const len=stacc?Math.min(dur,.12):dur;
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.setTargetAtTime(vol*.55,t+.05,.2); g.gain.setTargetAtTime(0,t+len*.92,.04); g.connect(AC.destination);
     [[1,'triangle',1],[2,'sine',.3],[3,'sine',.1]].forEach(([k,ty,v])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty;o.frequency.value=f*k;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+len+.3);(this._nodes=this._nodes||[]).push(o)}); },
   keysList(){ const s=this.start, n=this.steps; const up=[...Array(n+1).keys()].map(i=>s+i);
@@ -88,7 +92,7 @@ const Singers = {
     B.innerHTML=`<div class="hint">1. Scegli velocità e suddivisione. 2. Premi <b>Registra</b>: dopo 4 colpi di metronomo suona il vocalizzo sulla tastiera. 3. Premi <b>Stop</b>: le note vengono allineate al tempo. 4. Ascolta, dai un nome e salva: lo trovi in Vocalizzi, trasportabile in ogni tonalità.</div>
       <div class="grid2"><div class="sl"><span>Velocità del metronomo<em id="mkBpV">${this.bpm}</em></span><input type="range" id="mkBp" min="40" max="180" value="${this.bpm}" style="--v:${(this.bpm-40)/140*100}%"></div>
         <div class="field"><label>Allinea le note a</label><div class="seg" id="mkGrid">${[[1,'♩ semiminime'],[.5,'♪ crome'],[.25,'𝅘𝅥𝅯 semicrome'],[1/3,'terzine']].map(([g,l])=>`<button data-g="${g}" class="${Math.abs(this.grid-g)<.01?'on':''}">${l}</button>`).join('')}</div></div></div>
-      <div class="keys" id="mkKeys" style="height:140px"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><span class="hint" style="font-size:12.5px">oppure la tastiera del computer: A W S E D F T G Y H U J K</span></div><div class="keys" id="mkKeys" style="height:140px"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="goldBtn" id="mkRec">${iconSvg('mic')}${this.rec?'Stop':'Registra'}</button><button class="ghostBtn" id="mkPlay">${iconSvg('play')}Ascolta</button><button class="ghostBtn" id="mkClear">${iconSvg('trash')}Ricomincia</button><span class="hint" id="mkInfo"></span></div>
       <canvas id="mkRoll" width="1300" height="220" style="width:100%;height:110px;background:var(--panel-2);border-radius:12px;border:1px solid var(--line)"></canvas>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="field" style="flex:1;min-width:180px"><label for="mkName">Nome</label><input id="mkName" placeholder="es. Mio vocalizzo · Ma-me-mi"></div><div class="field" style="flex:1;min-width:140px"><label for="mkSyl">Sillabe</label><input id="mkSyl" placeholder="es. Ma-me-mi-mo-mu"></div></div>
@@ -110,9 +114,9 @@ const Singers = {
     for(let i=0;i<n;i++){const o=Math.floor(i/7),w=i%7;h+=`<div class="wk" data-m="${base+o*12+ws[w]}">${whites[w]}${w===0?(Math.floor((base+o*12)/12)-1):''}</div>`}
     K.innerHTML=h; const kw=100/n;
     [0,1,3,4,5].forEach(w=>{for(let o=0;o<2;o++){const i=o*7+w;const d=document.createElement('div');d.className='bk';d.dataset.m=base+o*12+ws[w]+1;d.style.left=`calc(${(i+1)*kw}% - ${kw*.32}%)`;d.style.width=kw*.64+'%';K.appendChild(d)}});
-    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-m]');if(!k)return;e.preventDefault();k.classList.add('dn');const m=+k.dataset.m;this.tone(m,.6);
+    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-m]');if(!k)return;e.preventDefault();k.classList.add('dn');const m=+k.dataset.m;Midi.voiceOn(m,95);(this._held=this._held||new Map()).set(e.pointerId,m);
       if(this.rec) this.rec.on.set(e.pointerId,{m,t:performance.now()});});
-    const up=e=>{$$('#mkKeys .dn').forEach(x=>x.classList.remove('dn'));const r=this.rec&&this.rec.on.get(e.pointerId);if(r){this.rec.on.delete(e.pointerId);this.rec.notes.push({m:r.m,t:r.t,e:performance.now()});this.raw=this.rec.notes;this.drawRoll(true)}};
+    const up=e=>{$$('#mkKeys .dn').forEach(x=>x.classList.remove('dn'));const hm=this._held&&this._held.get(e.pointerId);if(hm!=null){this._held.delete(e.pointerId);Midi.release(hm);}const r=this.rec&&this.rec.on.get(e.pointerId);if(r){this.rec.on.delete(e.pointerId);this.rec.notes.push({m:r.m,t:r.t,e:performance.now()});this.raw=this.rec.notes;this.drawRoll(true)}};
     K.addEventListener('pointerup',up); K.addEventListener('pointercancel',up); K.addEventListener('pointerleave',up);
   },
   startRec(){

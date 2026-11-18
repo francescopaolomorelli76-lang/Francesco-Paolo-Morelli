@@ -574,6 +574,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <button class="ib" data-act="annoCancel" aria-label="Annulla modifiche" data-i="close"></button>
       <button class="goldBtn sm" data-act="insert" title="Inserisci pagine"><svg class="i" data-i="plusDoc"></svg><span class="lbl">Pagine</span></button>
       <div class="undoGrp"><button class="ib undoBtn" id="annoUndo" data-act="annoUndo" aria-label="Annulla l'ultima azione" title="Annulla l'ultima azione" data-i="undo"></button><button class="ib undoBtn" id="annoRedo" data-act="annoRedo" aria-label="Ripeti" title="Ripeti" data-i="redo"></button></div>
+      <button class="ib" data-act="zoompad" title="Zoom e spostamento della pagina" aria-label="Zoom" data-i="search"></button>
       <div class="ttl" id="annoTitle">Pagina 1 <span>(Livello 1)</span></div>
       <button class="ib" data-act="prev" aria-label="Pagina precedente" data-i="chevLeft"></button>
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
@@ -584,7 +585,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 
   <div id="pianoSheet">
     <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b>
-      <div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
+      <button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
       <button class="ib" data-act="pianoClose" aria-label="Chiudi" data-i="close"></button></div>
     <div class="keys" id="keys"></div>
   </div>
@@ -606,6 +607,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 const SQLJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/";
 const PAKO_URL = "https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js";
+const PIANO_URL = "piano/";
 // Archivio locale (IndexedDB) con ripiego in memoria.
 const DB = {
   db:null, mem:{scores:new Map(), kv:new Map()},
@@ -1169,6 +1171,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   // Anche sopra le barre: tenere premuto sul bordo apre il pannello corrispondente
   addEventListener('keydown',e=>{
     if(e.target.matches('input,textarea,select')||e.target.isContentEditable) return;
+    if(ST.annotate&&$('#fgBar')&&Finger.line&&Finger.line.length&&e.key.startsWith('Arrow')){ e.preventDefault(); const st=e.shiftKey?.012:.003; const m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key]; Anno.push(); Finger.line.forEach(k=>Anno.strokes[k]&&moveStroke(Anno.strokes[k],m[0],m[1])); Anno.updSelBox(); Anno.redraw(); saveAnn(); return; }
     if(e.key==='+'||e.key==='='){e.preventDefault();ZoomPad.zoom(1.25);return}
     if(e.key==='-'||e.key==='_'){e.preventDefault();ZoomPad.zoom(1/1.25);return}
     if(Zoom.z>1.02&&e.key.startsWith('Arrow')){e.preventDefault();const m={ArrowLeft:[1,0],ArrowRight:[-1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key];ZoomPad.pan(m[0],m[1]);return}
@@ -1210,6 +1213,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  midi:()=>Midi.connect(),
   gif:()=>{closeSides();Gif.open()},
   zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
@@ -2418,11 +2422,15 @@ const Piano = {
     for(let i=0;i<n;i++){ const o=Math.floor(i/7), w=i%7; h+=`<div class="wk" data-s="${o*12+wsemi[w]}">${whites[w]}${w===0?(4+o):''}</div>`; }
     K.innerHTML=h; const kw=100/n;
     [0,1,3,4,5].forEach(w=>{ for(let o=0;o<2;o++){ const i=o*7+w; const d=document.createElement('div'); d.className='bk'; d.dataset.s=o*12+wsemi[w]+1; d.style.left=`calc(${(i+1)*kw}% - ${kw*.32}%)`; d.style.width=kw*.64+'%'; K.appendChild(d);} });
-    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-s]');if(!k)return;k.classList.add('dn');setTimeout(()=>k.classList.remove('dn'),180);this.play(+k.dataset.s)});
+    const held=new Map();
+    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-s]');if(!k)return;e.preventDefault();PianoS.preload(36,96);const n=60+(+k.dataset.s)+this.oct*12;held.set(e.pointerId,n);k.classList.add('dn');Midi.voiceOn(n,95)});
+    const up=e=>{const n=held.get(e.pointerId);if(n==null)return;held.delete(e.pointerId);this.light(n,false);if(!Midi.sustain)Midi.release(n)};
+    K.addEventListener('pointerup',up);K.addEventListener('pointercancel',up);K.addEventListener('pointerleave',up);
     $('#pianoOct').onclick=e=>{const b=e.target.closest('[data-o]');if(b){this.oct=clamp(this.oct+(+b.dataset.o),-3,2);toast('Ottava '+(4+this.oct))}};
   },
-  open(){ $('#pianoSheet').classList.add('open'); }, close(){ $('#pianoSheet').classList.remove('open'); },
-  play(semi){ ac(); const f=Metro.A4*Math.pow(2,(semi+this.oct*12-9)/12); const t=AC.currentTime; const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.35,t+.008); g.gain.exponentialRampToValueAtTime(.12,t+.3); g.gain.exponentialRampToValueAtTime(.0001,t+1.8); g.connect(AC.destination);
+  open(){ $('#pianoSheet').classList.add('open'); PianoS.preload(48,84); }, close(){ $('#pianoSheet').classList.remove('open'); },
+  light(n,on){ const k=$(`#keys [data-s="${n-60-this.oct*12}"]`); if(k) k.classList.toggle('dn',on); },
+  play(semi){ if(PianoS.note(60+semi+this.oct*12,1.6)) return; ac(); const f=Metro.A4*Math.pow(2,(semi+this.oct*12-9)/12); const t=AC.currentTime; const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.35,t+.008); g.gain.exponentialRampToValueAtTime(.12,t+.3); g.gain.exponentialRampToValueAtTime(.0001,t+1.8); g.connect(AC.destination);
     [[1,'triangle',1],[2,'sine',.35],[3,'sine',.12]].forEach(([m,ty,v])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty;o.frequency.value=f*m;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+1.9)}); },
 };
 
@@ -2938,7 +2946,10 @@ const midiHz=m=>Metro.A4*Math.pow(2,(m-69)/12);
 
 const Singers = {
   tab:'voc', sel:'scala5', start:48, steps:7, dir:'up', bpm:96, chord:true, playing:false, cur:0, saved:[], takes:[],
+  midiOn(n){ if(this.rec) this.rec.on.set('m'+n,{m:n,t:performance.now()}); const k=$(`#mkKeys [data-m="${n}"]`); if(k) k.classList.add('dn'); },
+  midiOff(n){ const k=$(`#mkKeys [data-m="${n}"]`); if(k) k.classList.remove('dn'); const r=this.rec&&this.rec.on.get('m'+n); if(r){ this.rec.on.delete('m'+n); this.rec.notes.push({m:r.m,t:r.t,e:performance.now()}); this.raw=this.rec.notes; this.drawRoll(true); } },
   async open(){
+    PianoS.preload(40,84);
     this.saved=(await DB.get('vocalizzi'))||[];
     try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
     const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
@@ -2985,7 +2996,8 @@ const Singers = {
     B.querySelector('.group').onclick=async e=>{const d=e.target.closest('[data-del]');if(d){e.stopPropagation();this.saved=this.saved.filter(x=>x.id!==d.dataset.del);await DB.set('vocalizzi',this.saved);this.render();return}
       const r=e.target.closest('[data-v]');if(r){this.stopAll();this.sel=r.dataset.v;this.render()}};
   },
-  tone(m,dur,when,vol=.32,stacc){ ac(); const t=when??AC.currentTime; const f=midiHz(m); const g=AC.createGain(); const len=stacc?Math.min(dur,.12):dur;
+  tone(m,dur,when,vol=.32,stacc){ ac(); const pv=PianoS.start(m,when,Math.min(.9,vol*1.9)); if(pv){ PianoS.stop(pv,(when??AC.currentTime)+(stacc?Math.min(dur,.14):dur),stacc?.08:.3); (this._nodes=this._nodes||[]).push(pv.src); return; }
+    const t=when??AC.currentTime; const f=midiHz(m); const g=AC.createGain(); const len=stacc?Math.min(dur,.12):dur;
     g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.setTargetAtTime(vol*.55,t+.05,.2); g.gain.setTargetAtTime(0,t+len*.92,.04); g.connect(AC.destination);
     [[1,'triangle',1],[2,'sine',.3],[3,'sine',.1]].forEach(([k,ty,v])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty;o.frequency.value=f*k;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+len+.3);(this._nodes=this._nodes||[]).push(o)}); },
   keysList(){ const s=this.start, n=this.steps; const up=[...Array(n+1).keys()].map(i=>s+i);
@@ -3007,7 +3019,7 @@ const Singers = {
     B.innerHTML=`<div class="hint">1. Scegli velocità e suddivisione. 2. Premi <b>Registra</b>: dopo 4 colpi di metronomo suona il vocalizzo sulla tastiera. 3. Premi <b>Stop</b>: le note vengono allineate al tempo. 4. Ascolta, dai un nome e salva: lo trovi in Vocalizzi, trasportabile in ogni tonalità.</div>
       <div class="grid2"><div class="sl"><span>Velocità del metronomo<em id="mkBpV">${this.bpm}</em></span><input type="range" id="mkBp" min="40" max="180" value="${this.bpm}" style="--v:${(this.bpm-40)/140*100}%"></div>
         <div class="field"><label>Allinea le note a</label><div class="seg" id="mkGrid">${[[1,'♩ semiminime'],[.5,'♪ crome'],[.25,'𝅘𝅥𝅯 semicrome'],[1/3,'terzine']].map(([g,l])=>`<button data-g="${g}" class="${Math.abs(this.grid-g)<.01?'on':''}">${l}</button>`).join('')}</div></div></div>
-      <div class="keys" id="mkKeys" style="height:140px"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><span class="hint" style="font-size:12.5px">oppure la tastiera del computer: A W S E D F T G Y H U J K</span></div><div class="keys" id="mkKeys" style="height:140px"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="goldBtn" id="mkRec">${iconSvg('mic')}${this.rec?'Stop':'Registra'}</button><button class="ghostBtn" id="mkPlay">${iconSvg('play')}Ascolta</button><button class="ghostBtn" id="mkClear">${iconSvg('trash')}Ricomincia</button><span class="hint" id="mkInfo"></span></div>
       <canvas id="mkRoll" width="1300" height="220" style="width:100%;height:110px;background:var(--panel-2);border-radius:12px;border:1px solid var(--line)"></canvas>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="field" style="flex:1;min-width:180px"><label for="mkName">Nome</label><input id="mkName" placeholder="es. Mio vocalizzo · Ma-me-mi"></div><div class="field" style="flex:1;min-width:140px"><label for="mkSyl">Sillabe</label><input id="mkSyl" placeholder="es. Ma-me-mi-mo-mu"></div></div>
@@ -3029,9 +3041,9 @@ const Singers = {
     for(let i=0;i<n;i++){const o=Math.floor(i/7),w=i%7;h+=`<div class="wk" data-m="${base+o*12+ws[w]}">${whites[w]}${w===0?(Math.floor((base+o*12)/12)-1):''}</div>`}
     K.innerHTML=h; const kw=100/n;
     [0,1,3,4,5].forEach(w=>{for(let o=0;o<2;o++){const i=o*7+w;const d=document.createElement('div');d.className='bk';d.dataset.m=base+o*12+ws[w]+1;d.style.left=`calc(${(i+1)*kw}% - ${kw*.32}%)`;d.style.width=kw*.64+'%';K.appendChild(d)}});
-    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-m]');if(!k)return;e.preventDefault();k.classList.add('dn');const m=+k.dataset.m;this.tone(m,.6);
+    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-m]');if(!k)return;e.preventDefault();k.classList.add('dn');const m=+k.dataset.m;Midi.voiceOn(m,95);(this._held=this._held||new Map()).set(e.pointerId,m);
       if(this.rec) this.rec.on.set(e.pointerId,{m,t:performance.now()});});
-    const up=e=>{$$('#mkKeys .dn').forEach(x=>x.classList.remove('dn'));const r=this.rec&&this.rec.on.get(e.pointerId);if(r){this.rec.on.delete(e.pointerId);this.rec.notes.push({m:r.m,t:r.t,e:performance.now()});this.raw=this.rec.notes;this.drawRoll(true)}};
+    const up=e=>{$$('#mkKeys .dn').forEach(x=>x.classList.remove('dn'));const hm=this._held&&this._held.get(e.pointerId);if(hm!=null){this._held.delete(e.pointerId);Midi.release(hm);}const r=this.rec&&this.rec.on.get(e.pointerId);if(r){this.rec.on.delete(e.pointerId);this.rec.notes.push({m:r.m,t:r.t,e:performance.now()});this.raw=this.rec.notes;this.drawRoll(true)}};
     K.addEventListener('pointerup',up); K.addEventListener('pointercancel',up); K.addEventListener('pointerleave',up);
   },
   startRec(){
@@ -4113,6 +4125,70 @@ const Gif = {
     $('#gfFile').onclick=()=>{ const f=$('#fileImg'); f.value=''; f.onchange=async()=>{ const file=f.files[0]; if(!file) return; const src=await blobToDataURL(file); closeLayers(); this.add(src); }; f.click(); };
   },
 };
+
+// ================= Pianoforte vero (campioni registrati) · tastiera MIDI/Bluetooth · tastiera del computer =================
+// Campioni: pianoforte a coda registrato (tonejs-instruments, licenza CC-BY 3.0), uno ogni terza minore,
+// trasposti di ±1 semitono: suono reale su tutta la tastiera.
+const PianoS = {
+  list:(()=>{ const o=[]; const N={C:0,Ds:3,Fs:6,A:9}; for(let oc=1;oc<=7;oc++) for(const k of ['C','Ds','Fs','A']) o.push({midi:12*(oc+1)+N[k],file:k+oc+'.mp3'}); o.push({midi:108,file:'C8.mp3'}); return o; })(),
+  buf:new Map(), loading:new Map(), failed:false,
+  nearest(m){ let b=this.list[0]; for(const s of this.list) if(Math.abs(s.midi-m)<Math.abs(b.midi-m)) b=s; return b; },
+  load(s){
+    if(this.buf.has(s.file)) return Promise.resolve(this.buf.get(s.file));
+    if(this.loading.has(s.file)) return this.loading.get(s.file);
+    const pr=(async()=>{ ac(); const r=await fetch(PIANO_URL+s.file); if(!r.ok) throw new Error('campione mancante'); const ab=await r.arrayBuffer();
+      const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej)); this.buf.set(s.file,b); return b; })();
+    pr.catch(()=>{ this.failed=true; this.loading.delete(s.file); }); this.loading.set(s.file,pr); return pr;
+  },
+  preload(lo=48,hi=84){ for(const s of this.list) if(s.midi>=lo-2&&s.midi<=hi+2) this.load(s).catch(()=>{}); },
+  // suona e restituisce la voce (per fermarla al rilascio del tasto); null se il campione non è ancora pronto
+  start(m,when,vol=.6){
+    ac(); const s=this.nearest(m), b=this.buf.get(s.file); if(!b){ this.load(s).catch(()=>{}); return null; }
+    const t=when??AC.currentTime; const src=AC.createBufferSource(); src.buffer=b;
+    src.playbackRate.value=Math.pow(2,(m-s.midi)/12)*(Metro.A4/440);
+    const g=AC.createGain(); g.gain.setValueAtTime(vol,t); src.connect(g).connect(AC.destination); src.start(t);
+    return {src,g};
+  },
+  stop(v,when,rel=.25){ if(!v) return; const t=Math.max(when??AC.currentTime,AC.currentTime); try{ v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0,t,rel/3); v.src.stop(t+rel*3); }catch(e){} },
+  // nota di durata fissa (vocalizzi, ascolto): true se suonata con il pianoforte vero
+  note(m,dur,when,vol=.5,stacc){ const v=this.start(m,when,vol); if(!v) return false; this.stop(v,(when??AC.currentTime)+(stacc?Math.min(dur,.14):dur),stacc?.08:.3); return true; },
+};
+
+// ---------- MIDI: tastiera collegata via Bluetooth o cavo ----------
+const Midi = {
+  on:new Map(), ready:false,
+  msg(st,a,b){ const c=st&0xf0; if(c===0x90&&b>0) this.noteOn(a,b); else if(c===0x80||(c===0x90&&b===0)) this.noteOff(a); else if(c===0xb0&&a===64) this.pedal(b>=64); },
+  sustain:false, held:new Set(),
+  pedal(on){ this.sustain=on; if(!on){ for(const n of this.held) if(!this.on.has('k'+n)) this.release(n); this.held.clear(); } },
+  voiceOn(n,vel=100){ if(this.voices&&this.voices.has(n)) this.release(n); const v=PianoS.start(n,undefined,.15+vel/127*.65)||synthStart(n,vel); (this.voices=this.voices||new Map()).set(n,v); },
+  noteOn(n,vel=100){ this.voiceOn(n,vel); this.on.set('k'+n,1); Piano.light(n,true); Singers.midiOn&&Singers.midiOn(n); },
+  noteOff(n){ this.on.delete('k'+n); Piano.light(n,false); Singers.midiOff&&Singers.midiOff(n); if(this.sustain){ this.held.add(n); return; } this.release(n); },
+  release(n){ const v=this.voices&&this.voices.get(n); if(!v) return; if(v.osc) synthStop(v); else PianoS.stop(v); this.voices.delete(n); },
+  async connect(){
+    PianoS.preload(36,96);
+    if(window.MozartNative&&MozartNative.app){ try{ const n=await window.webkit.messageHandlers.mozart.postMessage({cmd:'midiBluetooth'}); toast(n>0?`Tastiera MIDI pronta (${n} collegate)`:'Accendi la tastiera Bluetooth e sceglila nella finestra',3200); }catch(e){ toast('MIDI non disponibile'); } return; }
+    if(!navigator.requestMIDIAccess){ toast('In questo browser le tastiere MIDI non sono supportate: usa l\'app Mozart per iPad o la tastiera del computer (A W S E D…)',4200); return; }
+    try{ const acc=await navigator.requestMIDIAccess(); const hook=()=>acc.inputs.forEach(i=>i.onmidimessage=e=>this.msg(e.data[0],e.data[1],e.data[2])); hook(); acc.onstatechange=hook;
+      toast(acc.inputs.size?`Tastiera MIDI collegata (${acc.inputs.size})`:'Nessuna tastiera MIDI trovata: collegala e riprova',3000); }
+    catch(e){ toast('Accesso MIDI negato'); }
+  },
+};
+window.MozartMIDI=(a,b,c)=>Midi.msg(a,b,c);
+function synthStart(m,vel){ ac(); const f=Metro.A4*Math.pow(2,(m-69)/12), t=AC.currentTime, g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.3*vel/127+.05,t+.01); g.gain.setTargetAtTime(.1,t+.05,.4); g.connect(AC.destination);
+  const osc=AC.createOscillator(); osc.type='triangle'; osc.frequency.value=f; osc.connect(g); osc.start(t); return {osc,g}; }
+function synthStop(v){ const t=AC.currentTime; v.g.gain.setTargetAtTime(0,t,.08); v.osc.stop(t+.5); }
+
+// ---------- Tastiera del computer (anche Bluetooth): A W S E D F T G Y H U J K O L P ----------
+(function(){
+  const map={a:0,w:1,s:2,e:3,d:4,f:5,t:6,g:7,y:8,h:9,u:10,j:11,k:12,o:13,l:14,p:15,';':16,'ò':16};
+  const active=()=>$('#pianoSheet')?.classList.contains('open')||(Singers&&Singers.tab==='make'&&$('#mkKeys'));
+  const base=()=>$('#mkKeys')&&Singers.tab==='make'?Singers.start-(Singers.start%12):60+Piano.oct*12;
+  const down=new Set();
+  addEventListener('keydown',e=>{ if(e.metaKey||e.ctrlKey||e.altKey||!active()||e.target.matches('input,textarea')||e.target.isContentEditable) return;
+    const k=e.key.toLowerCase(); if(k==='z'||k==='x'){ Piano.oct=clamp(Piano.oct+(k==='x'?1:-1),-3,2); toast('Ottava '+(4+Piano.oct)); e.preventDefault(); e.stopPropagation(); return; }
+    if(!(k in map)) return; e.preventDefault(); e.stopPropagation(); if(down.has(k)) return; down.add(k); Midi.noteOn(base()+map[k],100); },true);
+  addEventListener('keyup',e=>{ const k=e.key.toLowerCase(); if(!down.has(k)) return; down.delete(k); Midi.noteOff(base()+map[k]); },true);
+})();
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

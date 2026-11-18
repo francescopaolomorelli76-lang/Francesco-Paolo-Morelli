@@ -9,6 +9,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
     private var pendingURLs: [URL] = []
     private var loaded = false
     private var uploads: [String: (name: String, data: Data)] = [:]
+    private var midi: MidiBridge?
 
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -42,6 +43,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         webView.load(URLRequest(url: URL(string: "\(AppSchemeHandler.scheme)://localhost/index.html")!))
+        midi = MidiBridge(web: webView)
     }
 
     // MARK: file in arrivo (Apri con Mozart, AirDrop, File)
@@ -126,6 +128,11 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         case "ocr":
             guard let s = body["image"] as? String else { replyHandler(nil, "immagine mancante"); return }
             recognizeText(dataURL: s) { words, err in replyHandler(words, err) }
+        case "midiBluetooth":
+            midi?.connectAll()
+            let n = midi?.sourceCount ?? 0
+            midi?.showBluetooth(from: self)
+            replyHandler(n, nil)
         case "keepAwake":
             UIApplication.shared.isIdleTimerDisabled = (body["on"] as? Bool) ?? true
             replyHandler(true, nil)

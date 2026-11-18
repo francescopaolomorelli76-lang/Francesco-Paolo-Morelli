@@ -108,11 +108,15 @@ const Piano = {
     for(let i=0;i<n;i++){ const o=Math.floor(i/7), w=i%7; h+=`<div class="wk" data-s="${o*12+wsemi[w]}">${whites[w]}${w===0?(4+o):''}</div>`; }
     K.innerHTML=h; const kw=100/n;
     [0,1,3,4,5].forEach(w=>{ for(let o=0;o<2;o++){ const i=o*7+w; const d=document.createElement('div'); d.className='bk'; d.dataset.s=o*12+wsemi[w]+1; d.style.left=`calc(${(i+1)*kw}% - ${kw*.32}%)`; d.style.width=kw*.64+'%'; K.appendChild(d);} });
-    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-s]');if(!k)return;k.classList.add('dn');setTimeout(()=>k.classList.remove('dn'),180);this.play(+k.dataset.s)});
+    const held=new Map();
+    K.addEventListener('pointerdown',e=>{const k=e.target.closest('[data-s]');if(!k)return;e.preventDefault();PianoS.preload(36,96);const n=60+(+k.dataset.s)+this.oct*12;held.set(e.pointerId,n);k.classList.add('dn');Midi.voiceOn(n,95)});
+    const up=e=>{const n=held.get(e.pointerId);if(n==null)return;held.delete(e.pointerId);this.light(n,false);if(!Midi.sustain)Midi.release(n)};
+    K.addEventListener('pointerup',up);K.addEventListener('pointercancel',up);K.addEventListener('pointerleave',up);
     $('#pianoOct').onclick=e=>{const b=e.target.closest('[data-o]');if(b){this.oct=clamp(this.oct+(+b.dataset.o),-3,2);toast('Ottava '+(4+this.oct))}};
   },
-  open(){ $('#pianoSheet').classList.add('open'); }, close(){ $('#pianoSheet').classList.remove('open'); },
-  play(semi){ ac(); const f=Metro.A4*Math.pow(2,(semi+this.oct*12-9)/12); const t=AC.currentTime; const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.35,t+.008); g.gain.exponentialRampToValueAtTime(.12,t+.3); g.gain.exponentialRampToValueAtTime(.0001,t+1.8); g.connect(AC.destination);
+  open(){ $('#pianoSheet').classList.add('open'); PianoS.preload(48,84); }, close(){ $('#pianoSheet').classList.remove('open'); },
+  light(n,on){ const k=$(`#keys [data-s="${n-60-this.oct*12}"]`); if(k) k.classList.toggle('dn',on); },
+  play(semi){ if(PianoS.note(60+semi+this.oct*12,1.6)) return; ac(); const f=Metro.A4*Math.pow(2,(semi+this.oct*12-9)/12); const t=AC.currentTime; const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.35,t+.008); g.gain.exponentialRampToValueAtTime(.12,t+.3); g.gain.exponentialRampToValueAtTime(.0001,t+1.8); g.connect(AC.destination);
     [[1,'triangle',1],[2,'sine',.35],[3,'sine',.12]].forEach(([m,ty,v])=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty;o.frequency.value=f*m;gg.gain.value=v;o.connect(gg).connect(g);o.start(t);o.stop(t+1.9)}); },
 };
 

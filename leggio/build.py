@@ -17,7 +17,7 @@ CDN = "https://cdnjs.cloudflare.com/ajax/libs/"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;"
          "1,6..96,600&family=Manrope:wght@400;500;600;700;800&family=Noto+Music&display=swap")
 JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js", "audio.js", "forscore.js",
-            "features.js", "singers.js", "lyrics.js", "pron.js", "uizoom.js", "textbox.js", "fix.js", "finger.js", "stable.js", "extras.js", "native.js"]
+            "features.js", "singers.js", "lyrics.js", "pron.js", "uizoom.js", "textbox.js", "fix.js", "finger.js", "stable.js", "extras.js", "piano.js", "native.js"]
 
 
 def build(mode: str) -> str:
@@ -40,14 +40,15 @@ def build(mode: str) -> str:
     if ios:
         # nell'app il lettore PDF lavora in un thread separato: la pagina resta fluida
         libs = '<script src="lib/pdf.min.js"></script>\n<script src="lib/pdf-lib.min.js"></script>\n'
-        consts = 'const PDFJS_WORKER = "lib/pdf.worker.min.js";\nconst SQLJS_URL = "lib/";\nconst PAKO_URL = "lib/pako.min.js";'
+        consts = 'const PDFJS_WORKER = "lib/pdf.worker.min.js";\nconst SQLJS_URL = "lib/";\nconst PAKO_URL = "lib/pako.min.js";\nconst PIANO_URL = "lib/piano/";'
     else:
         libs = (f'<script src="{CDN}pdf.js/3.11.174/pdf.min.js"></script>\n'
                 f'<script src="{CDN}pdf.js/3.11.174/pdf.worker.min.js"></script>\n'
                 f'<script src="{CDN}pdf-lib/1.17.1/pdf-lib.min.js"></script>\n')
         consts = (f'const PDFJS_WORKER = "{CDN}pdf.js/3.11.174/pdf.worker.min.js";\n'
                   f'const SQLJS_URL = "{CDN}sql.js/1.8.0/";\n'
-                  f'const PAKO_URL = "{CDN}pako/2.1.0/pako.min.js";')
+                  f'const PAKO_URL = "{CDN}pako/2.1.0/pako.min.js";\n'
+                  'const PIANO_URL = "piano/";')
     scripts = f"""{libs}<script>
 {consts}
 {js}

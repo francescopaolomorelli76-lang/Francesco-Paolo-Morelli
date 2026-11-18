@@ -1,0 +1,3 @@
+Campioni di pianoforte: tonejs-instruments (https://github.com/nbrosowsky/tonejs-instruments),
+licenza Creative Commons Attribution 3.0 (https://creativecommons.org/licenses/by/3.0/).
+Usati in Mozart (FPM web designer) senza modifiche, un campione ogni terza minore.

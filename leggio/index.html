@@ -487,6 +487,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
       <button class="ib" data-act="next" aria-label="Pagina successiva" data-i="chevRight"></button>
       <div id="pageNum">1 / 1</div>
       <button class="ib" data-act="bright" title="Luminosità" aria-label="Luminosità" data-i="sun"></button>
+      <button class="ib" data-act="zoompad" title="Zoom e spostamento" aria-label="Zoom" data-i="search"></button>
     </div>
     <button class="goldBtn fixBtn" data-act="fix" title="Migliora pagina: raddrizza e metti a fuoco"><svg class="i" data-i="wand"></svg><span class="lbl">Migliora</span></button>
     <button class="goldBtn" data-act="scanInsert" title="Scatta una foto e aggiungila come pagina"><svg class="i" data-i="camera"></svg><span class="lbl">Foto → pagina</span></button>
@@ -597,6 +598,7 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 <script>
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 const SQLJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/";
+const PAKO_URL = "https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js";
 // Archivio locale (IndexedDB) con ripiego in memoria.
 const DB = {
   db:null, mem:{scores:new Map(), kv:new Map()},
@@ -995,14 +997,19 @@ async function drawPageTo(p,W,H,dpr){
   const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
   const scale=Math.min((W-16)/cw,(H-16)/ch);
   // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
-  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>15e6) d=Math.sqrt(15e6/full);
+  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>7e6) d=Math.sqrt(7e6/full);
   const vp=pg.getViewport({scale:scale*d});
   const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
   const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
-  await pg.render({canvasContext:x,viewport:vp}).promise;
+  try{ await pg.render({canvasContext:x,viewport:vp}).promise; }
+  catch(e){ if(d>1.2){ off.width=1; off.height=1; pg.cleanup&&pg.cleanup(); return drawPageTo(p,W,H,1.2); } throw e; }
+  try{ pg.cleanup&&pg.cleanup(); }catch(e){}
   let fixed=off; try{ fixed=fixPage(off,ST.cur,p); }catch(e){}
   const v={off:fixed,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
-  pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
+  pageCache.set(key,v);
+  // memoria limitata (iPad/iPhone chiudono l'app se le immagini in memoria sono troppe): ~24 milioni di pixel
+  let px=0; for(const q of pageCache.values()) px+=q.off.width*q.off.height;
+  while(pageCache.size>1&&px>24e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
   return v;
 }
 const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
@@ -1137,7 +1144,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   const end=e=>{
     clearTimeout(timer);clearGlow(); if(!st) return; const s=st; st=null; if(s.done) return;
     if(ST.annotate) return;
-    if(Zoom.gestured || Zoom.active) return;
+    if(Zoom.gestured || Zoom.active || Zoom.ptrs.size || Date.now()-(Zoom.lastPinch||0)<600) return;
     const dx=e.clientX-s.x, dy=e.clientY-s.y;
     if(Zoom.z>1.02){ return; }
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.3){ dx<0?nextPage():prevPage(); return; }
@@ -1155,11 +1162,17 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   // Anche sopra le barre: tenere premuto sul bordo apre il pannello corrispondente
   addEventListener('keydown',e=>{
     if(e.target.matches('input,textarea,select')||e.target.isContentEditable) return;
+    if(e.key==='+'||e.key==='='){e.preventDefault();ZoomPad.zoom(1.25);return}
+    if(e.key==='-'||e.key==='_'){e.preventDefault();ZoomPad.zoom(1/1.25);return}
+    if(Zoom.z>1.02&&e.key.startsWith('Arrow')){e.preventDefault();const m={ArrowLeft:[1,0],ArrowRight:[-1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key];ZoomPad.pan(m[0],m[1]);return}
     if(['ArrowRight','PageDown',' ','ArrowDown'].includes(e.key)){e.preventDefault();nextPage()}
     else if(['ArrowLeft','PageUp','ArrowUp'].includes(e.key)){e.preventDefault();prevPage()}
     else if(e.key==='Escape'){closeLayers();closeSides()}
   });
-  addEventListener('resize',debounce(()=>{renderPage()},150));
+  let lastW=innerWidth,lastH=innerHeight,typedAt=0;
+  document.addEventListener('focusout',()=>typedAt=Date.now(),true);
+  addEventListener('resize',debounce(()=>{ const a=document.activeElement; const typing=a&&(a.matches('input,textarea')||a.isContentEditable)||Date.now()-typedAt<1500;
+    if(innerWidth===lastW&&(typing||Math.abs(innerHeight-lastH)<160)){ lastH=innerHeight; return; } lastW=innerWidth; lastH=innerHeight; renderPage(); },200));
 })();
 
 // ---------- Popover e modali ----------
@@ -1190,6 +1203,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
   pron:()=>{closeSides();Pron.open()},
@@ -1473,7 +1487,7 @@ function showBackup(){
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
     for(const s of ST.scores){const {_bytes,bytes:_b,...meta}=s;const bytes=await getBytes(s);let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
     busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
-  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};if(!ST.scores.some(x=>x.id===sc.id)){await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
+  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;Conflict.reset();busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};const ex=ST.scores.find(x=>x.id===sc.id||normName(x.file||x.title)===normName(sc.file||sc.title));let mode='new';if(ex){busy();mode=await Conflict.ask(ex.title);busy('Ripristino…');}if(mode==='skip')continue;if(mode==='replace'){Object.assign(ex,{...meta,id:ex.id,size:u8.byteLength});await DB.set('pdf:'+ex.id,u8.buffer);await DB.putScore(ex);if(ann)await DB.set('ann:'+ex.id,ann);continue;}if(mode==='both')sc.id=uid();await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}
       for(const sl of data.setlists||[]) if(!ST.setlists.some(x=>x.id===sl.id)) ST.setlists.push(sl); saveSetlists(); busy(); closeLayers(); renderLibrary(); toast('Backup ripristinato')}catch(e){busy();toast('File di backup non valido')}};f.click()};
 }
 function offerDownload(blob,name,where){
@@ -1685,11 +1699,12 @@ const Anno = {
   down(e){
     if(!ST.annotate) return;
     if(e.pointerType==='pen' && !ST.pencilSeen){ ST.pencilSeen=true; if(ST.settings.autoPencil) toast('Apple Pencil riconosciuta: con il dito sfogli e ingrandisci, con la Pencil scrivi',3200); }
-    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ this.touchNav={x:e.clientX,y:e.clientY}; return; }
+    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ if(this.touchNav&&this.touchNav.id!==e.pointerId) this.touchNav.multi=true; else this.touchNav={x:e.clientX,y:e.clientY,id:e.pointerId,multi:Zoom.ptrs.size>1}; return; }
     this.livePointer=e.pointerType; this.liveId=e.pointerId;
     inkCanvas.setPointerCapture(e.pointerId);
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
+    if((this.mode==='text'||this.mode==='lyric')&&Finger.hitText(p)>=0){ this.live={t:'hand'}; Finger.down(p,this.mode); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
     if(this.mode==='lyric'){ LyricType.start(p); return; }
     if(this.mode==='hand'){ this.live={t:'hand'}; Finger.down(p); return; }
@@ -1736,7 +1751,9 @@ const Anno = {
     const pr=this.presets[this.sel]; const r=inkCanvas.getBoundingClientRect(); const sz=Math.max(6,this.W(pr)*r.width);
     d.style.cssText=`left:${e.clientX-sz/2}px;top:${e.clientY-sz/2}px;width:${sz}px;height:${sz}px;border-color:${pr.color}`; clearTimeout(this._hv); this._hv=setTimeout(()=>d.style.display='none',600); },
   up(e){
-    if(this.touchNav){ const dx=e.clientX-this.touchNav.x; this.touchNav=null; if(Math.abs(dx)>60) dx<0?nextPage():prevPage(); return; }
+    if(this.touchNav){ const tn=this.touchNav; if(e.pointerId!==tn.id){ return; } const dx=e.clientX-tn.x, dy=e.clientY-tn.y; this.touchNav=null;
+      if(tn.multi||Zoom.active||Zoom.z>1.02||Date.now()-(Zoom.lastPinch||0)<600) return;
+      if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*1.5) dx<0?nextPage():prevPage(); return; }
     const L=this.live; this.live=null; if(!L) return;
     if(L.t==='hand'){ Finger.up(); return; }
     if(L.t==='erase'){ if(!L.hit){ const h=this.hist[ST.page]; h&&h.u.pop(); } saveAnn(); this.buildBar(); return; }
@@ -1982,7 +1999,7 @@ const Insert = {
   pickPdf(target){
     this.target=target; const f=$('#filePdf'); f.value='';
     f.onchange=async()=>{ const files=[...f.files]; if(!files.length) return;
-      if(target==='new'){ busy('Importo…'); let last=null; for(const file of files){ try{ last=await addScore(await file.arrayBuffer(),{title:file.name.replace(/\.pdf$/i,'').replace(/[_]+/g,' '),file:file.name,fromFile:true}); }catch(e){ toast('“'+file.name+'” non è un PDF leggibile'); } } busy(); renderLibrary(); if(last){ openScore(last.id); toast(files.length>1?files.length+' spartiti importati':'Spartito importato'); } return; }
+      if(target==='new'){ Conflict.reset(); busy('Importo…'); let last=null; for(const file of files){ try{ const r0=await importPdf(await file.arrayBuffer(),{title:file.name.replace(/\.pdf$/i,'').replace(/[_]+/g,' '),file:file.name,fromFile:true}); if(r0) last=r0; }catch(e){ toast('“'+file.name+'” non è un PDF leggibile'); } } busy(); renderLibrary(); if(last){ openScore(last.id); toast(files.length>1?files.length+' spartiti importati':'Spartito importato'); } return; }
       this.choosePages(await files[0].arrayBuffer(), files[0].name);
     };
     f.click();
@@ -2425,7 +2442,7 @@ const FS4 = {
     f.onchange=()=>{ const files=[...f.files]; if(files.length) this.run(files); };
     f.click();
   },
-  async run(files){
+  async run(files){ Conflict.reset();
     const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false,diag:[]};
     const metas=[]; const added=[];
     for(const file of files){
@@ -2560,8 +2577,7 @@ const FS4 = {
   },
   async addPdf(bytes,name,rep,added){
     const buf=bytes.buffer?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes;
-    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&(s.size||0)===buf.byteLength)){ rep.dups++; return; }
-    try{ const sc=await addScore(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); added.push(sc.id); rep.pdfs++; }
+    try{ const sc=await importPdf(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); if(!sc){ rep.dups++; return; } added.push(sc.id); rep.pdfs++; }
     catch(e){ rep.errors.push(name); }
   },
   report(r){
@@ -2569,12 +2585,13 @@ const FS4 = {
     let h=li(r.pdfs,'spartiti importati')+(r.dups?li(r.dups,'già presenti, saltati'):'')+li(r.matched,'spartiti con titolo, compositore o etichette da forScore')+li(r.setlists,'setlist ricreate');
     if(r.annFiles) h+=li(r.annApplied||0,`spartiti con testi e disegni di forScore applicati`);
     if(r.fsFiles&&r.fsFiles.length){ const have=new Set(ST.scores.map(s=>normName(s.file||s.title))); const miss=r.fsFiles.filter(f=>!have.has(normName(f)));
-      if(miss.length) h+=`<div class="hint"><b>Mancano i PDF di:</b> ${miss.map(esc).join(', ')}.<br>Importali (Importa → PDF dai File, dalla cartella di forScore): testi, disegni e titoli di forScore verranno messi <b>automaticamente</b> sulle pagine giuste.</div>`; }
+      if(miss.length) h+=`<div><button class="goldBtn" id="fsPdfs">${iconSvg('file')}Importa ora i PDF mancanti</button></div><div class="hint"><b>Mancano i PDF di:</b> ${miss.map(esc).join(', ')}.<br>Importali (Importa → PDF dai File, dalla cartella di forScore): testi, disegni e titoli di forScore verranno messi <b>automaticamente</b> sulle pagine giuste.</div>`; }
     if(r.errors.length) h+=`<div class="hint" style="color:var(--danger)">Non letti: ${esc(r.errors.slice(0,6).join(', '))}</div>`;
     if(r.metaOnly&&!r.pdfs&&!(r.fsFiles&&r.fsFiles.length)) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
     if(r.diag&&r.diag.length) h+=`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer"><b>Dettagli tecnici del file</b> (fai una foto dello schermo e mandala a Claude se qualcosa non è stato importato)</summary><pre id="fsDiag" style="white-space:pre-wrap;font-size:11.5px;line-height:1.45;color:var(--muted);max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text">${esc(r.diag.join('\n'))}</pre></details>`;
     const m2=modal('Import da forScore',h,`<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
     m2.querySelector('[data-ok]').onclick=()=>{closeLayers();openSide('library')};
+    const fp=m2.querySelector('#fsPdfs'); if(fp) fp.onclick=()=>{ closeLayers(); Insert.pickPdf('new'); };
   },
 };
 const baseName=p=>String(p).split(/[\/\\]/).pop();
@@ -2742,8 +2759,10 @@ async function gunzipAll(blob){
   for(let i=0;i<4;i++){
     const h=new Uint8Array(await blob.slice(0,2).arrayBuffer());
     if(!(h[0]===0x1f&&h[1]===0x8b)) return blob;
-    if(!window.DecompressionStream) throw new Error('Questo iPad è troppo vecchio per aprire i backup forScore (serve iPadOS 16.4)');
-    blob=new Blob([await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()]);
+    let out=null;
+    if(window.DecompressionStream){ try{ out=await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }catch(e){ out=null; } }
+    if(!out){ await loadPako(); out=pako.ungzip(new Uint8Array(await blob.arrayBuffer())).buffer; }
+    blob=new Blob([out]);
   }
   return blob;
 }
@@ -2760,6 +2779,8 @@ async function applyForscoreAnn(sc){
   return true;
 }
 
+function loadPako(){ if(window.pako) return Promise.resolve(); return new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=PAKO_URL; sc.onload=res; sc.onerror=()=>rej(new Error('Decompressione non disponibile')); document.head.appendChild(sc); }); }
+
 // ================= Zoom con due dita · Tutto schermo · Luminosità · Invio (AirDrop) =================
 const Zoom = {
   z:1, x:0, y:0, ptrs:new Map(), active:false, gestured:false, start:null, lastTap:0,
@@ -2771,6 +2792,9 @@ const Zoom = {
     const sharpen=debounce(()=>renderPage(0,{noPrefetch:true}),220);
     stage.addEventListener('pointerdown',e=>{
       if(e.pointerType!=='touch') return;
+      // mentre si disegna: il palmo o un secondo dito arrivati dopo non fanno zoom
+      if(ST.annotate&&Anno.live&&(Anno.livePointer!=='touch'||Date.now()-(this.t0||0)>220)) return;
+      if(!this.ptrs.size) this.t0=Date.now();
       this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY});
       if(this.ptrs.size===2){
         this.active=true; this.gestured=true; Anno.cancelTouchStroke&&Anno.cancelTouchStroke();
@@ -2793,6 +2817,7 @@ const Zoom = {
     },true);
     const up=e=>{
       if(!this.ptrs.has(e.pointerId)) return; this.ptrs.delete(e.pointerId);
+      if(this.active) this.lastPinch=Date.now();
       if(this.active && this.ptrs.size<2){ this.active=false; if(this.z<1.06) this.reset(); else sharpen(); }
       if(!this.ptrs.size){
         // doppio tocco: torna alla pagina intera (o ingrandisce)
@@ -3201,7 +3226,10 @@ const RULES = {
     if(s.length<=1) return s;
     s=s.replace(/ch/g,'S').replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'');
     s=s.replace(/([aeiouyéèêàâîôû])s(?=[aeiouyéèêàâîôû])/g,'$1ṡ').replace(/ss/g,'s').replace(/([gj])e(?=[aou])/g,'$1');
-    s=s.replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/œu|oeu|eu|œ/g,'ö').replace(/oi/g,'Ua').replace(/oy/g,'Uai').replace(/o[uùû]/g,'U');
+    s=s.replace(/[âà]/g,'a').replace(/[îï]/g,'i').replace(/ô/g,'o').replace(/û/g,'u');
+    s=s.replace(/^(ville|mille|tranquille)$/,m=>m.replace('ill','il'));
+    s=s.replace(/emm/g,'amm').replace(/ay/g,'èi').replace(/tion/g,'sion').replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/œu|oeu|eu|œ/g,'ö').replace(/oin(?![aeiouy])/g,'Uẽ').replace(/oi/g,'Ua').replace(/oy/g,'Uai').replace(/o[uùû]/g,'U');
+    s=s.replace(/ien(?![aeiouynm])/g,'iẽ').replace(/([^aeiouy])ill/g,'$1iI').replace(/([aeiouy])ill/g,'$1I').replace(/ail$/,'aI').replace(/eil$/,'èI');
     // nasali (vocale + n/m non seguita da vocale)
     s=s.replace(/(ain|aim|ein|eim|in|im|yn|ym|un|um)(?![aeiouyéèênm])/g,'ẽ').replace(/(an|am|en|em)(?![aeiouyéèênm])/g,'ã').replace(/(on|om)(?![aeiouyéèênm])/g,'õ');
     s=s.replace(/ai|ei|ê|ë/g,'è');
@@ -3209,7 +3237,7 @@ const RULES = {
     s=s.replace(/([aeiouyèé])ill/g,'$1i');
     s=s.replace(/qu/g,'K').replace(/ç/g,'s').replace(/c(?=[eiyéèê])/g,'s').replace(/c/g,'K');
     s=s.replace(/gu(?=[eiyéèê])/g,'G').replace(/g(?=[eiyéèê])/g,'j').replace(/g(?!n)/g,'G');
-    s=s.replace(/u/g,'ü').replace(/U/g,'u').replace(/y/g,'i');
+    s=s.replace(/u/g,'ü').replace(/U/g,'u').replace(/y/g,'i').replace(/I/g,'i');
     s=s.replace(/z/g,'ṡ');
     s=s.replace(/[dtsxzpg]+$/,'').replace(/([aeiouéèü])e$/,'$1').replace(/(.)e$/,'$1(e)').replace(/(.)es$/,'$1(e)');
     return itOrtho(s); },
@@ -3414,7 +3442,7 @@ const LyricType = {
   box(){
     $('#textEntry')?.remove(); const r=inkCanvas.getBoundingClientRect(); const b=document.createElement('div'); b.id='textEntry'; b.className='lybox';
     b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Salta nota">${iconSvg('chevRight')}</button>
-      <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
+      <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ghostBtn" id="lyTr" title="Pronuncia all'italiana della riga">${iconSvg('voice')}Traslittera</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
     $('#app').appendChild(b);
     const place=()=>{ b.style.left=clamp(r.left+this.x*r.width-150,8,innerWidth-470)+'px'; b.style.top=clamp(r.top+this.y*r.height+r.height*this.size*.9,60,innerHeight-70)+'px'; };
     place(); this._place=place;
@@ -3424,6 +3452,7 @@ const LyricType = {
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
     $('#lyX').onclick=()=>this.close(); $('#lyOcr').onclick=()=>this.ocrPick();
+    $('#lyTr').onclick=()=>{ const idx=Anno.strokes.map((s,k)=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004?k:-1).filter(k=>k>=0); if(!idx.length) return toast('Questa riga non ha ancora testo: scrivilo o copialo prima'); Finger.line=idx; Finger.idx=idx[0]; Finger.translit($('#textEntry')); };
     setTimeout(()=>inp.focus(),20);
   },
   step(d){ if(this.notes){ this.i=clamp(this.i+d,0,this.notes.length-1); this.x=this.notes[this.i]; } else this.x=clamp(this.x+d*.05,.02,.98); this._place&&this._place(); this.marks(); },
@@ -3445,7 +3474,7 @@ const LyricType = {
     const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
-      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L); const B=L.querySelector('.rdBand');
     const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
     B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
@@ -3457,6 +3486,12 @@ const LyricType = {
     L.onclick=async e=>{
       if(e.target.closest('[data-x]')){ L.remove(); return; }
       const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      if(e.target.closest('[data-tr]')){ L.remove(); busy('Leggo il testo…');
+        try{ const words=await readLyrics({...band,gap:g}); busy(); if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole',3200);
+          const yy=(band.y0+band.y1)/2, sz=Math.max(.012,g*1.6); const pseudo=words.map(w=>({text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer}));
+          let lang=detectLang(words.map(w=>w.text).join(' '))||'la'; if(lang==='it') lang='la';
+          Finger.writeTranslit(pseudo,lang,'up'); toast('Pronuncia scritta sopra il testo stampato · con il Dito ✋ la sposti',3200);
+        }catch(err){ busy(); toast(err.message||'Lettura non riuscita'); } return; }
       if(!e.target.closest('[data-ok]')) return;
       L.remove(); busy('Leggo il testo…');
       try{ const words=await readLyrics({...band,gap:g}); busy();
@@ -3464,8 +3499,9 @@ const LyricType = {
         Anno.push(); const n=target.notes; const added=[];
         for(const w of words){ let x=w.x; if(n&&n.length){ let b2=0,bd=9; n.forEach((v,j)=>{const d=Math.abs(v-x); if(d<bd){bd=d;b2=j}}); if(bd<.03) x=n[b2]; }
           Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}); added.push(Anno.strokes.length-1); }
-        saveAnn(); Anno.redraw(); Anno.buildBar(); LyricType.close();
-        toast(`${added.length} sillabe copiate · con il Dito ✋ le sposti e le correggi`,3200);
+        saveAnn(); Anno.redraw(); Anno.buildBar();
+        target.box(); target.marks();
+        toast(`${added.length} sillabe copiate · se ne manca qualcuna scrivila qui: Invio passa alla nota dopo`,4200);
         Finger.offerTranslit(added);
       }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); } };
   },
@@ -3619,6 +3655,7 @@ async function autoAnalyze(sc,p,pg){
   const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
   const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
   const skew=detectSkew(c); const r=rotateCanvas(c,skew); let box=null; try{ box=contentBox(r); }catch(e){}
+  if(box&&((1-box.l-box.r)*(1-box.t-box.b)<.35||box.l+box.r>.6||box.t+box.b>.6)) box=null; // riquadro sbagliato: meglio non ritagliare che mostrare una pagina bianca
   sc.auto[p]={skew,box:box||{l:0,t:0,r:0,b:0}}; DB.putScore(sc); return sc.auto[p];
 }
 // Applica le correzioni alla pagina disegnata (la zona da mostrare la decide drawPageTo con il ritaglio).
@@ -3789,12 +3826,14 @@ const Finger = {
   // tutte le sillabe della stessa riga di testo
   lineOf(i){ const A=Anno, s=A.strokes[i]; if(!s.lyric) return [i];
     return A.strokes.map((t,k)=>t.t==='text'&&t.lyric&&!t.pron===!s.pron&&Math.abs(t.y-s.y)<.004&&(t.layer||0)===(s.layer||0)?k:-1).filter(k=>k>=0); },
-  hit(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
-  down(p){
-    $('#fgBar')?.remove(); const i=this.hit(p);
-    if(i<0){ this.st=null; Anno.clearSel(); toast('Tocca una parola o una sillaba scritta',1600); return; }
-    const line=this.lineOf(i);
-    this.st={p0:p,i,line,orig:line.map(k=>({x:Anno.strokes[k].x,y:Anno.strokes[k].y})),moved:false,single:!Anno.strokes[i].lyric};
+  hitText(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
+  hit(p){ const t=this.hitText(p); if(t>=0) return t; const A=Anno; for(let i=A.strokes.length-1;i>=0;i--){ const s=A.strokes[i]; if(s.t==='text'||s.t==='img'||(s.layer||0)!==A.layer) continue; if(hitStroke(s,p[0],p[1],.016)) return i; } return -1; },
+  hitOld(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
+  down(p,from){
+    $('#fgBar')?.remove(); const i=this.hit(p); this.from=from||'hand';
+    if(i<0){ this.st=null; Anno.clearSel(); toast('Tocca un testo, una riga o un segno',1600); return; }
+    const line=Anno.strokes[i].t==='text'?this.lineOf(i):[i];
+    this.st={p0:p,i,line,orig:line.map(k=>JSON.parse(JSON.stringify(Anno.strokes[k]))),moved:false,single:!Anno.strokes[i].lyric};
     Anno.selIdx=line; Anno.updSelBox(); Anno.redraw();
   },
   move(p){
@@ -3802,13 +3841,17 @@ const Finger = {
     if(!s.moved&&Math.hypot(dx,dy)<.006) return;
     if(!s.moved){ s.moved=true; Anno.push(); }
     // la riga si sposta in su o in giù; un testo libero si sposta anche di lato
-    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; t.x=s.orig[j].x+dx; });
+    s.line.forEach((k,j)=>{ const c=JSON.parse(JSON.stringify(s.orig[j])); moveStroke(c,dx,dy); Anno.strokes[k]=c; });
     Anno.updSelBox(); Anno.redraw();
   },
   up(){
     const s=this.st; if(!s) return; this.st=null;
     if(s.moved){ saveAnn(); Anno.buildBar(); }
-    this.line=s.line; this.idx=s.i; this.bar();
+    this.line=s.line; this.idx=s.i;
+    // con la T: tocco senza spostare = modifica il testo
+    if(!s.moved&&this.from==='text'&&!Anno.strokes[s.i].lyric){ Anno.clearSel(); const t=Anno.strokes[s.i]; TextBox.open([t.x+.001,t.y]); return; }
+    if(Anno.strokes[s.i].t!=='text'){ this.strokeBar(); return; }
+    this.bar();
   },
   bar(){
     $('#fgBar')?.remove(); const A=Anno, s=A.strokes[this.idx]; if(!s) return;
@@ -3888,7 +3931,81 @@ const Finger = {
     L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
   },
+  // barretta per un tratto (riga evidenziata, linea, forma, segno): frecce, duplica, elimina
+  strokeBar(){
+    $('#fgBar')?.remove(); const A=Anno; const r=inkCanvas.getBoundingClientRect(); const bx=A.selBox||{x0:.4,y0:.4,y1:.45};
+    const b=document.createElement('div'); b.id='fgBar'; b.className='pill';
+    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); b.style.left=clamp(r.left+bx.x0*r.width,8,innerWidth-380)+'px'; b.style.top=clamp(r.top+bx.y0*r.height-60,70,innerHeight-60)+'px';
+    const st=.004;
+    b.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return;
+      if(a==='ok'){ b.remove(); A.clearSel(); return; }
+      A.push();
+      if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
+      else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
+      else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
+      A.redraw(); saveAnn(); A.buildBar(); };
+  },
 };
+
+// ================= Stabilità, zoom da pulsanti, conflitti d'importazione, emoticon =================
+
+// ---------- Importazioni: file già presente → sostituisci / tieni entrambi / salta ----------
+const Conflict = {
+  all:null,
+  reset(){ this.all=null; },
+  ask(name){
+    if(this.all) return Promise.resolve(this.all);
+    return new Promise(res=>{
+      const p=document.createElement('div'); p.className='modal'; p.style.zIndex=96;
+      p.innerHTML=`<div class="mHead"><h3><span class="eyebrow">Già in libreria</span>${esc(name)}</h3></div>
+        <div class="mBody"><div class="hint">C'è già uno spartito con questo nome. Cosa faccio?</div>
+        <div class="switchRow"><b>Vale per tutti i file di questa importazione</b><button class="switch" id="cfAll" role="switch"></button></div></div>
+        <div class="mFoot"><button class="ghostBtn" data-c="skip">Salta</button><button class="ghostBtn" data-c="both">Tieni entrambi</button><button class="goldBtn" data-c="replace">${iconSvg('check')}Sostituisci</button></div>`;
+      const sc=document.createElement('div'); sc.className='scrim'; sc.style.zIndex=95;
+      document.body.append(sc,p); let all=false;
+      p.querySelector('#cfAll').onclick=e=>{ all=!all; e.currentTarget.classList.toggle('on',all); };
+      p.querySelector('.mFoot').onclick=e=>{ const b=e.target.closest('[data-c]'); if(!b) return; if(all) this.all=b.dataset.c; p.remove(); sc.remove(); res(b.dataset.c); };
+    });
+  },
+};
+// Importa un PDF tenendo conto dei doppioni; sostituendo, le annotazioni restano.
+async function importPdf(bytes,meta){
+  const ex=ST.scores.find(s=>normName(s.file||s.title)===normName(meta.file||meta.title));
+  if(ex){ busy(); const c=await Conflict.ask(ex.title);
+    if(c==='skip') return null;
+    if(c==='replace'){ await replaceBytes(ex,bytes,null); try{ await applyForscoreAnn(ex); }catch(e){} return ex; } }
+  return addScore(bytes,meta);
+}
+
+// ---------- Zoom e spostamento da pulsanti e tastiera ----------
+const ZoomPad = {
+  open(el){
+    const p=popover(el,`<div style="display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-items:center">
+      <button class="ib" data-z="out" aria-label="Rimpicciolisci">${iconSvg('minus')}</button><button class="ib" data-m="0,1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-z="in" aria-label="Ingrandisci">${iconSvg('plus')}</button>
+      <button class="ib" data-m="1,0" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-z="fit" aria-label="Pagina intera" style="font-weight:800;font-size:12px">1:1</button><button class="ib" data-m="-1,0" aria-label="Destra">${iconSvg('chevRight')}</button>
+      <span></span><button class="ib" data-m="0,-1" aria-label="Giù">${iconSvg('down')}</button><span></span></div>
+      <div class="hint" style="font-size:12px;margin-top:8px;text-align:center">Tastiera: + e − ingrandiscono, frecce spostano</div>`,{above:true,id:'zoomPad'});
+    p.onclick=e=>{ const z=e.target.closest('[data-z]'), m=e.target.closest('[data-m]');
+      if(z) this.zoom(z.dataset.z==='in'?1.25:z.dataset.z==='out'?1/1.25:0);
+      if(m){ const [dx,dy]=m.dataset.m.split(',').map(Number); this.pan(dx,dy); } };
+  },
+  zoom(f){ if(!f){ Zoom.reset(); return; } Zoom.z=clamp(Zoom.z*f,1,5); if(Zoom.z<1.02){ Zoom.reset(); return; } Zoom.clampPan(); Zoom.apply(); this._r=this._r||debounce(()=>renderPage(0,{noPrefetch:true}),250); this._r(); },
+  pan(dx,dy){ if(Zoom.z<=1.02) return; const s=stage.getBoundingClientRect(); Zoom.x+=dx*s.width*.2; Zoom.y+=dy*s.height*.2; Zoom.clampPan(); Zoom.apply(); },
+};
+
+// ---------- Emoticon nei segni ----------
+(function(){
+  const e=(c,n)=>({c,f:'e',n});
+  STAMP_CATS.splice(1,0,{id:'emoji',name:'Emoticon',items:[
+    e('😊','sorriso'),e('🙂','ok'),e('😮','stupore'),e('🤫','piano!'),e('😴','sveglia'),e('😢','triste'),e('😡','attenzione'),e('😂','ridere'),
+    e('👍','bene'),e('👏','bravo'),e('🙏','grazie'),e('✋','stop'),e('👀','guarda'),e('👁','occhio'),e('👂','ascolta'),e('👄','articola'),
+    e('🫁','respira'),e('💨','fiato'),e('🎤','solo'),e('🎵','nota'),e('🎶','melodia'),e('🎼','partitura'),e('🎹','pianoforte'),e('🔔','attacco'),
+    e('⏱','tempo'),e('🐢','più lento'),e('🐇','più veloce'),e('⬆️','sali'),e('⬇️','scendi'),e('↗️','cresci'),e('↘️','cala'),e('🔁','ripeti'),
+    e('⚠️','attenzione'),e('❗','importante'),e('❓','dubbio'),e('✅','fatto'),e('❌','no'),e('⭐','bello'),e('❤️','con amore'),e('🔥','forte'),
+    e('💡','idea'),e('✏️','nota'),e('📌','qui'),e('🎯','intonazione'),e('🧘','rilassati'),e('😀','sorridi'),e('🤝','insieme'),e('👑','solista'),
+  ]});
+})();
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

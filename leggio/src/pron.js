@@ -37,7 +37,10 @@ const RULES = {
     if(s.length<=1) return s;
     s=s.replace(/ch/g,'S').replace(/ph/g,'f').replace(/th/g,'t').replace(/h/g,'');
     s=s.replace(/([aeiouyéèêàâîôû])s(?=[aeiouyéèêàâîôû])/g,'$1ṡ').replace(/ss/g,'s').replace(/([gj])e(?=[aou])/g,'$1');
-    s=s.replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/œu|oeu|eu|œ/g,'ö').replace(/oi/g,'Ua').replace(/oy/g,'Uai').replace(/o[uùû]/g,'U');
+    s=s.replace(/[âà]/g,'a').replace(/[îï]/g,'i').replace(/ô/g,'o').replace(/û/g,'u');
+    s=s.replace(/^(ville|mille|tranquille)$/,m=>m.replace('ill','il'));
+    s=s.replace(/emm/g,'amm').replace(/ay/g,'èi').replace(/tion/g,'sion').replace(/eaux?$/,'o').replace(/eau/g,'o').replace(/au/g,'o').replace(/œu|oeu|eu|œ/g,'ö').replace(/oin(?![aeiouy])/g,'Uẽ').replace(/oi/g,'Ua').replace(/oy/g,'Uai').replace(/o[uùû]/g,'U');
+    s=s.replace(/ien(?![aeiouynm])/g,'iẽ').replace(/([^aeiouy])ill/g,'$1iI').replace(/([aeiouy])ill/g,'$1I').replace(/ail$/,'aI').replace(/eil$/,'èI');
     // nasali (vocale + n/m non seguita da vocale)
     s=s.replace(/(ain|aim|ein|eim|in|im|yn|ym|un|um)(?![aeiouyéèênm])/g,'ẽ').replace(/(an|am|en|em)(?![aeiouyéèênm])/g,'ã').replace(/(on|om)(?![aeiouyéèênm])/g,'õ');
     s=s.replace(/ai|ei|ê|ë/g,'è');
@@ -45,7 +48,7 @@ const RULES = {
     s=s.replace(/([aeiouyèé])ill/g,'$1i');
     s=s.replace(/qu/g,'K').replace(/ç/g,'s').replace(/c(?=[eiyéèê])/g,'s').replace(/c/g,'K');
     s=s.replace(/gu(?=[eiyéèê])/g,'G').replace(/g(?=[eiyéèê])/g,'j').replace(/g(?!n)/g,'G');
-    s=s.replace(/u/g,'ü').replace(/U/g,'u').replace(/y/g,'i');
+    s=s.replace(/u/g,'ü').replace(/U/g,'u').replace(/y/g,'i').replace(/I/g,'i');
     s=s.replace(/z/g,'ṡ');
     s=s.replace(/[dtsxzpg]+$/,'').replace(/([aeiouéèü])e$/,'$1').replace(/(.)e$/,'$1(e)').replace(/(.)es$/,'$1(e)');
     return itOrtho(s); },

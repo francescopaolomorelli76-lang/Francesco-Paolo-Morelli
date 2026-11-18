@@ -104,6 +104,7 @@ async function autoAnalyze(sc,p,pg){
   const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height);
   const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); await pg.render({canvasContext:x,viewport:vp}).promise;
   const skew=detectSkew(c); const r=rotateCanvas(c,skew); let box=null; try{ box=contentBox(r); }catch(e){}
+  if(box&&((1-box.l-box.r)*(1-box.t-box.b)<.35||box.l+box.r>.6||box.t+box.b>.6)) box=null; // riquadro sbagliato: meglio non ritagliare che mostrare una pagina bianca
   sc.auto[p]={skew,box:box||{l:0,t:0,r:0,b:0}}; DB.putScore(sc); return sc.auto[p];
 }
 // Applica le correzioni alla pagina disegnata (la zona da mostrare la decide drawPageTo con il ritaglio).

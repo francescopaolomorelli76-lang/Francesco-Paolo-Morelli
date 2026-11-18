@@ -8,7 +8,7 @@ const FS4 = {
     f.onchange=()=>{ const files=[...f.files]; if(files.length) this.run(files); };
     f.click();
   },
-  async run(files){
+  async run(files){ Conflict.reset();
     const rep={pdfs:0,dups:0,meta:0,setlists:0,matched:0,errors:[],metaOnly:false,diag:[]};
     const metas=[]; const added=[];
     for(const file of files){
@@ -143,8 +143,7 @@ const FS4 = {
   },
   async addPdf(bytes,name,rep,added){
     const buf=bytes.buffer?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes;
-    if(ST.scores.some(s=>normName(s.file||'')===normName(name)&&(s.size||0)===buf.byteLength)){ rep.dups++; return; }
-    try{ const sc=await addScore(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); added.push(sc.id); rep.pdfs++; }
+    try{ const sc=await importPdf(buf,{title:name.replace(/\.pdf$/i,'').replace(/_+/g,' ').trim(),file:name,fromFile:true,tags:['forScore']}); if(!sc){ rep.dups++; return; } added.push(sc.id); rep.pdfs++; }
     catch(e){ rep.errors.push(name); }
   },
   report(r){
@@ -152,12 +151,13 @@ const FS4 = {
     let h=li(r.pdfs,'spartiti importati')+(r.dups?li(r.dups,'già presenti, saltati'):'')+li(r.matched,'spartiti con titolo, compositore o etichette da forScore')+li(r.setlists,'setlist ricreate');
     if(r.annFiles) h+=li(r.annApplied||0,`spartiti con testi e disegni di forScore applicati`);
     if(r.fsFiles&&r.fsFiles.length){ const have=new Set(ST.scores.map(s=>normName(s.file||s.title))); const miss=r.fsFiles.filter(f=>!have.has(normName(f)));
-      if(miss.length) h+=`<div class="hint"><b>Mancano i PDF di:</b> ${miss.map(esc).join(', ')}.<br>Importali (Importa → PDF dai File, dalla cartella di forScore): testi, disegni e titoli di forScore verranno messi <b>automaticamente</b> sulle pagine giuste.</div>`; }
+      if(miss.length) h+=`<div><button class="goldBtn" id="fsPdfs">${iconSvg('file')}Importa ora i PDF mancanti</button></div><div class="hint"><b>Mancano i PDF di:</b> ${miss.map(esc).join(', ')}.<br>Importali (Importa → PDF dai File, dalla cartella di forScore): testi, disegni e titoli di forScore verranno messi <b>automaticamente</b> sulle pagine giuste.</div>`; }
     if(r.errors.length) h+=`<div class="hint" style="color:var(--danger)">Non letti: ${esc(r.errors.slice(0,6).join(', '))}</div>`;
     if(r.metaOnly&&!r.pdfs&&!(r.fsFiles&&r.fsFiles.length)) h+=`<div class="hint"><b>Questo è un backup “solo dati”:</b> forScore ci mette titoli, setlist e impostazioni, ma non i PDF. Per avere anche la musica:<br>1. in forScore crea un <b>Archivio</b> (Strumenti → Backup → Archivio), che contiene anche gli spartiti, e aprilo qui; oppure<br>2. importa i PDF dalla cartella di forScore in File, poi riapri questo .4sb: titoli e setlist verranno abbinati ai PDF con lo stesso nome.</div>`;
     if(r.diag&&r.diag.length) h+=`<details style="margin-top:6px"><summary class="hint" style="cursor:pointer"><b>Dettagli tecnici del file</b> (fai una foto dello schermo e mandala a Claude se qualcosa non è stato importato)</summary><pre id="fsDiag" style="white-space:pre-wrap;font-size:11.5px;line-height:1.45;color:var(--muted);max-height:40vh;overflow:auto;user-select:text;-webkit-user-select:text">${esc(r.diag.join('\n'))}</pre></details>`;
     const m2=modal('Import da forScore',h,`<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
     m2.querySelector('[data-ok]').onclick=()=>{closeLayers();openSide('library')};
+    const fp=m2.querySelector('#fsPdfs'); if(fp) fp.onclick=()=>{ closeLayers(); Insert.pickPdf('new'); };
   },
 };
 const baseName=p=>String(p).split(/[\/\\]/).pop();
@@ -325,8 +325,10 @@ async function gunzipAll(blob){
   for(let i=0;i<4;i++){
     const h=new Uint8Array(await blob.slice(0,2).arrayBuffer());
     if(!(h[0]===0x1f&&h[1]===0x8b)) return blob;
-    if(!window.DecompressionStream) throw new Error('Questo iPad è troppo vecchio per aprire i backup forScore (serve iPadOS 16.4)');
-    blob=new Blob([await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()]);
+    let out=null;
+    if(window.DecompressionStream){ try{ out=await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }catch(e){ out=null; } }
+    if(!out){ await loadPako(); out=pako.ungzip(new Uint8Array(await blob.arrayBuffer())).buffer; }
+    blob=new Blob([out]);
   }
   return blob;
 }
@@ -342,3 +344,5 @@ async function applyForscoreAnn(sc){
   if(ST.cur&&ST.cur.id===sc.id){ ST.ann=ann; Anno.redraw(); }
   return true;
 }
+
+function loadPako(){ if(window.pako) return Promise.resolve(); return new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src=PAKO_URL; sc.onload=res; sc.onerror=()=>rej(new Error('Decompressione non disponibile')); document.head.appendChild(sc); }); }

@@ -9,6 +9,9 @@ const Zoom = {
     const sharpen=debounce(()=>renderPage(0,{noPrefetch:true}),220);
     stage.addEventListener('pointerdown',e=>{
       if(e.pointerType!=='touch') return;
+      // mentre si disegna: il palmo o un secondo dito arrivati dopo non fanno zoom
+      if(ST.annotate&&Anno.live&&(Anno.livePointer!=='touch'||Date.now()-(this.t0||0)>220)) return;
+      if(!this.ptrs.size) this.t0=Date.now();
       this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY});
       if(this.ptrs.size===2){
         this.active=true; this.gestured=true; Anno.cancelTouchStroke&&Anno.cancelTouchStroke();
@@ -31,6 +34,7 @@ const Zoom = {
     },true);
     const up=e=>{
       if(!this.ptrs.has(e.pointerId)) return; this.ptrs.delete(e.pointerId);
+      if(this.active) this.lastPinch=Date.now();
       if(this.active && this.ptrs.size<2){ this.active=false; if(this.z<1.06) this.reset(); else sharpen(); }
       if(!this.ptrs.size){
         // doppio tocco: torna alla pagina intera (o ingrandisce)

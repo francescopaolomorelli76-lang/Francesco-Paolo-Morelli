@@ -4,12 +4,14 @@ const Finger = {
   // tutte le sillabe della stessa riga di testo
   lineOf(i){ const A=Anno, s=A.strokes[i]; if(!s.lyric) return [i];
     return A.strokes.map((t,k)=>t.t==='text'&&t.lyric&&!t.pron===!s.pron&&Math.abs(t.y-s.y)<.004&&(t.layer||0)===(s.layer||0)?k:-1).filter(k=>k>=0); },
-  hit(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
-  down(p){
-    $('#fgBar')?.remove(); const i=this.hit(p);
-    if(i<0){ this.st=null; Anno.clearSel(); toast('Tocca una parola o una sillaba scritta',1600); return; }
-    const line=this.lineOf(i);
-    this.st={p0:p,i,line,orig:line.map(k=>({x:Anno.strokes[k].x,y:Anno.strokes[k].y})),moved:false,single:!Anno.strokes[i].lyric};
+  hitText(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
+  hit(p){ const t=this.hitText(p); if(t>=0) return t; const A=Anno; for(let i=A.strokes.length-1;i>=0;i--){ const s=A.strokes[i]; if(s.t==='text'||s.t==='img'||(s.layer||0)!==A.layer) continue; if(hitStroke(s,p[0],p[1],.016)) return i; } return -1; },
+  hitOld(p){ const A=Anno; let best=-1,bd=9; A.strokes.forEach((s,i)=>{ if(s.t!=='text'||(s.layer||0)!==A.layer) return; if(hitStroke(s,p[0],p[1],.012)){ const d=Math.abs(s.x-p[0])+Math.abs(s.y-p[1]); if(d<bd){bd=d;best=i;} } }); return best; },
+  down(p,from){
+    $('#fgBar')?.remove(); const i=this.hit(p); this.from=from||'hand';
+    if(i<0){ this.st=null; Anno.clearSel(); toast('Tocca un testo, una riga o un segno',1600); return; }
+    const line=Anno.strokes[i].t==='text'?this.lineOf(i):[i];
+    this.st={p0:p,i,line,orig:line.map(k=>JSON.parse(JSON.stringify(Anno.strokes[k]))),moved:false,single:!Anno.strokes[i].lyric};
     Anno.selIdx=line; Anno.updSelBox(); Anno.redraw();
   },
   move(p){
@@ -17,13 +19,17 @@ const Finger = {
     if(!s.moved&&Math.hypot(dx,dy)<.006) return;
     if(!s.moved){ s.moved=true; Anno.push(); }
     // la riga si sposta in su o in giù; un testo libero si sposta anche di lato
-    s.line.forEach((k,j)=>{ const t=Anno.strokes[k]; t.y=s.orig[j].y+dy; t.x=s.orig[j].x+dx; });
+    s.line.forEach((k,j)=>{ const c=JSON.parse(JSON.stringify(s.orig[j])); moveStroke(c,dx,dy); Anno.strokes[k]=c; });
     Anno.updSelBox(); Anno.redraw();
   },
   up(){
     const s=this.st; if(!s) return; this.st=null;
     if(s.moved){ saveAnn(); Anno.buildBar(); }
-    this.line=s.line; this.idx=s.i; this.bar();
+    this.line=s.line; this.idx=s.i;
+    // con la T: tocco senza spostare = modifica il testo
+    if(!s.moved&&this.from==='text'&&!Anno.strokes[s.i].lyric){ Anno.clearSel(); const t=Anno.strokes[s.i]; TextBox.open([t.x+.001,t.y]); return; }
+    if(Anno.strokes[s.i].t!=='text'){ this.strokeBar(); return; }
+    this.bar();
   },
   bar(){
     $('#fgBar')?.remove(); const A=Anno, s=A.strokes[this.idx]; if(!s) return;
@@ -102,5 +108,20 @@ const Finger = {
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
     L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
+  },
+  // barretta per un tratto (riga evidenziata, linea, forma, segno): frecce, duplica, elimina
+  strokeBar(){
+    $('#fgBar')?.remove(); const A=Anno; const r=inkCanvas.getBoundingClientRect(); const bx=A.selBox||{x0:.4,y0:.4,y1:.45};
+    const b=document.createElement('div'); b.id='fgBar'; b.className='pill';
+    b.innerHTML=`<button class="ib" data-a="l" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button class="ib" data-a="u" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-a="d" aria-label="Giù">${iconSvg('down')}</button><button class="ib" data-a="r" aria-label="Destra">${iconSvg('chevRight')}</button><button class="ib" data-a="c" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-a="x" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-a="ok" aria-label="Fine">${iconSvg('check')}</button>`;
+    $('#app').appendChild(b); b.style.left=clamp(r.left+bx.x0*r.width,8,innerWidth-380)+'px'; b.style.top=clamp(r.top+bx.y0*r.height-60,70,innerHeight-60)+'px';
+    const st=.004;
+    b.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return;
+      if(a==='ok'){ b.remove(); A.clearSel(); return; }
+      A.push();
+      if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
+      else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
+      else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
+      A.redraw(); saveAnn(); A.buildBar(); };
   },
 };

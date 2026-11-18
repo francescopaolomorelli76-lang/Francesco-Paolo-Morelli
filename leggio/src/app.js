@@ -87,14 +87,19 @@ async function drawPageTo(p,W,H,dpr){
   const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
   const scale=Math.min((W-16)/cw,(H-16)/ch);
   // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
-  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>15e6) d=Math.sqrt(15e6/full);
+  let d=dpr; const full=vp1.width*vp1.height*scale*scale; if(full*d*d>7e6) d=Math.sqrt(7e6/full);
   const vp=pg.getViewport({scale:scale*d});
   const off=document.createElement('canvas'); off.width=Math.round(vp.width); off.height=Math.round(vp.height);
   const x=off.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,off.width,off.height);
-  await pg.render({canvasContext:x,viewport:vp}).promise;
+  try{ await pg.render({canvasContext:x,viewport:vp}).promise; }
+  catch(e){ if(d>1.2){ off.width=1; off.height=1; pg.cleanup&&pg.cleanup(); return drawPageTo(p,W,H,1.2); } throw e; }
+  try{ pg.cleanup&&pg.cleanup(); }catch(e){}
   let fixed=off; try{ fixed=fixPage(off,ST.cur,p); }catch(e){}
   const v={off:fixed,cssW:vp.width/d,cssH:vp.height/d,cw:cw*scale,ch:ch*scale,crop};
-  pageCache.set(key,v); while(pageCache.size>7) pageCache.delete(pageCache.keys().next().value);
+  pageCache.set(key,v);
+  // memoria limitata (iPad/iPhone chiudono l'app se le immagini in memoria sono troppe): ~24 milioni di pixel
+  let px=0; for(const q of pageCache.values()) px+=q.off.width*q.off.height;
+  while(pageCache.size>1&&px>24e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
   return v;
 }
 const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
@@ -229,7 +234,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   const end=e=>{
     clearTimeout(timer);clearGlow(); if(!st) return; const s=st; st=null; if(s.done) return;
     if(ST.annotate) return;
-    if(Zoom.gestured || Zoom.active) return;
+    if(Zoom.gestured || Zoom.active || Zoom.ptrs.size || Date.now()-(Zoom.lastPinch||0)<600) return;
     const dx=e.clientX-s.x, dy=e.clientY-s.y;
     if(Zoom.z>1.02){ return; }
     if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.3){ dx<0?nextPage():prevPage(); return; }
@@ -247,11 +252,17 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
   // Anche sopra le barre: tenere premuto sul bordo apre il pannello corrispondente
   addEventListener('keydown',e=>{
     if(e.target.matches('input,textarea,select')||e.target.isContentEditable) return;
+    if(e.key==='+'||e.key==='='){e.preventDefault();ZoomPad.zoom(1.25);return}
+    if(e.key==='-'||e.key==='_'){e.preventDefault();ZoomPad.zoom(1/1.25);return}
+    if(Zoom.z>1.02&&e.key.startsWith('Arrow')){e.preventDefault();const m={ArrowLeft:[1,0],ArrowRight:[-1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key];ZoomPad.pan(m[0],m[1]);return}
     if(['ArrowRight','PageDown',' ','ArrowDown'].includes(e.key)){e.preventDefault();nextPage()}
     else if(['ArrowLeft','PageUp','ArrowUp'].includes(e.key)){e.preventDefault();prevPage()}
     else if(e.key==='Escape'){closeLayers();closeSides()}
   });
-  addEventListener('resize',debounce(()=>{renderPage()},150));
+  let lastW=innerWidth,lastH=innerHeight,typedAt=0;
+  document.addEventListener('focusout',()=>typedAt=Date.now(),true);
+  addEventListener('resize',debounce(()=>{ const a=document.activeElement; const typing=a&&(a.matches('input,textarea')||a.isContentEditable)||Date.now()-typedAt<1500;
+    if(innerWidth===lastW&&(typing||Math.abs(innerHeight-lastH)<160)){ lastH=innerHeight; return; } lastW=innerWidth; lastH=innerHeight; renderPage(); },200));
 })();
 
 // ---------- Popover e modali ----------
@@ -282,6 +293,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
   pron:()=>{closeSides();Pron.open()},
@@ -565,7 +577,7 @@ function showBackup(){
   $('#bkSave').onclick=async()=>{busy('Preparo il backup…');const data={v:1,setlists:ST.setlists,scores:[]};
     for(const s of ST.scores){const {_bytes,bytes:_b,...meta}=s;const bytes=await getBytes(s);let b64='';const u8=new Uint8Array(bytes);for(let i=0;i<u8.length;i+=32768)b64+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));data.scores.push({...meta,pdf:btoa(b64),ann:await DB.get('ann:'+s.id)})}
     busy();offerDownload(new Blob([JSON.stringify(data)],{type:'application/json'}),`Mozart-backup-${new Date().toISOString().slice(0,10)}.json`,$('#bkOut'))};
-  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};if(!ST.scores.some(x=>x.id===sc.id)){await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}}
+  $('#bkLoad').onclick=()=>{const f=$('#fileBackup');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;Conflict.reset();busy('Ripristino…');try{const data=JSON.parse(await file.text());for(const s of data.scores){const bin=atob(s.pdf);const u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);const {pdf,ann,...meta}=s;const sc={...meta,size:u8.byteLength};const ex=ST.scores.find(x=>x.id===sc.id||normName(x.file||x.title)===normName(sc.file||sc.title));let mode='new';if(ex){busy();mode=await Conflict.ask(ex.title);busy('Ripristino…');}if(mode==='skip')continue;if(mode==='replace'){Object.assign(ex,{...meta,id:ex.id,size:u8.byteLength});await DB.set('pdf:'+ex.id,u8.buffer);await DB.putScore(ex);if(ann)await DB.set('ann:'+ex.id,ann);continue;}if(mode==='both')sc.id=uid();await DB.set('pdf:'+sc.id,u8.buffer);ST.scores.push(sc);await DB.putScore(sc);if(ann)await DB.set('ann:'+sc.id,ann)}
       for(const sl of data.setlists||[]) if(!ST.setlists.some(x=>x.id===sl.id)) ST.setlists.push(sl); saveSetlists(); busy(); closeLayers(); renderLibrary(); toast('Backup ripristinato')}catch(e){busy();toast('File di backup non valido')}};f.click()};
 }
 function offerDownload(blob,name,where){

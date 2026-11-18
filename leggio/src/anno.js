@@ -94,11 +94,12 @@ const Anno = {
   down(e){
     if(!ST.annotate) return;
     if(e.pointerType==='pen' && !ST.pencilSeen){ ST.pencilSeen=true; if(ST.settings.autoPencil) toast('Apple Pencil riconosciuta: con il dito sfogli e ingrandisci, con la Pencil scrivi',3200); }
-    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ this.touchNav={x:e.clientX,y:e.clientY}; return; }
+    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ if(this.touchNav&&this.touchNav.id!==e.pointerId) this.touchNav.multi=true; else this.touchNav={x:e.clientX,y:e.clientY,id:e.pointerId,multi:Zoom.ptrs.size>1}; return; }
     this.livePointer=e.pointerType; this.liveId=e.pointerId;
     inkCanvas.setPointerCapture(e.pointerId);
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
+    if((this.mode==='text'||this.mode==='lyric')&&Finger.hitText(p)>=0){ this.live={t:'hand'}; Finger.down(p,this.mode); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
     if(this.mode==='lyric'){ LyricType.start(p); return; }
     if(this.mode==='hand'){ this.live={t:'hand'}; Finger.down(p); return; }
@@ -145,7 +146,9 @@ const Anno = {
     const pr=this.presets[this.sel]; const r=inkCanvas.getBoundingClientRect(); const sz=Math.max(6,this.W(pr)*r.width);
     d.style.cssText=`left:${e.clientX-sz/2}px;top:${e.clientY-sz/2}px;width:${sz}px;height:${sz}px;border-color:${pr.color}`; clearTimeout(this._hv); this._hv=setTimeout(()=>d.style.display='none',600); },
   up(e){
-    if(this.touchNav){ const dx=e.clientX-this.touchNav.x; this.touchNav=null; if(Math.abs(dx)>60) dx<0?nextPage():prevPage(); return; }
+    if(this.touchNav){ const tn=this.touchNav; if(e.pointerId!==tn.id){ return; } const dx=e.clientX-tn.x, dy=e.clientY-tn.y; this.touchNav=null;
+      if(tn.multi||Zoom.active||Zoom.z>1.02||Date.now()-(Zoom.lastPinch||0)<600) return;
+      if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*1.5) dx<0?nextPage():prevPage(); return; }
     const L=this.live; this.live=null; if(!L) return;
     if(L.t==='hand'){ Finger.up(); return; }
     if(L.t==='erase'){ if(!L.hit){ const h=this.hist[ST.page]; h&&h.u.pop(); } saveAnn(); this.buildBar(); return; }

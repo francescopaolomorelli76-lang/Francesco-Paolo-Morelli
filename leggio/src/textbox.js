@@ -109,8 +109,10 @@ const LyricType = {
     const nx=staves[staves.indexOf(st)+1]; const lim=nx?nx.top:1;
     const ex=Anno.strokes.find(s=>s.t==='text'&&s.lyric&&s.y>st.bottom&&s.y<lim);
     this.y=ex?ex.y:Math.min(lim-st.gap*.6, Math.max(p[1], st.bottom+st.gap*2.2));
-    this.size=ex?ex.size:Math.max(.014,st.gap*1.9);
-    this.i=this.notes?this.nearest(p[0]):0; this.x=this.notes?this.notes[this.i]:p[0];
+    this.size=ex?ex.size:clamp(st.gap*1.4,.011,.02);
+    // la sillaba va sotto la nota toccata se riconosciuta lì vicino, altrimenti esattamente dove hai toccato
+    this.i=this.notes?this.nearest(p[0]):0; this.x=(this.notes&&Math.abs(this.notes[this.i]-p[0])<.025)?this.notes[this.i]:p[0];
+    if(this.notes&&this.x===p[0]){ this.notes.push(p[0]); this.notes.sort((a,b)=>a-b); this.i=this.notes.indexOf(p[0]); }
     this.box(); Anno.redraw(); this.marks();
   },
   nearest(x){ let b=0,bd=9; this.notes.forEach((n,k)=>{const d=Math.abs(n-x); if(d<bd){bd=d;b=k}}); return b; },
@@ -198,9 +200,10 @@ async function readLyrics(st){
   const c=pageCanvas, W=c.width, H=c.height;
   const y0=Math.round((st.y0!=null?st.y0:st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.y1!=null?st.y1:st.bottom+st.gap*3.5)*H));
   // solo la striscia del testo, alla misura che serve alla lettura (caratteri alti ~24 px), in bianco e nero
-  const gapPx=st.gap*H, k=Math.min(1.5,Math.max(.25,24/Math.max(1,gapPx)));
+  const gapPx=st.gap*H, k=Math.min(3,Math.max(.3,34/Math.max(1,gapPx)));
   const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
-  const cx=cut.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.filter='grayscale(1) contrast(1.6)'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height); cx.filter='none';
+  const cx=cut.getContext('2d',{willReadFrequently:true}); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.imageSmoothingQuality='high'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height);
+  cleanForOcr(cut,gapPx*k);
   let res;
   if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
   else res=await ocrBrowser(cut);
@@ -208,7 +211,7 @@ async function readLyrics(st){
   if(res.length&&res[0].y!=null){ const ym=Math.min(...res.map(w=>w.y)); res=res.filter(w=>w.y<ym+.22); }
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
-    parts.forEach((t,i)=>{ if(t==='-'||t==='—') return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
+    parts.forEach((t,i)=>{ if(/^[-–—_]+$/.test(t)){ if(out.length&&!/-$/.test(out[out.length-1].text)) out[out.length-1].text+='-'; return; } t=t.replace(/_+/g,''); if(!t) return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
   return out;
 }
 
@@ -221,7 +224,7 @@ function ocrWarmup(){
   _ocrWorker=(async()=>{
     if(!window.Tesseract) await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); });
     const w=await Tesseract.createWorker('ita+fra+lat');
-    await w.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
+    await w.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
     return w;
   })();
   _ocrWorker.catch(()=>{ _ocrWorker=null; });
@@ -232,5 +235,17 @@ async function ocrBrowser(canvas){
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
   const Hh=canvas.height;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>25).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh}));
+  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh}));
+}
+
+// Bianco e nero netto e senza le linee orizzontali lunghe (estensioni delle sillabe "____"), che confondono la lettura.
+function cleanForOcr(c,gap){
+  const x=c.getContext('2d',{willReadFrequently:true}), W=c.width, H=c.height, im=x.getImageData(0,0,W,H), d=im.data;
+  let tot=0; for(let i=0;i<W*H;i++) tot+=d[i*4]+d[i*4+1]+d[i*4+2]; const thr=tot/(W*H)*.72;
+  const g=new Uint8Array(W*H); for(let i=0;i<W*H;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])<thr?1:0;
+  const long=Math.max(12,gap*2.2), T=Math.max(2,Math.round(gap*.12));
+  for(let y=T;y<H-T;y++){ let st=-1; for(let i=0;i<=W;i++){ const on=i<W&&g[y*W+i]&&!(g[(y-T)*W+i]&&g[(y+T)*W+i]);
+    if(on){ if(st<0) st=i; } else if(st>=0){ if(i-st>long) for(let k=st;k<i;k++){ g[y*W+k]=0; g[(y-1)*W+k]=0; g[(y+1)*W+k]=0; } st=-1; } } }
+  for(let i=0;i<W*H;i++){ const v=g[i]?0:255; d[i*4]=d[i*4+1]=d[i*4+2]=v; d[i*4+3]=255; }
+  x.putImageData(im,0,0);
 }

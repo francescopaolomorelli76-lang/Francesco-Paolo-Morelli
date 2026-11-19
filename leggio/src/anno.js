@@ -13,12 +13,8 @@ const Anno = {
   presets:[
     {k:'stamp',g:{c:U(0x1D110),f:'m'},color:'#d23b2f',size:30,alpha:1},
     {k:'shape',shape:'dim',color:'#d23b2f',size:6,alpha:1},
-    {k:'pen',color:'#d23b2f',size:5,alpha:1},{k:'pen',color:'#1f5fd6',size:5,alpha:1},{k:'pen',color:'#111111',size:4,alpha:1},
-    {k:'pen',color:'#111111',size:14,alpha:1},{k:'pen',color:'#111111',size:8,alpha:1},{k:'pen',color:'#1f5fd6',size:14,alpha:1},
-    {k:'hl',color:'#fff200',size:30,alpha:.5},{k:'pen',color:'#d23b2f',size:3,alpha:1},{k:'hl',color:'#fff200',size:70,alpha:.5},
-    {k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true},
-    {k:'pen',color:'#7a4a2a',size:22,alpha:1},{k:'pen',color:'#d23b2f',size:14,alpha:1},{k:'pen',color:'#d23b2f',size:8,alpha:1},
-    {k:'mask',color:'#ffffff',size:40,alpha:1},
+    {k:'pen',color:'#111111',size:5,alpha:1},{k:'pen',color:'#d23b2f',size:5,alpha:1},{k:'pen',color:'#1f5fd6',size:5,alpha:1},
+    {k:'pen',color:'#111111',size:12,alpha:1},{k:'hl',color:'#fff200',size:40,alpha:.5},{k:'mask',color:'#ffffff',size:40,alpha:1},
   ],
   sel:2, mode:'preset', ruler:false, layers:[{name:'Livello 1',vis:true},{name:'Livello 2',vis:true}], layer:0,
   hist:{}, snapshot:null, live:null, selIdx:[], selBox:null, stampCat:0,
@@ -96,7 +92,7 @@ const Anno = {
     if(!ST.annotate) return;
     if(e.pointerType==='pen' && !ST.pencilSeen){ ST.pencilSeen=true; if(ST.settings.autoPencil) toast('Apple Pencil riconosciuta: con il dito sfogli e ingrandisci, con la Pencil scrivi',3200); }
     if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ if(this.touchNav&&this.touchNav.id!==e.pointerId) this.touchNav.multi=true; else this.touchNav={x:e.clientX,y:e.clientY,id:e.pointerId,multi:Zoom.ptrs.size>1}; return; }
-    this.livePointer=e.pointerType; this.liveId=e.pointerId;
+    this.livePointer=e.pointerType; this.liveId=e.pointerId; if(e.pointerType==='pen') this.penAt=Date.now();
     inkCanvas.setPointerCapture(e.pointerId);
     const p=this.pt(e); const pr=this.presets[this.sel];
     if(this.mode==='eraser'){ this.push(); this.live={t:'erase',hit:false}; this.erase(p); return; }
@@ -124,7 +120,7 @@ const Anno = {
     this.strokes.forEach((s,i)=>{ if(s.t!=='shape'||(s.layer||0)!==this.layer) return; for(const end of ['a','b']){ const d=Math.hypot(s[end][0]-p[0],s[end][1]-p[1]); if(d<bd){ bd=d; best={idx:i,end}; } } });
     return best;
   },
-  touchNavigates(){ return ST.settings.pencilOnly || (ST.settings.autoPencil && ST.pencilSeen); },
+  touchNavigates(){ return ST.settings.pencilOnly || (ST.settings.autoPencil && (this.livePointer==='pen'&&this.live || Date.now()-(this.penAt||0)<600)); },
   cancelTouchStroke(){ if(this.live && this.livePointer==='touch'){ this.live=null; this.redraw(); } },
   move(e){
     if(this.touchNav) return;

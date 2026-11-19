@@ -38,6 +38,7 @@ const Finger = {
     b.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;min-width:300px">
       <div style="display:flex;gap:6px;align-items:center"><input id="fgTxt" value="${esc(s.text)}" autocapitalize="off" autocorrect="off" spellcheck="false" style="flex:1;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:0 10px;font-size:17px;outline:none"><button class="goldBtn sm" id="fgOk">${iconSvg('check')}</button></div>
       <div class="seg" id="fgFont"><button data-f="sans">Aa</button><button data-f="serif" style="font-family:var(--f-display)">Aa</button><button data-f="music" style="font-family:var(--f-display);font-style:italic">rit.</button>
+        <span class="fgCols">${['#111111','#d23b2f','#1f5fd6','#1d8a4a','#8b3fc4','#c8962e'].map(c=>`<button class="sw" data-col="${c}" style="background:${c};width:26px;height:26px" aria-label="Colore"></button>`).join('')}</span>
         <button id="fgB" style="font-weight:900">G</button><button id="fgI" style="font-style:italic">C</button><button id="fgM">A−</button><button id="fgP">A+</button></div>
       <div class="seg"><button id="fgLt">${iconSvg('chevLeft')}</button><button id="fgUp">${iconSvg('up')}</button><button id="fgDn">${iconSvg('down')}</button><button id="fgRt">${iconSvg('chevRight')}</button>
         ${lyric?`<button id="fgPrev" title="Sillaba precedente">${iconSvg('skipBack')}</button><button id="fgNext" title="Sillaba successiva">${iconSvg('skipFwd')}</button><button id="fgGap" title="Nota senza parola: scrivi la sillaba mancante sotto la nota">${iconSvg('plus')} Parola mancante</button><button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}<button id="fgHl">${iconSvg('pen')} Evidenzia</button><button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgDel" style="color:var(--danger)">${iconSvg('trash')}</button></div>
@@ -49,6 +50,7 @@ const Finger = {
     const mark=()=>{ const t=L()[0]||s; b.querySelectorAll('#fgFont [data-f]').forEach(x=>x.classList.toggle('on',(t.font||'sans')===x.dataset.f)); $('#fgB').classList.toggle('on',!!t.bold); $('#fgI').classList.toggle('on',!!t.italic); };
     mark();
     b.querySelector('#fgFont').onclick=e=>{ const x=e.target.closest('button'); if(!x) return;
+      if(x.dataset.col){ ch(t=>t.color=x.dataset.col); return; }
       if(x.dataset.f) ch(t=>t.font=x.dataset.f);
       else if(x.id==='fgB'){ const v=!L()[0].bold; ch(t=>t.bold=v); }
       else if(x.id==='fgI'){ const v=!L()[0].italic; ch(t=>t.italic=v); }

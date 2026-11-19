@@ -19,7 +19,9 @@ async function loadAll(){
   ST.setlists = (await DB.get('setlists'))||[];
   Object.assign(ST.settings, (await DB.get('settings'))||{});
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
-  if(pr&&pr.length&&!ST.settings.neonV){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
+  if(pr&&pr.length&&!ST.settings.presetsV2){ Anno.presets=Anno.presets.filter(p=>p.k!=='hl'); const hi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(hi<0?Anno.presets.length:hi,0,{k:'hl',color:'#fff200',size:40,alpha:.5}); DB.set('presets',Anno.presets); }
+  ST.settings.presetsV2=1; ST.settings.neonV=1;
+  if(false){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
   ST.settings.neonV=1;
   document.body.classList.toggle('night', !!ST.settings.night);
   if(!ST.scores.length){ busy('Preparo gli spartiti di esempio…'); await makeDemoLibrary(); busy(); }
@@ -201,7 +203,7 @@ function placeKnob(f){const tr=$('#scrubTrack');const w=tr.clientWidth-16;$('#sc
 })();
 
 // ---------- Barre e bordi (pressione lunga) ----------
-function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
+function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;document.body.classList.toggle('barsOn',(top||ST.annotate)&&!document.body.classList.contains('immersive'));$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
 function openSide(which,open=true){
   const el=$('#'+which); el.classList.toggle('open',open);
   if(open){ const other=which==='library'?'tools':'library'; $('#'+other).classList.remove('open'); if(which==='library') renderLibrary(); }
@@ -294,6 +296,7 @@ function modal(title, body, foot, opts={}){
 
 // ---------- Azioni (tutti i pulsanti con data-act) ----------
 const ACTIONS = {
+  clock:(el)=>Clock.open(el),
   midi:()=>Midi.connect(),
   gif:()=>{closeSides();Gif.open()},
   zoompad:(el)=>ZoomPad.open(el),
@@ -688,7 +691,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply();
+  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply(); Clock.init();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);

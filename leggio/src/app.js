@@ -396,7 +396,7 @@ function renderLibrary(){
   // Piede: importa + inserisci (sempre visibile)
   $('#libFoot').innerHTML = ST.libSelect
     ? `<button class="ghostBtn" data-libdo="setlist">${iconSvg('rings')}Setlist</button><button class="ghostBtn" data-libdo="merge">${iconSvg('merge')}Unisci</button><button class="ghostBtn danger" data-libdo="delete">${iconSvg('trash')}Elimina</button><button class="ghostBtn" data-libdo="done">Fine</button>`
-    : `<button class="goldBtn" data-libdo="import">${iconSvg('plus')}Importa</button><button class="goldBtn" data-act="scanNew" style="flex:1;justify-content:center">${iconSvg('camera')}Scansiona</button>`;
+    : `<button class="goldBtn" data-libdo="import">${iconSvg('plus')}Importa</button><button class="goldBtn" data-act="scanNew" style="flex:1;justify-content:center">${iconSvg('camera')}Scansiona</button><button class="sealBtn" data-act="about" title="© 2026 FPM webdesignertech" aria-label="Copyright FPM webdesignertech"><img src="__SEAL__" alt=""></button>`;
   // Miniature (prima pagina), pigre
   body.querySelectorAll('[data-thumb]').forEach(el=>drawThumb(el.dataset.thumb, el));
 }
@@ -601,8 +601,8 @@ function offerDownload(blob,name,where){
   else { const m2=modal('File pronto',`<div id="dlBox"></div>`); $('#dlBox').appendChild(a); }
 }
 function showAbout(){
-  modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><img src="__COVER__" alt="Mozart · FPM" style="width:130px;flex:none">
-    <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM web designer</div><div class="hint">Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM web designer · Tutti i diritti riservati.</div></div></div>
+  modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><img src="__SEAL__" alt="Sigillo FPM webdesignertech" style="width:140px;flex:none;filter:drop-shadow(0 0 18px rgba(214,168,78,.35))">
+    <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM webdesignertech</div><div class="hint">Mozart · Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM webdesignertech · Tutti i diritti riservati.<br>Nome, marchio, icona e codice sono opera protetta: vietata la copia e la distribuzione senza autorizzazione.</div></div></div>
     <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>`);
 }
 

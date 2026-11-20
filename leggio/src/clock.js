@@ -13,6 +13,8 @@ const Clock = {
     const dt=now.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
     const html=`<span class="ckD">${dt}</span><span class="ckH">${t}</span>${tm}`;
     $$('.clockPill').forEach(el=>{ if(el._h!==html){ el._h=html; el.innerHTML=html; } });
+    // l'orologio piccolo in lettura sparisce quando c'è la barra superiore o si annota
+    const mc=$('#miniClock'), tb=$('#topbar'); if(mc) mc.classList.toggle('off',!!(ST.annotate||(tb&&!tb.classList.contains('hide'))));
   },
   start(min,kind){ this.end=Date.now()+min*60000; this.kind=kind; this.total=min; this.save(); this.render(); toast(kind==='pausa'?`Pausa di ${min} minuti`:`Lavoro: ${min} minuti`,2000); },
   stop(){ this.end=0; this.kind=''; this.save(); this.render(); },

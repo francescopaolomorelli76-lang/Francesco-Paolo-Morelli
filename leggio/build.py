@@ -12,6 +12,7 @@ SRC = ROOT / "src"
 VENDOR = ROOT / "vendor"
 LOGO = ROOT / "logo160.jpg"
 COVER = ROOT / "cover.jpg"
+SEAL = ROOT / "fpm_seal320.png"
 
 CDN = "https://cdnjs.cloudflare.com/ajax/libs/"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;"
@@ -23,9 +24,10 @@ JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js
 def build(mode: str) -> str:
     logo = "data:image/jpeg;base64," + base64.b64encode(LOGO.read_bytes()).decode()
     cover = "data:image/jpeg;base64," + base64.b64encode(COVER.read_bytes()).decode()
+    seal = "data:image/png;base64," + base64.b64encode(SEAL.read_bytes()).decode()
     css = (SRC / "style.css").read_text().replace("__COVER__", cover)
-    body = (SRC / "body.html").read_text().replace("__LOGO__", logo).replace("__COVER__", cover)
-    js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo).replace("__COVER__", cover)
+    body = (SRC / "body.html").read_text().replace("__LOGO__", logo).replace("__COVER__", cover).replace("__SEAL__", seal)
+    js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo).replace("__COVER__", cover).replace("__SEAL__", seal)
     ios = mode == "ios"
     fonts = '<link rel="stylesheet" href="lib/fonts.css">' if ios else (
         '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'

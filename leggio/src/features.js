@@ -94,6 +94,7 @@ const Bright = {
 // ---------- Invia (AirDrop, Messaggi, WhatsApp, Mail…) ----------
 async function buildAnnotatedPdf(sc, ann){
   const doc=await PDFLib.PDFDocument.load(await getBytes(sc),{ignoreEncryption:true}); const pages=doc.getPages();
+  try{ doc.setProducer('Mozart · © 2026 FPM webdesignertech'); doc.setCreator('Mozart · FPM webdesignertech'); }catch(e){}
   for(let i=0;i<pages.length;i++){
     const strokes=ann[i]; if(!strokes||!strokes.length) continue; await preloadAnnImgs(strokes);
     const pg=pages[i]; const {width,height}=pg.getSize(); const k=3;

@@ -88,6 +88,11 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
 - **GIF animate**: il livello non viene più ricreato a ogni tocco, quindi le GIF si muovono.
 - **Legenda dei colori** nella copia del testo: blu = rigo con il testo, verde = dove copi, grigio = senza testo, riquadro arancio = sillabe selezionate.
 
+## Sigillo copyright FPM webdesignertech
+- `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.png` (inserito nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
+- Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).
+- I PDF condivisi hanno nei dati "Producer/Creator: Mozart · © 2026 FPM webdesignertech".
+
 ## Compilare l'app iOS (IPA)
 - **GitHub Actions**: `.github/workflows/mozart-ios.yml`, con `runs-on: macos-26`.
   - Parte a ogni push su `leggio/**` o `mozart-ios/**` e crea un IPA non firmato.

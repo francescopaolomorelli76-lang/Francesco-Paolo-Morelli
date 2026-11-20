@@ -174,7 +174,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
                     start = r.upperBound
                     if let box = try? cand.boundingBox(for: r) {
                         let b = box.boundingBox
-                        words.append(["text": String(part), "x": Double(b.minX), "w": Double(b.width), "y": 1 - Double(b.maxY)])
+                        words.append(["text": String(part), "x": Double(b.minX), "w": Double(b.width), "y": 1 - Double(b.maxY), "h": Double(b.height)])
                     }
                 }
             }
@@ -183,6 +183,8 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         }
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false
+        // sillabe piccole sotto il rigo: si accettano anche scritte basse
+        request.minimumTextHeight = 0.02
         request.recognitionLanguages = ["it-IT", "de-DE", "fr-FR", "en-US", "es-ES"]
         DispatchQueue.global(qos: .userInitiated).async {
             do { try VNImageRequestHandler(cgImage: cg, options: [:]).perform([request]) }

@@ -9,7 +9,10 @@ const Clock = {
   render(){
     const now=new Date(), t=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     let tm=''; if(this.end){ const left=this.end-Date.now(); if(left<=0) this.done(); else tm=`<span class="ckT ${this.kind}">${this.kind==='pausa'?'☕':'⏱'} ${this.fmt(left)}</span>`; }
-    $$('.clockPill').forEach(el=>el.innerHTML=`<span class="ckH">${t}</span>${tm}`);
+    // data del giorno: "ven 20 nov"
+    const dt=now.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
+    const html=`<span class="ckD">${dt}</span><span class="ckH">${t}</span>${tm}`;
+    $$('.clockPill').forEach(el=>{ if(el._h!==html){ el._h=html; el.innerHTML=html; } });
   },
   start(min,kind){ this.end=Date.now()+min*60000; this.kind=kind; this.total=min; this.save(); this.render(); toast(kind==='pausa'?`Pausa di ${min} minuti`:`Lavoro: ${min} minuti`,2000); },
   stop(){ this.end=0; this.kind=''; this.save(); this.render(); },

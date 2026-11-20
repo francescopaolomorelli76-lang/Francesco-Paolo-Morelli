@@ -57,6 +57,7 @@ const LyricCopy = {
     $('#lcLayer')?.remove(); const r=inkCanvas.getBoundingClientRect(); const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=this.staves.map((st,i)=>{const isRef=st===this.ref; return `<button data-st="${i}" class="lcBand${isRef?' ref':''}${this.picked.has(i)?' on':''}" style="top:${(st.top-st.gap*.6)*100}%;height:${(st.bottom-st.top+st.gap*1.2)*100}%">${isRef?'Testo da qui':this.picked.has(i)?'✓ Copia qui':'Tocca per copiare'}</button>`}).join('')
+      +`<div class="lcLegend"><i style="background:#1f5fd6"></i>Blu: rigo con il testo da copiare <i style="background:#1d8a4a"></i>Verde: dove lo copi <i style="background:#999"></i>Grigio: rigo senza testo <i style="border:2px dashed #c8962e;background:none"></i>Riquadro arancio: le sillabe selezionate</div>`
       +`<div class="lcBar pill"><button class="ghostBtn" data-lc="all">Tutti i righi senza testo</button><button class="goldBtn" data-lc="ok">${iconSvg('check')}Copia</button><button class="ib" data-lc="x" aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L);
     L.onclick=e=>{ const b=e.target.closest('[data-st]'); if(b){ const i=+b.dataset.st; if(this.staves[i]===this.ref) return; this.picked.has(i)?this.picked.delete(i):this.picked.add(i); this.overlay(); return; }

@@ -11,6 +11,8 @@ const Zoom = {
       if(e.pointerType!=='touch') return;
       // mentre si disegna: il palmo o un secondo dito arrivati dopo non fanno zoom
       if(ST.annotate&&Anno.live&&(Anno.livePointer!=='touch'||Date.now()-(this.t0||0)>220)) return;
+      // un dito alzato fuori dalla pagina (sopra una barra) poteva restare 'appeso' e bloccare la scrittura
+      if(e.isPrimary&&this.ptrs.size){ this.ptrs.clear(); this.active=false; }
       if(!this.ptrs.size) this.t0=Date.now();
       this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY});
       if(this.ptrs.size===2){
@@ -44,7 +46,7 @@ const Zoom = {
         setTimeout(()=>{ this.gestured=false; },0);
       }
     };
-    stage.addEventListener('pointerup',up,true); stage.addEventListener('pointercancel',up,true);
+    window.addEventListener('pointerup',up,true); window.addEventListener('pointercancel',up,true);
     // iOS: evita lo zoom di Safari sull'intera pagina
     ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
   },

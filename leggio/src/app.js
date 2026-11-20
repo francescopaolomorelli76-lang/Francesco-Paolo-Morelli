@@ -21,6 +21,11 @@ async function loadAll(){
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
   if(pr&&pr.length&&!ST.settings.presetsV2){ Anno.presets=Anno.presets.filter(p=>p.k!=='hl'); const hi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(hi<0?Anno.presets.length:hi,0,{k:'hl',color:'#fff200',size:40,alpha:.5}); DB.set('presets',Anno.presets); }
   ST.settings.presetsV2=1; ST.settings.neonV=1;
+  // un solo evidenziatore nella barra (le versioni precedenti ne avevano aggiunti tanti): colore e tipo si scelgono al secondo tocco
+  { const hl=Anno.presets.filter(p=>p.k==='hl'); if(hl.length!==1){ const keep=hl[0]||{k:'hl',color:'#fff200',size:40,alpha:.5}; let put=false;
+      Anno.presets=Anno.presets.filter(p=>{ if(p.k!=='hl') return true; if(!put){ put=true; return true; } return false; });
+      if(!put){ const mi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(mi<0?Anno.presets.length:mi,0,keep); }
+      Anno.sel=Math.min(Anno.sel,Anno.presets.length-1); DB.set('presets',Anno.presets); } }
   if(false){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
   ST.settings.neonV=1;
   document.body.classList.toggle('night', !!ST.settings.night);
@@ -101,14 +106,16 @@ async function drawPageTo(p,W,H,dpr){
   pageCache.set(key,v);
   // memoria limitata (iPad/iPhone chiudono l'app se le immagini in memoria sono troppe): ~24 milioni di pixel
   let px=0; for(const q of pageCache.values()) px+=q.off.width*q.off.height;
-  while(pageCache.size>1&&px>24e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
+  while(pageCache.size>1&&px>16e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
   return v;
 }
 const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
 async function renderPage(dir,opts={}){
   if(!ST.doc) return;
   const seq=++renderSeq; const W=stage.clientWidth, H=stage.clientHeight;
-  const dpr=baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1);
+  // iPad/iPhone: una tela oltre ~16 milioni di pixel smette di disegnare (e la memoria finisce: l'app si riavvia).
+  // Si resta sotto i 9 milioni per tela anche con lo zoom.
+  const dpr=Math.min(baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1), Math.sqrt(9e6/Math.max(1,W*H)));
   let v;
   try{ v=await drawPageTo(ST.page,W,H,dpr); }catch(e){ return; }
   if(seq!==renderSeq) return;
@@ -203,7 +210,7 @@ function placeKnob(f){const tr=$('#scrubTrack');const w=tr.clientWidth-16;$('#sc
 })();
 
 // ---------- Barre e bordi (pressione lunga) ----------
-function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;document.body.classList.toggle('barsOn',(top||ST.annotate)&&!document.body.classList.contains('immersive'));$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
+function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;document.body.classList.toggle('topOn',!!top||!!ST.annotate);document.body.classList.toggle('barsOn',(top||ST.annotate)&&!document.body.classList.contains('immersive'));$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
 function openSide(which,open=true){
   const el=$('#'+which); el.classList.toggle('open',open);
   if(open){ const other=which==='library'?'tools':'library'; $('#'+other).classList.remove('open'); if(which==='library') renderLibrary(); }
@@ -691,7 +698,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply(); Clock.init();
+  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply(); Clock.init(); AutoSave.init();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);

@@ -11,7 +11,7 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - `python3 leggio/build.py`: crea `leggio/index.html` (web-app installabile, librerie da cdnjs).
   - `--artifact FILE`: crea l'anteprima per claude.ai.
   - `--ios mozart-ios/Web`: crea la versione offline per l'app, con le librerie prese da `leggio/vendor` e copiate in `lib/`.
-  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, native.
+  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, native.
 - **App iOS nativa**: `mozart-ios/`.
   - Progetto XcodeGen `project.yml`, bundle `com.morelli.mozart`, iOS 15.
   - Usa WKWebView con lo schema `mozart://localhost`.
@@ -70,6 +70,24 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - ora sempre visibile in alto;
   - timer Lavoro 50 min e Pausa 10 min, modificabili, con avviso sonoro a fine tempo.
 
+## Novità del 20 novembre 2026 (`words.js` e correzioni)
+- **Stabilità**: la tela di disegno resta sotto i 9 milioni di pixel anche con lo zoom (prima iOS la bloccava: non si scriveva più e l'app si riavviava). Un dito alzato sopra una barra non blocca più la scrittura. Annulla/Ripeti non copia più 60 volte le immagini (GIF, foto).
+- **Salvataggio automatico**: ogni minuto mentre si annota e quando l'app va in secondo piano o si chiude.
+- **Stile del testo ricordato per spartito** (`TStyle`, in `sc.style`): carattere, colore, grandezza di sillabe (`lyric`), testo libero (`text`), pronuncia (`pron`), traduzione (`tr`), e grandezza dei segni (`stampK`). La grandezza delle sillabe viene dal rigo ed è limitata: niente più testo enorme.
+- **Barra del Dito**: mostra sempre carattere e grandezza (es. "Sans grassetto · 14 pt"), nomi dei caratteri (Sans, Serif, Corsivo), 8 colori, A− grandezza A+, Evidenzia, Traslittera, **Traduci**.
+- **Parola mancante**: con il Dito si tocca lo spazio vuoto nella riga del testo → si apre la casella sotto la nota più vicina. Riconoscimento delle note più tollerante (modalità "larga" di `detectNotes`).
+- **Dito sotto un rigo stampato** (senza annotazioni): si apre la fascia blu per Evidenzia, Traslittera, Traduci.
+- **Fascia blu**: frecce su/giù e pulsanti + / − per allargarla e stringerla; Aa per lo stile del testo copiato.
+- **Lettura OCR**: tiene la riga di testo con più parole (prima la più alta: un segno sopra faceva perdere la riga) e rilegge ingranditi i pezzi d'inchiostro rimasti senza parola. Vision restituisce anche l'altezza `h`.
+- **Traduzione in italiano** (`Translate`): riconosce la lingua, frase intera o singola parola, scritta in rosso corsivo sotto (o sopra) il rigo. Usa internet (Google, poi MyMemory); senza rete un piccolo dizionario latino liturgico.
+- **Lazo su testo**: Modifica (apre la barra del Dito), Traduci, Copia sui righi, Evidenzia.
+- **Casella T**: menu con Sposta, Evidenzia, Traslittera, Traduci; carattere e grandezza scritti.
+- **Evidenziatore**: uno solo nella barra; secondo tocco = pannello con colori fluo, arcobaleno, spessore e trasparenza. Evidenzia automatico con spessore (Sottile, Normale, Largo, Molto largo).
+- **Barra strumenti su una riga**; strumento attivo in vetro dorato luminoso; numero di pagina sempre visibile in basso mentre si annota.
+- **Orologio con data**; in lettura è al centro in alto e si nasconde quando c'è la barra superiore (non copre più gli Attrezzi).
+- **GIF animate**: il livello non viene più ricreato a ogni tocco, quindi le GIF si muovono.
+- **Legenda dei colori** nella copia del testo: blu = rigo con il testo, verde = dove copi, grigio = senza testo, riquadro arancio = sillabe selezionate.
+
 ## Compilare l'app iOS (IPA)
 - **GitHub Actions**: `.github/workflows/mozart-ios.yml`, con `runs-on: macos-26`.
   - Parte a ogni push su `leggio/**` o `mozart-ios/**` e crea un IPA non firmato.
@@ -80,7 +98,8 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - La chiave API salvata viene rifiutata (errore 401): serve una nuova chiave da Teams → Integrations → Codemagic API.
 
 ## Da fare / da verificare
-- Provare sull'iPad la lettura del testo a pagina 7 di `appendice_barbiere.pdf` (sillabe piccole con trattini e linee).
+- Provare sull'iPad la lettura del testo a pagina 7 di `appendice_barbiere.pdf` con la nuova lettura OCR (il PDF non è nel repository).
+- Provare la traduzione sull'iPad (da questo server i servizi di traduzione non rispondono).
 - Se serve TestFlight: nuova chiave Codemagic.
 
 ## Regole di lavoro

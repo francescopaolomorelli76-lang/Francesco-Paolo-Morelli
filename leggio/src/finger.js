@@ -55,7 +55,7 @@ const Finger = {
       else if(x.id==='fgB'){ const v=!L()[0].bold; ch(t=>t.bold=v); }
       else if(x.id==='fgI'){ const v=!L()[0].italic; ch(t=>t.italic=v); }
       else if(x.id==='fgM') ch(t=>t.size=Math.max(.008,t.size*.9));
-      else if(x.id==='fgP') ch(t=>t.size=Math.min(.08,t.size*1.1));
+      else if(x.id==='fgP') ch(t=>t.size=Math.min(.05,t.size*1.1));
       mark(); };
     const step=.004;
     $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step); $('#fgLt').onclick=()=>ch(t=>t.x-=step); $('#fgRt').onclick=()=>ch(t=>t.x+=step);
@@ -83,7 +83,7 @@ const Finger = {
       <button class="goldBtn block" id="ftOk">${iconSvg('check')}Scrivi sul rigo</button></div>`;
       p.querySelector('#ftL').onclick=e=>{const x=e.target.closest('[data-l]');if(x){lang=x.dataset.l;draw()}};
       p.querySelector('#ftW').onclick=e=>{const x=e.target.closest('[data-w]');if(x){where=x.dataset.w;draw()}};
-      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
         A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
         L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
         p.remove(); bar&&bar.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Traslitterazione scritta sul rigo',2200); };
@@ -107,7 +107,7 @@ const Finger = {
     p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
   },
   writeTranslit(L,lang,where){
-    const A=Anno; A.push(); const sz=(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+    const A=Anno; A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
     L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
@@ -124,7 +124,9 @@ const Finger = {
       A.push();
       if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
       else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
-      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox(); }
+      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox();
+        // la grandezza scelta per i segni resta per i prossimi segni di questo spartito
+        if(ST.cur&&this.line.some(k=>A.strokes[k]&&A.strokes[k].t==='stamp')){ const st=ST.cur.style=ST.cur.style||{}; st.stampK=clamp((st.stampK||1)*f,.3,4); DB.putScore(ST.cur); } }
       else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
       A.redraw(); saveAnn(); A.buildBar(); };
   },
@@ -133,13 +135,15 @@ const Finger = {
   gapNote(){
     const A=Anno, s=A.strokes[this.idx]; if(!s) return;
     const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<s.y).pop(); if(!st) return toast('Non trovo il rigo sopra questa riga');
-    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(!notes.length) return toast('Non riconosco le note di questo rigo: tocca sotto la nota con "Testo sulle note"');
-    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,st.gap*1.2);
+    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(notes.length<2){ try{ notes=detectNotes(st,true); }catch(e){} }
+    if(!notes.length){ $('#fgBar')?.remove(); A.clearSel(); if(A.mode!=='hand'){ A.mode='hand'; A.buildBar(); } return toast('Non riconosco le note di questo rigo: con il Dito ✋ tocca lo spazio vuoto nella riga del testo, sotto la nota senza parola',4200); }
+    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,LyricType.tol(st)*.45);
     const free=notes.map((n,i)=>({n,i})).filter(o=>!xs.some(x=>Math.abs(x-o.n)<tol));
     if(!free.length) return toast('Tutte le note di questo rigo hanno già la loro sillaba');
     const next=free.find(o=>o.n>s.x)||free[0];
     $('#fgBar')?.remove(); A.clearSel();
     if(!ST.annotate) Anno.enter(); A.mode='lyric'; A.buildBar();
+    LyricType.style={font:s.font||'sans',bold:s.bold!==false,italic:!!s.italic,color:s.color||'#111111'};
     LyricType.startAt(st,notes,s.y,s.size,next.i);
   },
   strokeBar0(){},

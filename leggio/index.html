@@ -449,6 +449,48 @@ kbd{font-family:inherit;font-weight:800;color:var(--gold-hi)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* ===== Orologio con data · barra strumenti su una riga · strumento attivo ben visibile · numero di pagina ===== */
+.clockPill .ckD{font-weight:600;color:var(--gold-hi);text-transform:capitalize;opacity:.9}
+#miniClock{left:50%;right:auto;transform:translateX(-50%)}
+body.topOn #miniClock{opacity:0;pointer-events:none}
+@media (max-width:620px){ #titlePill .clockPill .ckD,.annoTop .clockPill .ckD{display:none} .annoTop .clockPill{padding:0 4px} }
+/* una sola riga di strumenti: i pennelli scorrono, gli attrezzi restano a destra (scorrono anche loro se lo schermo è stretto) */
+.annoTools{flex-direction:row!important;align-items:center}
+.presetScroll{height:54px;min-width:120px}
+.toolFixed{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;border-top:0!important;border-left:1px solid var(--line)!important;height:54px!important;justify-content:flex-start!important}
+.toolFixed::-webkit-scrollbar{display:none}
+.toolFixed .atool{width:46px!important;flex:none!important;height:50px!important;max-width:none!important}
+.preset{width:50px;height:54px}
+.preset canvas{width:40px;height:40px}
+@media (max-width:700px){ .toolFixed .atool{width:42px!important} .preset{width:46px} }
+/* strumento scelto: vetro dorato luminoso */
+.atool,.preset{border-radius:14px;margin:0 1px;transition:background .15s,box-shadow .15s}
+.atool.on,.preset.on{background:linear-gradient(180deg,rgba(242,211,130,.55),rgba(214,168,78,.32))!important;-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);
+  box-shadow:inset 0 0 0 2px #f2d382,inset 0 1px 0 rgba(255,255,255,.6),0 0 14px rgba(242,211,130,.75);color:#1b1406}
+.atool.on svg{filter:drop-shadow(0 0 2px #fff)}
+.preset.on::after{color:#1b1406;font-weight:900}
+/* numero di pagina mentre si annota */
+#annoPage{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:26;pointer-events:none;
+  font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;color:#1b1406;padding:5px 14px;border-radius:999px;
+  background:rgba(242,211,130,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 10px rgba(0,0,0,.35)}
+#annoPage[hidden]{display:none}
+/* barra del Dito e stile del testo: carattere e grandezza sempre scritti */
+.fgWrap{display:flex;flex-direction:column;gap:8px;min-width:300px;max-width:min(560px,calc(100vw - 32px))}
+#fgTxt{flex:1;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);padding:0 10px;font-size:17px;outline:none;color:var(--text)}
+.tsInfo{font-size:12.5px;font-weight:700;color:var(--gold-hi);letter-spacing:.01em}
+.tsFont button,.fgAct button{height:34px;padding:0 10px}
+.tsRow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tsCols{display:flex;gap:5px;flex-wrap:wrap}
+.tsCols .sw{width:26px;height:26px}
+.tsCols .sw.on{box-shadow:0 0 0 2px var(--bg,#111),0 0 0 4px var(--gold-hi)}
+.tsSize{display:flex;align-items:center;gap:4px}
+.tsSize button{height:34px;min-width:40px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:800}
+.tsPt{min-width:34px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold-hi)}
+#tsPop,#trPop{position:fixed}
+.lcLegend{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 74px);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;justify-content:center;
+  max-width:calc(100vw - 24px);padding:6px 12px;border-radius:14px;background:rgba(18,15,10,.78);color:#f4ecdc;font-size:12px;font-weight:600;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.lcLegend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:2px;vertical-align:-1px}
+
 </style>
 </head>
 <body>
@@ -950,6 +992,11 @@ async function loadAll(){
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
   if(pr&&pr.length&&!ST.settings.presetsV2){ Anno.presets=Anno.presets.filter(p=>p.k!=='hl'); const hi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(hi<0?Anno.presets.length:hi,0,{k:'hl',color:'#fff200',size:40,alpha:.5}); DB.set('presets',Anno.presets); }
   ST.settings.presetsV2=1; ST.settings.neonV=1;
+  // un solo evidenziatore nella barra (le versioni precedenti ne avevano aggiunti tanti): colore e tipo si scelgono al secondo tocco
+  { const hl=Anno.presets.filter(p=>p.k==='hl'); if(hl.length!==1){ const keep=hl[0]||{k:'hl',color:'#fff200',size:40,alpha:.5}; let put=false;
+      Anno.presets=Anno.presets.filter(p=>{ if(p.k!=='hl') return true; if(!put){ put=true; return true; } return false; });
+      if(!put){ const mi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(mi<0?Anno.presets.length:mi,0,keep); }
+      Anno.sel=Math.min(Anno.sel,Anno.presets.length-1); DB.set('presets',Anno.presets); } }
   if(false){ Anno.presets.push({k:'hl',color:'#39ff14',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:50,alpha:.45},{k:'hl',color:'#00e5ff',size:50,alpha:.45},{k:'hl',color:'#ff3cac',size:55,alpha:.45,rainbow:true}); DB.set('presets',Anno.presets); }
   ST.settings.neonV=1;
   document.body.classList.toggle('night', !!ST.settings.night);
@@ -1030,14 +1077,16 @@ async function drawPageTo(p,W,H,dpr){
   pageCache.set(key,v);
   // memoria limitata (iPad/iPhone chiudono l'app se le immagini in memoria sono troppe): ~24 milioni di pixel
   let px=0; for(const q of pageCache.values()) px+=q.off.width*q.off.height;
-  while(pageCache.size>1&&px>24e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
+  while(pageCache.size>1&&px>16e6){ const k0=pageCache.keys().next().value, q=pageCache.get(k0); px-=q.off.width*q.off.height; q.off.width=q.off.height=1; pageCache.delete(k0); }
   return v;
 }
 const baseDpr=()=>Math.min(window.devicePixelRatio||1,2.5);
 async function renderPage(dir,opts={}){
   if(!ST.doc) return;
   const seq=++renderSeq; const W=stage.clientWidth, H=stage.clientHeight;
-  const dpr=baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1);
+  // iPad/iPhone: una tela oltre ~16 milioni di pixel smette di disegnare (e la memoria finisce: l'app si riavvia).
+  // Si resta sotto i 9 milioni per tela anche con lo zoom.
+  const dpr=Math.min(baseDpr()*(Zoom.z>1.05?Math.min(Zoom.z,3):1), Math.sqrt(9e6/Math.max(1,W*H)));
   let v;
   try{ v=await drawPageTo(ST.page,W,H,dpr); }catch(e){ return; }
   if(seq!==renderSeq) return;
@@ -1132,7 +1181,7 @@ function placeKnob(f){const tr=$('#scrubTrack');const w=tr.clientWidth-16;$('#sc
 })();
 
 // ---------- Barre e bordi (pressione lunga) ----------
-function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;document.body.classList.toggle('barsOn',(top||ST.annotate)&&!document.body.classList.contains('immersive'));$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
+function setBars(top,bottom){ST.bars.top=top;ST.bars.bottom=bottom;document.body.classList.toggle('topOn',!!top||!!ST.annotate);document.body.classList.toggle('barsOn',(top||ST.annotate)&&!document.body.classList.contains('immersive'));$('#topbar').classList.toggle('hide',!top||ST.annotate);$('#bottombar').classList.toggle('hide',!bottom||ST.annotate)}
 function openSide(which,open=true){
   const el=$('#'+which); el.classList.toggle('open',open);
   if(open){ const other=which==='library'?'tools':'library'; $('#'+other).classList.remove('open'); if(which==='library') renderLibrary(); }
@@ -1620,7 +1669,7 @@ async function boot(){
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
   await loadAll();
-  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply(); Clock.init();
+  Anno.init(); Piano.build(); Zoom.init(); UIZoom.init(); Bright.apply(); Clock.init(); AutoSave.init();
   let last=null; try{last=JSON.parse(localStorage.getItem('fpm-last')||'null')}catch(e){}
   const start = (last && ST.scores.find(s=>s.id===last.id)) ? last : {id:[...ST.scores].sort((a,b)=>b.pages-a.pages)[0]?.id, page:0};
   if(start.id) await openScore(start.id,start.page||0);
@@ -1655,7 +1704,10 @@ const Anno = {
     c.addEventListener('pointerdown',e=>this.down(e));
     c.addEventListener('pointermove',e=>this.move(e));
     c.addEventListener('pointerup',e=>this.up(e));
-    c.addEventListener('pointercancel',e=>{this.live=null;this.redraw()});
+    c.addEventListener('pointercancel',e=>{this.live=null;this.touchNav=null;this.redraw()});
+    // dito o Pencil alzati fuori dalla pagina: nessuno stato resta bloccato (prima a volte non si scriveva più)
+    window.addEventListener('pointerup',e=>{ if(e.target===inkCanvas) return; if(this.touchNav&&this.touchNav.id===e.pointerId) this.touchNav=null; if(this.live&&this.liveId===e.pointerId) this.up(e); },true);
+    window.addEventListener('pointercancel',e=>{ if(this.touchNav&&this.touchNav.id===e.pointerId) this.touchNav=null; },true);
     inkCanvas.style.pointerEvents='none';
   },
   W(p){return p.size*.00028+.0004},
@@ -1664,7 +1716,7 @@ const Anno = {
 
   enter(){
     if(!ST.cur) return toast('Apri prima uno spartito');
-    ST.annotate=true; this.snapshot=JSON.stringify(ST.ann); this.hist={};
+    ST.annotate=true; this.snapshot=histPack(ST.ann); this.hist={};
     $('#annobar').classList.add('open'); setBars(ST.bars.top,ST.bars.bottom);
     inkCanvas.style.pointerEvents='auto'; stage.style.cursor='crosshair'; this.buildBar(); updateChrome();
   },
@@ -1673,7 +1725,7 @@ const Anno = {
     this.clearSel(); $('#textEntry')?.remove(); closeLayers(); saveAnn(); setBars(true,true); this.redraw();
     if(!silent) toast('Annotazioni salvate');
   },
-  cancel(){ if(this.snapshot){ST.ann=JSON.parse(this.snapshot);saveAnn();} this.exit(true); toast('Modifiche annullate'); },
+  cancel(){ if(this.snapshot){ST.ann=histUnpack(this.snapshot);saveAnn();} this.exit(true); toast('Modifiche annullate'); },
   pageChanged(){ this.clearSel(); $('#textEntry')?.remove(); updateChrome(); },
 
   // ---- barra strumenti ----
@@ -1715,13 +1767,14 @@ const Anno = {
 
   // ---- disegno ----
   pt(e){ const r=inkCanvas.getBoundingClientRect(); return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height, e.pressure||.5]; },
-  push(){ const h=this.hist[ST.page]=this.hist[ST.page]||{u:[],r:[]}; h.u.push(JSON.stringify(this.strokes)); if(h.u.length>60)h.u.shift(); h.r=[]; },
-  undo(){ const h=this.hist[ST.page]; if(!h||!h.u.length) return; h.r.push(JSON.stringify(this.strokes)); this.strokes=JSON.parse(h.u.pop()); this.clearSel(); this.redraw(); saveAnn(); this.buildBar(); },
-  redo(){ const h=this.hist[ST.page]; if(!h||!h.r.length) return; h.u.push(JSON.stringify(this.strokes)); this.strokes=JSON.parse(h.r.pop()); this.redraw(); saveAnn(); this.buildBar(); },
+  push(){ const h=this.hist[ST.page]=this.hist[ST.page]||{u:[],r:[]}; h.u.push(histPack(this.strokes)); if(h.u.length>40)h.u.shift(); h.r=[]; },
+  undo(){ const h=this.hist[ST.page]; if(!h||!h.u.length) return; h.r.push(histPack(this.strokes)); this.strokes=histUnpack(h.u.pop()); this.clearSel(); this.redraw(); saveAnn(); this.buildBar(); },
+  redo(){ const h=this.hist[ST.page]; if(!h||!h.r.length) return; h.u.push(histPack(this.strokes)); this.strokes=histUnpack(h.r.pop()); this.redraw(); saveAnn(); this.buildBar(); },
   down(e){
     if(!ST.annotate) return;
     if(e.pointerType==='pen' && !ST.pencilSeen){ ST.pencilSeen=true; if(ST.settings.autoPencil) toast('Apple Pencil riconosciuta: con il dito sfogli e ingrandisci, con la Pencil scrivi',3200); }
-    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ if(this.touchNav&&this.touchNav.id!==e.pointerId) this.touchNav.multi=true; else this.touchNav={x:e.clientX,y:e.clientY,id:e.pointerId,multi:Zoom.ptrs.size>1}; return; }
+    if(this.touchNav && (e.isPrimary || Date.now()-(this.touchNav.t||0)>4000)) this.touchNav=null;
+    if(e.pointerType==='touch' && (this.touchNavigates() || Zoom.ptrs.size>1)){ if(this.touchNav&&this.touchNav.id!==e.pointerId) this.touchNav.multi=true; else this.touchNav={x:e.clientX,y:e.clientY,id:e.pointerId,multi:Zoom.ptrs.size>1,t:Date.now()}; return; }
     this.livePointer=e.pointerType; this.liveId=e.pointerId; if(e.pointerType==='pen') this.penAt=Date.now();
     inkCanvas.setPointerCapture(e.pointerId);
     const p=this.pt(e); const pr=this.presets[this.sel];
@@ -1736,7 +1789,7 @@ const Anno = {
     }
     const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
     if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
-    if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016,color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
+    if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';
     this.live={t:pr.k,color:pr.k==='mask'?'#ffffff':pr.color,alpha:pr.alpha,w:this.W(pr),pts:[pen?[p[0],p[1],+(e.pressure||.5).toFixed(3)]:[p[0],p[1]]],layer:this.layer};
@@ -1873,6 +1926,7 @@ const Anno = {
     const pr=this.presets[this.sel];
     if(pr.k==='stamp') return this.openStamps();
     if(pr.k==='shape') return this.openShapes(anchor);
+    if(pr.k==='hl') return this.openHl(anchor);
     const hsl=hexToHsl(pr.color);
     const sl=(id,l,min,max,v,suf='')=>`<div class="sl"><span>${l}<em id="${id}v">${v}${suf}</em></span><input type="range" id="${id}" min="${min}" max="${max}" value="${v}" style="--v:${(v-min)/(max-min)*100}%"></div>`;
     const p=popover(anchor,`<h4>Stile pennello</h4><div style="width:300px;display:flex;flex-direction:column;gap:10px">
@@ -1894,6 +1948,26 @@ const Anno = {
     $('#bHl').onclick=()=>{pr.k=pr.k==='hl'?'pen':'hl';if(pr.k==='hl'&&pr.alpha>.6)pr.alpha=.42;$('#bHl').classList.toggle('on',pr.k==='hl');$('#bMask').classList.toggle('on',false);prev();this.savePresets()};
     $('#bDel').onclick=()=>{if(this.presets.length<2)return;this.presets.splice(this.sel,1);this.sel=Math.max(0,this.sel-1);closeLayers();this.savePresets()};
     $('#bDup').onclick=()=>{this.presets.splice(this.sel+1,0,JSON.parse(JSON.stringify(pr)));this.sel++;closeLayers();this.savePresets()};
+    prev();
+  },
+  // Evidenziatore: secondo tocco = il suo pannello (colori fluo o arcobaleno, spessore, trasparenza)
+  openHl(anchor){
+    const pr=this.presets[this.sel];
+    const p=popover(anchor,`<h4>Evidenziatore</h4><div style="width:300px;display:flex;flex-direction:column;gap:12px">
+      <div class="brushPrev"><canvas id="bpC" width="600" height="120"></canvas></div>
+      <div class="swatches" id="hlNeon">${NEON.map(c=>`<button class="sw${c===pr.color&&!pr.rainbow?' on':''}" style="background:${c};box-shadow:0 0 10px ${c}" data-c="${c}" aria-label="Fluo"></button>`).join('')}<button class="sw${pr.rainbow?' on':''}" style="background:conic-gradient(#ff3cac,#fff200,#39ff14,#00e5ff,#b388ff,#ff3cac)" data-rb="1" aria-label="Arcobaleno"></button></div>
+      <div class="sl"><span>Spessore<em id="hlSv">${pr.size}</em></span><input type="range" id="hlS" min="10" max="100" value="${pr.size}" style="--v:${(pr.size-10)/90*100}%"></div>
+      <div class="sl"><span>Trasparenza<em id="hlAv">${Math.round(pr.alpha*100)}%</em></span><input type="range" id="hlA" min="20" max="80" value="${Math.round(pr.alpha*100)}" style="--v:${(pr.alpha*100-20)/60*100}%"></div>
+      <div class="hint" style="font-size:12.5px">Scrive con il dito e con la Pencil. Per le parole: Dito ✋ → Evidenzia, oppure lazo → Evidenzia.</div></div>`,{id:'brushPop'});
+    const prev=()=>{ const c=$('#bpC'); const x=c.getContext('2d'); x.clearRect(0,0,600,120); x.fillStyle='#f4efe4'; x.fillRect(0,0,600,120); x.font='600 44px serif'; x.fillStyle='#222'; x.fillText('Gloria in excelsis',90,76);
+      x.globalAlpha=pr.alpha; x.globalCompositeOperation='multiply'; x.lineWidth=clamp(this.W(pr)*1400,6,80); x.lineCap='butt';
+      if(pr.rainbow){ const g=x.createLinearGradient(60,0,540,0); ['#ff3cac','#fff200','#39ff14','#00e5ff','#b388ff'].forEach((c2,i)=>g.addColorStop(i/4,c2)); x.strokeStyle=g; } else x.strokeStyle=pr.color;
+      x.beginPath(); x.moveTo(70,62); x.lineTo(540,62); x.stroke(); x.globalAlpha=1; x.globalCompositeOperation='source-over'; };
+    $('#hlNeon').onclick=e=>{ const rb=e.target.closest('[data-rb]'); if(rb) pr.rainbow=!pr.rainbow; else { const s2=e.target.closest('[data-c]'); if(!s2) return; pr.color=s2.dataset.c; pr.rainbow=false; }
+      $$('#hlNeon .sw').forEach(x=>x.classList.toggle('on',x.dataset.rb?!!pr.rainbow:(x.dataset.c===pr.color&&!pr.rainbow))); prev(); this.savePresets(); };
+    const S=$('#hlS'), Al=$('#hlA');
+    S.oninput=()=>{ pr.size=+S.value; $('#hlSv').textContent=S.value; S.style.setProperty('--v',(S.value-10)/90*100+'%'); prev(); this.savePresets(); };
+    Al.oninput=()=>{ pr.alpha=Al.value/100; $('#hlAv').textContent=Al.value+'%'; Al.style.setProperty('--v',(Al.value-20)/60*100+'%'); prev(); this.savePresets(); };
     prev();
   },
   savePresets(){ DB.set('presets',this.presets); this.buildBar(); },
@@ -1941,13 +2015,17 @@ const Anno = {
       const s=e.target.closest('[data-c]'); if(s){pr.color=s.dataset.c;this.savePresets();p.querySelectorAll('#spSw .sw').forEach(x=>x.classList.toggle('on',x===s))}
     };
     p.onchange=e=>{if(e.target.id==='spCat'){this.stampCat=+e.target.value;render()}};
-    p.oninput=e=>{if(e.target.id==='spSz'){pr.size=+e.target.value;$('#spSzv').textContent=pr.size;e.target.style.setProperty('--v',(pr.size-8)/82*100+'%');this.savePresets()}};
+    p.oninput=e=>{if(e.target.id==='spSz'){if(ST.cur&&ST.cur.style&&ST.cur.style.stampK){ST.cur.style.stampK=1;DB.putScore(ST.cur);} pr.size=+e.target.value;$('#spSzv').textContent=pr.size;e.target.style.setProperty('--v',(pr.size-8)/82*100+'%');this.savePresets()}};
     // scorrimento orizzontale tra categorie
     let sx=null; p.addEventListener('pointerdown',e=>{if(e.target.closest('#spGrid'))sx=e.clientX});
     p.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>70){this.stampCat=clamp(this.stampCat+(dx<0?1:-1),0,STAMP_CATS.length-1);render()}});
     render();
   },
 };
+// Annulla/Ripeti: le immagini (GIF, foto, pagine) sono stringhe enormi; si salvano una volta sola e nella cronologia resta un riferimento.
+const _histSrc=new Map(), _histKey=new Map();
+function histPack(strokes){ return JSON.stringify(strokes,(k,v)=>{ if(k==='src'&&typeof v==='string'&&v.length>200){ let id=_histKey.get(v); if(!id){ id='§'+_histKey.size; _histKey.set(v,id); _histSrc.set(id,v); } return id; } return v; }); }
+function histUnpack(t){ return JSON.parse(t,(k,v)=>k==='src'&&typeof v==='string'&&v[0]==='§'&&_histSrc.has(v)?_histSrc.get(v):v); }
 function sameGlyph(a,b){return a&&b&&a.c===b.c&&a.v===b.v&&a.f===b.f}
 const _annImgs=new Map();
 function annImg(src){ let im=_annImgs.get(src); if(!im){ im=new Image(); im.onload=()=>Anno.redraw(); im.src=src; _annImgs.set(src,im); } return im; }
@@ -2823,6 +2901,8 @@ const Zoom = {
       if(e.pointerType!=='touch') return;
       // mentre si disegna: il palmo o un secondo dito arrivati dopo non fanno zoom
       if(ST.annotate&&Anno.live&&(Anno.livePointer!=='touch'||Date.now()-(this.t0||0)>220)) return;
+      // un dito alzato fuori dalla pagina (sopra una barra) poteva restare 'appeso' e bloccare la scrittura
+      if(e.isPrimary&&this.ptrs.size){ this.ptrs.clear(); this.active=false; }
       if(!this.ptrs.size) this.t0=Date.now();
       this.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY});
       if(this.ptrs.size===2){
@@ -2856,7 +2936,7 @@ const Zoom = {
         setTimeout(()=>{ this.gestured=false; },0);
       }
     };
-    stage.addEventListener('pointerup',up,true); stage.addEventListener('pointercancel',up,true);
+    window.addEventListener('pointerup',up,true); window.addEventListener('pointercancel',up,true);
     // iOS: evita lo zoom di Safari sull'intera pagina
     ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
   },
@@ -3167,6 +3247,7 @@ const LyricCopy = {
     $('#lcLayer')?.remove(); const r=inkCanvas.getBoundingClientRect(); const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
     L.innerHTML=this.staves.map((st,i)=>{const isRef=st===this.ref; return `<button data-st="${i}" class="lcBand${isRef?' ref':''}${this.picked.has(i)?' on':''}" style="top:${(st.top-st.gap*.6)*100}%;height:${(st.bottom-st.top+st.gap*1.2)*100}%">${isRef?'Testo da qui':this.picked.has(i)?'✓ Copia qui':'Tocca per copiare'}</button>`}).join('')
+      +`<div class="lcLegend"><i style="background:#1f5fd6"></i>Blu: rigo con il testo da copiare <i style="background:#1d8a4a"></i>Verde: dove lo copi <i style="background:#999"></i>Grigio: rigo senza testo <i style="border:2px dashed #c8962e;background:none"></i>Riquadro arancio: le sillabe selezionate</div>`
       +`<div class="lcBar pill"><button class="ghostBtn" data-lc="all">Tutti i righi senza testo</button><button class="goldBtn" data-lc="ok">${iconSvg('check')}Copia</button><button class="ib" data-lc="x" aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L);
     L.onclick=e=>{ const b=e.target.closest('[data-st]'); if(b){ const i=+b.dataset.st; if(this.staves[i]===this.ref) return; this.picked.has(i)?this.picked.delete(i):this.picked.add(i); this.overlay(); return; }
@@ -3363,7 +3444,8 @@ const TextBox = {
     const ed=idx>=0?A.strokes[idx]:null;
     const pr=A.presets[A.sel];
     const o=this.opt; if(ed) Object.assign(o,{size:Math.round(ed.size*1100),font:ed.font||'sans',bold:!!ed.bold,italic:!!ed.italic,color:ed.color});
-    else o.color=(pr.k==='mask'||pr.k==='hl')?'#111111':(pr.color||'#111111');
+    else { const mem=TStyle.get('text'); if(mem) Object.assign(o,{size:clamp(Math.round(mem.size*1100),8,90),font:mem.font,bold:mem.bold,italic:mem.italic,color:mem.color});
+      else o.color=(pr.k==='mask'||pr.k==='hl')?'#111111':(pr.color||'#111111'); }
     const orig=ed?JSON.parse(JSON.stringify(ed)):null;
     const st=ed||{t:'text',text:'',x:p[0],y:p[1],align:'l',alpha:1,layer:A.layer};
     if(ed) ed._editing=true; A.redraw();
@@ -3381,6 +3463,8 @@ const TextBox = {
       const props={size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic,color:o.color};
       if(ed){ const changed=v!==orig.text||Object.keys(props).some(k=>props[k]!==(orig[k]??(k==='font'?'sans':k==='bold'||k==='italic'?false:undefined))); if(!v){ A.push(); A.strokes.splice(A.strokes.indexOf(ed),1); } else if(changed){ A.push(); Object.assign(ed,{text:v},props); } }
       else if(v){ A.push(); A.strokes.push({...st,text:v,size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic,color:o.color}); }
+      if(v) TStyle.remember('text',{size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic,color:o.color});
+      this._last=ed&&v?A.strokes.indexOf(ed):(v&&!ed?A.strokes.length-1:-1);
       A.redraw(); saveAnn(); A.buildBar(); };
     this._close=(cancel)=>{ if(!box.parentNode) return; if(cancel){ if(ed){ delete ed._editing; } A.redraw(); } else save(); box.remove(); $('#tbMenu')?.remove(); document.removeEventListener('pointerdown',outside,true); };
     // tocco fuori dalla casella: salva (come forScore)
@@ -3395,12 +3479,20 @@ const TextBox = {
     $('#tbMenu')?.remove(); const m=document.createElement('div'); m.id='tbMenu'; m.className='pop';
     m.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;min-width:250px">
       <div class="eyebrow">Formato</div>
-      <div class="seg" id="tbFont"><button data-f="sans" class="${o.font==='sans'?'on':''}">Aa</button><button data-f="serif" class="${o.font==='serif'?'on':''}" style="font-family:var(--f-display)">Aa</button><button data-f="music" class="${o.font==='music'?'on':''}" style="font-family:var(--f-display);font-style:italic">rit.</button></div>
-      <div class="seg"><button id="tbB" class="${o.bold?'on':''}" style="font-weight:900">G</button><button id="tbI" class="${o.italic?'on':''}" style="font-style:italic">C</button><button id="tbMinus">A−</button><button id="tbPlus">A+</button></div>
+      <div class="tsInfo" id="tbInfo"></div>
+      <div class="seg" id="tbFont"><button data-f="sans" class="${o.font==='sans'?'on':''}">Sans</button><button data-f="serif" class="${o.font==='serif'?'on':''}" style="font-family:var(--f-display)">Serif</button><button data-f="music" class="${o.font==='music'?'on':''}" style="font-family:var(--f-display);font-style:italic">Corsivo</button></div>
+      <div class="seg"><button id="tbB" class="${o.bold?'on':''}" style="font-weight:900">G</button><button id="tbI" class="${o.italic?'on':''}" style="font-style:italic">C</button><button id="tbMinus">A−</button><b class="tsPt" id="tbPt" style="min-width:34px;text-align:center;align-self:center"></b><button id="tbPlus">A+</button></div>
       <div class="swatches" id="tbCol">${['#111111','#d23b2f','#1f5fd6','#1d8a4a','#8b3fc4','#c8962e','#ff8a3d','#ffffff'].map(c=>`<button class="sw${c===o.color?' on':''}" style="background:${c};width:28px;height:28px" data-c="${c}" aria-label="Colore"></button>`).join('')}</div>
+      <div class="seg" id="tbMore2"><button data-a="move">${iconSvg('hand')} Sposta</button><button data-a="hl">${iconSvg('pen')} Evidenzia</button><button data-a="tr">${iconSvg('voice')} Traslittera</button><button data-a="tt">🌐 Traduci</button></div>
       <button class="ghostBtn danger" id="tbDel">${iconSvg('trash')}Elimina</button></div>`;
     $('#app').appendChild(m); const b=box.getBoundingClientRect();
     m.style.left=clamp(b.right-260,8,innerWidth-280)+'px'; m.style.top=(b.bottom+8+m.offsetHeight>innerHeight-10?Math.max(10,b.top-m.offsetHeight-8):b.bottom+8)+'px';
+    const info=()=>{ const t={size:o.size/1100,font:o.font,bold:o.bold,italic:o.italic}; m.querySelector('#tbInfo').textContent=TStyle.label(t); m.querySelector('#tbPt').textContent=o.size; };
+    const style0=style; style=()=>{ style0(); info(); }; info();
+    // dopo aver scritto: sposta con le frecce, evidenzia, traslittera o traduci (il testo si salva prima)
+    m.querySelector('#tbMore2').onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return; m.remove(); this.close(); const i=this._last; if(i==null||i<0||!Anno.strokes[i]) return toast('Scrivi prima il testo',1600);
+      Finger.openFor([i]); const b=$('#fgBar'); if(!b) return;
+      if(a==='hl') b.querySelector('#fgHl')?.click(); else if(a==='tr') b.querySelector('#fgTr')?.click(); else if(a==='tt') b.querySelector('#fgTt')?.click(); };
     const keep=()=>$('#teIn')?.focus();
     m.querySelector('#tbFont').onclick=e=>{const x=e.target.closest('[data-f]');if(!x)return;o.font=x.dataset.f;m.querySelectorAll('#tbFont button').forEach(y=>y.classList.toggle('on',y===x));style();keep()};
     m.querySelector('#tbB').onclick=()=>{o.bold=!o.bold;m.querySelector('#tbB').classList.toggle('on',o.bold);style();keep()};
@@ -3418,7 +3510,7 @@ function pageGray(){
   const d=x.getImageData(0,0,w,h).data; const g=new Uint8Array(w*h); for(let i=0;i<w*h;i++) g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3<150?1:0;
   return {g,w,h};
 }
-function detectNotes(st){
+function detectNotes(st,loose){
   // 1) fascia del rigo  2) tolgo righe del pentagramma e gambi sottili  3) le macchie della misura di una testa di nota sono note
   const {g,w,h}=pageGray(); const gap=Math.max(3,st.gap*h);
   const top=Math.max(2,Math.round(st.top*h-gap*1.8)), bot=Math.min(h-3,Math.round(st.bottom*h+gap*1.3)), bh=bot-top+1;
@@ -3441,6 +3533,7 @@ function detectNotes(st){
       for(const d of [1,-1,w,-w]){ const q=k+d; if(q>=0&&q<w*bh&&m[q]&&!seen[q]){ seen[q]=1; stack.push(q); } } }
     const cw=maxx-minx+1, ch=maxy-miny+1;
     if(minx<x0) continue;
+    if(loose){ if(cw>=gap*.45&&cw<=gap*3&&ch>=gap*.3&&ch<=gap*2.2&&n>=gap*gap*.12) out.push((minx+maxx)/2/w); continue; }
     if(cw>=gap*.75&&cw<=gap*2.4&&ch>=gap*.45&&ch<=gap*1.6&&n>=gap*gap*.25) out.push((minx+maxx)/2/w);
     else if(cw>gap*2.4&&ch>=gap*.45&&ch<=gap*1.6&&n>=cw*gap*.35){ const k2=Math.round(cw/(gap*1.35)); for(let j=0;j<k2;j++) out.push((minx+(j+.5)*cw/k2)/w); } // teste attaccate (accordi, seconde)
   }
@@ -3462,12 +3555,21 @@ const LyricType = {
     const nx=staves[staves.indexOf(st)+1]; const lim=nx?nx.top:1;
     const ex=Anno.strokes.find(s=>s.t==='text'&&s.lyric&&s.y>st.bottom&&s.y<lim);
     this.y=ex?ex.y:Math.min(lim-st.gap*.6, Math.max(p[1], st.bottom+st.gap*2.2));
-    this.size=ex?ex.size:clamp(st.gap*1.4,.011,.02);
-    // la sillaba va sotto la nota toccata se riconosciuta lì vicino, altrimenti esattamente dove hai toccato
-    this.i=this.notes?this.nearest(p[0]):0; this.x=(this.notes&&Math.abs(this.notes[this.i]-p[0])<.025)?this.notes[this.i]:p[0];
-    if(this.notes&&this.x===p[0]){ this.notes.push(p[0]); this.notes.sort((a,b)=>a-b); this.i=this.notes.indexOf(p[0]); }
+    // grandezza: quella scelta l'ultima volta in questo spartito, altrimenti dalla misura del rigo (mai enorme)
+    const base=TStyle.lyricSize(st), mem=TStyle.get('lyric');
+    this.size=mem?clamp(mem.size,.006,.05):TStyle.sane(ex&&ex.size,base);
+    this.style=mem||(ex?{font:ex.font||'sans',bold:ex.bold!==false,italic:!!ex.italic,color:ex.color||'#111111'}:null);
+    // la sillaba va sotto la nota toccata: si cerca la nota più vicina (anche con il riconoscimento "largo" per note piccole)
+    const tol=this.tol(st);
+    this.i=this.notes?this.nearest(p[0]):0; this.x=(this.notes&&Math.abs(this.notes[this.i]-p[0])<tol)?this.notes[this.i]:p[0];
+    if(this.x===p[0]){ let loose=[]; try{ loose=detectNotes(st,true); }catch(e){} const n2=nearestNote(loose,p[0]); if(n2!=null&&Math.abs(n2-p[0])<tol) this.x=n2; }
+    if(this.notes&&!this.notes.includes(this.x)){ this.notes.push(this.x); this.notes.sort((a,b)=>a-b); }
+    if(this.notes) this.i=this.notes.indexOf(this.x);
     this.box(); Anno.redraw(); this.marks();
   },
+  // distanza utile per agganciare la nota: circa tre spazi del rigo
+  tol(st){ const k=inkCanvas.width?inkCanvas.height/inkCanvas.width:1.4; return Math.max(.022,(st?st.gap:.01)*k*3); },
+  props(){ const m=this.style||{}; return {font:m.font||'sans',bold:m.bold!==false,italic:!!m.italic,color:m.color||'#111111'}; },
   nearest(x){ let b=0,bd=9; this.notes.forEach((n,k)=>{const d=Math.abs(n-x); if(d<bd){bd=d;b=k}}); return b; },
   marks(){ // segnini sulle note riconosciute, la nota corrente in oro
     const L=$('#lyMarks')||Object.assign(document.createElement('div'),{id:'lyMarks'}); if(!L.parentNode) $('#app').appendChild(L);
@@ -3477,21 +3579,26 @@ const LyricType = {
   box(){
     $('#textEntry')?.remove(); const r=inkCanvas.getBoundingClientRect(); const b=document.createElement('div'); b.id='textEntry'; b.className='lybox';
     b.innerHTML=`<button class="ib" id="lyPrev" aria-label="Nota precedente">${iconSvg('chevLeft')}</button><input id="lyIn" placeholder="sillaba (Invio = nota dopo)" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next"><button class="ib" id="lyNext" aria-label="Nota dopo">${iconSvg('chevRight')}</button><button class="ib" id="lyGap" title="Prossima nota senza parola" aria-label="Prossima nota senza parola">${iconSvg('skipFwd')}</button>
-      <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ghostBtn" id="lyTr" title="Pronuncia all'italiana della riga">${iconSvg('voice')}Traslittera</button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
+      <button class="ghostBtn" id="lyOcr" title="Legge il testo stampato di un altro rigo e lo copia qui">${iconSvg('copy')}Copia dal rigo…</button><button class="ghostBtn" id="lyTr" title="Pronuncia all'italiana della riga">${iconSvg('voice')}Traslittera</button><button class="ghostBtn" id="lyTt" title="Traduci la riga in italiano">🌐 Traduci</button><button class="ghostBtn" id="lySt" title="Carattere, colore e grandezza">Aa <small id="lyPt">${TStyle.pt(this.size)}</small></button><button class="ib" id="lyX" aria-label="Chiudi">${iconSvg('close')}</button>`;
     $('#app').appendChild(b);
     const place=()=>dockBar(b, r.top+this.y*r.height);
     place(); this._place=place;
     const inp=$('#lyIn');
-    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
+    const commit=adv=>{ const v=inp.value.trim(); if(v){ Anno.push(); const old=Anno.strokes.findIndex(s=>s.t==='text'&&s.lyric&&Math.abs(s.y-this.y)<.003&&Math.abs(s.x-this.x)<.004); const s={t:'text',text:v,x:this.x,y:this.y,size:this.size,align:'c',lyric:1,...this.props(),alpha:1,layer:Anno.layer}; if(old>=0) Anno.strokes[old]=s; else Anno.strokes.push(s); saveAnn(); }
       inp.value=''; if(adv) this.step(adv); Anno.redraw(); };
     inp.onkeydown=e=>{ if(e.key==='Enter'||e.key==='Tab'){ e.preventDefault(); commit(1); } else if(e.key===' '&&inp.value.trim()){ e.preventDefault(); commit(1); } else if(e.key==='Backspace'&&!inp.value){ this.step(-1); } else if(e.key==='Escape') this.close(); };
     $('#lyNext').onclick=()=>{ commit(1); inp.focus(); }; $('#lyPrev').onclick=()=>{ commit(0); this.step(-1); inp.focus(); };
     $('#lyGap').onclick=()=>{ commit(0); this.nextGap(); inp.focus(); };
     $('#lyX').onclick=()=>this.close(); $('#lyOcr').onclick=()=>this.ocrPick();
     $('#lyTr').onclick=()=>{ const idx=Anno.strokes.map((s,k)=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004?k:-1).filter(k=>k>=0); if(!idx.length) return toast('Questa riga non ha ancora testo: scrivilo o copialo prima'); Finger.line=idx; Finger.idx=idx[0]; Finger.translit($('#textEntry')); };
+    const rowIdx=()=>Anno.strokes.map((s,k)=>s.t==='text'&&s.lyric&&!s.pron&&!s.tr&&Math.abs(s.y-this.y)<.004?k:-1).filter(k=>k>=0);
+    $('#lyTt').onclick=()=>{ const idx=rowIdx(); if(!idx.length) return toast('Questa riga non ha ancora testo: scrivilo o copialo prima'); Translate.open(idx.map(k=>Anno.strokes[k]),$('#textEntry')); };
+    $('#lySt').onclick=e=>TStyle.pick(e.currentTarget,'lyric',{size:this.size,...this.props()},t=>{ this.size=t.size; this.style=t; const idx=rowIdx();
+      if(idx.length){ Anno.push(); idx.forEach(k=>Object.assign(Anno.strokes[k],{size:t.size,font:t.font,bold:t.bold,italic:t.italic,color:t.color})); Anno.redraw(); saveAnn(); }
+      const pt=$('#lyPt'); if(pt) pt.textContent=TStyle.pt(t.size); inp.focus(); });
     setTimeout(()=>inp.focus(),20);
   },
-  startAt(st,notes,y,size,i){ this.st=st; this.notes=notes; this.y=y; this.size=size; this.i=i; this.x=notes[i]; this.box(); Anno.redraw(); this.marks(); },
+  startAt(st,notes,y,size,i){ this.st=st; this.notes=notes&&notes.length?notes:null; this.y=y; this.size=size; this.i=Math.max(0,i); this.x=notes&&notes.length?notes[this.i]:.5; this.box(); Anno.redraw(); this.marks(); },
   nextGap(){ if(!this.notes) return; const xs=Anno.strokes.filter(s=>s.t==='text'&&s.lyric&&!s.pron&&Math.abs(s.y-this.y)<.004).map(s=>s.x); const tol=Math.max(.012,this.st.gap*1.2);
     for(let k=1;k<=this.notes.length;k++){ const j=(this.i+k)%this.notes.length; if(!xs.some(x=>Math.abs(x-this.notes[j])<tol)){ this.i=j; this.x=this.notes[j]; this._place&&this._place(); this.marks(); return; } }
     toast('Tutte le note hanno la loro sillaba',1800); },
@@ -3502,19 +3609,24 @@ const LyricType = {
     const staves=detectStaves(); const me=this.st; const target=this;
     const L=document.createElement('div'); L.id='lcLayer'; const r=inkCanvas.getBoundingClientRect();
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
-    L.innerHTML=staves.map((st,i)=>st===me?'':`<button data-st="${i}" class="lcBand${st.printed?' ref':''}" style="top:${(st.bottom+st.gap*.3)*100}%;height:${st.gap*3.2*100}%">${st.printed?'Copia questo testo':'(senza testo)'}</button>`).join('')+`<div class="lcBar pill"><span class="hint" style="padding:0 10px">Tocca il testo stampato da copiare</span><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    L.innerHTML=staves.map((st,i)=>st===me?'':`<button data-st="${i}" class="lcBand${st.printed?' ref':''}" style="top:${(st.bottom+st.gap*.3)*100}%;height:${st.gap*3.2*100}%">${st.printed?'Copia questo testo':'(senza testo)'}</button>`).join('')+`<div class="lcLegend"><i style="background:#1f5fd6"></i>Blu: riga con testo stampato <i style="background:#999"></i>Grigio: senza testo stampato <i style="background:#d6a84e;border-radius:50%"></i>Pallino oro: la nota dove scrivi</div><div class="lcBar pill"><span class="hint" style="padding:0 10px">Tocca il testo stampato da copiare</span><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L);
     L.onclick=e=>{ if(e.target.closest('[data-x]')){ L.remove(); return; } const b=e.target.closest('[data-st]'); if(!b) return; L.remove(); this.adjustBand(staves[+b.dataset.st]); };
   },
-  // La fascia blu si sposta (su/giù) e si allarga/stringe: legge solo la riga di testo che contiene.
-  adjustBand(src){
-    const target=this; const r=inkCanvas.getBoundingClientRect(); const g=src.gap;
+  // La fascia blu si sposta (frecce o trascinando) e si allarga/stringe: legge solo la riga di testo che contiene.
+  // opts.y: fascia centrata dove si è toccato · opts.free: senza copia (aperta dal Dito)
+  adjustBand(src,opts={}){
+    const target=this, copy=!opts.free&&!!this.st; const r=inkCanvas.getBoundingClientRect(); const g=src.gap;
     const all=detectStaves(); const nx=all.find(s=>s.top>src.bottom+g); const lim=nx?nx.top-g*.25:1;
-    const band={y0:src.bottom+g*.35,y1:Math.max(src.bottom+g*1.6,Math.min(lim,src.bottom+g*2.9))};
+    const band=opts.y!=null?{y0:Math.max(src.bottom+g*.2,opts.y-g*.9),y1:Math.min(lim,opts.y+g*.9)}:{y0:src.bottom+g*.35,y1:Math.max(src.bottom+g*1.6,Math.min(lim,src.bottom+g*2.9))};
+    if(band.y1-band.y0<g) band.y1=band.y0+g*1.6;
     const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
-    L.innerHTML=`<div class="rdBand"><span>Trascina la fascia sulla riga di testo da copiare</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
-      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button><button class="ghostBtn" data-hl style="height:36px">${iconSvg('pen')}Evidenzia</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Solo traslittera</button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button><button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
+    L.innerHTML=`<div class="rdBand"><span>Fascia blu = riga di testo da leggere · trascinala o usa le frecce</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
+      <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button>
+        <button class="ib" data-sz="1" aria-label="Allarga la fascia" title="Allarga">${iconSvg('plus')}</button><button class="ib" data-sz="-1" aria-label="Stringi la fascia" title="Stringi">${iconSvg('minus')}</button>
+        <button class="ghostBtn" data-hl style="height:36px">${iconSvg('pen')}Evidenzia</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Traslittera</button><button class="ghostBtn" data-tt style="height:36px">🌐 Traduci</button>
+        ${copy?`<button class="ghostBtn" data-st style="height:36px">Aa <small>${TStyle.pt(target.size)}</small></button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button>`:''}<button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L); const B=L.querySelector('.rdBand');
     const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
     B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
@@ -3523,32 +3635,33 @@ const LyricType = {
         band.y0=clamp(band.y0,0,.98); band.y1=clamp(band.y1,band.y0+.01,1); place(); };
       const up=()=>{ B.removeEventListener('pointermove',mv); B.removeEventListener('pointerup',up); };
       B.addEventListener('pointermove',mv); B.addEventListener('pointerup',up); };
+    const read=async()=>{ L.remove(); busy('Leggo il testo…'); try{ const w=await readLyrics({...band,gap:g}); busy(); if(!w.length) toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600); return w; }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); return []; } };
+    const pseudo=words=>{ const yy=(band.y0+band.y1)/2, sz=TStyle.lyricSize(src); return words.map(w=>({t:'text',text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer})); };
     L.onclick=async e=>{
       if(e.target.closest('[data-x]')){ L.remove(); return; }
-      const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.5; band.y0+=d; band.y1+=d; place(); return; }
+      const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.4; band.y0=clamp(band.y0+d,0,.97); band.y1=clamp(band.y1+d,band.y0+.01,1); place(); return; }
+      const szb=e.target.closest('[data-sz]'); if(szb){ const d=+szb.dataset.sz*g*.3; if(band.y1-band.y0+2*d>=g*.7){ band.y0=clamp(band.y0-d,0,.98); band.y1=clamp(band.y1+d,band.y0+.01,1); place(); } return; }
+      const stb=e.target.closest('[data-st]'); if(stb){ TStyle.pick(stb,'lyric',{size:target.size,...target.props()},t=>{ target.size=t.size; target.style=t; stb.querySelector('small').textContent=TStyle.pt(t.size); }); return; }
       const hb=e.target.closest('[data-hl]'); if(hb){ AutoHL.pick(hb,c=>{ const sp=AutoHL.inkSpan(band.y0,band.y1); if(!sp) return toast('Niente da evidenziare in quella fascia'); L.remove(); AutoHL.rect(sp[0],band.y0,sp[1],band.y1,c); toast('Testo evidenziato',1500); }); return; }
-      if(e.target.closest('[data-tr]')){ L.remove(); busy('Leggo il testo…');
-        try{ const words=await readLyrics({...band,gap:g}); busy(); if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole',3200);
-          const yy=(band.y0+band.y1)/2, sz=Math.max(.012,g*1.6); const pseudo=words.map(w=>({text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer}));
-          let lang=detectLang(words.map(w=>w.text).join(' '))||'la'; if(lang==='it') lang='la';
-          Finger.writeTranslit(pseudo,lang,'up'); toast('Pronuncia scritta sopra il testo stampato · con il Dito ✋ la sposti',3200);
-        }catch(err){ busy(); toast(err.message||'Lettura non riuscita'); } return; }
+      if(e.target.closest('[data-tr]')){ const words=await read(); if(!words.length) return;
+        let lang=detectLang(words.map(w=>w.text).join(' '))||'la'; if(lang==='it') lang='la';
+        Finger.writeTranslit(pseudo(words),lang,'up'); toast('Pronuncia scritta sopra il testo stampato · con il Dito ✋ la sposti',3200); return; }
+      if(e.target.closest('[data-tt]')){ const words=await read(); if(!words.length) return; Translate.open(pseudo(words),null); return; }
       if(!e.target.closest('[data-ok]')) return;
-      L.remove(); busy('Leggo il testo…');
-      try{ const words=await readLyrics({...band,gap:g}); busy();
-        if(!words.length) return toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600);
-        Anno.push(); const n=target.notes; const added=[];
-        for(const w of words){ let x=w.x; if(n&&n.length){ let b2=0,bd=9; n.forEach((v,j)=>{const d=Math.abs(v-x); if(d<bd){bd=d;b2=j}}); if(bd<.03) x=n[b2]; }
-          Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,bold:true,color:'#111111',alpha:1,layer:Anno.layer}); added.push(Anno.strokes.length-1); }
-        saveAnn(); Anno.redraw(); Anno.buildBar();
-        target.box(); target.marks();
-        toast(`${added.length} sillabe copiate · se ne manca qualcuna scrivila qui: Invio passa alla nota dopo`,4200);
-        Finger.offerTranslit(added);
-      }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); } };
+      const words=await read(); if(!words.length) return;
+      Anno.push(); const n=target.notes; const added=[]; const tol=target.tol(target.st);
+      for(const w of words){ let x=w.x; if(n&&n.length){ const v=nearestNote(n,x); if(v!=null&&Math.abs(v-x)<tol) x=v; }
+        Anno.strokes.push({t:'text',text:w.text,x,y:target.y,size:target.size,align:'c',lyric:1,...target.props(),alpha:1,layer:Anno.layer}); added.push(Anno.strokes.length-1); }
+      saveAnn(); Anno.redraw(); Anno.buildBar();
+      target.box(); target.marks();
+      toast(`${added.length} sillabe copiate · se ne manca qualcuna: tocca la nota e scrivila qui, oppure con il Dito ✋ tocca lo spazio vuoto nella riga`,4800);
+      Finger.offerTranslit(added); };
   },
 };
 
-// Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; nel browser non disponibile).
+// Lettura del testo stampato sotto un rigo (Vision di Apple nell'app; Tesseract nel browser).
+// 1) legge la fascia intera  2) tiene la riga di testo con più parole  3) rilegge, ingranditi, i pezzi d'inchiostro rimasti senza parola
+async function ocrImage(cv){ return (window.MozartNative&&MozartNative.ocr)?(await MozartNative.ocr(cv.toDataURL('image/jpeg',.92)))||[]:await ocrBrowser(cv); }
 async function readLyrics(st){
   const c=pageCanvas, W=c.width, H=c.height;
   const y0=Math.round((st.y0!=null?st.y0:st.bottom+st.gap*.3)*H), y1=Math.round(Math.min(H,(st.y1!=null?st.y1:st.bottom+st.gap*3.5)*H));
@@ -3557,11 +3670,32 @@ async function readLyrics(st){
   const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
   const cx=cut.getContext('2d',{willReadFrequently:true}); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.imageSmoothingQuality='high'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height);
   cleanForOcr(cut,gapPx*k);
-  let res;
-  if(window.MozartNative&&MozartNative.ocr) res=await MozartNative.ocr(cut.toDataURL('image/jpeg',.92));
-  else res=await ocrBrowser(cut);
-  // se la fascia contiene due righe (es. italiano e traduzione) si tiene la prima
-  if(res.length&&res[0].y!=null){ const ym=Math.min(...res.map(w=>w.y)); res=res.filter(w=>w.y<ym+.22); }
+  let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+  // righe di testo: si tiene quella con più lettere (prima: la più alta, e un segno sopra il testo faceva perdere tutta la riga)
+  let band=[0,1];
+  if(res.length&&res[0].y!=null){
+    const yc=w=>w.y+(w.h||.3)/2; const sorted=res.slice().sort((a,b)=>yc(a)-yc(b)); const lines=[];
+    for(const w of sorted){ const l=lines[lines.length-1]; if(l&&yc(w)-l.y<Math.max(.18,(w.h||.3)*.7)){ l.w.push(w); l.n+=w.text.length; l.y=(l.y*(l.w.length-1)+yc(w))/l.w.length; } else lines.push({y:yc(w),w:[w],n:w.text.length}); }
+    const mx=Math.max(...lines.map(l=>l.n)); const best=lines.find(l=>l.n>=mx*.6);
+    res=best.w; const hh=Math.max(...res.map(w=>w.h||.3)); band=[clamp(best.y-hh*.9,0,1),clamp(best.y+hh*.9,0,1)];
+  }
+  // pezzi d'inchiostro senza parola: si rileggono da soli, più grandi
+  try{
+    const extra=[]; const CW=cut.width, CH=cut.height, d=cut.getContext('2d').getImageData(0,0,CW,CH).data;
+    const ya=Math.floor(band[0]*CH), yb=Math.ceil(band[1]*CH), ink=new Uint8Array(CW);
+    for(let x=0;x<CW;x++){ for(let y=ya;y<yb;y++){ if(d[(y*CW+x)*4]<128){ ink[x]=1; break; } } }
+    const covered=x=>res.some(w=>x>=(w.x-.004)*CW&&x<=(w.x+w.w+.004)*CW);
+    const join=gapPx*k*.9, runs=[]; let st0=-1, last=-1;
+    for(let x=0;x<=CW;x++){ const on=x<CW&&ink[x]&&!covered(x); if(on){ if(st0<0) st0=x; last=x; } else if(st0>=0&&x-last>join){ runs.push([st0,last]); st0=-1; } }
+    for(const [a,b] of runs.filter(r=>r[1]-r[0]>gapPx*k*.6).slice(0,16)){
+      const pad=Math.round(gapPx*k*.6), ax=Math.max(0,a-pad), bx=Math.min(CW,b+pad), z=1.7;
+      const pc=document.createElement('canvas'); pc.width=Math.round((bx-ax)*z)+40; pc.height=Math.round((yb-ya)*z)+40; const px=pc.getContext('2d');
+      px.fillStyle='#fff'; px.fillRect(0,0,pc.width,pc.height); px.imageSmoothingQuality='high'; px.drawImage(cut,ax,ya,bx-ax,yb-ya,20,20,pc.width-40,pc.height-40);
+      const got=(await ocrImage(pc)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+      for(const w of got){ const gx=(ax+(w.x*pc.width-20)/z)/CW, gw=w.w*pc.width/z/CW; extra.push({text:w.text,x:gx,w:gw,y:band[0],h:band[1]-band[0]}); }
+    }
+    if(extra.length){ res=res.concat(extra).sort((a,b)=>a.x-b.x); }
+  }catch(e){}
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
     parts.forEach((t,i)=>{ if(/^[-–—_]+$/.test(t)){ if(out.length&&!/-$/.test(out[out.length-1].text)) out[out.length-1].text+='-'; return; } t=t.replace(/_+/g,''); if(!t) return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
@@ -3588,7 +3722,7 @@ async function ocrBrowser(canvas){
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
   const Hh=canvas.height;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh}));
+  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh,h:(x.bbox.y1-x.bbox.y0)/Hh}));
 }
 
 // Bianco e nero netto e senza le linee orizzontali lunghe (estensioni delle sillabe "____"), che confondono la lettura.
@@ -3931,7 +4065,7 @@ const Finger = {
       else if(x.id==='fgB'){ const v=!L()[0].bold; ch(t=>t.bold=v); }
       else if(x.id==='fgI'){ const v=!L()[0].italic; ch(t=>t.italic=v); }
       else if(x.id==='fgM') ch(t=>t.size=Math.max(.008,t.size*.9));
-      else if(x.id==='fgP') ch(t=>t.size=Math.min(.08,t.size*1.1));
+      else if(x.id==='fgP') ch(t=>t.size=Math.min(.05,t.size*1.1));
       mark(); };
     const step=.004;
     $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step); $('#fgLt').onclick=()=>ch(t=>t.x-=step); $('#fgRt').onclick=()=>ch(t=>t.x+=step);
@@ -3959,7 +4093,7 @@ const Finger = {
       <button class="goldBtn block" id="ftOk">${iconSvg('check')}Scrivi sul rigo</button></div>`;
       p.querySelector('#ftL').onclick=e=>{const x=e.target.closest('[data-l]');if(x){lang=x.dataset.l;draw()}};
       p.querySelector('#ftW').onclick=e=>{const x=e.target.closest('[data-w]');if(x){where=x.dataset.w;draw()}};
-      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
         A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
         L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
         p.remove(); bar&&bar.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Traslitterazione scritta sul rigo',2200); };
@@ -3983,7 +4117,7 @@ const Finger = {
     p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
   },
   writeTranslit(L,lang,where){
-    const A=Anno; A.push(); const sz=(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+    const A=Anno; A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
     L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
@@ -4000,7 +4134,9 @@ const Finger = {
       A.push();
       if(a==='x'){ const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); }
       else if(a==='c'){ const n=this.line.map(k=>{ const c=JSON.parse(JSON.stringify(A.strokes[k])); moveStroke(c,.015,.015); return c; }); const base=A.strokes.length; A.strokes.push(...n); this.line=n.map((_,j)=>base+j); A.selIdx=this.line; A.updSelBox(); }
-      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox(); }
+      else if(a==='sm'||a==='lg'){ const f=a==='lg'?1.15:1/1.15; this.line.forEach(k=>{ const t=A.strokes[k]; if(t.t==='gif'){ const cx=t.x+t.w/2, cy=t.y+t.h/2; t.w*=f; t.h*=f; t.x=cx-t.w/2; t.y=cy-t.h/2; } else if(t.t==='stamp') t.size*=f; else if(t.w) t.w*=f; }); A.updSelBox();
+        // la grandezza scelta per i segni resta per i prossimi segni di questo spartito
+        if(ST.cur&&this.line.some(k=>A.strokes[k]&&A.strokes[k].t==='stamp')){ const st=ST.cur.style=ST.cur.style||{}; st.stampK=clamp((st.stampK||1)*f,.3,4); DB.putScore(ST.cur); } }
       else { const [dx,dy]={l:[-st,0],r:[st,0],u:[0,-st],d:[0,st]}[a]; this.line.forEach(k=>moveStroke(A.strokes[k],dx,dy)); A.updSelBox(); }
       A.redraw(); saveAnn(); A.buildBar(); };
   },
@@ -4009,13 +4145,15 @@ const Finger = {
   gapNote(){
     const A=Anno, s=A.strokes[this.idx]; if(!s) return;
     const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<s.y).pop(); if(!st) return toast('Non trovo il rigo sopra questa riga');
-    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(!notes.length) return toast('Non riconosco le note di questo rigo: tocca sotto la nota con "Testo sulle note"');
-    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,st.gap*1.2);
+    let notes=[]; try{ notes=detectNotes(st); }catch(e){} if(notes.length<2){ try{ notes=detectNotes(st,true); }catch(e){} }
+    if(!notes.length){ $('#fgBar')?.remove(); A.clearSel(); if(A.mode!=='hand'){ A.mode='hand'; A.buildBar(); } return toast('Non riconosco le note di questo rigo: con il Dito ✋ tocca lo spazio vuoto nella riga del testo, sotto la nota senza parola',4200); }
+    const xs=this.line.map(k=>A.strokes[k]).filter(Boolean).map(t=>t.x), tol=Math.max(.012,LyricType.tol(st)*.45);
     const free=notes.map((n,i)=>({n,i})).filter(o=>!xs.some(x=>Math.abs(x-o.n)<tol));
     if(!free.length) return toast('Tutte le note di questo rigo hanno già la loro sillaba');
     const next=free.find(o=>o.n>s.x)||free[0];
     $('#fgBar')?.remove(); A.clearSel();
     if(!ST.annotate) Anno.enter(); A.mode='lyric'; A.buildBar();
+    LyricType.style={font:s.font||'sans',bold:s.bold!==false,italic:!!s.italic,color:s.color||'#111111'};
     LyricType.startAt(st,notes,s.y,s.size,next.i);
   },
   strokeBar0(){},
@@ -4227,7 +4365,10 @@ const Clock = {
   render(){
     const now=new Date(), t=now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
     let tm=''; if(this.end){ const left=this.end-Date.now(); if(left<=0) this.done(); else tm=`<span class="ckT ${this.kind}">${this.kind==='pausa'?'☕':'⏱'} ${this.fmt(left)}</span>`; }
-    $$('.clockPill').forEach(el=>el.innerHTML=`<span class="ckH">${t}</span>${tm}`);
+    // data del giorno: "ven 20 nov"
+    const dt=now.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
+    const html=`<span class="ckD">${dt}</span><span class="ckH">${t}</span>${tm}`;
+    $$('.clockPill').forEach(el=>{ if(el._h!==html){ el._h=html; el.innerHTML=html; } });
   },
   start(min,kind){ this.end=Date.now()+min*60000; this.kind=kind; this.total=min; this.save(); this.render(); toast(kind==='pausa'?`Pausa di ${min} minuti`:`Lavoro: ${min} minuti`,2000); },
   stop(){ this.end=0; this.kind=''; this.save(); this.render(); },
@@ -4257,6 +4398,261 @@ const Clock = {
     const st=$('#ckStop'); if(st) st.onclick=()=>{ this.stop(); closeLayers(); };
   },
 };
+
+// ================= Testo: stile ricordato per spartito · traduzione · Dito con carattere e grandezza · parola mancante · salvataggio automatico =================
+
+// ---------- Stile del testo: l'ultima scelta (carattere, colore, grandezza) vale per i nuovi inserimenti nello stesso spartito ----------
+const TS_FONTS=[['sans','Sans'],['serif','Serif'],['music','Corsivo']];
+const TS_COLORS=['#111111','#d23b2f','#1f5fd6','#1d8a4a','#8b3fc4','#c8962e','#ff8a3d','#ffffff'];
+const TStyle = {
+  kindOf(t){ return t.tr?'tr':t.pron?'pron':t.lyric?'lyric':'text'; },
+  get(kind){ const s=ST.cur&&ST.cur.style; return s&&s[kind]||null; },
+  remember(kind,t){ if(!ST.cur||!t) return; const st=ST.cur.style=ST.cur.style||{};
+    st[kind]={size:t.size,font:t.font||'sans',bold:!!t.bold,italic:!!t.italic,color:t.color||'#111111'}; DB.putScore(ST.cur); },
+  // grandezza leggibile per le sillabe: dalla distanza tra le righe del rigo, mai enorme
+  lyricSize(st){ const k=inkCanvas.width?inkCanvas.height/inkCanvas.width:1.4; return clamp((st?st.gap:.01)*k*1.25,.009,.022); },
+  sane(size,base){ return size&&size>base*.45&&size<base*1.9?size:base; },
+  pt(size){ return Math.round(size*1100); },
+  label(t){ const f=TS_FONTS.find(x=>x[0]===(t.font||'sans')); return `${f?f[1]:'Sans'}${t.bold?' grassetto':''}${t.italic?' corsivo':''} · ${this.pt(t.size)} pt`; },
+  // controlli condivisi: carattere con il nome, colori, grassetto/corsivo, A− grandezza A+
+  html(t){ return `<div class="seg tsFont">${TS_FONTS.map(([k,n])=>`<button data-f="${k}" class="${(t.font||'sans')===k?'on':''}" style="${k==='sans'?'':'font-family:var(--f-display);'}${k==='music'?'font-style:italic':''}">${n}</button>`).join('')}
+      <button data-b class="${t.bold?'on':''}" style="font-weight:900">G</button><button data-i class="${t.italic?'on':''}" style="font-style:italic">C</button></div>
+    <div class="tsRow"><span class="tsCols">${TS_COLORS.map(c=>`<button class="sw${(t.color||'').toLowerCase()===c?' on':''}" data-col="${c}" style="background:${c}" aria-label="Colore"></button>`).join('')}</span>
+      <span class="tsSize"><button data-m aria-label="Più piccolo">A−</button><b class="tsPt">${this.pt(t.size)}</b><button data-p aria-label="Più grande">A+</button></span></div>`; },
+  // list(): sillabe da cambiare · done(): dopo ogni modifica
+  bind(root,list,done,noHist){
+    const first=()=>list()[0]||{};
+    const mark=()=>{ const t=first(); root.querySelectorAll('.tsFont [data-f]').forEach(x=>x.classList.toggle('on',(t.font||'sans')===x.dataset.f));
+      root.querySelector('.tsFont [data-b]')?.classList.toggle('on',!!t.bold); root.querySelector('.tsFont [data-i]')?.classList.toggle('on',!!t.italic);
+      root.querySelectorAll('.tsCols [data-col]').forEach(x=>x.classList.toggle('on',x.dataset.col===(t.color||'').toLowerCase()));
+      const pt=root.querySelector('.tsPt'); if(pt) pt.textContent=this.pt(t.size||.016); };
+    const ch=fn=>{ if(!noHist) Anno.push(); list().forEach(fn); const t=first(); if(!noHist&&t.t==='text') this.remember(this.kindOf(t),t); done&&done(); mark(); };
+    root.addEventListener('click',e=>{ const x=e.target.closest('button'); if(!x||!x.closest('.tsFont,.tsRow')) return;
+      if(x.dataset.f) ch(t=>t.font=x.dataset.f);
+      else if(x.hasAttribute('data-b')){ const v=!first().bold; ch(t=>t.bold=v); }
+      else if(x.hasAttribute('data-i')){ const v=!first().italic; ch(t=>t.italic=v); }
+      else if(x.dataset.col) ch(t=>t.color=x.dataset.col);
+      else if(x.hasAttribute('data-m')) ch(t=>t.size=Math.max(.006,t.size/1.08));
+      else if(x.hasAttribute('data-p')) ch(t=>t.size=Math.min(.05,t.size*1.08)); });
+    mark();
+  },
+  // finestrella di stile prima di copiare o scrivere (vale per lo spartito)
+  pick(anchor,kind,def,cb){
+    $('#tsPop')?.remove(); const t={...def,...(this.get(kind)||{})}; t.t='text';
+    const p=document.createElement('div'); p.className='pop'; p.id='tsPop';
+    p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:310px"><div class="eyebrow">Carattere, colore e grandezza</div>${this.html(t)}
+      <div class="tsPrev" style="font-size:22px;text-align:center;padding:6px;border-radius:10px;background:#f4efe4">Glo - ri - a</div>
+      <button class="goldBtn block" data-ok>${iconSvg('check')}Usa questo stile</button></div>`;
+    document.body.appendChild(p); p.style.position='fixed'; p.style.zIndex=72;
+    const r=anchor.getBoundingClientRect(); p.style.left=clamp(r.left,8,innerWidth-340)+'px'; p.style.top=(r.top>innerHeight/2?Math.max(8,r.top-p.offsetHeight-8):r.bottom+8)+'px';
+    const prev=()=>{ const v=p.querySelector('.tsPrev'); v.style.fontFamily=t.font==='sans'?'var(--f-body)':'var(--f-display)'; v.style.fontWeight=t.bold?'700':'500'; v.style.fontStyle=(t.italic||t.font==='music')?'italic':'normal'; v.style.color=t.color; v.style.fontSize=clamp(this.pt(t.size)*1.3,10,40)+'px'; };
+    this.bind(p,()=>[t],prev,true); prev();
+    p.querySelector('[data-ok]').onclick=()=>{ this.remember(kind,t); p.remove(); cb&&cb(t); };
+  },
+};
+
+// ---------- Traduzione in italiano (riconosce la lingua da solo) · rosso corsivo ----------
+const TR_NAMES={la:'Latino',de:'Tedesco',fr:'Francese',es:'Spagnolo',en:'Inglese',it:'Italiano'};
+// latino liturgico senza internet: frasi e parole più frequenti nei brani per coro
+const LA_IT={'kyrie eleison':'Signore, pietà','christe eleison':'Cristo, pietà','gloria in excelsis deo':'Gloria a Dio nell\'alto dei cieli','et in terra pax hominibus':'e pace in terra agli uomini',
+  'agnus dei':'Agnello di Dio','qui tollis peccata mundi':'che togli i peccati del mondo','miserere nobis':'abbi pietà di noi','dona nobis pacem':'dona a noi la pace','sanctus':'santo','benedictus qui venit in nomine domini':'benedetto colui che viene nel nome del Signore',
+  'hosanna in excelsis':'osanna nell\'alto dei cieli','ave maria':'Ave Maria','gratia plena':'piena di grazia','dominus tecum':'il Signore è con te','ora pro nobis':'prega per noi','requiem aeternam':'l\'eterno riposo','dona eis domine':'dona loro, Signore',
+  'lux aeterna':'luce eterna','pleni sunt caeli et terra gloria tua':'i cieli e la terra sono pieni della tua gloria','alleluia':'alleluia','amen':'amen','te deum laudamus':'ti lodiamo, Dio','pater noster':'Padre nostro','stabat mater dolorosa':'stava la madre addolorata',
+  'deus':'Dio','deo':'a Dio','dei':'di Dio','dominus':'Signore','domine':'Signore','domini':'del Signore','christe':'Cristo','christus':'Cristo','pax':'pace','pacem':'pace','gloria':'gloria','sanctus':'santo','sancte':'santo','spiritus':'spirito','spiritu':'Spirito',
+  'pater':'padre','patris':'del Padre','filius':'figlio','filii':'del Figlio','mater':'madre','virgo':'vergine','caeli':'cieli','coeli':'cieli','terra':'terra','lux':'luce','lumen':'luce','vita':'vita','mors':'morte','cor':'cuore','amor':'amore','laudamus':'lodiamo',
+  'benedicimus':'benediciamo','adoramus':'adoriamo','glorificamus':'glorifichiamo','te':'te','tibi':'a te','nobis':'a noi','nos':'noi','in':'in','et':'e','cum':'con','excelsis':'alto dei cieli','aeternam':'eterna','aeterna':'eterna','salve':'salve','regina':'regina','rex':'re'};
+const Translate = {
+  cache:new Map(),
+  async text(q,from){
+    q=String(q).replace(/\s+/g,' ').trim(); if(!q) return ''; const key=(from||'auto')+'|'+q; if(this.cache.has(key)) return this.cache.get(key);
+    let out='';
+    const nq=q.toLowerCase().replace(/[.,;:!?]/g,'').trim(); const offline=(from==='la'||from==='auto'||!from)?LA_IT[nq]:null;
+    if(window.MozartNative&&MozartNative.translate){ try{ out=(await MozartNative.translate(q,from||'',''))||''; }catch(e){} }
+    if(!out){ try{ const j=await (await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from||'auto'}&tl=it&dt=t&q=${encodeURIComponent(q)}`)).json();
+      out=(j&&j[0]||[]).map(x=>x&&x[0]||'').join('').trim(); }catch(e){} }
+    if(!out){ try{ const j=await (await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${from&&from!=='auto'?from:'la'}|it`)).json();
+      out=String(j&&j.responseData&&j.responseData.translatedText||'').trim(); }catch(e){} }
+    if(!out&&offline) out=offline;
+    if(!out) throw new Error('Traduzione non riuscita: serve la connessione a internet');
+    this.cache.set(key,out); return out;
+  },
+  // sillabe → parole: "Glo-" "ri-" "a" diventa "Gloria"
+  words(L){ const ord=L.filter(t=>t&&t.text).slice().sort((a,b)=>a.x-b.x); const out=[]; let cur=null;
+    for(const t of ord){ let w=String(t.text).trim(); const lead=/^[-–—]/.test(w), hy=/[-–—]$/.test(w); w=w.replace(/^[-–—_]+|[-–—_]+$/g,''); if(!w) continue;
+      if(cur&&(cur.open||lead)){ cur.text+=w; cur.items.push(t); cur.open=hy; } else { cur={text:w,items:[t],open:hy}; out.push(cur); } }
+    return out; },
+  phrase(L){ return this.words(L).map(w=>w.text).join(' ').replace(/\s+([,.;:!?])/g,'$1'); },
+  // finestra: lingua, frase intera o parola toccata, anteprima e "Scrivi sul rigo"
+  open(L,anchor,tapped){
+    L=L.filter(Boolean); if(!L.length) return toast('Niente da tradurre');
+    $('#trPop')?.remove(); const words=this.words(L); const wt=tapped&&words.find(w=>w.items.includes(tapped));
+    let lang=detectLang(this.phrase(L))||'auto', mode=wt&&words.length>1?'word':'all', where='down', res='';
+    const p=document.createElement('div'); p.className='pop'; p.id='trPop';
+    const src=()=>mode==='word'&&wt?wt.text:this.phrase(L);
+    const run=async()=>{ const box=p.querySelector('#trOut'); box.innerHTML='<span class="hint">Traduco…</span>'; res='';
+      if(lang==='it'){ box.innerHTML='<span class="hint">Il testo sembra già in italiano: scegli la lingua giusta se non lo è.</span>'; return; }
+      try{ res=await this.text(src(),lang); box.innerHTML=`<span style="color:#ff6b5e;font-style:italic;font-family:var(--f-display);font-size:18px">${esc(res)}</span>`; }
+      catch(err){ box.innerHTML=`<span style="color:var(--danger)">${esc(err.message)}</span>`; } };
+    const draw=()=>{ p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:330px"><div class="eyebrow">Traduzione in italiano</div>
+      <div class="seg" id="trL">${Object.entries(TR_NAMES).map(([k,n])=>`<button data-l="${k}" class="${k===lang?'on':''}">${n}</button>`).join('')}</div>
+      ${wt&&words.length>1?`<div class="seg" id="trM"><button data-m="all" class="${mode==='all'?'on':''}">Frase intera</button><button data-m="word" class="${mode==='word'?'on':''}">Solo “${esc(wt.text)}”</button></div>`:''}
+      <div class="hint" style="font-size:14px"><b>${esc(src())}</b></div><div id="trOut" style="min-height:26px"></div>
+      <div class="seg" id="trW"><button data-w="down" class="${where==='down'?'on':''}">${iconSvg('down')} Sotto il rigo</button><button data-w="up" class="${where==='up'?'on':''}">${iconSvg('up')} Sopra</button></div>
+      <div style="display:flex;gap:8px"><button class="ghostBtn" data-x style="flex:1">Chiudi</button><button class="goldBtn" data-ok style="flex:1">${iconSvg('check')}Scrivi in rosso</button></div></div>`;
+      p.querySelector('#trL').onclick=e=>{ const x=e.target.closest('[data-l]'); if(x){ lang=x.dataset.l; draw(); } };
+      const m=p.querySelector('#trM'); if(m) m.onclick=e=>{ const x=e.target.closest('[data-m]'); if(x){ mode=x.dataset.m; draw(); } };
+      p.querySelector('#trW').onclick=e=>{ const x=e.target.closest('[data-w]'); if(x){ where=x.dataset.w; p.querySelectorAll('#trW button').forEach(y=>y.classList.toggle('on',y===x)); } };
+      p.querySelector('[data-x]').onclick=()=>p.remove();
+      p.querySelector('[data-ok]').onclick=()=>{ if(!res) return toast('Aspetta la traduzione',1400); this.write(mode==='word'&&wt?wt.items:L,res,where); p.remove(); $('#fgBar')?.remove(); Anno.clearSel(); toast('Traduzione scritta · con il Dito ✋ la sposti o la cambi',2600); };
+      run(); };
+    draw(); $('#app').appendChild(p);
+    const r=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():{left:innerWidth/2-165,top:innerHeight/2,bottom:innerHeight/2};
+    p.style.position='fixed'; p.style.zIndex=66; p.style.left=clamp(r.left,8,innerWidth-350)+'px';
+    p.style.top=clamp(r.top>innerHeight/2?r.top-p.offsetHeight-8:r.bottom+8,8,innerHeight-p.offsetHeight-8)+'px';
+  },
+  write(L,text,where){
+    const A=Anno; const ord=L.slice().sort((a,b)=>a.x-b.x); const s0=ord[0]; const base=s0.size||.016;
+    const mem=TStyle.get('tr'); const sz=mem?mem.size:base*.85;
+    const y0=Math.min(...ord.map(t=>t.y)), y1=Math.max(...ord.map(t=>t.y));
+    // sotto: dopo l'eventuale pronuncia già scritta sotto
+    let ny=where==='up'?y0-(base*.6+sz*.75):y1+(base*.6+sz*.8);
+    if(where!=='up'){ const pr=A.strokes.filter(t=>t.t==='text'&&(t.pron||t.tr)&&t.y>y1&&t.y<y1+base*2.2&&t.x>=ord[0].x-.05&&t.x<=ord[ord.length-1].x+.05); if(pr.length) ny=Math.max(...pr.map(t=>t.y))+sz*1.15; }
+    const one=ord.length===1||ord.every(t=>Math.abs(t.y-y0)<.004)&&ord.length<4;
+    A.push();
+    A.strokes.push({t:'text',text,x:one&&s0.align==='c'?ord.reduce((a,t)=>a+t.x,0)/ord.length:ord[0].x-(s0.align==='c'?(s0.size*String(s0.text).length*.28):0),y:ny,size:sz,
+      align:one&&s0.align==='c'?'c':'l',font:mem?mem.font:'serif',italic:mem?mem.italic:true,bold:mem?mem.bold:false,color:mem?mem.color:'#d23b2f',alpha:1,tr:1,lyric:1,layer:s0.layer||A.layer});
+    A.redraw(); saveAnn(); A.buildBar();
+  },
+};
+
+// ---------- Dito: barra con carattere e grandezza sempre visibili, traduci, parola mancante ----------
+Finger.bar=function(){
+  $('#fgBar')?.remove(); const A=Anno, s=A.strokes[this.idx]; if(!s) return;
+  const r=inkCanvas.getBoundingClientRect(); const lyric=!!s.lyric&&!s.tr;
+  const b=document.createElement('div'); b.id='fgBar'; b.className='pop';
+  b.innerHTML=`<div class="fgWrap">
+    <div style="display:flex;gap:6px;align-items:center"><input id="fgTxt" value="${esc(s.text)}" autocapitalize="off" autocorrect="off" spellcheck="false"><button class="goldBtn sm" id="fgOk" aria-label="Fatto">${iconSvg('check')}</button></div>
+    <div class="tsInfo" id="fgInfo">${esc(TStyle.label(s))}</div>
+    ${TStyle.html(s)}
+    <div class="seg fgAct"><button id="fgLt" aria-label="Sinistra">${iconSvg('chevLeft')}</button><button id="fgUp" aria-label="Su">${iconSvg('up')}</button><button id="fgDn" aria-label="Giù">${iconSvg('down')}</button><button id="fgRt" aria-label="Destra">${iconSvg('chevRight')}</button>
+      ${lyric?`<button id="fgPrev" title="Sillaba precedente">${iconSvg('skipBack')}</button><button id="fgNext" title="Sillaba successiva">${iconSvg('skipFwd')}</button></div>
+    <div class="seg fgAct"><button id="fgGap" title="Scrivi la sillaba che manca sotto la nota">${iconSvg('plus')} Parola mancante</button><button id="fgCopy">${iconSvg('copy')} Copia sui righi</button>`:''}
+      <button id="fgHl">${iconSvg('pen')} Evidenzia</button><button id="fgTr">${iconSvg('voice')} Traslittera</button><button id="fgTt">🌐 Traduci</button><button id="fgDel" style="color:var(--danger)" aria-label="Elimina">${iconSvg('trash')}</button></div>
+    <div class="hint" style="font-size:12px">${lyric?`Riga di ${this.line.length} sillabe: carattere, grandezza e spostamento valgono per tutta la riga; il testo in alto cambia solo la sillaba toccata. Per una parola che manca: tocca con il Dito lo spazio vuoto nella riga.`:'Trascina con il dito per spostarlo.'} L'ultimo stile scelto resta per i nuovi testi di questo spartito.</div></div>`;
+  $('#app').appendChild(b);
+  dockBar(b, r.top+s.y*r.height);
+  const L=()=>this.line.map(k=>A.strokes[k]).filter(Boolean);
+  const after=()=>{ A.redraw(); A.updSelBox(); saveAnn(); A.buildBar(); const i=$('#fgInfo'); if(i) i.textContent=TStyle.label(A.strokes[this.idx]||s); };
+  TStyle.bind(b,L,after);
+  const ch=fn=>{ A.push(); L().forEach(fn); after(); };
+  const step=.003;
+  $('#fgUp').onclick=()=>ch(t=>t.y-=step); $('#fgDn').onclick=()=>ch(t=>t.y+=step); $('#fgLt').onclick=()=>ch(t=>t.x-=step); $('#fgRt').onclick=()=>ch(t=>t.x+=step);
+  const save=()=>{ const v=$('#fgTxt').value.trim(); const cur=A.strokes[this.idx]; if(!cur||v===cur.text) return; A.push(); if(!v){ A.strokes.splice(this.idx,1); b.remove(); A.clearSel(); } else cur.text=v; A.redraw(); saveAnn(); A.buildBar(); };
+  $('#fgOk').onclick=()=>{ save(); b.remove(); A.clearSel(); };
+  $('#fgTxt').onkeydown=e=>{ if(e.key==='Enter'){ save(); this.nextSyl(); } if(e.key==='Escape'){ b.remove(); A.clearSel(); } };
+  $('#fgDel').onclick=()=>{ A.push(); const del=new Set(this.line); A.strokes=A.strokes.filter((_,k)=>!del.has(k)); b.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); };
+  const cp=$('#fgCopy'); if(cp) cp.onclick=()=>{ b.remove(); A.selIdx=[...this.line]; A.updSelBox(); LyricCopy.start(); };
+  $('#fgTr').onclick=()=>this.translit(b);
+  $('#fgTt').onclick=()=>{ save(); Translate.open(L(),b,A.strokes[this.idx]); };
+  $('#fgHl').onclick=e=>AutoHL.pick(e.currentTarget,c=>{ const bx=A.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0+.008,bx.x1,bx.y1-.008,c); b.remove(); A.clearSel(); toast('Testo evidenziato',1500); });
+  const pv=$('#fgPrev'); if(pv){ pv.onclick=()=>{ save(); this.stepSyl(-1); }; $('#fgNext').onclick=()=>{ save(); this.stepSyl(1); }; $('#fgGap').onclick=()=>{ save(); this.gapNote(); }; }
+};
+// apre la barra del Dito per alcune scritte (dal lazo, dalla T)
+Finger.openFor=function(idx){ const A=Anno; idx=idx.filter(k=>A.strokes[k]&&A.strokes[k].t==='text'); if(!idx.length) return;
+  if(!ST.annotate) A.enter(); this.line=idx; this.idx=idx.slice().sort((a,b)=>A.strokes[a].x-A.strokes[b].x)[0]; A.selIdx=[...idx]; A.updSelBox(); A.redraw(); this.bar(); };
+
+// Tocco nel vuoto: sulla riga del testo = parola mancante; sotto un rigo con testo stampato = fascia da leggere (traslittera, traduci, evidenzia)
+Finger._down0=Finger.down;
+Finger.down=function(p,from){
+  const i=this.hit(p);
+  if(i>=0||from==='text') return this._down0(p,from);
+  $('#fgBar')?.remove(); this.st=null; Anno.clearSel();
+  const A=Anno; const near=A.strokes.filter(s=>s.t==='text'&&s.lyric&&!s.pron&&!s.tr&&(s.layer||0)===A.layer&&Math.abs(s.y-p[1])<Math.max(.012,s.size*1.1));
+  if(near.length) return this.insertAt(p,near);
+  const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<p[1]).pop();
+  if(st&&p[1]<st.bottom+st.gap*5){ LyricType.adjustBand(st,{y:p[1],free:true}); return; }
+  toast('Tocca un testo, una riga o un segno · sotto un rigo stampato si apre la lettura del testo',2600);
+};
+// scrive una sillaba nello spazio vuoto della riga, sotto la nota più vicina al tocco
+Finger.insertAt=function(p,near){
+  const A=Anno; const ref=near.slice().sort((a,b)=>Math.abs(a.x-p[0])-Math.abs(b.x-p[0]))[0];
+  const staves=detectStaves(); const st=[...staves].filter(t=>t.bottom<ref.y).pop()||staves[0];
+  let notes=[]; if(st){ try{ notes=detectNotes(st); }catch(e){} }
+  const tol=LyricType.tol(st); let x=p[0];
+  const nn=nearestNote(notes,p[0]); if(nn!=null&&Math.abs(nn-p[0])<tol) x=nn;
+  else if(st){ let loose=[]; try{ loose=detectNotes(st,true); }catch(e){} const n2=nearestNote(loose,p[0]); if(n2!=null&&Math.abs(n2-p[0])<tol) x=n2; }
+  const list=[...new Set([...notes,x])].sort((a,b)=>a-b);
+  if(!ST.annotate) A.enter();
+  LyricType.style={font:ref.font||'sans',bold:ref.bold!==false,italic:!!ref.italic,color:ref.color||'#111111'};
+  LyricType.startAt(st||{gap:.01,top:0,bottom:0},list,ref.y,ref.size,list.indexOf(x));
+  toast('Scrivi la parola che manca · Invio = nota dopo',2200);
+};
+function nearestNote(notes,x){ let b=null,bd=9; (notes||[]).forEach(n=>{ const d=Math.abs(n-x); if(d<bd){bd=d;b=n;} }); return b; }
+
+// ---------- Lazo su testo: Modifica (carattere, grandezza, traslittera, traduci, evidenzia) ----------
+Anno.showSelBar=function(){
+  $('#selBar')?.remove(); if(!this.selBox) return; const r=inkCanvas.getBoundingClientRect();
+  const b=document.createElement('div'); b.id='selBar'; b.className='pill';
+  const tIdx=this.selIdx.filter(i=>this.strokes[i]&&this.strokes[i].t==='text');
+  b.innerHTML=(tIdx.length?`<button class="ghostBtn" data-s="ed" style="height:40px">${iconSvg('text')}Modifica</button><button class="ghostBtn" data-s="tt" style="height:40px">🌐 Traduci</button><button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button>`:'')
+    +`<button class="ib" data-s="hl" aria-label="Evidenzia">${iconSvg('pen')}</button><button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
+  $('#app').appendChild(b); const w=b.offsetWidth||400;
+  b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-w-8)+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
+  b.onclick=e=>{const k=e.target.closest('[data-s]')?.dataset.s; if(!k) return;
+    if(k==='ed'){ b.remove(); Finger.openFor(tIdx); return; }
+    if(k==='tt'){ Translate.open(tIdx.map(i=>this.strokes[i]),b); return; }
+    if(k==='hl'){ AutoHL.pick(e.target.closest('[data-s]'),c=>{ const bx=this.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0+.008,bx.x1,bx.y1-.008,c); this.clearSel(); toast('Evidenziato',1400); }); return; }
+    if(k==='del'){this.push();this.strokes=this.strokes.filter((_,i)=>!this.selIdx.includes(i));this.clearSel()}
+    if(k==='dup'){this.push();const n=this.selIdx.map(i=>{const c=JSON.parse(JSON.stringify(this.strokes[i]));moveStroke(c,.02,.02);return c});const base=this.strokes.length;this.strokes.push(...n);this.selIdx=n.map((_,i)=>base+i);this.updSelBox();this.showSelBar()}
+    if(k==='done') this.clearSel();
+    if(k==='lc'){ LyricCopy.start(); return; }
+    this.redraw(); saveAnn(); this.buildBar(); };
+};
+
+// ---------- Evidenziatore automatico: colore + spessore (si può ingrandire) ----------
+AutoHL.k=1;
+AutoHL.pick=function(anchor,cb){
+  $('#hlPick')?.remove(); const p=document.createElement('div'); p.id='hlPick'; p.className='pop';
+  const sizes=[[.7,'Sottile'],[1,'Normale'],[1.4,'Largo'],[1.9,'Molto largo']];
+  p.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Evidenzia con</div><div class="swatches">${NEON.map(c=>`<button class="sw" style="background:${c};box-shadow:0 0 10px ${c}" data-c="${c}" aria-label="${c}"></button>`).join('')}</div>
+    <div class="seg" id="hlK" style="margin-top:10px">${sizes.map(([k,n])=>`<button data-k="${k}" class="${k===this.k?'on':''}">${n}</button>`).join('')}</div>`;
+  document.body.appendChild(p); const r=anchor.getBoundingClientRect(); p.style.position='fixed'; p.style.zIndex=70;
+  p.style.left=clamp(r.left,8,innerWidth-360)+'px'; p.style.top=clamp(r.top>innerHeight/2?r.top-p.offsetHeight-8:r.bottom+8,8,innerHeight-p.offsetHeight-8)+'px';
+  p.onclick=e=>{ const k=e.target.closest('[data-k]'); if(k){ this.k=+k.dataset.k; p.querySelectorAll('#hlK button').forEach(x=>x.classList.toggle('on',x===k)); return; }
+    const s=e.target.closest('[data-c]'); if(!s) return; p.remove(); cb(s.dataset.c); };
+  setTimeout(()=>document.addEventListener('pointerdown',function f(ev){ if(!ev.target.closest('#hlPick')){ p.remove(); document.removeEventListener('pointerdown',f,true); } },true),30);
+};
+AutoHL.rect=function(x0,y0,x1,y1,color){
+  const A=Anno, ar=inkCanvas.height/inkCanvas.width, yc=(y0+y1)/2, w=Math.max(.006,(y1-y0)*ar*1.05*(this.k||1));
+  A.push(); A.strokes.unshift({t:'hl',color,alpha:.45,w,pts:[[x0,yc],[x1,yc]],layer:A.layer}); A.redraw(); saveAnn(); A.buildBar();
+};
+
+// ---------- GIF: si muovono (prima il livello veniva ridisegnato a ogni tocco e l'animazione ripartiva da capo) ----------
+Gif.sync=function(){
+  const L=this.layer(), list=(ST.ann[ST.page]||[]).filter(s=>s.t==='gif'&&(!Anno.layers[s.layer||0]||Anno.layers[s.layer||0].vis));
+  const key=ST.page+'|'+list.map(s=>s.src.length+':'+s.src.slice(-24)).join(',');
+  if(L._key!==key){ L._key=key; L.innerHTML=''; list.forEach(()=>{ const im=document.createElement('img'); im.alt=''; im.decoding='async'; L.appendChild(im); }); [...L.children].forEach((im,i)=>{ im.src=list[i].src; }); }
+  [...L.children].forEach((im,i)=>{ const s=list[i]; if(!s) return; const st=`left:${s.x*100}%;top:${s.y*100}%;width:${s.w*100}%;height:${s.h*100}%`; if(im._st!==st){ im._st=st; im.style.cssText=st; } });
+};
+
+// ---------- Salvataggio automatico: ogni minuto e quando l'app va in secondo piano o si chiude ----------
+const AutoSave = {
+  init(){
+    const now=()=>{ try{ if($('#textEntry.tinline')) TextBox.close(); }catch(e){} try{ if(ST.cur) DB.set('ann:'+ST.cur.id,ST.ann); if(ST.cur) DB.putScore(ST.cur); DB.set('settings',ST.settings); }catch(e){} };
+    this.now=now;
+    setInterval(()=>{ if(ST.cur&&ST.annotate) now(); },60000);
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') now(); });
+    addEventListener('pagehide',now); addEventListener('beforeunload',now);
+  },
+};
+
+// ---------- Numero della pagina sempre visibile mentre si annota ----------
+const PageBadge = {
+  update(){ let b=$('#annoPage'); if(!b){ b=document.createElement('div'); b.id='annoPage'; $('#app').appendChild(b); }
+    b.hidden=!(ST.annotate&&ST.cur); if(ST.cur) b.textContent=`Pag. ${ST.page+1} / ${ST.cur.pages}`; },
+};
+(function(){ const u0=updateChrome; updateChrome=function(){ u0.apply(this,arguments); try{ PageBadge.update(); }catch(e){} }; })();
+(function(){ const ex=Anno.exit; Anno.exit=function(){ const r=ex.apply(this,arguments); PageBadge.update(); return r; }; })();
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

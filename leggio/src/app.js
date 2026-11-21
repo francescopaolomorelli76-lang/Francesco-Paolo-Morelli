@@ -233,7 +233,7 @@ const anySideOpen=()=>$('#library').classList.contains('open')||$('#tools').clas
     else if(edge==='right') openSide('tools');
   }
   stage.addEventListener('pointerdown',e=>{
-    if(ST.annotate && e.target===inkCanvas) return;
+    if(ST.annotate) return; // mentre si annota i bordi non aprono pannelli (prima a volte si apriva Attrezzi)
     const edge=edgeOf(e.clientX,e.clientY);
     st={x:e.clientX,y:e.clientY,t:Date.now(),edge,done:false};
     if(edge){ const g=glow(edge); g.style.setProperty('--lp',ST.settings.longPress+'ms'); requestAnimationFrame(()=>g.classList.add('charging'));

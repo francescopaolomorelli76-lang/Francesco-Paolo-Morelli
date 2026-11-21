@@ -11,20 +11,26 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 VENDOR = ROOT / "vendor"
 LOGO = ROOT / "logo160.jpg"
-COVER = ROOT / "cover.jpg"
-SEAL = ROOT / "fpm_seal320.png"
+COVER = ROOT / "cover.webp"
+SEAL = ROOT / "fpm_seal320.webp"
+STATIC = [(COVER, "cover.webp"), (SEAL, "fpm_seal.webp")]
 
 CDN = "https://cdnjs.cloudflare.com/ajax/libs/"
 FONTS = ("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,900;"
          "1,6..96,600&family=Manrope:wght@400;500;600;700;800&family=Noto+Music&display=swap")
 JS_ORDER = ["store.js", "icons.js", "glyphs.js", "app.js", "anno.js", "insert.js", "audio.js", "forscore.js",
-            "features.js", "singers.js", "lyrics.js", "pron.js", "uizoom.js", "textbox.js", "fix.js", "finger.js", "stable.js", "extras.js", "piano.js", "clock.js", "words.js", "native.js"]
+            "features.js", "singers.js", "lyrics.js", "pron.js", "uizoom.js", "textbox.js", "fix.js", "finger.js", "stable.js", "extras.js", "piano.js", "clock.js", "words.js", "shapes.js", "native.js"]
 
 
 def build(mode: str) -> str:
     logo = "data:image/jpeg;base64," + base64.b64encode(LOGO.read_bytes()).decode()
-    cover = "data:image/jpeg;base64," + base64.b64encode(COVER.read_bytes()).decode()
-    seal = "data:image/png;base64," + base64.b64encode(SEAL.read_bytes()).decode()
+    # copertina e sigillo: nell'app e sul sito sono file (caricati una volta e messi in cache);
+    # solo l'anteprima di claude.ai li incorpora nella pagina
+    if mode == "artifact":
+        cover = "data:image/webp;base64," + base64.b64encode(COVER.read_bytes()).decode()
+        seal = "data:image/webp;base64," + base64.b64encode(SEAL.read_bytes()).decode()
+    else:
+        cover, seal = COVER.name, "fpm_seal.webp"
     css = (SRC / "style.css").read_text().replace("__COVER__", cover)
     body = (SRC / "body.html").read_text().replace("__LOGO__", logo).replace("__COVER__", cover).replace("__SEAL__", seal)
     js = "\n".join((SRC / f).read_text() for f in JS_ORDER).replace("__LOGO__", logo).replace("__COVER__", cover).replace("__SEAL__", seal)
@@ -91,6 +97,10 @@ if __name__ == "__main__":
         if lib.exists():
             shutil.rmtree(lib)
         shutil.copytree(VENDOR, lib)
+        for src, name in STATIC:
+            shutil.copy(src, out / name)
     else:
         (ROOT / "index.html").write_text(build("web"))
+        for src, name in STATIC:
+            if src.name != name: shutil.copy(src, ROOT / name)
     print("ok")

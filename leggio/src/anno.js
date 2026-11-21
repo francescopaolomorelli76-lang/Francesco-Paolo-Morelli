@@ -134,19 +134,22 @@ const Anno = {
     const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
     const p=this.pt(e);
     if(L.t==='erase'){ this.erase(p); return; }
-    if(L.t==='lasso'){ L.pts.push(p); this.redraw(); return; }
+    if(L.t==='lasso'){ L.pts.push(p); this.frame(); return; }
     if(L.t==='drag'){ const dx=p[0]-L.from[0], dy=p[1]-L.from[1]; L.from=p; this.selIdx.forEach(i=>moveStroke(this.strokes[i],dx,dy)); this.selBox.x0+=dx;this.selBox.x1+=dx;this.selBox.y0+=dy;this.selBox.y1+=dy; this.redraw(); return; }
-    if(L.t==='stamp'){ L.x=p[0]; L.y=p[1]; this.redraw(); return; }
-    if(L.t==='shape'){ L.b=[p[0],p[1]]; this.redraw(); return; }
-    if(L.t==='reshape'){ const s=this.strokes[L.idx]; if(s) s[L.end]=[p[0],p[1]]; this.redraw(); return; }
+    if(L.t==='stamp'){ L.x=p[0]; L.y=p[1]; this.frame(); return; }
+    if(L.t==='shape'){ L.b=[p[0],p[1]]; this.frame(); return; }
+    if(L.t==='reshape'){ const s=this.strokes[L.idx]; if(s) s[L.end]=[p[0],p[1]]; this.frame(); return; }
     if(this.ruler){ L.pts=[L.pts[0],[p[0],p[1]]]; }
     else for(const ev of evs){ const q=this.pt(ev); const last=L.pts[L.pts.length-1]; if(Math.hypot(q[0]-last[0],q[1]-last[1])>.0009) L.pts.push(L.pr?[q[0],q[1],+(ev.pressure||.5).toFixed(3)]:[q[0],q[1]]); }
-    this.redraw();
+    this.frame();
   },
   hover(e){ let d=$('#penHover'); if(!d){ d=document.createElement('div'); d.id='penHover'; $('#app').appendChild(d); }
     const pr=this.presets[this.sel]; const r=inkCanvas.getBoundingClientRect(); const sz=Math.max(6,this.W(pr)*r.width);
     d.style.cssText=`left:${e.clientX-sz/2}px;top:${e.clientY-sz/2}px;width:${sz}px;height:${sz}px;border-color:${pr.color}`; clearTimeout(this._hv); this._hv=setTimeout(()=>d.style.display='none',600); },
+  // un solo ridisegno per fotogramma mentre il dito o la Pencil si muovono
+  frame(){ if(this._raf) return; this._raf=requestAnimationFrame(()=>{ this._raf=0; this.redraw(); }); },
   up(e){
+    if(this._raf){ cancelAnimationFrame(this._raf); this._raf=0; }
     if(this.touchNav){ const tn=this.touchNav; if(e.pointerId!==tn.id){ return; } const dx=e.clientX-tn.x, dy=e.clientY-tn.y; this.touchNav=null;
       if(tn.multi||Zoom.active||Zoom.z>1.02||Date.now()-(Zoom.lastPinch||0)<600) return;
       if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*1.5) dx<0?nextPage():prevPage(); return; }
@@ -199,9 +202,21 @@ const Anno = {
     const hx=hlCanvas.getContext('2d'); hx.clearRect(0,0,hlCanvas.width,hlCanvas.height);
     x.clearRect(0,0,W,H);
     const all=ST.ann[ST.page]||[];
-    this.paint(hx,all.filter(s=>s.t==='hl'),W,H,false);
-    this.paint(x,all.filter(s=>s.t!=='hl'),W,H,false);
-    const L=this.live;
+    const L=this.live, fast=L&&['pen','hl','mask','shape','stamp','lasso'].includes(L.t);
+    if(fast){
+      const B=this._base;
+      if(!B||B.ink.width!==W||B.ink.height!==H||B.page!==ST.page){
+        const mk=()=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; return c; };
+        const nb={ink:mk(),hl:mk(),page:ST.page};
+        this.paint(nb.hl.getContext('2d'),all.filter(s=>s.t==='hl'),W,H,false);
+        this.paint(nb.ink.getContext('2d'),all.filter(s=>s.t!=='hl'),W,H,false);
+        this._base=nb; }
+      hx.drawImage(this._base.hl,0,0); x.drawImage(this._base.ink,0,0);
+    } else {
+      this._base=null;
+      this.paint(hx,all.filter(s=>s.t==='hl'),W,H,false);
+      this.paint(x,all.filter(s=>s.t!=='hl'),W,H,false);
+    }
     if(L && !['erase','lasso','drag'].includes(L.t)) this.paint(L.t==='hl'?hx:x,[L],W,H,true);
     if(L && L.t==='lasso'){ x.save(); x.setLineDash([8,6]); x.strokeStyle='#c8962e'; x.lineWidth=2; x.beginPath(); L.pts.forEach((p,i)=>i?x.lineTo(p[0]*W,p[1]*H):x.moveTo(p[0]*W,p[1]*H)); x.stroke(); x.restore(); }
     const prs=this.presets[this.sel]; if(ST.annotate && this.mode==='preset' && prs && (prs.k==='shape'||(prs.k==='stamp'&&prs.g&&STRETCH[prs.g.v]))){
@@ -232,7 +247,7 @@ const Anno = {
         const l=P2[P2.length-1]; x.lineTo(l[0],l[1]); x.stroke();
       } else if(s.t==='gif'){ if(all){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,s.x*W,s.y*H,s.w*W,s.h*H); } }
       else if(s.t==='img'){ const im=annImg(s.src); if(im.complete&&im.naturalWidth) x.drawImage(im,0,0,W,H); }
-      else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color}); }
+      else if(s.t==='shape'){ drawShape(x,{shape:s.shape,a:[s.a[0]*W,s.a[1]*H],b:[s.b[0]*W,s.b[1]*H],w:s.w*W,color:s.color,bend:s.bend}); }
       else if(s.t==='stamp'){ drawGlyph(x,s.g,s.x*W,s.y*H,s.size*W,s.color); }
       else if(s.t==='text'){ x.fillStyle=s.color; const fam=s.font==='serif'?css('--f-display'):s.font==='music'?css('--f-display'):css('--f-body');
         const style=s.font==='music'?'italic 600':`${s.italic?'italic ':''}${s.bold?'700':'500'}`;
@@ -318,7 +333,7 @@ const Anno = {
       const cat=STAMP_CATS[this.stampCat];
       p.innerHTML=`<div class="stampHead"><button class="ib" id="spSide" aria-label="Sposta il pannello">${iconSvg(this.stampRight?'chevLeft':'chevRight')}</button>
         <select id="spCat" aria-label="Categoria">${STAMP_CATS.map((c,i)=>`<option value="${i}"${i===this.stampCat?' selected':''}>${esc(c.name)} (${c.items.length})</option>`).join('')}</select>
-        <button class="ib" id="spClose" aria-label="Chiudi">${iconSvg('close')}</button></div>
+        <button class="ib" id="spEmoji" aria-label="Tutte le emoji e i Memoji" title="Tutte le emoji e i Memoji" style="font-size:22px">😀</button><button class="ib" id="spClose" aria-label="Chiudi">${iconSvg('close')}</button></div>
         <div class="catChips">${STAMP_CATS.map((c,i)=>`<button data-cat="${i}" class="${i===this.stampCat?'on':''}">${esc(c.name)}</button>`).join('')}</div>
         <div class="stampGrid" id="spGrid">${cat.items.map((g,i)=>`<button class="stamp${sameGlyph(g,pr.g)?' on':''}" data-g="${i}" title="${esc(g.n||'')}"><canvas width="120" height="132"></canvas><small>${esc(g.n||'')}</small></button>`).join('')}</div>
         <div class="dots">${STAMP_CATS.map((c,i)=>`<i class="${i===this.stampCat?'on':''}"></i>`).join('')}</div>
@@ -330,6 +345,7 @@ const Anno = {
     };
     p.onclick=e=>{
       if(e.target.closest('#spClose')){p.remove();return}
+      if(e.target.closest('#spEmoji')){EmojiPick.open(pr);return}
       if(e.target.closest('#spSide')){this.stampRight=!this.stampRight;render();return}
       const c=e.target.closest('[data-cat]'); if(c){this.stampCat=+c.dataset.cat;render();return}
       const g=e.target.closest('[data-g]'); if(g){pr.g=STAMP_CATS[this.stampCat].items[+g.dataset.g]; pr.g={c:pr.g.c,f:pr.g.f,v:pr.g.v,n:pr.g.n}; this.mode='preset'; this.savePresets(); p.querySelectorAll('.stamp').forEach(s=>s.classList.toggle('on',s===g)); toast('Tocca la pagina per mettere: '+(pr.g.n||pr.g.c||'segno'),1600); return}
@@ -372,7 +388,7 @@ function drawShape(x,s){
     case 'cresc': case 'dim':{ const hh=Math.max(s.w*2.5,Math.min(len*.09,s.w*7+10)); const [tx,ty,ox,oy]=s.shape==='cresc'?[ax,ay,bx,by]:[bx,by,ax,ay];
       x.moveTo(ox+nx*hh,oy+ny*hh); x.lineTo(tx,ty); x.lineTo(ox-nx*hh,oy-ny*hh); break }
     case 'slurUp': case 'slurDown': case 'tie':{ // legatura a falce: più spessa al centro, come quelle stampate
-      const up=s.shape==='slurDown'?1:-1; const sg=dx>=0?1:-1; const h=Math.min(len*(s.shape==='tie'?.12:.2),18+len*.07)*up*sg; const th=Math.max(1.2,s.w*1.6)*up*sg;
+      const up=s.shape==='slurDown'?1:-1; const sg=dx>=0?1:-1; const h=Math.min(len*(s.shape==='tie'?.12:.2),18+len*.07)*up*sg*(s.bend??1); const th=Math.max(1.2,s.w*1.6)*up*sg;
       const mx=(ax+bx)/2,my=(ay+by)/2; x.moveTo(ax,ay); x.quadraticCurveTo(mx+nx*h,my+ny*h,bx,by); x.quadraticCurveTo(mx+nx*(h+th),my+ny*(h+th),ax,ay); x.closePath(); x.fill(); x.restore(); return; }
     case 'trill':{ x.font=`700 italic ${Math.max(14,s.w*7)}px ${css('--f-display')}`; x.textBaseline='middle'; x.fillText('tr',ax-2,ay); const off=Math.max(14,s.w*7)*1.1; const L2=Math.max(0,len-off); const sx=ax+dx/len*off, sy=ay+dy/len*off; const n=Math.max(2,Math.round(L2/(s.w*4+6))); const st=L2/n;
       x.lineWidth=Math.max(1,s.w*.8); x.moveTo(sx,sy); for(let i=0;i<n;i++){const t0=i*st; x.quadraticCurveTo(sx+dx/len*(t0+st/2)+nx*(i%2?1:-1)*st*.45, sy+dy/len*(t0+st/2)+ny*(i%2?1:-1)*st*.45, sx+dx/len*(t0+st), sy+dy/len*(t0+st))} break }

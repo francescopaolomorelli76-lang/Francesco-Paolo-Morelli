@@ -11,7 +11,7 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - `python3 leggio/build.py`: crea `leggio/index.html` (web-app installabile, librerie da cdnjs).
   - `--artifact FILE`: crea l'anteprima per claude.ai.
   - `--ios mozart-ios/Web`: crea la versione offline per l'app, con le librerie prese da `leggio/vendor` e copiate in `lib/`.
-  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, native.
+  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, shapes, native.
 - **App iOS nativa**: `mozart-ios/`.
   - Progetto XcodeGen `project.yml`, bundle `com.morelli.mozart`, iOS 15.
   - Usa WKWebView con lo schema `mozart://localhost`.
@@ -88,8 +88,24 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
 - **GIF animate**: il livello non viene più ricreato a ogni tocco, quindi le GIF si muovono.
 - **Legenda dei colori** nella copia del testo: blu = rigo con il testo, verde = dove copi, grigio = senza testo, riquadro arancio = sillabe selezionate.
 
+## Novità del 21 novembre 2026 (`shapes.js`, suonerie in `clock.js`)
+- **App più leggera**: copertina e sigillo non sono più incorporati 7 volte nella pagina ma sono file (`cover.webp`, `fpm_seal.webp`, copiati da `build.py` nell'app e accanto a `leggio/index.html`). La pagina dell'app è passata da 1,75 MB a circa 0,45 MB. Solo l'anteprima di claude.ai li incorpora.
+- **Più veloce**: mentre si disegna, le annotazioni già fatte sono un'unica immagine e si ridisegna una volta per fotogramma; il riconoscimento dei righi si fa una volta per pagina (cache di `detectStaves` e `pageGray`).
+- **Maniglie d'oro** (`Handles`), per dito e Apple Pencil:
+  - legature, forcelle e linee: i due estremi; legature e legature di valore anche la **curva** (maniglia blu al centro, campo `bend`);
+  - segni, emoji e GIF: maniglia per ingrandire o rimpicciolire;
+  - evidenziatore e penna: maniglie a sinistra e a destra per allungare o accorciare;
+  - appena inserito un segno o una forma compaiono maniglie e barretta con −, +, elimina, fatto.
+- **Lazo**: prende anche il testo scritto con la T (misura vera del testo con `textBox`).
+- **Dito su una riga di sillabe**: due maniglie blu per prendere solo una parte della riga.
+- **Fascia blu**: maniglie laterali per leggere, evidenziare, traslitterare o tradurre solo una parte della riga.
+- **Evidenziatura automatica** precisa: parte dalla prima lettera e finisce all'ultima.
+- **Emoji**: pulsante 😀 nel pannello dei segni → qualsiasi emoji di Apple dalla tastiera, emoji recenti, **Memoji e adesivi** (incollati dalla tastiera emoji), immagini dalle Foto.
+- **Sveglia del timer**: 10 suonerie (Accordo di pianoforte, Sveglia classica, Campanello, Carillon, Arpa, Marimba, Campane, Gong, Digitale, Uccellini) o un mp3 caricato (salvato in `alarmFile`); suona finché non si tocca lo schermo, al massimo un minuto.
+- Mentre si annota, i bordi non aprono più i pannelli e l'app non scorre più di lato quando si mette a fuoco una casella.
+
 ## Sigillo copyright FPM webdesignertech
-- `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.png` (inserito nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
+- `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).
 - I PDF condivisi hanno nei dati "Producer/Creator: Mozart · © 2026 FPM webdesignertech".
 

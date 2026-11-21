@@ -186,29 +186,31 @@ const LyricType = {
     const all=detectStaves(); const nx=all.find(s=>s.top>src.bottom+g); const lim=nx?nx.top-g*.25:1;
     const band=opts.y!=null?{y0:Math.max(src.bottom+g*.2,opts.y-g*.9),y1:Math.min(lim,opts.y+g*.9)}:{y0:src.bottom+g*.35,y1:Math.max(src.bottom+g*1.6,Math.min(lim,src.bottom+g*2.9))};
     if(band.y1-band.y0<g) band.y1=band.y0+g*1.6;
+    band.x0=0; band.x1=1;
     const L=document.createElement('div'); L.id='lcLayer';
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:27`;
-    L.innerHTML=`<div class="rdBand"><span>Fascia blu = riga di testo da leggere · trascinala o usa le frecce</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i></div>
+    L.innerHTML=`<div class="rdBand"><span>Fascia blu = riga di testo da leggere · trascinala o usa le frecce</span><i class="rdH" data-e="t"></i><i class="rdH" data-e="b"></i><i class="rdV" data-e="l"></i><i class="rdV" data-e="r"></i></div>
       <div class="lcBar pill"><button class="ib" data-mv="-1" aria-label="Su">${iconSvg('up')}</button><button class="ib" data-mv="1" aria-label="Giù">${iconSvg('down')}</button>
         <button class="ib" data-sz="1" aria-label="Allarga la fascia" title="Allarga">${iconSvg('plus')}</button><button class="ib" data-sz="-1" aria-label="Stringi la fascia" title="Stringi">${iconSvg('minus')}</button>
         <button class="ghostBtn" data-hl style="height:36px">${iconSvg('pen')}Evidenzia</button><button class="ghostBtn" data-tr style="height:36px">${iconSvg('voice')}Traslittera</button><button class="ghostBtn" data-tt style="height:36px">🌐 Traduci</button>
         ${copy?`<button class="ghostBtn" data-st style="height:36px">Aa <small>${TStyle.pt(target.size)}</small></button><button class="goldBtn sm" data-ok>${iconSvg('check')}Leggi e copia</button>`:''}<button class="ib" data-x aria-label="Annulla">${iconSvg('close')}</button></div>`;
     $('#app').appendChild(L); const B=L.querySelector('.rdBand');
-    const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; }; place();
-    B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, a0={...band};
-      const mv=ev=>{ const d=(ev.clientY-y)/r.height;
+    const place=()=>{ B.style.top=band.y0*100+'%'; B.style.height=(band.y1-band.y0)*100+'%'; B.style.left=`calc(${band.x0*100}% - 6px)`; B.style.right='auto'; B.style.width=`calc(${(band.x1-band.x0)*100}% + 12px)`; }; place();
+    B.onpointerdown=e=>{ e.preventDefault(); B.setPointerCapture(e.pointerId); const edge=e.target.dataset.e; const y=e.clientY, x=e.clientX, a0={...band};
+      const mv=ev=>{ const d=(ev.clientY-y)/r.height, dx=(ev.clientX-x)/r.width;
+        if(edge==='l'){ band.x0=clamp(a0.x0+dx,0,band.x1-.04); place(); return; } if(edge==='r'){ band.x1=clamp(a0.x1+dx,band.x0+.04,1); place(); return; }
         if(edge==='t') band.y0=Math.min(a0.y1-g*.8,a0.y0+d); else if(edge==='b') band.y1=Math.max(a0.y0+g*.8,a0.y1+d); else { band.y0=a0.y0+d; band.y1=a0.y1+d; }
         band.y0=clamp(band.y0,0,.98); band.y1=clamp(band.y1,band.y0+.01,1); place(); };
       const up=()=>{ B.removeEventListener('pointermove',mv); B.removeEventListener('pointerup',up); };
       B.addEventListener('pointermove',mv); B.addEventListener('pointerup',up); };
-    const read=async()=>{ L.remove(); busy('Leggo il testo…'); try{ const w=await readLyrics({...band,gap:g}); busy(); if(!w.length) toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600); return w; }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); return []; } };
+    const read=async()=>{ L.remove(); busy('Leggo il testo…'); try{ const w=(await readLyrics({...band,gap:g})).filter(t=>t.x>=band.x0-.008&&t.x<=band.x1+.008); busy(); if(!w.length) toast('Non leggo testo in quella fascia: spostala sulla riga delle parole e riprova',3600); return w; }catch(err){ busy(); toast(err.message||'Lettura non riuscita',3400); return []; } };
     const pseudo=words=>{ const yy=(band.y0+band.y1)/2, sz=TStyle.lyricSize(src); return words.map(w=>({t:'text',text:w.text,x:w.x,y:yy,size:sz,align:'c',layer:Anno.layer})); };
     L.onclick=async e=>{
       if(e.target.closest('[data-x]')){ L.remove(); return; }
       const mvb=e.target.closest('[data-mv]'); if(mvb){ const d=+mvb.dataset.mv*g*.4; band.y0=clamp(band.y0+d,0,.97); band.y1=clamp(band.y1+d,band.y0+.01,1); place(); return; }
       const szb=e.target.closest('[data-sz]'); if(szb){ const d=+szb.dataset.sz*g*.3; if(band.y1-band.y0+2*d>=g*.7){ band.y0=clamp(band.y0-d,0,.98); band.y1=clamp(band.y1+d,band.y0+.01,1); place(); } return; }
       const stb=e.target.closest('[data-st]'); if(stb){ TStyle.pick(stb,'lyric',{size:target.size,...target.props()},t=>{ target.size=t.size; target.style=t; stb.querySelector('small').textContent=TStyle.pt(t.size); }); return; }
-      const hb=e.target.closest('[data-hl]'); if(hb){ AutoHL.pick(hb,c=>{ const sp=AutoHL.inkSpan(band.y0,band.y1); if(!sp) return toast('Niente da evidenziare in quella fascia'); L.remove(); AutoHL.rect(sp[0],band.y0,sp[1],band.y1,c); toast('Testo evidenziato',1500); }); return; }
+      const hb=e.target.closest('[data-hl]'); if(hb){ AutoHL.pick(hb,c=>{ const sp=AutoHL.inkSpan(band.y0,band.y1,band.x0,band.x1); if(!sp) return toast('Niente da evidenziare in quella fascia'); L.remove(); AutoHL.rect(sp[0],band.y0,sp[1],band.y1,c); toast('Testo evidenziato',1500); }); return; }
       if(e.target.closest('[data-tr]')){ const words=await read(); if(!words.length) return;
         let lang=detectLang(words.map(w=>w.text).join(' '))||'la'; if(lang==='it') lang='la';
         Finger.writeTranslit(pseudo(words),lang,'up'); toast('Pronuncia scritta sopra il testo stampato · con il Dito ✋ la sposti',3200); return; }
@@ -236,6 +238,7 @@ async function readLyrics(st){
   const cut=document.createElement('canvas'); cut.width=Math.round(W*k); cut.height=Math.max(1,Math.round((y1-y0)*k));
   const cx=cut.getContext('2d',{willReadFrequently:true}); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.imageSmoothingQuality='high'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height);
   cleanForOcr(cut,gapPx*k);
+  if(st.x0!=null&&(st.x0>0||st.x1<1)){ const cc=cut.getContext('2d'); cc.fillStyle='#fff'; cc.fillRect(0,0,st.x0*cut.width,cut.height); cc.fillRect(st.x1*cut.width,0,cut.width,cut.height); }
   let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
   // righe di testo: si tiene quella con più lettere (prima: la più alta, e un segno sopra il testo faceva perdere tutta la riga)
   let band=[0,1];

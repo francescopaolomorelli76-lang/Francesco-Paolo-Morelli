@@ -46,10 +46,10 @@ const Handles = {
     L.style.cssText=`position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;z-index:26;pointer-events:none`;
     const pts=this.points(s);
     // le maniglie si creano una volta e poi si spostano (ricrearle durante il trascinamento interrompeva il gesto)
-    const sig=pts.map(p=>p.k).join(',')+'|'+this.bar;
+    const flip=s.t==='stamp'&&noteFlip(s.g), sig=pts.map(p=>p.k).join(',')+'|'+this.bar+'|'+(flip?1:0);
     if(L._sig!==sig){ L._sig=sig;
       let h=pts.map(p=>`<i class="hd hd-${p.k}" data-k="${p.k}"></i>`).join('');
-      if(this.bar) h+=`<div class="hdBar pill"><button class="ib" data-h="sm" aria-label="Più piccolo">${iconSvg('minus')}</button><button class="ib" data-h="lg" aria-label="Più grande">${iconSvg('plus')}</button><button class="ib" data-h="del" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-h="ok" aria-label="Fatto">${iconSvg('check')}</button></div>`;
+      if(this.bar) h+=`<div class="hdBar pill"><button class="ib" data-h="sm" aria-label="Più piccolo">${iconSvg('minus')}</button><button class="ib" data-h="lg" aria-label="Più grande">${iconSvg('plus')}</button>${flip?`<button class="ib" data-h="flip" aria-label="Stanghetta in su o in giù" title="Stanghetta in su / in giù" style="font-weight:900;font-size:18px">⇅</button>`:''}<button class="ib" data-h="del" aria-label="Elimina" style="color:var(--danger)">${iconSvg('trash')}</button><button class="ib" data-h="ok" aria-label="Fatto">${iconSvg('check')}</button></div>`;
       L.innerHTML=h; const b=L.querySelector('.hdBar'); if(b) b.onclick=e=>this.barClick(e); }
     pts.forEach(p=>{ const el=L.querySelector(`.hd-${p.k}`); if(el){ el.style.left=p.x*100+'%'; el.style.top=p.y*100+'%'; } });
     const b=L.querySelector('.hdBar'); if(b){ const y=Math.max(...pts.map(p=>p.y)), x=pts.reduce((a,p)=>a+p.x,0)/Math.max(1,pts.length); b.style.left=x*100+'%'; b.style.top=`calc(${y*100}% + 26px)`; }
@@ -57,7 +57,8 @@ const Handles = {
   barClick(e){ const a=e.target.closest('[data-h]')?.dataset.h; if(!a) return; const A=Anno, s=A.strokes[this.idx]; if(!s) return this.hide();
     if(a==='ok'){ this.hide(); return; }
     A.push();
-    if(a==='del'){ A.strokes.splice(this.idx,1); this.hide(); }
+    if(a==='flip'){ const g=noteFlip(s.g); if(g) s.g=g; }
+    else if(a==='del'){ A.strokes.splice(this.idx,1); this.hide(); }
     else { const f=a==='lg'?1.15:1/1.15; this.scale(s,f); this.rememberSize(s,f); }
     A.redraw(); saveAnn(); A.buildBar(); },
   scale(s,f){ if(s.t==='stamp') s.size*=f; else if(s.t==='gif'){ const cx=s.x+s.w/2, cy=s.y+s.h/2; s.w*=f; s.h*=f; s.x=cx-s.w/2; s.y=cy-s.h/2; } else if(s.t==='shape') s.w*=f; else if(s.w) s.w*=f; },

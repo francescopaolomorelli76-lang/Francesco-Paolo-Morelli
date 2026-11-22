@@ -40,7 +40,9 @@ const STAMP_CATS = [
     m(U(0x1D15C),'breve'),m(U(0x1D15D),'semibreve'),m(U(0x1D15E),'minima'),m(U(0x1D15F),'semiminima'),m(U(0x1D160),'croma'),
     m(U(0x1D161),'semicroma'),m(U(0x1D162),'biscroma'),m(U(0x1D163),'semibiscroma'),m(U(0x1D164),'1/128'),m('♩','semiminima'),
     m('♪','croma'),m('♫','crome'),m('♬','semicrome'),m(U(0x1D15F)+'.','semimin. punt.'),m(U(0x1D15E)+'.','minima punt.'),
-    m(U(0x1D160)+'.','croma punt.'),m(U(0x1D158),'testa nera'),m(U(0x1D157),'testa vuota'),m(U(0x1D143),'testa x'),m(U(0x1D144),'testa +'),
+    m(U(0x1D160)+'.','croma punt.'),
+    vx('nd2','minima ↓'),vx('nd4','semiminima ↓'),vx('nd8','croma ↓'),vx('nd16','semicroma ↓'),vx('nd32','biscroma ↓'),vx('nd2.','minima punt. ↓'),vx('nd4.','semimin. punt. ↓'),vx('nd8.','croma punt. ↓'),
+    m(U(0x1D158),'testa nera'),m(U(0x1D157),'testa vuota'),m(U(0x1D143),'testa x'),m(U(0x1D144),'testa +'),
     m(U(0x1D145),'testa ⊗'),m(U(0x1D146),'quadrata'),m(U(0x1D147),'quadrata nera'),m(U(0x1D148),'triangolo'),m(U(0x1D149),'triangolo nero'),
     ...range(0x1D14A,0x1D156,['△ sx','▲ sx','△ dx','▲ dx','▽','▼','◸','◤','luna','luna nera','goccia','goccia nera','(testa)']),
     m(U(0x1D159),'testa nulla'),m(U(0x1D15A),'cluster'),m(U(0x1D15B),'cluster nero'),
@@ -116,7 +118,27 @@ const STAMP_CATS = [
 })();
 
 // Disegno vettoriale dei segni (origine al centro, s = dimensione in px).
+// Note con la stanghetta in basso (gambo a sinistra della testa, code verso destra): d = valore, p = punto
+function noteDn(c,s,d,p){
+  const hx=s*.07, hy=-s*.3, rx=s*.125, ry=s*.088, sx=hx-rx*.93, ty=hy+s*.66;
+  c.beginPath(); c.ellipse(hx,hy,rx,ry,-.38,0,7); c.fill();
+  if(d===2){ c.save(); c.fillStyle='#fff'; c.beginPath(); c.ellipse(hx,hy,rx*.72,ry*.45,-.8,0,7); c.fill(); c.restore(); }
+  c.lineWidth=s*.035; c.lineCap='butt'; c.beginPath(); c.moveTo(sx,hy); c.lineTo(sx,ty); c.stroke();
+  const fl=d>=32?3:d>=16?2:d>=8?1:0;
+  for(let i=0;i<fl;i++){ const fy=ty-i*s*.15; c.lineWidth=s*.055; c.beginPath(); c.moveTo(sx,fy); c.bezierCurveTo(sx+s*.03,fy-s*.16,sx+s*.3,fy-s*.2,sx+s*.22,fy-s*.5); c.stroke(); }
+  if(p) dot(c,hx+rx+s*.1,hy,s*.03);
+}
+const NOTE_DN={'nd2':[2,0],'nd4':[4,0],'nd8':[8,0],'nd16':[16,0],'nd32':[32,0],'nd2.':[2,1],'nd4.':[4,1],'nd8.':[8,1]};
+// stesso segno con la stanghetta in giù o in su (null se non è una nota con gambo)
+function noteFlip(g){
+  if(!g) return null; const key=g.v||g.c;
+  if(g.v&&NOTE_DN[g.v]){ const [d,p]=NOTE_DN[g.v]; const up={2:0x1D15E,4:0x1D15F,8:0x1D160,16:0x1D161,32:0x1D162}[d]; return {c:U(up)+(p?'.':''),f:'m',n:g.n}; }
+  const map={[U(0x1D15E)]:'nd2',[U(0x1D15F)]:'nd4',[U(0x1D160)]:'nd8',[U(0x1D161)]:'nd16',[U(0x1D162)]:'nd32','♩':'nd4','♪':'nd8',[U(0x1D15E)+'.']:'nd2.',[U(0x1D15F)+'.']:'nd4.',[U(0x1D160)+'.']:'nd8.'};
+  return map[key]?{v:map[key],n:g.n}:null;
+}
 const VDRAW = {
+  nd2:(c,s)=>noteDn(c,s,2,0), nd4:(c,s)=>noteDn(c,s,4,0), nd8:(c,s)=>noteDn(c,s,8,0), nd16:(c,s)=>noteDn(c,s,16,0), nd32:(c,s)=>noteDn(c,s,32,0),
+  'nd2.':(c,s)=>noteDn(c,s,2,1), 'nd4.':(c,s)=>noteDn(c,s,4,1), 'nd8.':(c,s)=>noteDn(c,s,8,1),
   stacc:(c,s)=>{dot(c,0,0,s*.12)},
   staccis:(c,s)=>{c.beginPath();c.moveTo(-s*.12,-s*.3);c.lineTo(s*.12,-s*.3);c.lineTo(0,s*.3);c.closePath();c.fill()},
   tenuto:(c,s)=>{c.fillRect(-s*.38,-s*.05,s*.76,s*.1)},

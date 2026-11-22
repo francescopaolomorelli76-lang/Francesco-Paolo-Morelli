@@ -490,3 +490,35 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .emRec button{font-size:28px;width:48px;height:48px;border-radius:12px;background:var(--panel-2)}
 .emPaste{min-height:90px;padding:10px 12px;border-radius:12px;border:1px dashed var(--gold);background:var(--panel-2);color:var(--muted);-webkit-user-select:text;user-select:text;outline:none}
 .emPaste img{max-height:80px}
+
+/* ===== Crea: compositore ===== */
+#crea{position:fixed;inset:0;z-index:45;background:#1a1712;display:flex;flex-direction:column;-webkit-user-select:none;user-select:none}
+.crTop{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));background:#16130e;border-bottom:1px solid var(--line)}
+.crTtl{flex:1;text-align:center;font-family:var(--f-display);font-weight:700;font-size:18px;color:var(--gold-hi)}
+.crScroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 8px 40px;display:flex;flex-direction:column;align-items:center;gap:14px;background:#2a251c}
+.crPage{background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.55);touch-action:none;flex:none;border-radius:2px}
+.crTools{background:#1d2a44;border-top:1px solid #34476e;padding:6px max(8px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;flex-direction:column;gap:4px}
+.crRow{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
+.crRow::-webkit-scrollbar{display:none}
+.crSep{width:1px;height:28px;background:#34476e;margin:0 4px;flex:none}
+.crB{flex:none;min-width:44px;height:44px;padding:0 10px;border-radius:12px;color:#e8eefc;font-weight:700;font-size:16px;display:grid;place-items:center}
+.crB svg.i{width:22px;height:22px}
+.crB.on{background:#4a7ad8;color:#fff;box-shadow:0 0 0 2px #9bbcff}
+.crGl{font-family:var(--f-music);font-size:30px;line-height:1}
+.crSel{position:fixed;z-index:48;display:flex;gap:2px;padding:4px;border-radius:14px;background:rgba(245,245,245,.97);box-shadow:0 6px 22px rgba(0,0,0,.45);color:#111}
+.crSel[hidden]{display:none}
+.crSel button{height:38px;padding:0 12px;border-radius:10px;font-weight:700;font-size:14px;color:#111}
+.crSel button:active{background:#ddd}
+.crDynBar{display:flex;gap:4px;padding:6px 8px;background:#2a3a5c;overflow-x:auto;justify-content:center}
+.crDynBar[hidden],.crKeys[hidden]{display:none}
+.crDynBar button{flex:none;min-width:48px;height:40px;border-radius:10px;color:#fff;font-family:var(--f-display);font-style:italic;font-weight:800;font-size:20px}
+.crKeys{position:relative;height:150px;background:#111;touch-action:none}
+.crKw{position:absolute;top:0;bottom:0;background:linear-gradient(#fff,#e7e2d8);border:1px solid #888;border-radius:0 0 6px 6px}
+.crKw:active{background:#b9cdf5}
+.crKb{position:absolute;top:0;height:62%;background:linear-gradient(#333,#000);border-radius:0 0 5px 5px;z-index:2}
+.crKb:active{background:#2c4c8f}
+.crKo{position:absolute;right:6px;top:6px;z-index:3;display:flex;gap:4px}
+.crKo button{height:30px;padding:0 10px;border-radius:8px;background:rgba(30,40,70,.85);color:#fff;font-size:12px;font-weight:700}
+#crea.keysOn .crScroll{padding-bottom:10px}
+@media (max-width:700px){ .crTop .ghostBtn{padding:0 10px} .crTop .ghostBtn svg{display:none} .crB{min-width:40px;height:42px;padding:0 6px} }
+@media (max-width:700px){ .crTtl{font-size:0;min-width:0} .crTop{gap:6px} .crTop .ghostBtn,.crTop .goldBtn{padding:0 11px;font-size:13.5px;height:40px} .crTop .ghostBtn svg,.crTop .goldBtn svg{display:none} .crTop .ib{width:40px;height:40px} }

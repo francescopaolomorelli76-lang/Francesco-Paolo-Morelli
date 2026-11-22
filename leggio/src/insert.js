@@ -8,7 +8,9 @@ const Insert = {
     const m2=modal('Inserisci pagine',`
       <div class="hint">In <b>${esc(ST.cur.title)}</b>, ora a pagina <b>${ST.page+1}</b> di ${ST.cur.pages}. Scegli da dove prendere le nuove pagine:</div>
       <div class="srcCards">
-        <button class="srcCard hero" data-src="cam">${iconSvg('camera')}<b>Scatta una foto</b><span>Ritaglia la zona, raddrizza e migliora note e dettagli.</span></button>
+        <button class="srcCard hero" data-src="crea">${iconSvg('pen')}<b>Crea: scrivi le note</b><span>Componi pagine nuove: tonalità, tempo, strumenti, note e tastiera.</span></button>
+        ${ST.cur.compose?`<button class="srcCard" data-src="creaEdit">${iconSvg('wand')}<b>Modifica lo spartito creato</b><span>Riapri “${esc(ST.cur.title)}” nel compositore.</span></button>`:''}
+        <button class="srcCard" data-src="cam">${iconSvg('camera')}<b>Scatta una foto</b><span>Ritaglia la zona, raddrizza e migliora note e dettagli.</span></button>
         <button class="srcCard" data-src="img">${iconSvg('image')}<b>Foto dalla libreria</b><span>Una o più immagini già sull'iPad.</span></button>
         <button class="srcCard" data-src="pdf">${iconSvg('file')}<b>Da un altro PDF</b><span>Tutte le pagine o solo alcune.</span></button>
         <button class="srcCard" data-src="staff">${iconSvg('staff')}<b>Pentagrammata</b><span>Pagina vuota con 12 righi per scrivere a mano.</span></button>
@@ -20,7 +22,8 @@ const Insert = {
     m2.querySelector('#insPos').onclick=e=>{const b=e.target.closest('[data-pos]');if(!b)return;this.pos=b.dataset.pos;m2.querySelectorAll('#insPos button').forEach(x=>x.classList.toggle('on',x===b))};
     m2.querySelector('.srcCards').onclick=e=>{const b=e.target.closest('[data-src]');if(!b)return;const s=b.dataset.src;
       if(s==='cam') this.fromPhoto('insert'); if(s==='img') this.fromPhoto('insert',true); if(s==='pdf') this.pickPdf('insert');
-      if(s==='staff') this.addTemplate('staff'); if(s==='blank') this.addTemplate('blank'); };
+      if(s==='staff') this.addTemplate('staff'); if(s==='blank') this.addTemplate('blank');
+      if(s==='crea'){ closeLayers(); Compose.open('insert'); } if(s==='creaEdit'){ closeLayers(); Compose.open('edit',ST.cur); } };
   },
 
   // ---- PDF ----
@@ -65,12 +68,13 @@ const Insert = {
   },
   async templatesNew(){
     const m2=modal('Modelli',`<div class="srcCards">
-      <button class="srcCard hero" data-t="staff">${iconSvg('staff')}<b>Pentagrammata</b><span>12 righi per pagina</span></button>
+      <button class="srcCard hero" data-t="crea">${iconSvg('pen')}<b>Crea: scrivi le note</b><span>Compositore con tastiera</span></button>
+      <button class="srcCard" data-t="staff">${iconSvg('staff')}<b>Pentagrammata</b><span>12 righi per pagina</span></button>
       <button class="srcCard" data-t="piano">${iconSvg('piano')}<b>Pianoforte</b><span>6 sistemi con graffa</span></button>
       <button class="srcCard" data-t="choir">${iconSvg('list')}<b>Coro SATB</b><span>3 sistemi da 4 righi</span></button>
       <button class="srcCard" data-t="blank">${iconSvg('plusDoc')}<b>Bianca</b><span>Per appunti</span></button></div>
       <div class="field"><label for="tplN">Numero di pagine</label><input id="tplN" type="number" min="1" max="50" value="4"></div>`,null,{eyebrow:'Nuovo spartito'});
-    m2.querySelector('.srcCards').onclick=async e=>{const b=e.target.closest('[data-t]');if(!b)return;const n=clamp(+$('#tplN').value||1,1,50);closeLayers();busy('Creo lo spartito…');
+    m2.querySelector('.srcCards').onclick=async e=>{const b=e.target.closest('[data-t]');if(!b)return; if(b.dataset.t==='crea'){ closeLayers(); Compose.open('new'); return; } const n=clamp(+$('#tplN').value||1,1,50);closeLayers();busy('Creo lo spartito…');
       const doc=await PDFLib.PDFDocument.create();for(let i=0;i<n;i++)drawTemplate(doc.addPage([595,842]),b.dataset.t);
       const sc=await addScore((await doc.save()).buffer,{title:({staff:'Pentagrammata',piano:'Pianoforte',choir:'Coro SATB',blank:'Appunti'})[b.dataset.t]+' · '+new Date().toLocaleDateString('it-IT'),genre:'Manoscritto'});
       busy();renderLibrary();openScore(sc.id);toast('Pronto: annota con la matita');};

@@ -431,10 +431,11 @@ function libMenu(el){
     <button class="toolRow" data-m="select">${iconSvg('check')}Seleziona più spartiti</button>
     <button class="toolRow" data-m="import">${iconSvg('file')}Importa PDF</button>
     <button class="toolRow" data-m="scan">${iconSvg('camera')}Scansione in nuovo spartito</button>
+    <button class="toolRow" data-m="crea">${iconSvg('pen')}Crea: scrivi le note</button>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div>`);
   p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();const m2=b.dataset.m;
-    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='fs')FS4.pick();};
+    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='crea')Compose.open('new'); if(m2==='fs')FS4.pick();};
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
@@ -526,10 +527,11 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="cam">${iconSvg('camera')}Scansione (foto → spartito)</button>
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
+    <button class="toolRow" data-m="crea">${iconSvg('pen')}<b>Crea</b>&nbsp;· scrivi le note</button>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),crea:()=>Compose.open('new'),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------

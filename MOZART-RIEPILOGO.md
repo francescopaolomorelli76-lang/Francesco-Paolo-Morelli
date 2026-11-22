@@ -11,7 +11,7 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - `python3 leggio/build.py`: crea `leggio/index.html` (web-app installabile, librerie da cdnjs).
   - `--artifact FILE`: crea l'anteprima per claude.ai.
   - `--ios mozart-ios/Web`: crea la versione offline per l'app, con le librerie prese da `leggio/vendor` e copiate in `lib/`.
-  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, shapes, native.
+  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, shapes, compose, native.
 - **App iOS nativa**: `mozart-ios/`.
   - Progetto XcodeGen `project.yml`, bundle `com.morelli.mozart`, iOS 15.
   - Usa WKWebView con lo schema `mozart://localhost`.
@@ -103,6 +103,15 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
 - **Emoji**: pulsante 😀 nel pannello dei segni → qualsiasi emoji di Apple dalla tastiera, emoji recenti, **Memoji e adesivi** (incollati dalla tastiera emoji), immagini dalle Foto.
 - **Sveglia del timer**: 10 suonerie (Accordo di pianoforte, Sveglia classica, Campanello, Carillon, Arpa, Marimba, Campane, Gong, Digitale, Uccellini) o un mp3 caricato (salvato in `alarmFile`); suona finché non si tocca lo schermo, al massimo un minuto.
 - Mentre si annota, i bordi non aprono più i pannelli e l'app non scorre più di lato quando si mette a fuoco una casella.
+
+## Crea: compositore di spartiti (`compose.js`) e note con stanghetta in basso
+- **Dove si apre**: Inserisci pagine → "Crea: scrivi le note" (con uno spartito aperto, anche "Modifica lo spartito creato"); libreria → Importa → "Crea"; menu ⋯ della libreria; Modelli.
+- **Impostazioni iniziali** (come "Quick Start"): titolo, sottotitolo, compositore, tonalità (15), tempo (2/4 … 12/8), metronomo, battute totali e per rigo, strumenti (pianoforte, voce, SATB, violino, viola, violoncello, chitarra, flauto, organo; anche più di uno).
+- **Scrittura**: matita ✎ = tocca il rigo (con Pencil o mouse tieni premuto e trascina per scegliere l'altezza, ghost blu); valori intera…biscroma, punto, pausa, ♭ ♮ ♯, legatura di valore, terzina, accordo, V1/V2 (V2 = gambi in giù); la nota si inserisce dove tocchi e la battuta non può essere troppo lunga.
+- **Modifica**: ➤ = tocca una nota (arancio), trascinala su/giù o usa la barretta (Elimina, ▲ ▼, ♯⇄♭, ⇅ Gambo, In pausa); i pulsanti dei valori e delle alterazioni si applicano alla nota selezionata.
+- **Altro**: dinamiche (pp … sf, cresc., dim.), tastiera a 2 ottave con 8va ±, ascolto con il pianoforte campionato, annulla (60 passi), + battute. Travi automatiche, terzine, armatura, graffa, numeri di battuta, più pagine A4.
+- **Salvataggio**: "Fine" crea un PDF (pagine PNG a 3×) e lo aggiunge come nuovo spartito, lo inserisce nello spartito aperto o aggiorna lo spartito creato; i dati restano in `sc.compose` per riaprirlo.
+- **Note con stanghetta in basso** (`glyphs.js`): nel pannello dei segni, categoria Note, ci sono minima, semiminima, croma, semicroma, biscroma e punteggiate "↓" (disegnate a vettori, `noteDn`); dopo aver messo un segno, il pulsante ⇅ delle maniglie lo gira in su/in giù (`noteFlip`).
 
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".

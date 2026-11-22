@@ -361,11 +361,11 @@ function scoreRow(sc){
   const sel=ST.libSelect, on=ST.selected.has(sc.id);
   return `<div class="item${ST.cur&&ST.cur.id===sc.id?' cur':''}" data-open="${sc.id}">
     ${sel?`<span class="chk${on?' on':''}">${on?iconSvg('check'):''}</span>`:`<span class="thumb" data-thumb="${sc.id}"></span>`}
-    <div class="tx"><div class="tt">${esc(sc.title)}${(sc.tags||[]).includes('esempio')?'<span class="tag">ESEMPIO</span>':''}</div><div class="st">${esc([sc.composer,sc.pages+' pag.'].filter(Boolean).join(' · '))}</div></div>
+    <div class="tx"><div class="tt">${esc(sc.title)}${(sc.tags||[]).includes('esempio')?'<span class="tag">ESEMPIO</span>':''}</div><div class="st">${typeof K!=='undefined'?K.badge(sc.composer):''}${esc([sc.composer,sc.pages+' pag.'].filter(Boolean).join(' · '))}</div></div>
     ${sel?'':`<button class="infoBtn" data-info="${sc.id}" aria-label="Informazioni">${iconSvg('info')}</button>`}</div>`;
 }
 function groupRows(title,rows){return `<div class="group"><div class="groupHead">${esc(title)}</div>${rows}</div>`}
-function drillRow(key,label,count){return `<div class="item" data-drill="${esc(key)}"><div class="tx"><div class="tt">${esc(label)}</div><div class="st">${count} ${count===1?'elemento':'elementi'}</div></div><span class="chev">${iconSvg('chevRight')}</span></div>`}
+function drillRow(key,label,count){return `<div class="item" data-drill="${esc(key)}"><div class="tx"><div class="tt">${ST.libTab==='composers'&&typeof K!=='undefined'?K.badge(label,24):''}${esc(label)}</div><div class="st">${count} ${count===1?'elemento':'elementi'}</div></div><span class="chev">${iconSvg('chevRight')}</span></div>`}
 function renderLibrary(){
   const body=$('#libBody'), idx=$('#letterIdx'); idx.innerHTML='';
   const list=ST.scores.filter(matches);
@@ -432,10 +432,11 @@ function libMenu(el){
     <button class="toolRow" data-m="import">${iconSvg('file')}Importa PDF</button>
     <button class="toolRow" data-m="scan">${iconSvg('camera')}Scansione in nuovo spartito</button>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}Crea: scrivi le note</button>
+    <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div>`);
   p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();const m2=b.dataset.m;
-    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='crea')Compose.open('new'); if(m2==='fs')FS4.pick();};
+    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='crea')Compose.open('new'); if(m2==='dups')Dups.open(); if(m2==='fs')FS4.pick();};
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
@@ -528,10 +529,12 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}<b>Crea</b>&nbsp;· scrivi le note</button>
+    <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
+    <button class="toolRow" data-m="fsmiss">${iconSvg('file')}Completa l'import di forScore (PDF mancanti)</button>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),crea:()=>Compose.open('new'),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------

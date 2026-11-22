@@ -194,6 +194,7 @@ function drawGlyph(c,g,x,y,s,color){
   if(g.v){
     if(g.v.startsWith('ts:')){const [a,b]=g.v.slice(3).split('/');timeSig(c,s,a,b);}
     else if(VDRAW[g.v]) VDRAW[g.v](c,s);
+    else if(g.v.startsWith('cp:')&&typeof drawComposer==='function') drawComposer(c,g.v.slice(3),s);
   } else {
     const fam = g.f==='m'?css('--f-music'):g.f==='i'?css('--f-display'):g.f==='e'?'"Apple Color Emoji","Noto Color Emoji",sans-serif':css('--f-body');
     const style = g.f==='i'?'italic 600':g.f==='b'?'800':'400';

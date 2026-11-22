@@ -27,7 +27,7 @@ const FS4 = {
     for(const s of sls){ const ids=s.files.map(f=>ST.scores.find(sc=>normName(sc.file||sc.title)===normName(f))?.id).filter(Boolean);
       if(!ids.length) continue; const name=s.name||'Setlist forScore'; if(ST.setlists.some(x=>x.name===name&&x.items.join()===ids.join())) continue;
       ST.setlists.push({id:uid(),name,items:ids}); rep.setlists++; }
-    saveSetlists(); busy(); renderLibrary();
+    await this.persistMeta(byFile,sls); saveSetlists(); busy(); renderLibrary();
     if(added[0]) await openScore(added[0]);
     this.report(rep);
   },
@@ -161,7 +161,7 @@ const FS4 = {
   },
 };
 const baseName=p=>String(p).split(/[\/\\]/).pop();
-const normName=p=>baseName(p||'').toLowerCase().replace(/\.pdf$/,'').replace(/[_\s]+/g,' ').trim();
+const normName=p=>baseName(p||'').toLowerCase().replace(/\.pdf$/,'').replace(/[_\s]+/g,' ').replace(/\s*[\(\[]\s*\d+\s*[\)\]]\s*$/,'').replace(/\s*[-–]?\s*(copy|copia)(\s*\d+)?$/,'').trim();
 
 // ---- ZIP letto a pezzi (directory centrale, anche zip64; deflate via DecompressionStream) ----
 async function zipEntries(file){

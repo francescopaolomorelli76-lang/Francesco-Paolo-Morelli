@@ -572,3 +572,30 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .kGrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:14px;background:var(--panel-2)}
 .kGrid svg{border-radius:50%;box-shadow:0 0 0 2px var(--gold)}
 .kGrid b{font-size:13px}.kGrid small{font-size:11px;color:var(--muted)}
+
+/* ===== Crea semplificato: tastierino e procedura guidata ===== */
+.crHint{padding:7px 14px;background:#2a3a5c;color:#dbe6ff;font-size:13px;text-align:center}
+.crHint[hidden]{display:none}.crHint b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#9bbcff;color:#13203d;font-size:11px;margin:0 1px}
+.crTools .crRow{overflow:visible}
+.crTools .crB{flex:1 1 0;min-width:0;padding:0 2px;height:46px}
+.crTools .crB.crW{flex:2 1 0;font-size:14px}
+.crTools .crB.crL{font-size:15px;font-weight:800}
+.crTools .crNotes .crB.crL{background:rgba(255,255,255,.07)}
+.crTools .crSep{flex:none}
+.wzSteps{display:flex;gap:6px;margin-bottom:12px}
+.wzSteps span{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 4px;border-radius:999px;background:var(--panel-2);color:var(--muted);font-size:12.5px;font-weight:700}
+.wzSteps span b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--panel-3);font-size:11px}
+.wzSteps span.on{background:var(--gold);color:#1b1406}.wzSteps span.on b{background:#1b1406;color:var(--gold-hi)}
+.wzSteps span.done b{background:var(--gold-deep);color:#fff}
+.wzCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0 14px}
+.wzCard{padding:12px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);text-align:left}
+.wzCard b{display:block;font-size:14.5px}.wzCard small{color:var(--muted);font-size:12px}
+.wzCard.on{border-color:var(--gold);background:rgba(214,168,78,.18)}
+.wzTs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.wzTs button{height:62px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif;font-weight:700;font-size:20px;line-height:1.05}
+.wzTs button i{font-style:normal}.wzTs button.on{background:var(--gold);color:#1b1406;border-color:var(--gold)}
+.wzKeys{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:6px}
+.wzKeys button{padding:8px 10px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);text-align:left;line-height:1.25}
+.wzKeys b{display:block;font-size:15px}.wzKeys small{display:block;color:var(--gold-hi);font-size:11.5px}.wzKeys em{font-style:normal;color:var(--muted);font-size:11.5px}
+.wzKeys button.on{background:rgba(214,168,78,.22);border-color:var(--gold)}
+@media (max-width:700px){ .crTop .ib{width:40px;height:40px} .crTools .crB{height:44px} .wzSteps span{font-size:0;gap:0} .wzSteps span b{font-size:12px} }

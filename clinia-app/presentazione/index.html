@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1c3144">
+<title>Clinia connessa</title>
+<link rel="icon" href="../img/clinia-mark.svg">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Presentazione autonoma: palco 1920×1080 scalato allo schermo; stile delle slide identico al deck */
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;background:#0f1b26;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:#fbfbf8}
+:root{--navy:#1c3144;--teal:#2c5e66;--teal-2:#214a51;--gold:#a38258;--paper:#fbfbf8;--soft:#eef3f3;--line:#dde3e7;--muted:#465a6b;--mint:#9fd0d6}
+body{font-family:'Source Sans 3',Arial,sans-serif;color:#1c3144}
+section{background:#fbfbf8;color:#1c3144;padding:128px;display:flex;flex-direction:column;gap:44px;box-sizing:border-box}
+section.dark{background:#1c3144;color:#fbfbf8}
+section.soft{background:#eef3f3}
+h1{font-family:'Lora',Georgia,serif;font-size:104px;font-weight:600;line-height:1.05}
+h2{font-family:'Lora',Georgia,serif;font-size:72px;font-weight:600;line-height:1.1;color:#1c3144}
+section.dark h2{color:#fbfbf8}
+h3{font-family:'Source Sans 3',Arial,sans-serif;font-size:38px;font-weight:700;line-height:1.2;color:#1c3144}
+section.dark h3{color:#fbfbf8}
+p{font-size:30px;line-height:1.4}
+.eyebrow{font-size:26px;font-weight:700;letter-spacing:4px;color:#2c5e66}
+section.dark .eyebrow{color:#9fd0d6}
+.lead{font-size:38px;line-height:1.4;color:#465a6b}
+section.dark .lead{color:#c9d6df}
+.txt{font-size:30px;line-height:1.4;color:#465a6b}
+section.dark .txt{color:#c9d6df}
+.small{font-size:26px;line-height:1.35;color:#465a6b}
+.card{background:#ffffff;border:2px solid #dde3e7;border-radius:28px;padding:40px;display:flex;flex-direction:column;gap:16px;animation:sali 600ms ease-out both;animation-delay:calc(var(--i,0) * 140ms)}
+section.dark .card{background:#243d52;border-color:#33506a}
+.ic{width:64px;height:64px;color:#2c5e66}
+section.dark .ic{color:#9fd0d6}
+.num{font-family:'Lora',Georgia,serif;font-size:88px;font-weight:700;line-height:1;color:#a38258}
+.pill{font-size:24px;font-weight:700;color:#214a51;background:#e5eef0;border-radius:999px;padding:8px 20px}
+.tag{font-size:24px;font-weight:700;color:#1c3144;background:#f3e9da;border-radius:999px;padding:8px 20px}
+.foot{position:absolute;left:128px;bottom:56px;width:1664px;font-size:24px;color:#717f8b}
+section.dark .foot{color:#9fb1bf}
+.av{width:120px;height:120px;border-radius:999px;object-fit:cover}
+@keyframes sali{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes appare{from{opacity:0}to{opacity:1}}
+.fade{animation:appare 700ms ease-out both;animation-delay:calc(var(--i,0) * 140ms)}
+
+#stage>section{position:absolute;inset:0;width:1920px;height:1080px;visibility:hidden}
+#stage>section.on{visibility:visible}
+#stage>section:not(.on) .card,#stage>section:not(.on) .fade{animation:none}
+.qr{background:#fbfbf8;display:grid;place-items:center}
+.qr img,.qr canvas{width:100%!important;height:100%!important;image-rendering:pixelated}
+#bar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));font:600 15px/1.2 'Source Sans 3',system-ui,sans-serif;color:#fbfbf8;pointer-events:none}
+#bar>*{pointer-events:auto}
+#bar button{font:inherit;color:#fbfbf8;background:rgba(28,49,68,.88);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:10px 16px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#bar button:focus-visible{outline:2px solid #9fd0d6;outline-offset:2px}
+#num{background:rgba(28,49,68,.88);border-radius:999px;padding:10px 14px;font-variant-numeric:tabular-nums}
+#live{display:flex;align-items:center;gap:8px}
+#live i{width:9px;height:9px;border-radius:9px;background:#9aa7b2;display:inline-block}
+#live.on i{background:#5fd38a;box-shadow:0 0 0 4px rgba(95,211,138,.25)}
+#live.solo i{background:#e8b04b}
+#gira{display:none;position:fixed;left:16px;right:16px;top:calc(16px + env(safe-area-inset-top));text-align:center;font:600 16px/1.3 "Source Sans 3",system-ui,sans-serif;color:#c9d6df}
+@media (orientation:portrait) and (max-width:700px){#gira{display:block}}
+#bar.hide{opacity:0;transition:opacity .4s}
+@media (prefers-reduced-motion:reduce){#stage *{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage" aria-live="polite">
+<section id="cover" data-i="0" class="dark" style="flex-direction:row;align-items:center;gap:96px;padding:128px 128px 160px">
+<div style="flex:1;display:flex;flex-direction:column;gap:40px">
+<img src="clinia-logo-light.png" alt="Logo Clinia" style="width:420px;height:180px;object-fit:contain;align-self:flex-start">
+<p class="eyebrow">CLINIA APP · SITO · MONITOR · SOCIAL</p>
+<h1>Un’app.<br>Tutto collegato.</h1>
+<p class="lead">Il dottore prenota la sua stanza una volta sola. Sito clinia.it, monitor in sala e social si aggiornano da soli.</p>
+</div>
+<div class="card" style="width:560px;background:#fbfbf8;border-color:#fbfbf8;align-items:center;text-align:center;gap:20px">
+<div class="qr" role="img" style="width:420px;height:420px"></div>
+<h3 style="color:#1c3144">Inquadra con il telefono</h3>
+<p class="small">Segui la presentazione sul tuo schermo mentre la racconto.</p>
+</div>
+<div class="foot" style="display:flex;align-items:center;gap:16px"><img src="../img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="width:26px;height:34px;object-fit:contain"><p style="font-size:24px">Progetto di FPM WebDesignTech · Francesco Paolo Morelli</p></div>
+<aside hidden>Apri questa slide sull’iPad e falla inquadrare a Marco: il QR apre la stessa presentazione sul suo telefono. Il messaggio in una frase: il dottore prenota la stanza nell’app e tutto il resto si aggiorna da solo.</aside>
+</section>
+
+<section id="idea" data-i="1" class="soft">
+<p class="eyebrow">L’IDEA</p>
+<h2>Si scrive una volta, si vede ovunque</h2>
+<div style="flex:1;display:flex;align-items:center;gap:40px">
+<div class="card" style="width:600px;gap:24px;border-color:#2c5e66;--i:0">
+<img src="../img/clinia-logo.svg" alt="Logo Clinia" style="width:300px;height:128px;object-fit:contain">
+<h3>Clinia App</h3>
+<p class="txt">Il dottore sceglie stanza, giorni e orari. È l’unico posto dove si inserisce qualcosa.</p>
+<p class="pill" style="align-self:flex-start">La fonte di tutto</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:96px">
+<div class="fade" style="clip-path:polygon(0 30%,60% 30%,60% 0,100% 50%,60% 100%,60% 70%,0 70%);width:120px;height:56px;background:#a38258;--i:2"></div>
+<div class="fade" style="clip-path:polygon(0 30%,60% 30%,60% 0,100% 50%,60% 100%,60% 70%,0 70%);width:120px;height:56px;background:#a38258;--i:3"></div>
+<div class="fade" style="clip-path:polygon(0 30%,60% 30%,60% 0,100% 50%,60% 100%,60% 70%,0 70%);width:120px;height:56px;background:#a38258;--i:4"></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:32px;--i:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><div style="display:flex;flex-direction:column;gap:4px"><h3>Sito clinia.it</h3><p class="small">Il calendario dei medici, sempre aggiornato</p></div></div>
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:32px;--i:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg><div style="display:flex;flex-direction:column;gap:4px"><h3>Monitor in sala</h3><p class="small">Chi riceve oggi, cosa fa e a che ora</p></div></div>
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:32px;--i:4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M1 21a8 8 0 0 1 16 0M17 4a4 4 0 0 1 0 8M23 21a7 7 0 0 0-5-6.7"/></svg><div style="display:flex;flex-direction:column;gap:4px"><h3>Facebook e Instagram</h3><p class="small">Post e storie pronti, con la grafica Clinia</p></div></div>
+</div>
+</div>
+<aside hidden>Il punto chiave: nessuno deve copiare a mano le stesse informazioni in quattro posti. Si inserisce tutto nell’app, una volta, e da lì passa al sito, al monitor e ai social.</aside>
+</section>
+
+<section id="flusso" data-i="2">
+<p class="eyebrow">COME FUNZIONA</p>
+<h2>Tre passaggi, uno solo a mano</h2>
+<div style="flex:1;display:flex;gap:32px">
+<div class="card" style="flex:1;padding:0;overflow:hidden;gap:0;--i:0">
+<img src="../img/stanze/studio1.jpg" alt="Studio 1 di Clinia" style="width:100%;height:300px;object-fit:cover">
+<div style="display:flex;flex-direction:column;gap:14px;padding:36px">
+<p class="num">1</p>
+<h3>Il dottore prenota la stanza</h3>
+<p class="small">Dall’app sceglie lo studio, i giorni e gli orari in cui riceve.</p>
+</div>
+</div>
+<div class="card" style="flex:1;--i:1">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" style="width:96px;height:96px" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+<p class="num">2</p>
+<h3>Nasce il calendario dei medici</h3>
+<p class="small">L’app mette insieme tutti: chi c’è, in quale giorno, a che ora e in quale stanza.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><p class="pill">Lun</p><p class="pill">Mer</p><p class="pill">Gio</p></div>
+</div>
+<div class="card" style="flex:1;background:#2c5e66;border-color:#2c5e66;--i:2">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" style="width:96px;height:96px;color:#f3e9da" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+<p class="num" style="color:#f3e9da">3</p>
+<h3 style="color:#fbfbf8">Tutto si aggiorna da solo</h3>
+<p class="small" style="color:#d6e6e8">Sito, monitor e social ricevono il calendario. Se il dottore cambia orario, cambia ovunque.</p>
+</div>
+</div>
+<aside hidden>Solo il primo passo lo fa una persona: il dottore che prenota la stanza, cosa che fa già. Il resto è automatico. Se annulla o sposta un turno, anche sito, monitor e social si correggono.</aside>
+</section>
+
+<section id="sito" data-i="3" class="soft">
+<p class="eyebrow">SUL SITO CLINIA.IT</p>
+<h2>Il calendario dei medici, sempre giusto</h2>
+<div style="flex:1;display:flex;gap:56px;align-items:flex-start">
+<div class="card" style="width:1080px;padding:0;gap:0;overflow:hidden;--i:0">
+<div style="display:flex;align-items:center;gap:12px;padding:20px 28px;background:#e7ecef">
+<div style="border-radius:999px;width:16px;height:16px;background:#c9d2d8"></div><div style="border-radius:999px;width:16px;height:16px;background:#c9d2d8"></div><div style="border-radius:999px;width:16px;height:16px;background:#c9d2d8"></div>
+<p style="font-size:24px;color:#465a6b;background:#ffffff;border-radius:999px;padding:4px 24px;margin-left:16px">clinia.it/medici</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:0;padding:12px 36px 24px">
+<h3 style="padding:18px 0">I nostri medici questa settimana</h3>
+<div style="display:flex;align-items:center;gap:28px;padding:20px 0;border-top:2px solid #dde3e7"><img src="../img/specialisti/michele-picciallo.jpg" alt="Dott. Michele Picciallo" class="av" style="width:96px;height:96px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><p style="font-size:30px;font-weight:700">Dott. Michele Picciallo</p><p class="small">Dermatologia · Studio 1</p></div><p class="pill">Lun · Gio 15–19</p></div>
+<div style="display:flex;align-items:center;gap:28px;padding:20px 0;border-top:2px solid #dde3e7"><img src="../img/specialisti/feliciana-pellegrino.jpg" alt="Dott.ssa Feliciana Pellegrino" class="av" style="width:96px;height:96px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><p style="font-size:30px;font-weight:700">Dott.ssa Feliciana Pellegrino</p><p class="small">Fisioterapia · Studio 3</p></div><p class="pill">Mar · Ven 9–13</p></div>
+<div style="display:flex;align-items:center;gap:28px;padding:20px 0;border-top:2px solid #dde3e7"><img src="../img/specialisti/enrico-pierangeli.jpg" alt="Prof. Enrico Pierangeli" class="av" style="width:96px;height:96px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><p style="font-size:30px;font-weight:700">Prof. Enrico Pierangeli</p><p class="small">Neurochirurgia · Studio 4</p></div><p class="pill">Sab 9–13</p></div>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<p class="tag" style="align-self:flex-start">Esempio</p>
+<p class="lead">Il paziente vede chi c’è, in quale giorno e a che ora.</p>
+<p class="txt">Un tocco su “Prenota” e si apre l’app con il dottore già scelto.</p>
+<p class="txt">Nessuno aggiorna il sito a mano.</p>
+</div>
+</div>
+<aside hidden>Giorni e orari qui sono di esempio. Sul sito vero compariranno quelli che ogni dottore ha prenotato nell’app, con il pulsante per prenotare la visita.</aside>
+</section>
+
+<section id="monitor" data-i="4" class="dark">
+<p class="eyebrow">SUL MONITOR IN SALA</p>
+<h2>Chi riceve oggi, cosa fa, a che ora</h2>
+<div style="flex:1;display:flex;gap:64px;align-items:center">
+<div style="display:flex;flex-direction:column;align-items:center;gap:0">
+<div class="fade" style="width:1000px;height:562px;background:#0f1b26;border:16px solid #0b141c;border-radius:24px;box-sizing:border-box;display:flex;overflow:hidden;--i:0">
+<img src="../img/specialisti/michele-picciallo.jpg" alt="Dott. Michele Picciallo sul monitor" style="width:400px;height:530px;object-fit:cover">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;padding:40px;background:#fbfbf8">
+<img src="../img/clinia-logo.svg" alt="Logo Clinia" style="width:170px;height:72px;object-fit:contain">
+<p style="font-size:24px;font-weight:700;letter-spacing:3px;color:#2c5e66">OGGI IN CLINIA</p>
+<p style="font-family:'Lora',Georgia,serif;font-size:40px;font-weight:600;line-height:1.1;color:#1c3144">Dott. Michele Picciallo</p>
+<p style="font-size:26px;color:#465a6b">Dermatologia: visite della pelle e controllo dei nei</p>
+<p style="font-size:28px;font-weight:700;color:#fbfbf8;background:#2c5e66;border-radius:14px;padding:10px 20px;align-self:flex-start">15:00–19:00 · Studio 1</p>
+</div>
+</div>
+<div style="width:80px;height:48px;background:#0b141c"></div>
+<div style="width:320px;height:14px;background:#0b141c;border-radius:8px"></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<p class="lead">A rotazione, uno dopo l’altro, i medici del giorno.</p>
+<div style="display:flex;gap:20px;align-items:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" style="width:44px;height:44px" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg><p class="txt">Cambia da solo quando cambia una prenotazione.</p></div>
+<div style="display:flex;gap:20px;align-items:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" style="width:44px;height:44px" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg><p class="txt">Tra un medico e l’altro, i video di Clinia e delle stanze.</p></div>
+<p class="tag" style="align-self:flex-start">Esempio</p>
+</div>
+</div>
+<aside hidden>Il monitor pubblicitario in sala d’attesa mostra a turno i medici che ricevono quel giorno: foto, specialità, cosa fa e orario. In mezzo, i video di Clinia, come quello dell’ecografo e delle stanze.</aside>
+</section>
+
+<section id="social" data-i="5" class="soft">
+<p class="eyebrow">SU FACEBOOK E INSTAGRAM</p>
+<h2>Post e storie pronti, con un senso</h2>
+<div style="flex:1;display:flex;gap:48px;align-items:flex-start">
+<div class="card" style="width:600px;padding:0;gap:0;overflow:hidden;--i:0">
+<div style="display:flex;align-items:center;gap:16px;padding:18px 24px"><img src="../img/clinia-logo.svg" alt="Logo Clinia" style="width:96px;height:40px;object-fit:contain"><p style="font-size:24px;font-weight:700">Clinia · Matera</p></div>
+<div style="position:relative;width:600px;height:420px">
+<img src="../img/stanze/studio5.jpg" alt="Uno studio di Clinia" style="position:absolute;left:0;top:0;width:600px;height:420px;object-fit:cover">
+<div style="position:absolute;left:0;top:220px;width:600px;height:200px;background:rgba(28,49,68,.82);padding:24px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Lora',Georgia,serif;font-size:36px;font-weight:600;color:#fbfbf8">Questa settimana in Clinia</p>
+<p style="font-size:24px;color:#d6e6e8">Dermatologia lun e gio · Fisioterapia mar e ven · Neurochirurgia sab</p>
+</div>
+</div>
+<p class="small" style="padding:18px 24px">Prenota dall’app o da clinia.it · Via La Martella 5/D, Matera</p>
+</div>
+<div class="card" style="width:330px;padding:0;gap:0;overflow:hidden;--i:1">
+<div style="position:relative;width:330px;height:586px">
+<img src="../img/specialisti/donato-panetta.jpg" alt="Dott. Donato Panetta" style="position:absolute;left:0;top:0;width:330px;height:586px;object-fit:cover">
+<div style="position:absolute;left:0;top:380px;width:330px;height:206px;background:rgba(44,94,102,.9);padding:22px;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+<p style="font-size:24px;font-weight:700;color:#f3e9da">STORIA</p>
+<p style="font-size:28px;font-weight:700;color:#fbfbf8">Dott. Donato Panetta</p>
+<p style="font-size:24px;color:#d6e6e8">Ortopedia · ogni mercoledì</p>
+</div>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:28px">
+<p class="lead">L’app prepara i contenuti dal calendario.</p>
+<p class="txt">Grafica Clinia sempre uguale: colori, logo, foto vere delle stanze e dei medici.</p>
+<p class="txt">Clinia controlla e pubblica con un tocco.</p>
+<p class="tag" style="align-self:flex-start">Esempio</p>
+</div>
+</div>
+<aside hidden>Ogni settimana l’app prepara un post con i medici e i giorni, e una storia per ogni medico nuovo o per chi riceve quel giorno. Non sono post a caso: dicono al paziente chi c’è e quando, e portano a prenotare.</aside>
+</section>
+
+<section id="dottori" data-i="6">
+<p class="eyebrow">PER I DOTTORI</p>
+<h2>Più visibilità, zero lavoro in più</h2>
+<div style="display:flex;gap:24px;align-items:center">
+<img src="../img/specialisti/michele-picciallo.jpg" alt="Dott. Michele Picciallo" class="av fade" style="--i:0">
+<img src="../img/specialisti/feliciana-pellegrino.jpg" alt="Dott.ssa Feliciana Pellegrino" class="av fade" style="--i:1">
+<img src="../img/specialisti/enrico-pierangeli.jpg" alt="Prof. Enrico Pierangeli" class="av fade" style="--i:2">
+<img src="../img/specialisti/donato-panetta.jpg" alt="Dott. Donato Panetta" class="av fade" style="--i:3">
+<img src="../img/specialisti/francesca-trabace.jpg" alt="Francesca Trabace" class="av fade" style="--i:4">
+<img src="../img/specialisti/rossella-conversano.jpg" alt="Rossella Conversano" class="av fade" style="--i:5">
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px">
+<div class="card" style="--i:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"/></svg><h3>Si fanno conoscere</h3><p class="small">Nome, specialità e orari su sito, monitor e social, senza fare nulla.</p></div>
+<div class="card" style="--i:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M1 21a8 8 0 0 1 16 0M17 4a4 4 0 0 1 0 8M23 21a7 7 0 0 0-5-6.7"/></svg><h3>Più pazienti</h3><p class="small">Chi li vede può prenotare subito, dall’app o dal sito.</p></div>
+<div class="card" style="--i:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><h3>Tutto in un’app</h3><p class="small">Stanze, agenda, conferme e pagamenti delle visite.</p></div>
+<div class="card" style="--i:4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg><h3>Anche online</h3><p class="small">Visite in videochiamata, pagate prima con la carta.</p></div>
+</div>
+<aside hidden>Per la conferenza con i professionisti: il dottore fa una cosa sola, prenotare la stanza, e in cambio ottiene visibilità ovunque e un posto unico per agenda, conferme, incassi e visite online.</aside>
+</section>
+
+<section id="clinia" data-i="7" class="soft" style="flex-direction:row;gap:72px;align-items:stretch">
+<div style="width:620px;display:flex;flex-direction:column;gap:36px">
+<p class="eyebrow">PER CLINIA</p>
+<h2>Una struttura che si racconta da sola</h2>
+<div class="card" style="flex:1;padding:0;overflow:hidden;--i:0"><img src="../img/reception.jpg" alt="Reception di Clinia" style="width:100%;height:100%;object-fit:cover"></div>
+</div>
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-content:center">
+<div class="card" style="--i:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><h3>Stanze più piene</h3><p class="small">Più medici visibili, più pazienti, più ore di studio prenotate.</p></div>
+<div class="card" style="--i:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><path d="M12 2l2.4 2.1 3.2-.3.9 3.1 2.8 1.6-1.2 3 1.2 3-2.8 1.6-.9 3.1-3.2-.3L12 22l-2.4-2.1-3.2.3-.9-3.1-2.8-1.6 1.2-3-1.2-3 2.8-1.6.9-3.1 3.2.3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><h3>Immagine professionale</h3><p class="small">Stessi colori, stesso logo, stesse foto ovunque.</p></div>
+<div class="card" style="--i:3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg><h3>Niente lavoro doppio</h3><p class="small">La segreteria non riscrive orari su sito, monitor e social.</p></div>
+<div class="card" style="--i:4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ic" aria-hidden="true"><rect x="4" y="11" width="16" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><h3>Privacy rispettata</h3><p class="small">Si pubblicano solo nome, specialità e orari. Mai dati dei pazienti.</p></div>
+</div>
+<aside hidden>Per Marco: il beneficio è doppio. Le stanze si riempiono perché i medici si vedono di più, e l’immagine di Clinia è sempre in ordine senza lavoro in più per la segreteria. Sulla privacy: fuori dall’app escono solo informazioni pubbliche dei medici.</aside>
+</section>
+
+<section id="passi" data-i="8" class="dark" style="flex-direction:row;gap:80px;align-items:center;padding:128px 128px 160px">
+<div style="flex:1;display:flex;flex-direction:column;gap:36px">
+<p class="eyebrow">I PROSSIMI PASSI</p>
+<h2>Si parte dall’app, poi si collega il resto</h2>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:28px 36px;--i:0"><p class="num" style="font-size:64px;width:56px">1</p><div style="display:flex;flex-direction:column;gap:2px"><h3>Clinia App</h3><p class="small" style="color:#c9d6df">Da dicembre 2026, mese di prova gratuito</p></div></div>
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:28px 36px;--i:1"><p class="num" style="font-size:64px;width:56px">2</p><div style="display:flex;flex-direction:column;gap:2px"><h3>Calendario dei medici su clinia.it</h3><p class="small" style="color:#c9d6df">Il sito legge i turni prenotati nell’app</p></div></div>
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:28px 36px;--i:2"><p class="num" style="font-size:64px;width:56px">3</p><div style="display:flex;flex-direction:column;gap:2px"><h3>Monitor in sala</h3><p class="small" style="color:#c9d6df">Medici del giorno e video di Clinia</p></div></div>
+<div class="card" style="flex-direction:row;align-items:center;gap:28px;padding:28px 36px;--i:3"><p class="num" style="font-size:64px;width:56px">4</p><div style="display:flex;flex-direction:column;gap:2px"><h3>Facebook e Instagram</h3><p class="small" style="color:#c9d6df">Post e storie preparati dal calendario</p></div></div>
+</div>
+</div>
+<div class="card" style="width:500px;background:#fbfbf8;border-color:#fbfbf8;align-items:center;text-align:center;gap:20px;--i:4">
+<div class="qr" role="img" style="width:380px;height:380px"></div>
+<h3 style="color:#1c3144">Rivedila quando vuoi</h3>
+<p class="small">Inquadra il codice con il telefono.</p>
+</div>
+<div class="foot" style="display:flex;align-items:center;gap:16px"><img src="../img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="width:26px;height:34px;object-fit:contain"><p style="font-size:24px">FPM WebDesignTech · fpm@fpmwebdesigntech.it</p></div>
+<aside hidden>Chiudi così: l’app è pronta per dicembre; sito, monitor e social si collegano dopo, uno alla volta, perché leggono tutti lo stesso calendario. Lascia il QR sullo schermo per chi vuole riaprire la presentazione.</aside>
+</section>
+
+</div>
+<p id="gira">Gira il telefono in orizzontale per vedere le slide più grandi</p>
+<div id="bar">
+ <button id="prev" aria-label="Slide precedente">‹</button>
+ <span id="num">1 / 9</span>
+ <button id="next" aria-label="Slide successiva">›</button>
+ <button id="live" aria-label="Stato del collegamento"><i></i><span>Collegamento…</span></button>
+ <button id="full" aria-label="Schermo intero">⤢</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+const N=9,stage=document.getElementById("stage"),secs=[...stage.children],num=document.getElementById("num"),live=document.getElementById("live");
+const q=new URLSearchParams(location.search),RELATORE=q.has("relatore");
+const PUBBLICO=location.origin+location.pathname;         // il QR porta sempre alla versione per il pubblico
+let cur=0,segui=!RELATORE,ultimoRel=null,ch=null,ok=false;
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080),ox=(innerWidth-1920*s)/2,oy=(innerHeight-1080*s)/2;stage.style.transform="translate("+ox+"px,"+oy+"px) scale("+s+")"}
+addEventListener("resize",fit);fit();
+function show(i,da){i=Math.max(0,Math.min(N-1,i));secs.forEach((s,k)=>s.classList.toggle("on",k===i));cur=i;num.textContent=(i+1)+" / "+N;
+  try{history.replaceState(null,"","#"+(i+1))}catch(e){}
+  if(RELATORE&&da!=="rete")manda();stato()}
+function vai(d){if(!RELATORE&&segui&&ultimoRel!==null){segui=false}show(cur+d)}
+function stato(){const t=live.querySelector("span");live.className="";
+  if(RELATORE){live.classList.add(ok?"on":"solo");t.textContent=ok?"Relatore · in diretta":"Relatore · senza rete"}
+  else if(!ok){t.textContent="Sfoglia da solo"}
+  else if(ultimoRel===null){t.textContent="In attesa del relatore"}
+  else if(segui){live.classList.add("on");t.textContent="In diretta"}
+  else{live.classList.add("solo");t.textContent="Torna in diretta"}}
+function manda(){if(ch&&ok)ch.send({type:"broadcast",event:"slide",payload:{i:cur}})}
+document.getElementById("prev").onclick=()=>vai(-1);document.getElementById("next").onclick=()=>vai(1);
+live.onclick=()=>{if(!RELATORE&&ultimoRel!==null){segui=true;show(ultimoRel,"rete")}};
+document.getElementById("full").onclick=()=>{const d=document.documentElement;try{document.fullscreenElement?document.exitFullscreen():(d.requestFullscreen||d.webkitRequestFullscreen).call(d)}catch(e){}};
+addEventListener("keydown",e=>{if(["ArrowRight","PageDown"," ","Enter"].includes(e.key)){e.preventDefault();vai(1)}if(["ArrowLeft","PageUp","Backspace"].includes(e.key)){e.preventDefault();vai(-1)}});
+let x0=null,y0=null;stage.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+stage.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))vai(dx<0?1:-1);else if(Math.abs(dx)<10&&Math.abs(dy)<10)vai(e.changedTouches[0].clientX>innerWidth/2?1:-1);x0=null},{passive:true});
+stage.addEventListener("click",e=>{if(!("ontouchstart" in window))vai(e.clientX>innerWidth/2?1:-1)});
+// nasconde la barra dopo qualche secondo
+let tm;const bar=document.getElementById("bar");function sveglia(){bar.classList.remove("hide");clearTimeout(tm);tm=setTimeout(()=>bar.classList.add("hide"),4000)}["touchstart","mousemove","keydown"].forEach(ev=>addEventListener(ev,sveglia,{passive:true}));sveglia();
+// QR verso questa stessa pagina
+function qr(){if(!window.QRCode)return setTimeout(qr,300);document.querySelectorAll(".qr").forEach(el=>{el.innerHTML="";new QRCode(el,{text:PUBBLICO,width:600,height:600,colorDark:"#1c3144",colorLight:"#fbfbf8",correctLevel:QRCode.CorrectLevel.M})})}
+qr();
+// Diretta: il relatore manda la slide, il pubblico la segue (canale in tempo reale, nessun dato salvato)
+function collega(){if(!window.supabase)return setTimeout(collega,300);
+  try{const sb=supabase.createClient("https://iuydwatobtrpzhotcfyd.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eWR3YXRvYnRycHpob3RjZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyODAwNDgsImV4cCI6MjEwOTg1NjA0OH0.T8HNEAJn5h-fEb6ZPEH-Xl838DXZk_j2sTm9B_bCYOA",{auth:{persistSession:false}});
+   ch=sb.channel("clinia-connessa",{config:{broadcast:{self:false}}});
+   ch.on("broadcast",{event:"slide"},({payload})=>{if(RELATORE)return;ultimoRel=payload.i;if(segui&&payload.i!==cur)show(payload.i,"rete");else stato()});
+   ch.on("broadcast",{event:"ciao"},()=>{if(RELATORE)manda()});
+   ch.subscribe(s=>{ok=s==="SUBSCRIBED";if(ok&&!RELATORE)ch.send({type:"broadcast",event:"ciao",payload:{}});if(ok&&RELATORE)manda();stato()});
+   if(RELATORE)setInterval(manda,4000)}catch(e){ok=false;stato()}}
+collega();
+const h=parseInt(location.hash.slice(1),10);show(h>0?h-1:0,"rete");if(RELATORE)document.title="Clinia connessa · relatore";
+})();
+</script>
+</body>
+</html>

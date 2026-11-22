@@ -309,6 +309,7 @@ const ACTIONS = {
   zoompad:(el)=>ZoomPad.open(el),
   fix:(el)=>Fix.open(el),
   annoUndo:()=>Anno.undo(), annoRedo:()=>Anno.redo(),
+  lyr:()=>{closeSides();Lyr.open()},
   pron:()=>{closeSides();Pron.open()},
   fullscreen:()=>FS.toggle(), bright:(el)=>Bright.open(el), share:()=>{closeSides();shareScore()}, singers:()=>{closeSides();Singers.open()},
   forscore:()=>{closeSides();FS4.pick()},

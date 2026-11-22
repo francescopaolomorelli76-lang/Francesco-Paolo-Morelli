@@ -267,7 +267,8 @@ async function readLyrics(st){
   }catch(e){}
   // parole → sillabe: "Glo - ri - a" restano separate; le parole senza trattini restano intere
   const out=[]; for(const w of res){ const parts=String(w.text).split(/\s+/).filter(Boolean); const step=w.w/Math.max(1,parts.length);
-    parts.forEach((t,i)=>{ if(/^[-–—_]+$/.test(t)){ if(out.length&&!/-$/.test(out[out.length-1].text)) out[out.length-1].text+='-'; return; } t=t.replace(/_+/g,''); if(!t) return; out.push({text:t,x:w.x+step*(i+.5)}); }); }
+    parts.forEach((t,i)=>{ if(/^[-–—_]+$/.test(t)){ if(out.length&&!/-$/.test(out[out.length-1].text)) out[out.length-1].text+='-'; return; } t=t.replace(/_+/g,''); if(!t) return; out.push({text:t,x:w.x+step*(i+.5),a:w.x+step*i,b:w.x+step*(i+1)}); }); }
+  out.meta={cut,band,k,y0,H,W,gapPx:gapPx*k};
   return out;
 }
 

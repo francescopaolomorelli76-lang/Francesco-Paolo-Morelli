@@ -128,6 +128,14 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - **Resa**: righi, chiavi, armatura, tempo (anche C), anacrusi, travi automatiche, legature, graffa, nomi degli strumenti, andamento e metronomo, più pagine A4; ascolto con il pianoforte campionato; "Fine" crea il PDF (PNG a 3×) come nuovo spartito, inserito nello spartito aperto o aggiornamento (`sc.compose` per riaprirlo).
 - **Note con stanghetta in basso** (`glyphs.js`): nel pannello dei segni, categoria Note, minima…biscroma e punteggiate "↓" (vettori, `noteDn`); il pulsante ⇅ delle maniglie gira un segno in su/in giù (`noteFlip`).
 
+## Pronuncia e traduzione dei versi stampati (22 novembre 2026, `lyr.js`)
+- Pulsante libro nella barra annotazioni e riga "Pronuncia e traduzione" in Attrezzi: legge il testo sotto OGNI rigo (coro SATB), un rigo per voce.
+- Parole ricostruite: `di - vi - ne` = una parola; spazio senza trattino = parola nuova; trattino a fine rigo continua sul rigo/sistema dopo e sulla pagina dopo (`ST.cur.lyrCarry`). Trattini non letti dall'OCR vengono cercati sull'immagine (`Lyr.dashBetween`).
+- Lingua: da testo/compositore/titolo (Fauré -> francese), ricordata per spartito. Anteprima modificabile per ogni voce (si corregge a mano la lettura).
+- Francese: pronuncia calcolata sulla parola intera e divisa sulle sillabe stampate (`frPronSyl`): a-mo-ur = a·mu·ur, com-bat-tant = kõ·ba·tã, e muta cantata da sola = ö.
+- Scrive pronuncia in blu sotto i versi e traduzione rossa in corsivo (una per voce, o tutte); senza internet usa dizionario offline (`FR_LINES`, Cantique de Jean Racine incluso).
+- `readLyrics` ora restituisce anche estremi (`a`,`b`) e `meta` per cercare i trattini.
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

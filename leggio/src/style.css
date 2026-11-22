@@ -621,3 +621,8 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .kBadge{display:inline-block;width:20px;height:20px;border-radius:50%;overflow:hidden;vertical-align:-5px;margin-right:6px;box-shadow:0 0 0 1.5px var(--gold);line-height:0}
 .kBadge svg{width:100%;height:100%;display:block}
 .brandDot svg{width:100%;height:100%;display:block;transform:scale(1.04)}
+.lyRow{border:1px solid var(--line,#3a3326);border-radius:12px;padding:8px 10px;margin:8px 0;background:rgba(255,255,255,.03)}
+.lyHd{display:flex;gap:10px;align-items:baseline;font-size:13px}.lyHd small{opacity:.6}.lyOff{margin-left:auto;font-size:12.5px;display:flex;gap:4px;align-items:center}
+.lyIn{width:100%;box-sizing:border-box;margin:6px 0 4px;font-size:17px;padding:8px 10px;border-radius:10px}
+.lyPr{font-size:16px;font-weight:700;color:#5aa0ff;line-height:1.5;word-break:break-word}
+.lyOpts{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0;font-size:13.5px}.lyOpts label{display:flex;gap:6px;align-items:center}

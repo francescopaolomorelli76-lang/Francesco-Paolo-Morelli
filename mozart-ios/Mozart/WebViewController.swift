@@ -128,6 +128,9 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         case "ocr":
             guard let s = body["image"] as? String else { replyHandler(nil, "immagine mancante"); return }
             recognizeText(dataURL: s) { words, err in replyHandler(words, err) }
+        case "midiStatus":
+            midi?.connectAll()
+            replyHandler(midi?.names() ?? [], nil)
         case "midiBluetooth":
             midi?.connectAll()
             let n = midi?.sourceCount ?? 0

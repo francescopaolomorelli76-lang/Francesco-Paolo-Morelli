@@ -11,7 +11,7 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
   - `python3 leggio/build.py`: crea `leggio/index.html` (web-app installabile, librerie da cdnjs).
   - `--artifact FILE`: crea l'anteprima per claude.ai.
   - `--ios mozart-ios/Web`: crea la versione offline per l'app, con le librerie prese da `leggio/vendor` e copiate in `lib/`.
-  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, shapes, compose, native.
+  - L'ordine dei file JS è in `JS_ORDER`: store, icons, glyphs, app, anno, insert, audio, forscore, features, singers, lyrics, pron, uizoom, textbox, fix, finger, stable, extras, piano, clock, words, shapes, compose, tune, info, native.
 - **App iOS nativa**: `mozart-ios/`.
   - Progetto XcodeGen `project.yml`, bundle `com.morelli.mozart`, iOS 15.
   - Usa WKWebView con lo schema `mozart://localhost`.
@@ -103,6 +103,13 @@ Aggiornato al 20 novembre 2026. Ramo di lavoro: `claude/fervent-sagan-xuja93`.
 - **Emoji**: pulsante 😀 nel pannello dei segni → qualsiasi emoji di Apple dalla tastiera, emoji recenti, **Memoji e adesivi** (incollati dalla tastiera emoji), immagini dalle Foto.
 - **Sveglia del timer**: 10 suonerie (Accordo di pianoforte, Sveglia classica, Campanello, Carillon, Arpa, Marimba, Campane, Gong, Digitale, Uccellini) o un mp3 caricato (salvato in `alarmFile`); suona finché non si tocca lo schermo, al massimo un minuto.
 - Mentre si annota, i bordi non aprono più i pannelli e l'app non scorre più di lato quando si mette a fuoco una casella.
+
+## Novità del 22 novembre 2026 (`tune.js`, `info.js`)
+- **Dimensione del testo ricordata**: `TStyle` ha una sola "ultima dimensione" per spartito (`sc.style.last`), usata da sillabe, traslitterazione, traduzione e testo T; partenza 16,7 pt (`TStyle.START=.0152`). Ogni cambio (A−/A+, Aa) la aggiorna.
+- **Pannello dei segni**: simboli più piccoli (3 densità, pulsante ▦), maniglia ◢ per allargare e allungare (misura salvata in `settings.spW/spH`, doppio tocco = automatica), scorrimento corretto (il cambio categoria con lo swipe ora richiede un gesto orizzontale deciso).
+- **Torna indietro sulle pagine** (`PdfUndo`): `replaceBytes` salva una copia (`bak:<id>`) prima di ogni modifica alle pagine (Migliora "per sempre", Inserisci, Crea, sostituzione); compare per 9 s la barretta "↩ Annulla" e restano i pulsanti in Migliora e in Inserisci pagine. L'annullamento è reversibile (scambia le due versioni).
+- **Informazioni dello spartito** (`info.js`): compositore con suggerimenti mentre scrivi (e completamento), scheda con volto disegnato (SVG offline) o foto da Wikipedia se c'è internet, cenni biografici e opere principali (≈65 compositori); "Compositori famosi" = griglia dei volti. Riconoscimento del brano dal titolo (≈100 opere, arie e brani, con compositore, genere, tonalità quando certa e **trama** delle opere italiane); compila da solo i campi vuoti anche all'importazione (`K.autofill`). Trama salvata in `sc.about`.
+- **Tastiera MIDI/Bluetooth**: pannello a 3 passi (accendi, abbina, prova) con stato "collegata/non collegata" e nome della tastiera, prova "Ricevuto: Do4 ✓"; pallino verde/rosso sui pulsanti. Lato nativo: comando `midiStatus` e `MozartMIDIDevices(...)` in `MidiBridge.swift` (non compilabile qui: verificare con la build su GitHub).
 
 ## Crea: compositore di spartiti (`compose.js`) e note con stanghetta in basso
 - **Dove si apre**: Inserisci pagine → "Crea: scrivi le note" (con uno spartito aperto, anche "Modifica lo spartito creato"); libreria → Importa → "Crea"; menu ⋯ della libreria; Modelli.

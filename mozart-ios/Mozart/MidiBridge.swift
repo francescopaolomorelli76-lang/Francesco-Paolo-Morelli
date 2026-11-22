@@ -12,7 +12,7 @@ final class MidiBridge {
     init(web: WKWebView) {
         self.web = web
         MIDIClientCreateWithBlock("Mozart" as CFString, &client) { [weak self] _ in
-            DispatchQueue.main.async { self?.connectAll() }
+            DispatchQueue.main.async { self?.connectAll(); self?.pushStatus() }
         }
         MIDIInputPortCreateWithBlock(client, "Mozart in" as CFString, &port) { [weak self] list, _ in
             self?.handle(list)
@@ -21,6 +21,24 @@ final class MidiBridge {
     }
 
     var sourceCount: Int { MIDIGetNumberOfSources() }
+
+    /// Nomi delle tastiere collegate (cavo o Bluetooth)
+    func names() -> [String] {
+        var out: [String] = []
+        for i in 0..<MIDIGetNumberOfSources() {
+            var p: Unmanaged<CFString>?
+            MIDIObjectGetStringProperty(MIDIGetSource(i), kMIDIPropertyDisplayName, &p)
+            if let n = p?.takeRetainedValue() as String? { out.append(n) }
+        }
+        return out
+    }
+
+    /// Avvisa la pagina quando una tastiera si collega o si scollega
+    func pushStatus() {
+        guard let data = try? JSONSerialization.data(withJSONObject: names()),
+              let json = String(data: data, encoding: .utf8) else { return }
+        web?.evaluateJavaScript("if(window.MozartMIDIDevices){MozartMIDIDevices(\(json))}")
+    }
 
     func connectAll() {
         for i in 0..<MIDIGetNumberOfSources() {

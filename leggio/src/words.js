@@ -7,9 +7,12 @@ const TStyle = {
   kindOf(t){ return t.tr?'tr':t.pron?'pron':t.lyric?'lyric':'text'; },
   get(kind){ const s=ST.cur&&ST.cur.style; return s&&s[kind]||null; },
   remember(kind,t){ if(!ST.cur||!t) return; const st=ST.cur.style=ST.cur.style||{};
-    st[kind]={size:t.size,font:t.font||'sans',bold:!!t.bold,italic:!!t.italic,color:t.color||'#111111'}; DB.putScore(ST.cur); },
+    st[kind]={size:t.size,font:t.font||'sans',bold:!!t.bold,italic:!!t.italic,color:t.color||'#111111'}; st.last=t.size; DB.putScore(ST.cur); },
   // grandezza leggibile per le sillabe: dalla distanza tra le righe del rigo, mai enorme
-  lyricSize(st){ const k=inkCanvas.width?inkCanvas.height/inkCanvas.width:1.4; return clamp((st?st.gap:.01)*k*1.25,.009,.022); },
+  START:.0152,                                   // 16,7 pt: dimensione di partenza
+  last(){ const s=ST.cur&&ST.cur.style; return clamp((s&&s.last)||this.START,.006,.05); },
+  size(kind){ const m=this.get(kind); return clamp(m&&m.size||this.last(),.006,.05); },
+  lyricSize(st){ return this.size('lyric'); },
   sane(size,base){ return size&&size>base*.45&&size<base*1.9?size:base; },
   pt(size){ return Math.round(size*1100); },
   label(t){ const f=TS_FONTS.find(x=>x[0]===(t.font||'sans')); return `${f?f[1]:'Sans'}${t.bold?' grassetto':''}${t.italic?' corsivo':''} · ${this.pt(t.size)} pt`; },
@@ -111,7 +114,7 @@ const Translate = {
   },
   write(L,text,where){
     const A=Anno; const ord=L.slice().sort((a,b)=>a.x-b.x); const s0=ord[0]; const base=s0.size||.016;
-    const mem=TStyle.get('tr'); const sz=mem?mem.size:base*.85;
+    const mem=TStyle.get('tr'); const sz=TStyle.size('tr');
     const y0=Math.min(...ord.map(t=>t.y)), y1=Math.max(...ord.map(t=>t.y));
     // sotto: dopo l'eventuale pronuncia già scritta sotto
     let ny=where==='up'?y0-(base*.6+sz*.75):y1+(base*.6+sz*.8);

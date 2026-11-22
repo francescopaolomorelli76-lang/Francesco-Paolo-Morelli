@@ -170,7 +170,7 @@ const Anno = {
   },
   textAt(p){
     $('#textEntry')?.remove(); const pr=this.presets[this.sel];
-    if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:.017,align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
+    if(this.pendingText){ this.push(); this.strokes.push({t:'text',text:this.pendingText,x:p[0],y:p[1],size:TStyle.size('pron'),align:'l',color:'#1f5fd6',alpha:1,layer:this.layer,pron:1}); this.pendingText=null; this.redraw(); saveAnn(); this.buildBar(); return; }
     TextBox.open(p);
   },
   selectLasso(poly){
@@ -333,15 +333,15 @@ const Anno = {
       const cat=STAMP_CATS[this.stampCat];
       p.innerHTML=`<div class="stampHead"><button class="ib" id="spSide" aria-label="Sposta il pannello">${iconSvg(this.stampRight?'chevLeft':'chevRight')}</button>
         <select id="spCat" aria-label="Categoria">${STAMP_CATS.map((c,i)=>`<option value="${i}"${i===this.stampCat?' selected':''}>${esc(c.name)} (${c.items.length})</option>`).join('')}</select>
-        <button class="ib" id="spEmoji" aria-label="Tutte le emoji e i Memoji" title="Tutte le emoji e i Memoji" style="font-size:22px">😀</button><button class="ib" id="spClose" aria-label="Chiudi">${iconSvg('close')}</button></div>
+        <button class="ib" id="spDen" aria-label="Dimensione dei simboli" title="Dimensione dei simboli" style="font-size:18px">▦</button><button class="ib" id="spEmoji" aria-label="Tutte le emoji e i Memoji" title="Tutte le emoji e i Memoji" style="font-size:22px">😀</button><button class="ib" id="spClose" aria-label="Chiudi">${iconSvg('close')}</button></div>
         <div class="catChips">${STAMP_CATS.map((c,i)=>`<button data-cat="${i}" class="${i===this.stampCat?'on':''}">${esc(c.name)}</button>`).join('')}</div>
         <div class="stampGrid" id="spGrid">${cat.items.map((g,i)=>`<button class="stamp${sameGlyph(g,pr.g)?' on':''}" data-g="${i}" title="${esc(g.n||'')}"><canvas width="120" height="132"></canvas><small>${esc(g.n||'')}</small></button>`).join('')}</div>
         <div class="dots">${STAMP_CATS.map((c,i)=>`<i class="${i===this.stampCat?'on':''}"></i>`).join('')}</div>
         <div class="stampFoot"><div class="sl"><span>Dimensione<em id="spSzv">${pr.size}</em></span><input type="range" id="spSz" min="8" max="90" value="${pr.size}" style="--v:${(pr.size-8)/82*100}%"></div>
           <div class="swatches" id="spSw">${['#111111','#d23b2f','#1f5fd6','#1d8a4a','#c8962e'].map(c=>`<button class="sw${c===pr.color?' on':''}" style="background:${c};width:28px;height:28px" data-c="${c}" aria-label="Colore"></button>`).join('')}</div></div>
-        <div class="hint" style="margin-top:8px;font-size:12.5px">Scegli un segno e tocca la pagina dove metterlo. Tieni premuto e trascina per posizionarlo con precisione.</div>`;
+        <div class="hint" style="margin-top:8px;font-size:12.5px">Scegli un segno e tocca la pagina dove metterlo. Tieni premuto e trascina per posizionarlo con precisione. Trascina l'angolo ◢ per allargare o allungare il pannello (doppio tocco: misura automatica).</div><i class="spRs" id="spRs" aria-label="Ridimensiona"></i>`;
       p.querySelectorAll('[data-g]').forEach(b=>{const g=cat.items[+b.dataset.g];const c=b.querySelector('canvas');const x=c.getContext('2d');const bx=glyphBox(x,g,70);const s=70*Math.min(1.3,92/Math.max(bx.w,bx.h,1));drawGlyph(x,g,60,58,s,'#f4ecdc')});
-      side();
+      side(); this.stampFit&&this.stampFit(p);
     };
     p.onclick=e=>{
       if(e.target.closest('#spClose')){p.remove();return}
@@ -354,8 +354,8 @@ const Anno = {
     p.onchange=e=>{if(e.target.id==='spCat'){this.stampCat=+e.target.value;render()}};
     p.oninput=e=>{if(e.target.id==='spSz'){if(ST.cur&&ST.cur.style&&ST.cur.style.stampK){ST.cur.style.stampK=1;DB.putScore(ST.cur);} pr.size=+e.target.value;$('#spSzv').textContent=pr.size;e.target.style.setProperty('--v',(pr.size-8)/82*100+'%');this.savePresets()}};
     // scorrimento orizzontale tra categorie
-    let sx=null; p.addEventListener('pointerdown',e=>{if(e.target.closest('#spGrid'))sx=e.clientX});
-    p.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>70){this.stampCat=clamp(this.stampCat+(dx<0?1:-1),0,STAMP_CATS.length-1);render()}});
+    let sx=null, sy=0; p.addEventListener('pointerdown',e=>{if(e.target.closest('#spGrid')){ sx=e.clientX; sy=e.clientY; }});
+    p.addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx, dy=e.clientY-sy;sx=null;if(Math.abs(dx)>110&&Math.abs(dx)>Math.abs(dy)*2.5){this.stampCat=clamp(this.stampCat+(dx<0?1:-1),0,STAMP_CATS.length-1);render()}});
     render();
   },
 };

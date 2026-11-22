@@ -522,3 +522,53 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 #crea.keysOn .crScroll{padding-bottom:10px}
 @media (max-width:700px){ .crTop .ghostBtn{padding:0 10px} .crTop .ghostBtn svg{display:none} .crB{min-width:40px;height:42px;padding:0 6px} }
 @media (max-width:700px){ .crTtl{font-size:0;min-width:0} .crTop{gap:6px} .crTop .ghostBtn,.crTop .goldBtn{padding:0 11px;font-size:13.5px;height:40px} .crTop .ghostBtn svg,.crTop .goldBtn svg{display:none} .crTop .ib{width:40px;height:40px} }
+
+/* ===== Pannello dei segni ridimensionabile, simboli più piccoli ===== */
+#stampPanel{--cell:46px;display:flex;flex-direction:column;max-height:calc(100% - 80px)}
+#stampPanel>*{flex:none}
+#stampPanel .stampGrid{flex:1 1 auto;min-height:90px;max-height:min(46vh,380px);grid-template-columns:repeat(auto-fill,minmax(var(--cell),1fr));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#stampPanel.sized .stampGrid{max-height:none}
+#stampPanel .stamp{height:var(--cell)}
+#stampPanel .stamp small{display:none}
+#stampPanel[style*="--cell:74px"] .stamp small,#stampPanel[style*="--cell:58px"] .stamp small{display:block}
+#stampPanel .dots{display:none}
+.spRs{position:absolute;right:4px;bottom:4px;width:30px;height:30px;border-radius:8px;cursor:nwse-resize;touch-action:none;z-index:3;background:linear-gradient(135deg,transparent 52%,var(--gold) 52% 60%,transparent 60% 72%,var(--gold) 72% 80%,transparent 80%)}
+.spRs.left{right:auto;left:4px;transform:scaleX(-1)}
+/* torna indietro sulle pagine */
+#undoToast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);transform:translate(-50%,20px);opacity:0;z-index:91;display:flex;gap:12px;align-items:center;background:#16130e;color:var(--text);border:1px solid var(--gold);border-radius:999px;padding:6px 8px 6px 16px;font-weight:700;font-size:14px;transition:.3s;box-shadow:var(--shadow)}
+#undoToast.on{opacity:1;transform:translate(-50%,0)}
+#undoToast button{height:36px;padding:0 14px;border-radius:999px;background:var(--gold);color:#1b1406;font-weight:800}
+/* tastiera MIDI */
+.mdStatus{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel-2);margin-bottom:12px}
+.mdStatus i{width:14px;height:14px;border-radius:50%;background:#777;flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.06)}
+.mdStatus.ok i{background:#39d353;box-shadow:0 0 0 4px rgba(57,211,83,.2),0 0 12px #39d353}
+.mdStatus.no i{background:#e0624f}
+.mdStatus b{display:block;font-size:16px}.mdStatus small{display:block;color:var(--muted);font-size:12.5px}
+.mdSteps{display:flex;flex-direction:column;gap:10px}
+.mdStep{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line)}
+.mdStep>b{flex:none;width:30px;height:30px;border-radius:50%;background:var(--gold);color:#1b1406;display:grid;place-items:center;font-weight:900}
+.mdStep h5{margin:0 0 3px;font-size:15px}.mdStep p{margin:0 0 8px;font-size:13.5px;color:var(--muted);line-height:1.45}
+.mdTest{padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.25);color:var(--muted);font-weight:700;font-size:14px}
+.mdTest.on{background:rgba(57,211,83,.18);color:#7ee08f}
+.midiDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#e0624f;margin-left:8px;vertical-align:middle}
+.midiDot.on{background:#39d353;box-shadow:0 0 8px #39d353}
+/* informazioni: compositori */
+.kSug{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--panel-3);border:1px solid var(--gold);border-radius:14px;padding:4px;box-shadow:var(--shadow)}
+.kSug button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:6px;border-radius:10px}
+.kSug button:active{background:rgba(214,168,78,.2)}
+.kSug small{display:block;color:var(--muted);font-size:12px}
+.kAvS,.kAv{flex:none;border-radius:50%;overflow:hidden;display:block;line-height:0;box-shadow:0 0 0 2px var(--gold)}
+.kAvS{width:36px;height:36px}.kAv{width:72px;height:72px}
+.kAv img,.kAvS svg,.kAv svg{width:100%;height:100%;object-fit:cover;display:block}
+.kCard{display:flex;gap:14px;align-items:flex-start;padding:12px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line);margin:-2px 0 12px}
+.kTx b{font-family:var(--f-display);font-size:18px}.kTx small{display:block;color:var(--gold-hi);font-size:12.5px;margin-bottom:4px}
+.kTx p{margin:4px 0;font-size:13.5px;line-height:1.45;color:var(--text)}
+.kWiki{color:var(--muted)!important;font-size:12.5px!important}
+.kWork{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:12px;background:rgba(214,168,78,.14);border:1px solid var(--gold-deep);margin:-4px 0 12px;font-size:13.5px}
+.kWork[hidden]{display:none}
+.kPlot{padding:12px 14px;border-radius:14px;background:var(--panel-2);border-left:3px solid var(--gold);margin:6px 0 12px}
+.kPlot b{color:var(--gold-hi)}.kPlot p{margin:5px 0 0;font-size:14px;line-height:1.5}
+.kGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;max-height:58vh;overflow-y:auto;touch-action:pan-y}
+.kGrid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:14px;background:var(--panel-2)}
+.kGrid svg{border-radius:50%;box-shadow:0 0 0 2px var(--gold)}
+.kGrid b{font-size:13px}.kGrid small{font-size:11px;color:var(--muted)}

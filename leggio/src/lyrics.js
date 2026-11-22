@@ -93,7 +93,7 @@ const Pron = {
     const upd=()=>{$('#prPrev').innerHTML=src.map(s=>`<b>${esc(s.text)}</b> → <span style="color:var(--gold-hi)">${esc(PRON.conv(s.text,this.lang))}</span>`).join(' &nbsp; ')};
     $('#prLang').onclick=e=>{const b=e.target.closest('[data-l]');if(!b)return;this.lang=b.dataset.l;$$('#prLang button').forEach(x=>x.classList.toggle('on',x===b));upd()}; upd();
     m2.querySelector('[data-no]').onclick=closeLayers;
-    m2.querySelector('[data-ok]').onclick=()=>{ A.push(); src.forEach(s=>A.strokes.push({...JSON.parse(JSON.stringify(s)),text:PRON.conv(s.text,this.lang),y:s.y+s.size*1.15,size:s.size*.8,color:'#1f5fd6',lyric:1,align:s.align||'l',pron:1}));
+    m2.querySelector('[data-ok]').onclick=()=>{ A.push(); src.forEach(s=>A.strokes.push({...JSON.parse(JSON.stringify(s)),text:PRON.conv(s.text,this.lang),y:s.y+s.size*1.15,size:TStyle.size('pron'),color:'#1f5fd6',lyric:1,align:s.align||'l',pron:1}));
       closeLayers(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Pronuncia aggiunta sotto il testo'); };
   },
   // Testo libero (anche per partiture scansionate, dove il testo è un'immagine)

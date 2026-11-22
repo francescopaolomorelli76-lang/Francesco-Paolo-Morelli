@@ -83,7 +83,7 @@ const Finger = {
       <button class="goldBtn block" id="ftOk">${iconSvg('check')}Scrivi sul rigo</button></div>`;
       p.querySelector('#ftL').onclick=e=>{const x=e.target.closest('[data-l]');if(x){lang=x.dataset.l;draw()}};
       p.querySelector('#ftW').onclick=e=>{const x=e.target.closest('[data-w]');if(x){where=x.dataset.w;draw()}};
-      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0]?.size||.016)*.8; const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+      p.querySelector('#ftOk').onclick=()=>{ A.push(); const sz=TStyle.size('pron'); const y0=L[0]?.y||0; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
         A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
         L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
         p.remove(); bar&&bar.remove(); A.clearSel(); A.redraw(); saveAnn(); A.buildBar(); toast('Traslitterazione scritta sul rigo',2200); };
@@ -107,7 +107,7 @@ const Finger = {
     p.querySelector('[data-y]').onclick=()=>{ p.remove(); this.writeTranslit(L,lang,'up'); toast('Traslitterazione aggiunta sopra la riga',2200); };
   },
   writeTranslit(L,lang,where){
-    const A=Anno; A.push(); const sz=(TStyle.get('pron')||{}).size||(L[0].size||.016)*.8; const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
+    const A=Anno; A.push(); const sz=TStyle.size('pron'); const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
     L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();

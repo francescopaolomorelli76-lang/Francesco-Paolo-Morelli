@@ -2,7 +2,7 @@
 
 // ---- T: casella di testo per scrivere qualsiasi cosa (appunti, indicazioni, testo, note) ----
 const TextBox = {
-  opt:{size:22, font:'sans', bold:false, italic:false, color:null},
+  opt:{size:17, font:'sans', bold:false, italic:false, color:null},
   // Casella sulla pagina, come in forScore: tocchi, scrivi lì; ⋯ per formato ed elimina.
   open(p){
     const A=Anno; this.close(true);
@@ -11,7 +11,7 @@ const TextBox = {
     const pr=A.presets[A.sel];
     const o=this.opt; if(ed) Object.assign(o,{size:Math.round(ed.size*1100),font:ed.font||'sans',bold:!!ed.bold,italic:!!ed.italic,color:ed.color});
     else { const mem=TStyle.get('text'); if(mem) Object.assign(o,{size:clamp(Math.round(mem.size*1100),8,90),font:mem.font,bold:mem.bold,italic:mem.italic,color:mem.color});
-      else o.color=(pr.k==='mask'||pr.k==='hl')?'#111111':(pr.color||'#111111'); }
+      else { o.size=clamp(Math.round(TStyle.last()*1100),8,90); o.color=(pr.k==='mask'||pr.k==='hl')?'#111111':(pr.color||'#111111'); } }
     const orig=ed?JSON.parse(JSON.stringify(ed)):null;
     const st=ed||{t:'text',text:'',x:p[0],y:p[1],align:'l',alpha:1,layer:A.layer};
     if(ed) ed._editing=true; A.redraw();

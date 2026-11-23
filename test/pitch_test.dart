@@ -73,4 +73,14 @@ void main() {
   test('file non WAV ignorato', () {
     expect(medianPitchFromWav(Uint8List.fromList(List.filled(100, 7))), isNull);
   });
+
+  test('WAV 48 kHz → 16 kHz per Whisper, stesso tono', () {
+    final wav = syntheticVoice(220);
+    final out = toWhisperWav(wav)!;
+    final pcm = readWav16(out)!;
+    expect(pcm.$2, 16000);
+    expect(pcm.$1.length, closeTo(32000, 2));
+    final f0 = medianPitchFromWav(out)!;
+    expect(f0, closeTo(220, 25));
+  });
 }

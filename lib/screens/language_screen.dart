@@ -16,6 +16,12 @@ class LanguageScreen extends StatefulWidget {
 class _LanguageScreenState extends State<LanguageScreen> {
   late Lang _sel = widget.initial;
 
+  // Le 6 principali in cima, poi le altre in ordine alfabetico.
+  static final List<Lang> _sorted = [
+    ...Lang.values.take(6),
+    ...(Lang.values.skip(6).toList()..sort((a, b) => a.itName.compareTo(b.itName))),
+  ];
+
   static const _question = {
     Lang.it: 'CHE LINGUA PARLI?',
     Lang.en: 'WHAT LANGUAGE DO YOU SPEAK?',
@@ -49,7 +55,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               const SizedBox(height: 18),
               SpeechBubble(
                 child: Text(
-                  _question[_sel]!,
+                  _question[_sel] ?? 'CHE LINGUA PARLI? · ${_sel.label.toUpperCase()}?',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
                 ),
@@ -58,7 +64,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               Expanded(
                 child: ListView(
                   children: [
-                    for (final l in Lang.values)
+                    for (final l in _sorted)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         child: GestureDetector(
@@ -88,7 +94,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               ),
               const SizedBox(height: 12),
               ComicButton(
-                label: _ok[_sel]!,
+                label: _ok[_sel] ?? 'OK!',
                 icon: Icons.arrow_forward,
                 color: MC.red,
                 textColor: MC.white,

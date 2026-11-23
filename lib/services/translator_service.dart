@@ -28,7 +28,6 @@ class TranslatorService {
 
   static const _apple = MethodChannel('manga_vox/apple_translate');
   bool? _appleAvailable;
-  final Set<String> _appleInstalled = {};
 
   static String appleCode(Lang l) => l == Lang.zh ? 'zh-Hans' : l.name;
 
@@ -45,28 +44,38 @@ class TranslatorService {
     return _appleAvailable!;
   }
 
-  /// La coppia di lingue Apple è già scaricata sul telefono?
-  Future<bool> appleReady(Lang from, Lang to) async {
+  /// Stato Apple di una coppia: "installed", "supported" (scaricabile),
+  /// "unsupported" (Apple non la conosce). Ricordato per tutta la sessione:
+  /// chiederlo a ogni traduzione rallentava.
+  final Map<String, String> _appleStatus = {};
+
+  Future<String> appleStatus(Lang from, Lang to) async {
     final key = '${from.name}>${to.name}';
-    if (_appleInstalled.contains(key)) return true;
-    if (!await appleAvailable()) return false;
+    final cached = _appleStatus[key];
+    if (cached != null) return cached;
+    if (!await appleAvailable()) return 'unsupported';
     try {
       final s = await _apple.invokeMethod<String>('status', {'from': appleCode(from), 'to': appleCode(to)});
-      if (s == 'installed') {
-        _appleInstalled.add(key);
-        return true;
-      }
-    } catch (_) {}
-    return false;
+      return _appleStatus[key] = s ?? 'unsupported';
+    } catch (_) {
+      return 'unsupported';
+    }
   }
 
-  /// Lingue (diverse dalla mia) per cui il traduttore Apple non è pronto.
+  /// La coppia di lingue Apple è già scaricata sul telefono?
+  Future<bool> appleReady(Lang from, Lang to) async => await appleStatus(from, to) == 'installed';
+
+  /// Lingue (diverse dalla mia) che Apple sa tradurre ma non sono ancora
+  /// scaricate. Quelle che Apple non conosce (es. albanese) non contano:
+  /// per loro c'è ML Kit, e chiederle a iOS faceva solo comparire errori.
   Future<List<Lang>> appleMissing(Lang mine) async {
     if (!await appleAvailable()) return [];
     final out = <Lang>[];
     for (final l in Langs.installed) {
       if (l == mine) continue;
-      if (!await appleReady(l, mine) || !await appleReady(mine, l)) out.add(l);
+      final a = await appleStatus(l, mine), b = await appleStatus(mine, l);
+      if (a == 'unsupported' || b == 'unsupported') continue;
+      if (a != 'installed' || b != 'installed') out.add(l);
     }
     return out;
   }
@@ -77,10 +86,14 @@ class TranslatorService {
     try {
       await _apple.invokeMethod<bool>('prepare', {
         'pairs': [
-          for (final l in others) [appleCode(l), appleCode(mine)],
+          for (final l in others) ...[
+            [appleCode(l), appleCode(mine)],
+            [appleCode(mine), appleCode(l)],
+          ],
         ],
       });
     } catch (_) {}
+    _appleStatus.clear();
   }
 
   Future<bool> isDownloaded(Lang lang) async {
@@ -112,9 +125,23 @@ class TranslatorService {
 
   /// Traduce; lancia [MissingLanguage] se manca un pacchetto (invece di
   /// restare bloccato a cercare di scaricarlo senza rete).
+  /// Ultime traduzioni fatte: la frase finale spesso è già stata tradotta
+  /// mentre si parlava, così la risposta è immediata.
+  final Map<String, String> _memo = {};
+
   Future<String> translate(String text, Lang from, Lang to) async {
     final clean = text.trim();
     if (clean.isEmpty || from == to) return clean;
+    final memoKey = '${from.name}>${to.name}>$clean';
+    final hit = _memo[memoKey];
+    if (hit != null) return hit;
+    final out = await _translate(clean, from, to);
+    if (_memo.length > 200) _memo.remove(_memo.keys.first);
+    _memo[memoKey] = out;
+    return out;
+  }
+
+  Future<String> _translate(String clean, Lang from, Lang to) async {
     if (await appleReady(from, to)) {
       try {
         final out = await _apple.invokeMethod<String>('translate', {
@@ -124,7 +151,8 @@ class TranslatorService {
         });
         if (out != null && out.trim().isNotEmpty) return out;
       } catch (_) {
-        // Se Apple fallisce si usa ML Kit.
+        // Se Apple fallisce si usa ML Kit (e non lo si richiede più per questa coppia).
+        _appleStatus['${from.name}>${to.name}'] = 'failed';
       }
     }
     for (final l in [from, to]) {
@@ -149,7 +177,49 @@ class TranslatorService {
   }
 
   /// Riscarica da zero il modello di una lingua (pulsante "Ripara le lingue").
-  Future<void> repair(Lang l) => _repair(l);
+  Future<void> repair(Lang l) async {
+    _memo.clear();
+    await _closeTranslatorsWith(l);
+    await _repair(l);
+  }
+
+  Future<void> _closeTranslatorsWith(Lang l) async {
+    final keys = _cache.keys.where((k) => k.split('>').contains(l.name)).toList();
+    for (final k in keys) {
+      await _cache.remove(k)?.close().catchError((_) {});
+    }
+  }
+
+  /// Controllo automatico (una volta per versione, in sottofondo): prova una
+  /// parola con ogni lingua ML Kit scaricata; quelle rovinate vengono
+  /// cancellate e riscaricate. Restituisce le lingue riparate.
+  Future<List<Lang>> selfCheck(Lang mine) async {
+    final fixed = <Lang>[];
+    for (final l in Langs.installed) {
+      if (l == mine || !await isDownloaded(l)) continue;
+      final pivot = l == Lang.en ? mine : Lang.en;
+      if (!await isDownloaded(pivot)) continue;
+      final t = OnDeviceTranslator(sourceLanguage: l.mlkit, targetLanguage: pivot.mlkit);
+      try {
+        await t.translateText('ok').timeout(const Duration(seconds: 20));
+      } on PlatformException catch (e) {
+        if (isBrokenModelError(e)) {
+          // Non si sa quale delle due sia rovinata: si riparano entrambe (una volta).
+          for (final x in [l, pivot]) {
+            if (fixed.contains(x)) continue;
+            try {
+              await repair(x);
+              fixed.add(x);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {
+      } finally {
+        await t.close().catchError((_) {});
+      }
+    }
+    return fixed;
+  }
 
   /// Errore di ML Kit "Translation model files not found" (codice 13) e simili.
   static bool isBrokenModelError(PlatformException e) {

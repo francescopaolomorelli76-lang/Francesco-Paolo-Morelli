@@ -139,6 +139,41 @@ class _SetupScreenState extends State<SetupScreen> {
                 ),
               ),
               const SizedBox(height: 18),
+              if (_running) ...[
+                Text(_step, textAlign: TextAlign.center, style: comic(26)),
+                const SizedBox(height: 10),
+                ComicPanel(
+                  padding: EdgeInsets.zero,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      minHeight: 26,
+                      backgroundColor: MC.white,
+                      color: MC.red,
+                    ),
+                  ),
+                ),
+              ] else if (s != null && s.complete)
+                Center(
+                  child: ComicButton(
+                    label: 'TUTTO PRONTO!',
+                    icon: Icons.check,
+                    onTap: () => Navigator.pop(context, true),
+                  ),
+                )
+              else
+                Center(
+                  child: ComicButton(
+                    label: 'SCARICA TUTTO',
+                    icon: Icons.download,
+                    color: MC.red,
+                    textColor: MC.white,
+                    size: 30,
+                    onTap: s == null ? null : _go,
+                  ),
+                ),
+              const SizedBox(height: 18),
               ComicPanel(
                 child: Column(
                   children: [
@@ -194,41 +229,6 @@ class _SetupScreenState extends State<SetupScreen> {
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                 ),
               ],
-              const SizedBox(height: 22),
-              if (_running) ...[
-                Text(_step, textAlign: TextAlign.center, style: comic(26)),
-                const SizedBox(height: 10),
-                ComicPanel(
-                  padding: EdgeInsets.zero,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                      value: _progress,
-                      minHeight: 26,
-                      backgroundColor: MC.white,
-                      color: MC.red,
-                    ),
-                  ),
-                ),
-              ] else if (s != null && s.complete)
-                Center(
-                  child: ComicButton(
-                    label: 'TUTTO PRONTO!',
-                    icon: Icons.check,
-                    onTap: () => Navigator.pop(context, true),
-                  ),
-                )
-              else
-                Center(
-                  child: ComicButton(
-                    label: 'SCARICA TUTTO',
-                    icon: Icons.download,
-                    color: MC.red,
-                    textColor: MC.white,
-                    size: 30,
-                    onTap: s == null ? null : _go,
-                  ),
-                ),
               if (_error != null) ...[
                 const SizedBox(height: 14),
                 ComicPanel(

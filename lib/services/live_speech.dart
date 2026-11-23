@@ -156,6 +156,22 @@ class LiveSpeech {
     level.value = 0;
   }
 
+  final Map<String, bool> _supports = {};
+
+  /// Il riconoscimento vocale di Apple conosce questa lingua (sul telefono)?
+  /// Se no (es. albanese, lettone) si usa Whisper dopo aver rilasciato.
+  Future<bool> appleSupports(Lang lang) async {
+    if (!Platform.isIOS) return true;
+    final cached = _supports[lang.locale];
+    if (cached != null) return cached;
+    try {
+      final m = Map<String, dynamic>.from(await _ch.invokeMethod('supports', {'locale': lang.locale}) as Map);
+      return _supports[lang.locale] = m['available'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// iPhone: trascrive un file già registrato in una lingua nota (preciso, veloce).
   Future<String?> recognizeFile(String path, Lang lang) async {
     if (!Platform.isIOS) return null;

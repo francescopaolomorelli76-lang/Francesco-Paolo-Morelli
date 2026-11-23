@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 
 /// Una lingua: tutte quelle che il traduttore offline sa tradurre (59).
-/// Le 6 lingue "di base" sono incluse da subito; le altre si scaricano
+/// Le lingue "di base" (6 principali + Est Europa) sono incluse da subito; le altre si scaricano
 /// dalla schermata 🌍 Lingue del mondo (vedi services/langs.dart).
 class Lang {
   const Lang(this.name, this.label, this.itName, this.flag, this.mlkit, this.locale);
@@ -35,53 +35,94 @@ class Lang {
   static const ru = Lang('ru', 'Русский', 'Russo', '🇷🇺', TranslateLanguage.russian, 'ru-RU');
   static const zh = Lang('zh', '中文', 'Cinese', '🇨🇳', TranslateLanguage.chinese, 'zh-CN');
 
-  /// Lingue di base, incluse da subito.
-  static const List<Lang> values = [it, en, de, fr, ru, zh];
+  // Lingue dell'Est Europa, incluse da subito anche loro.
+  static const sq = Lang('sq', 'Shqip', 'Albanese', '🇦🇱', TranslateLanguage.albanian, 'sq-AL');
+  static const be = Lang('be', 'Беларуская', 'Bielorusso', '🇧🇾', TranslateLanguage.belarusian, 'be-BY');
+  static const bg = Lang('bg', 'Български', 'Bulgaro', '🇧🇬', TranslateLanguage.bulgarian, 'bg-BG');
+  static const hr = Lang('hr', 'Hrvatski', 'Croato', '🇭🇷', TranslateLanguage.croatian, 'hr-HR');
+  static const cs = Lang('cs', 'Čeština', 'Ceco', '🇨🇿', TranslateLanguage.czech, 'cs-CZ');
+  static const et = Lang('et', 'Eesti', 'Estone', '🇪🇪', TranslateLanguage.estonian, 'et-EE');
+  static const el = Lang('el', 'Ελληνικά', 'Greco', '🇬🇷', TranslateLanguage.greek, 'el-GR');
+  static const hu = Lang('hu', 'Magyar', 'Ungherese', '🇭🇺', TranslateLanguage.hungarian, 'hu-HU');
+  static const lv = Lang('lv', 'Latviešu', 'Lettone', '🇱🇻', TranslateLanguage.latvian, 'lv-LV');
+  static const lt = Lang('lt', 'Lietuvių', 'Lituano', '🇱🇹', TranslateLanguage.lithuanian, 'lt-LT');
+  static const mk = Lang('mk', 'Македонски', 'Macedone', '🇲🇰', TranslateLanguage.macedonian, 'mk-MK');
+  static const pl = Lang('pl', 'Polski', 'Polacco', '🇵🇱', TranslateLanguage.polish, 'pl-PL');
+  static const ro = Lang('ro', 'Română', 'Rumeno', '🇷🇴', TranslateLanguage.romanian, 'ro-RO');
+  static const sk = Lang('sk', 'Slovenčina', 'Slovacco', '🇸🇰', TranslateLanguage.slovak, 'sk-SK');
+  static const sl = Lang('sl', 'Slovenščina', 'Sloveno', '🇸🇮', TranslateLanguage.slovenian, 'sl-SI');
+  static const uk = Lang('uk', 'Українська', 'Ucraino', '🇺🇦', TranslateLanguage.ukrainian, 'uk-UA');
+
+  /// Lingue di base, incluse da subito (le 6 principali + l'Est Europa).
+  static const List<Lang> values = [
+    it,
+    en,
+    de,
+    fr,
+    ru,
+    zh,
+    sq,
+    ro,
+    bg,
+    pl,
+    cs,
+    sk,
+    hu,
+    hr,
+    sl,
+    uk,
+    be,
+    lt,
+    lv,
+    et,
+    mk,
+    el,
+  ];
 
   /// Tutte le lingue disponibili per il download.
   static const List<Lang> all = [
     it, en, de, fr, ru, zh, //
     Lang('af', 'Afrikaans', 'Afrikaans', '🇿🇦', TranslateLanguage.afrikaans, 'af-ZA'),
-    Lang('sq', 'Shqip', 'Albanese', '🇦🇱', TranslateLanguage.albanian, 'sq-AL'),
+    sq,
     Lang('ar', 'العربية', 'Arabo', '🇸🇦', TranslateLanguage.arabic, 'ar-SA'),
-    Lang('be', 'Беларуская', 'Bielorusso', '🇧🇾', TranslateLanguage.belarusian, 'be-BY'),
+    be,
     Lang('bn', 'বাংলা', 'Bengalese', '🇧🇩', TranslateLanguage.bengali, 'bn-IN'),
-    Lang('bg', 'Български', 'Bulgaro', '🇧🇬', TranslateLanguage.bulgarian, 'bg-BG'),
+    bg,
     Lang('ca', 'Català', 'Catalano', '🇦🇩', TranslateLanguage.catalan, 'ca-ES'),
-    Lang('hr', 'Hrvatski', 'Croato', '🇭🇷', TranslateLanguage.croatian, 'hr-HR'),
-    Lang('cs', 'Čeština', 'Ceco', '🇨🇿', TranslateLanguage.czech, 'cs-CZ'),
+    hr,
+    cs,
     Lang('da', 'Dansk', 'Danese', '🇩🇰', TranslateLanguage.danish, 'da-DK'),
     Lang('nl', 'Nederlands', 'Olandese', '🇳🇱', TranslateLanguage.dutch, 'nl-NL'),
     Lang('eo', 'Esperanto', 'Esperanto', '🌍', TranslateLanguage.esperanto, 'eo'),
-    Lang('et', 'Eesti', 'Estone', '🇪🇪', TranslateLanguage.estonian, 'et-EE'),
+    et,
     Lang('fi', 'Suomi', 'Finlandese', '🇫🇮', TranslateLanguage.finnish, 'fi-FI'),
     Lang('gl', 'Galego', 'Galiziano', '🇪🇸', TranslateLanguage.galician, 'gl-ES'),
     Lang('ka', 'ქართული', 'Georgiano', '🇬🇪', TranslateLanguage.georgian, 'ka-GE'),
-    Lang('el', 'Ελληνικά', 'Greco', '🇬🇷', TranslateLanguage.greek, 'el-GR'),
+    el,
     Lang('gu', 'ગુજરાતી', 'Gujarati', '🇮🇳', TranslateLanguage.gujarati, 'gu-IN'),
     Lang('ht', 'Kreyòl ayisyen', 'Creolo haitiano', '🇭🇹', TranslateLanguage.haitian, 'ht-HT'),
     Lang('he', 'עברית', 'Ebraico', '🇮🇱', TranslateLanguage.hebrew, 'he-IL'),
     Lang('hi', 'हिन्दी', 'Hindi', '🇮🇳', TranslateLanguage.hindi, 'hi-IN'),
-    Lang('hu', 'Magyar', 'Ungherese', '🇭🇺', TranslateLanguage.hungarian, 'hu-HU'),
+    hu,
     Lang('is', 'Íslenska', 'Islandese', '🇮🇸', TranslateLanguage.icelandic, 'is-IS'),
     Lang('id', 'Bahasa Indonesia', 'Indonesiano', '🇮🇩', TranslateLanguage.indonesian, 'id-ID'),
     Lang('ga', 'Gaeilge', 'Irlandese', '🇮🇪', TranslateLanguage.irish, 'ga-IE'),
     Lang('ja', '日本語', 'Giapponese', '🇯🇵', TranslateLanguage.japanese, 'ja-JP'),
     Lang('kn', 'ಕನ್ನಡ', 'Kannada', '🇮🇳', TranslateLanguage.kannada, 'kn-IN'),
     Lang('ko', '한국어', 'Coreano', '🇰🇷', TranslateLanguage.korean, 'ko-KR'),
-    Lang('lv', 'Latviešu', 'Lettone', '🇱🇻', TranslateLanguage.latvian, 'lv-LV'),
-    Lang('lt', 'Lietuvių', 'Lituano', '🇱🇹', TranslateLanguage.lithuanian, 'lt-LT'),
-    Lang('mk', 'Македонски', 'Macedone', '🇲🇰', TranslateLanguage.macedonian, 'mk-MK'),
+    lv,
+    lt,
+    mk,
     Lang('ms', 'Bahasa Melayu', 'Malese', '🇲🇾', TranslateLanguage.malay, 'ms-MY'),
     Lang('mt', 'Malti', 'Maltese', '🇲🇹', TranslateLanguage.maltese, 'mt-MT'),
     Lang('mr', 'मराठी', 'Marathi', '🇮🇳', TranslateLanguage.marathi, 'mr-IN'),
     Lang('no', 'Norsk', 'Norvegese', '🇳🇴', TranslateLanguage.norwegian, 'nb-NO'),
     Lang('fa', 'فارسی', 'Persiano', '🇮🇷', TranslateLanguage.persian, 'fa-IR'),
-    Lang('pl', 'Polski', 'Polacco', '🇵🇱', TranslateLanguage.polish, 'pl-PL'),
+    pl,
     Lang('pt', 'Português', 'Portoghese', '🇵🇹', TranslateLanguage.portuguese, 'pt-PT'),
-    Lang('ro', 'Română', 'Rumeno', '🇷🇴', TranslateLanguage.romanian, 'ro-RO'),
-    Lang('sk', 'Slovenčina', 'Slovacco', '🇸🇰', TranslateLanguage.slovak, 'sk-SK'),
-    Lang('sl', 'Slovenščina', 'Sloveno', '🇸🇮', TranslateLanguage.slovenian, 'sl-SI'),
+    ro,
+    sk,
+    sl,
     Lang('es', 'Español', 'Spagnolo', '🇪🇸', TranslateLanguage.spanish, 'es-ES'),
     Lang('sw', 'Kiswahili', 'Swahili', '🇰🇪', TranslateLanguage.swahili, 'sw-KE'),
     Lang('sv', 'Svenska', 'Svedese', '🇸🇪', TranslateLanguage.swedish, 'sv-SE'),
@@ -90,7 +131,7 @@ class Lang {
     Lang('te', 'తెలుగు', 'Telugu', '🇮🇳', TranslateLanguage.telugu, 'te-IN'),
     Lang('th', 'ไทย', 'Thailandese', '🇹🇭', TranslateLanguage.thai, 'th-TH'),
     Lang('tr', 'Türkçe', 'Turco', '🇹🇷', TranslateLanguage.turkish, 'tr-TR'),
-    Lang('uk', 'Українська', 'Ucraino', '🇺🇦', TranslateLanguage.ukrainian, 'uk-UA'),
+    uk,
     Lang('ur', 'اردو', 'Urdu', '🇵🇰', TranslateLanguage.urdu, 'ur-PK'),
     Lang('vi', 'Tiếng Việt', 'Vietnamita', '🇻🇳', TranslateLanguage.vietnamese, 'vi-VN'),
     Lang('cy', 'Cymraeg', 'Gallese', '🏴󠁧󠁢󠁷󠁬󠁳󠁿', TranslateLanguage.welsh, 'cy-GB'),

@@ -147,6 +147,9 @@ class NativeHelpersPlugin: NSObject, FlutterPlugin {
 /// - translate: richiede iOS 26 e lingue già scaricate
 /// - prepare: mostra la richiesta di sistema per scaricare le lingue
 class AppleTranslatePlugin: NSObject, FlutterPlugin {
+  /// Sessioni di traduzione già pronte, per coppia "da>a" (TranslationSession, iOS 26).
+  private var sessions: [String: Any] = [:]
+
   static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "manga_vox/apple_translate", binaryMessenger: registrar.messenger())
     registrar.addMethodCallDelegate(AppleTranslatePlugin(), channel: channel)
@@ -178,16 +181,24 @@ class AppleTranslatePlugin: NSObject, FlutterPlugin {
       guard let text = args["text"] as? String, let from = args["from"] as? String, let to = args["to"] as? String else {
         result(FlutterError(code: "args", message: "text/from/to mancanti", details: nil)); return
       }
-      Task {
+      Task { @MainActor in
+        let key = "\(from)>\(to)"
         do {
-          let session = try TranslationSession(
-            installedSource: Locale.Language(identifier: from), target: Locale.Language(identifier: to))
+          // La sessione si crea una volta per coppia di lingue e si riusa:
+          // crearla ogni volta costa quasi un secondo.
+          let session: TranslationSession
+          if let cached = self.sessions[key] as? TranslationSession {
+            session = cached
+          } else {
+            session = try TranslationSession(
+              installedSource: Locale.Language(identifier: from), target: Locale.Language(identifier: to))
+            self.sessions[key] = session
+          }
           let response = try await session.translate(text)
-          let out = response.targetText
-          await MainActor.run { result(out) }
+          result(response.targetText)
         } catch {
-          let msg = error.localizedDescription
-          await MainActor.run { result(FlutterError(code: "translate", message: msg, details: nil)) }
+          self.sessions[key] = nil
+          result(FlutterError(code: "translate", message: error.localizedDescription, details: nil))
         }
       }
 
@@ -269,6 +280,8 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private var peakDb: Float = -160
   private var waiter: ((String) -> Void)?
   private var running = false
+  /// Il riconoscimento è già finito (risultato finale o errore) prima del rilascio.
+  private var taskEnded = false
 
   static func register(with registrar: FlutterPluginRegistrar) {
     let instance = LiveSpeechPlugin()
@@ -407,7 +420,8 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         forWriting: URL(fileURLWithPath: path), settings: wav,
         commonFormat: format.commonFormat, interleaved: format.isInterleaved)
     }
-    if let id = locale, let rec = SFSpeechRecognizer(locale: Locale(identifier: id)) {
+    taskEnded = false
+    if let id = locale, let rec = SFSpeechRecognizer(locale: Locale(identifier: id)), rec.isAvailable {
       recognizer = rec
       let req = SFSpeechAudioBufferRecognitionRequest()
       req.shouldReportPartialResults = true
@@ -420,9 +434,15 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
           let text = res.bestTranscription.formattedString
           DispatchQueue.main.async { self.lastText = text }
           self.emit(["type": "partial", "text": text])
-          if res.isFinal { self.finish() }
+          if res.isFinal {
+            DispatchQueue.main.async { self.taskEnded = true }
+            self.finish()
+          }
         }
-        if err != nil { self.finish() }
+        if err != nil {
+          DispatchQueue.main.async { self.taskEnded = true }
+          self.finish()
+        }
       }
     }
 
@@ -452,15 +472,19 @@ class LiveSpeechPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       engine.inputNode.removeTap(onBus: 0)
     }
     file = nil
-    guard let req = request else {
+    guard let req = request, !taskEnded else {
+      task?.cancel()
+      task = nil
+      request = nil
+      recognizer = nil
       done(lastText)
       return
     }
     waiter = done
     req.endAudio()
     // Il risultato finale sul telefono arriva in pochi decimi di secondo;
-    // per sicurezza non si aspetta mai più di 1,2 secondi.
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.finish() }
+    // per sicurezza non si aspetta mai più di 0,8 secondi (poi vale l'ultimo parziale).
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in self?.finish() }
   }
 
   private func finish() {

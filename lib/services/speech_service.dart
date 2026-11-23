@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:whisper_ggml/whisper_ggml.dart';
 
@@ -40,6 +42,16 @@ class Detected {
   Detected(this.lang, this.text);
   final Lang? lang;
   final String text;
+}
+
+/// Lingue possibili di un audio, dalla più probabile (probabilità 0..1
+/// calcolate solo tra le lingue installate).
+class LangGuess {
+  LangGuess(this.scores);
+  final Map<Lang, double> scores;
+  Lang get best => scores.keys.first;
+  double get bestScore => scores.values.first;
+  double of(Lang? l) => l == null ? 0 : (scores[l] ?? 0);
 }
 
 /// - Riconoscimento della LINGUA di un audio (solo quando non è ancora nota):
@@ -153,7 +165,7 @@ class SpeechService {
   Future<Detected> detect(String audioPath) async {
     final res = await Whisper(model: model).transcribe(
       transcribeRequest: TranscribeRequest(
-        audio: audioPath,
+        audio: await whisperWavFile(audioPath) ?? audioPath,
         language: 'auto',
         isNoTimestamps: true,
         noContext: true,
@@ -165,6 +177,83 @@ class SpeechService {
     );
     final text = cleanTranscript(res.text);
     return Detected(await LangDetect.instance.detect(text), text);
+  }
+
+  /// Riconosce la lingua parlata scegliendo SOLO tra [candidates] (le lingue
+  /// installate): Whisper calcola la probabilità di ogni lingua senza
+  /// trascrivere (circa 0,3 s). Null se non disponibile su questo telefono.
+  Future<LangGuess?> detectAmong(String audioPath, List<Lang> candidates) async {
+    try {
+      final wav = await whisperWavFile(audioPath) ?? audioPath;
+      final probs = await Whisper(model: model)
+          .detectLanguage(audio: wav, modelPath: await modelPath(), threads: 4)
+          .timeout(const Duration(seconds: 4));
+      final scores = <Lang, double>{};
+      probs.forEach((code, p) {
+        final l = Lang.fromCode(code);
+        if (l != null && candidates.contains(l)) scores[l] = (scores[l] ?? 0) + p;
+      });
+      if (scores.isEmpty) return null;
+      final total = scores.values.fold<double>(0, (a, b) => a + b);
+      final ranked = scores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      return LangGuess({for (final e in ranked) e.key: total > 0 ? e.value / total : 0});
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Trascrive un audio in una lingua GIÀ NOTA con Whisper (per le lingue
+  /// che il riconoscimento vocale di Apple non conosce, es. albanese).
+  Future<String> transcribeIn(String audioPath, Lang lang) async {
+    final wav = await whisperWavFile(audioPath) ?? audioPath;
+    final res = await Whisper(model: model).transcribe(
+      transcribeRequest: TranscribeRequest(
+        audio: wav,
+        language: lang.name == 'zh' ? 'zh' : lang.name,
+        isNoTimestamps: true,
+        noContext: true,
+        keepModelLoaded: true,
+        suppressNonSpeechTokens: true,
+        threads: 4,
+      ),
+      modelPath: await modelPath(),
+    );
+    return cleanTranscript(res.text);
+  }
+
+  /// Carica Whisper in memoria all'avvio, così il primo riconoscimento è
+  /// immediato (un secondo di silenzio, in sottofondo).
+  Future<void> warmUp() async {
+    try {
+      if (!await modelReady()) return;
+      final dir = await getTemporaryDirectory();
+      final f = File('${dir.path}/mv_warmup.wav');
+      if (!await f.exists()) {
+        final silence = Uint8List(16000 * 2);
+        final header = ByteData(44);
+        void tag(int o, String t) {
+          for (var i = 0; i < 4; i++) {
+            header.setUint8(o + i, t.codeUnitAt(i));
+          }
+        }
+
+        tag(0, 'RIFF');
+        header.setUint32(4, 36 + silence.length, Endian.little);
+        tag(8, 'WAVE');
+        tag(12, 'fmt ');
+        header.setUint32(16, 16, Endian.little);
+        header.setUint16(20, 1, Endian.little);
+        header.setUint16(22, 1, Endian.little);
+        header.setUint32(24, 16000, Endian.little);
+        header.setUint32(28, 32000, Endian.little);
+        header.setUint16(32, 2, Endian.little);
+        header.setUint16(34, 16, Endian.little);
+        tag(36, 'data');
+        header.setUint32(40, silence.length, Endian.little);
+        await f.writeAsBytes([...header.buffer.asUint8List(), ...silence], flush: true);
+      }
+      await Whisper(model: model).detectLanguage(audio: f.path, modelPath: await modelPath(), threads: 2);
+    } catch (_) {}
   }
 
   /// Rimuove annotazioni tipo "[musica]" o "(ride)" prodotte da Whisper.
@@ -226,6 +315,9 @@ class SpeechService {
     });
     return list;
   }
+
+  /// C'è almeno una voce installata per leggere questa lingua?
+  Future<bool> hasVoice(Lang lang) async => (await voicesFor(lang)).isNotEmpty;
 
   /// La voce da usare: quella scelta, altrimenti la migliore del genere giusto.
   Future<TtsVoice?> pickVoice(Lang lang, VoiceGender gender) async {

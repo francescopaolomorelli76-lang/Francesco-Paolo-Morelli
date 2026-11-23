@@ -22,7 +22,7 @@ Future<VoiceGender?> genderFromWav(String path) async {
 
 /// Mediana della frequenza fondamentale (Hz) dei tratti con voce, o null.
 double? medianPitchFromWav(Uint8List wav) {
-  final pcm = _readWav(wav);
+  final pcm = readWav16(wav);
   if (pcm == null) return null;
   final (samples, rate) = pcm;
 
@@ -86,7 +86,7 @@ double? medianPitchFromWav(Uint8List wav) {
 }
 
 /// Legge un WAV PCM 16 bit: campioni del primo canale in -1..1 e frequenza.
-(Float64List, int)? _readWav(Uint8List b) {
+(Float64List, int)? readWav16(Uint8List b) {
   if (b.length < 44) return null;
   final d = ByteData.sublistView(b);
   String tag(int o) => String.fromCharCodes(b.sublist(o, o + 4));
@@ -113,4 +113,64 @@ double? medianPitchFromWav(Uint8List wav) {
     off = body + size + (size.isOdd ? 1 : 0);
   }
   return null;
+}
+
+/// WAV 16 kHz mono 16 bit (il formato di Whisper) da un WAV PCM 16 bit
+/// qualsiasi, ricampionato sul telefono in pochi millisecondi (senza ffmpeg).
+Uint8List? toWhisperWav(Uint8List wav) {
+  final pcm = readWav16(wav);
+  if (pcm == null) return null;
+  final (x, rate) = pcm;
+  if (rate <= 0 || x.isEmpty) return null;
+  final ratio = rate / 16000;
+  final n = (x.length / ratio).floor();
+  final out = ByteData(44 + n * 2);
+  void tag(int o, String t) {
+    for (var i = 0; i < 4; i++) {
+      out.setUint8(o + i, t.codeUnitAt(i));
+    }
+  }
+
+  tag(0, 'RIFF');
+  out.setUint32(4, 36 + n * 2, Endian.little);
+  tag(8, 'WAVE');
+  tag(12, 'fmt ');
+  out.setUint32(16, 16, Endian.little);
+  out.setUint16(20, 1, Endian.little);
+  out.setUint16(22, 1, Endian.little);
+  out.setUint32(24, 16000, Endian.little);
+  out.setUint32(28, 32000, Endian.little);
+  out.setUint16(32, 2, Endian.little);
+  out.setUint16(34, 16, Endian.little);
+  tag(36, 'data');
+  out.setUint32(40, n * 2, Endian.little);
+  // Media dei campioni che cadono in ogni campione d'uscita (filtro passa-basso
+  // semplice, basta per la voce).
+  final half = math.max(0, (ratio / 2).floor());
+  for (var i = 0; i < n; i++) {
+    final c = (i * ratio).round();
+    final a = math.max(0, c - half), b = math.min(x.length - 1, c + half);
+    var s = 0.0;
+    for (var j = a; j <= b; j++) {
+      s += x[j];
+    }
+    final v = (s / (b - a + 1) * 32767).round().clamp(-32768, 32767);
+    out.setInt16(44 + i * 2, v, Endian.little);
+  }
+  return out.buffer.asUint8List();
+}
+
+/// Scrive accanto a [path] la copia per Whisper (stesso nome + ".wav") e ne
+/// restituisce il percorso; null se il file non è un WAV leggibile.
+Future<String?> whisperWavFile(String path) async {
+  try {
+    final bytes = await File(path).readAsBytes();
+    final out = await compute(toWhisperWav, bytes);
+    if (out == null) return null;
+    final dest = '$path.wav';
+    await File(dest).writeAsBytes(out, flush: true);
+    return dest;
+  } catch (_) {
+    return null;
+  }
 }

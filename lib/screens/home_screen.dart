@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -40,10 +41,15 @@ class _Msg {
     required this.original,
     required this.translated,
     this.gender,
+    this.audioPath,
   });
   final Side side;
-  final Lang from, to;
-  final String original, translated;
+  Lang from;
+  final Lang to;
+  String original, translated;
+
+  /// Audio della frase (solo LUI/LEI, le ultime): serve per "LINGUA SBAGLIATA?".
+  String? audioPath;
 
   /// Uomo/donna di chi ha parlato (dal tono), per leggere con una voce simile.
   final VoiceGender? gender;
@@ -91,6 +97,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Lang _mine = Prefs.get('mine', Lang.deviceDefault());
   Lang? _partner = Prefs.maybe('partner2');
+
+  /// LUI/LEI in automatico: la lingua si riconosce (e si corregge) a ogni frase.
+  /// Se la scegli tu dall'elenco resta fissa.
+  bool _partnerAuto = Prefs.flag('partner_auto', fallback: true);
 
   Mode _mode = Mode.talk;
   bool _ready = true;
@@ -169,6 +179,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await Prefs.setFlag('mine_set', true);
     }
     await _checkSetup(openIfMissing: true);
+    // Whisper pronto in memoria: il primo riconoscimento della lingua è subito veloce.
+    unawaited(_speech.warmUp());
+    // Una volta per versione: controllo delle lingue scaricate e riparazione
+    // automatica di quelle rovinate (causa dei blocchi su alcune lingue).
+    if (!Prefs.flag('selfcheck_16')) {
+      await Prefs.setFlag('selfcheck_16', true);
+      unawaited(
+        _tr
+            .selfCheck(_mine)
+            .then((fixed) {
+              if (fixed.isNotEmpty && mounted) {
+                _toast('🔧 Ho riparato da solo: ${fixed.map((l) => '${l.flag} ${l.label}').join(', ')}');
+              }
+            })
+            .catchError((_) {}),
+      );
+    }
     // Chiede subito i permessi del microfono, così il primo uso è immediato.
     try {
       final p = await _live.permissions();
@@ -322,8 +349,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
     _memo.clear();
     if (!mounted) return;
-    if (l == kAutoLanguage) _setPartner(null);
-    if (l is Lang) _setPartner(l);
+    if (l == kAutoLanguage) {
+      _partnerAuto = true;
+      _setPartner(null);
+    }
+    if (l is Lang) {
+      _partnerAuto = false;
+      _setPartner(l);
+    }
+    Prefs.setFlag('partner_auto', _partnerAuto);
     setState(() {});
   }
 
@@ -414,6 +448,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _partialSeq++;
     setState(() => _state = PushState.busy);
     LiveResult? r;
+    var keptAudio = false;
     try {
       r = await _live.stop();
       if (!mounted) return;
@@ -434,29 +469,59 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final genderFuture = r.audioPath == null ? Future<VoiceGender?>.value() : genderFromWav(r.audioPath!);
       var from = side == Side.me ? _mine : _partner;
       var text = r.text;
+      final path = r.audioPath;
+      Future<String>? early;
 
-      if (side == Side.them && (from == null || text.isEmpty) && r.audioPath != null) {
-        // Lingua dell'interlocutore ancora sconosciuta (o non capita):
-        // la riconosce Whisper, poi la frase viene trascritta bene in quella lingua.
-        final d = await _speech.detect(r.audioPath!);
-        if (!mounted) return;
-        final lang = d.lang;
-        if (lang == null) {
-          _toast('Non ho riconosciuto la lingua: parla un po\' più a lungo e più vicino.');
-          return;
+      if (side == Side.them && path != null && (_partnerAuto || from == null || text.isEmpty)) {
+        // Intanto si traduce quello che ha sentito Apple (se la lingua è giusta
+        // la risposta è già pronta), mentre Whisper controlla la lingua
+        // scegliendo SOLO tra le lingue installate (circa 0,3 s).
+        if (from != null && text.isNotEmpty) {
+          early = _tr.translate(text, from, _mine).catchError((_) => '');
         }
-        if (!Langs.isInstalled(lang)) {
-          _notInstalled(lang);
-          return;
+        final guess = (_partnerAuto || from == null) ? await _speech.detectAmong(path, Langs.installed) : null;
+        if (!mounted) return;
+        Lang? lang = from;
+        if (guess != null) {
+          final change = from == null
+              ? guess.bestScore >= 0.15
+              : (guess.best != from && guess.bestScore >= 0.5 && guess.of(from) < 0.2);
+          if (change) lang = guess.best;
+        }
+        if (lang == null) {
+          // Riserva (es. Android): trascrizione automatica + riconoscimento dal testo.
+          final d = await _speech.detect(path);
+          if (!mounted) return;
+          lang = d.lang;
+          if (lang == null) {
+            _toast(
+              'Non ho riconosciuto la lingua: parla un po\' più a lungo, oppure sceglila sotto il pulsante azzurro.',
+            );
+            return;
+          }
+          if (!Langs.isInstalled(lang)) {
+            _notInstalled(lang);
+            return;
+          }
+          if (lang != _mine) text = d.text;
         }
         if (lang == _mine) {
           _toast('Questa era ${_mine.label}: per la tua lingua usa il pulsante giallo IO.');
           return;
         }
-        if (lang != _partner) _setPartner(lang);
-        from = lang;
-        text = (await _live.recognizeFile(r.audioPath!, lang))?.trim() ?? '';
-        if (text.isEmpty) text = d.text;
+        if (lang != from) {
+          _setPartner(lang);
+          from = lang;
+          text = '';
+          early = null;
+        }
+      }
+
+      if (from != null && text.isEmpty && path != null) {
+        // Lingua che Apple non riconosce dal vivo (o lingua appena cambiata):
+        // si trascrive l'audio registrato nella lingua giusta.
+        text = await _transcribe(path, from);
+        if (!mounted) return;
       }
 
       if (from == null || text.isEmpty) {
@@ -485,23 +550,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
       final to = side == Side.me ? _partner! : _mine;
-      final out = await _tr.translate(text, from, to);
+      var out = early == null ? '' : await early;
+      if (out.isEmpty) out = await _tr.translate(text, from, to);
       final gender = await genderFuture;
       if (!mounted) return;
+      final keepAudio = side == Side.them ? path : null;
       setState(() {
-        _talk.add(_Msg(side: side, from: from!, to: to, original: text, translated: out, gender: gender));
+        _talk.add(
+          _Msg(side: side, from: from!, to: to, original: text, translated: out, gender: gender, audioPath: keepAudio),
+        );
         _active = null;
         _state = PushState.idle;
         _liveTranslation = '';
       });
+      if (keepAudio != null) {
+        keptAudio = true;
+        _trimKeptAudio();
+      }
       // La mia frase tradotta la sente l'altro (altoparlante); la sua la sento io (cuffie).
-      await _speech.speak(out, to, gender: gender, hearer: side == Side.me ? Hearer.partner : Hearer.me);
+      await _say(out, to, gender: gender, hearer: side == Side.me ? Hearer.partner : Hearer.me);
     } on MissingLanguage catch (e) {
       if (mounted) _missing(e);
     } catch (e) {
       if (mounted) _toast('Qualcosa è andato storto: $e', error: true);
     } finally {
-      LiveSpeech.deleteAudio(r?.audioPath);
+      if (!keptAudio) LiveSpeech.deleteAudio(r?.audioPath);
       if (mounted && (_active != null || _state != PushState.idle)) {
         setState(() {
           _active = null;
@@ -509,6 +582,76 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _liveTranslation = '';
         });
       }
+    }
+  }
+
+  /// Testo di un audio registrato in una lingua nota: riconoscimento Apple se
+  /// conosce la lingua, altrimenti Whisper.
+  Future<String> _transcribe(String path, Lang lang) async {
+    if (await _live.appleSupports(lang)) {
+      final t = (await _live.recognizeFile(path, lang))?.trim() ?? '';
+      if (t.isNotEmpty) return t;
+    }
+    try {
+      return await _speech.transcribeIn(path, lang);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /// Si tiene l'audio solo delle ultime frasi di LUI/LEI (per correggerne la lingua).
+  void _trimKeptAudio() {
+    final withAudio = _talk.where((m) => m.audioPath != null).toList();
+    for (final m in withAudio.take(math.max(0, withAudio.length - 3))) {
+      LiveSpeech.deleteAudio(m.audioPath);
+      m.audioPath = null;
+    }
+  }
+
+  final Set<Lang> _noVoiceWarned = {};
+
+  /// Legge la traduzione; se il telefono non ha una voce per quella lingua
+  /// lo dice una volta (invece di leggerla con una voce sbagliata).
+  Future<void> _say(String text, Lang lang, {VoiceGender? gender, Hearer hearer = Hearer.me}) async {
+    if (!await _speech.hasVoice(lang)) {
+      if (_noVoiceWarned.add(lang) && mounted) {
+        _toast(
+          'L\'iPhone non ha una voce per leggere ${lang.flag} ${lang.label}: la traduzione resta scritta. '
+          'Puoi aggiungerla in Impostazioni › Accessibilità › Contenuti letti › Voci.',
+        );
+      }
+      return;
+    }
+    await _speech.speak(text, lang, gender: gender, hearer: hearer);
+  }
+
+  /// "LINGUA SBAGLIATA?": scegli la lingua giusta e la frase si rifà da capo.
+  Future<void> _correct(_Msg m) async {
+    if (_active != null) return;
+    final l = await showLanguageSheet(context, title: 'CHE LINGUA ERA?', current: m.from, exclude: _mine);
+    if (l is! Lang || !mounted || l == m.from) return;
+    _setPartner(l);
+    setState(() => _state = PushState.busy);
+    try {
+      var text = m.original;
+      if (m.audioPath != null) {
+        final t = await _transcribe(m.audioPath!, l);
+        if (t.isNotEmpty) text = t;
+      }
+      final out = await _tr.translate(text, l, m.to);
+      if (!mounted) return;
+      setState(() {
+        m.from = l;
+        m.original = text;
+        m.translated = out;
+      });
+      await _say(out, m.to, gender: m.gender, hearer: Hearer.me);
+    } on MissingLanguage catch (e) {
+      if (mounted) _missing(e);
+    } catch (e) {
+      if (mounted) _toast('Qualcosa è andato storto: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _state = PushState.idle);
     }
   }
 
@@ -893,7 +1036,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      lang == null ? '✨ AUTO' : '${lang.flag} ${lang.label}',
+                      lang == null ? '✨ AUTO' : '${!isMe && _partnerAuto ? '✨ ' : ''}${lang.flag} ${lang.label}',
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                     ),
                     const Icon(Icons.arrow_drop_down, color: MC.black, size: 20),
@@ -1010,6 +1153,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         m.original,
                         style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: Color(0xAA111111)),
                       ),
+                      if (!fromMe)
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _correct(m),
+                          child: const Padding(
+                            padding: EdgeInsets.only(top: 6),
+                            child: Text(
+                              '🔁 LINGUA SBAGLIATA? TOCCA QUI',
+                              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: MC.black),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

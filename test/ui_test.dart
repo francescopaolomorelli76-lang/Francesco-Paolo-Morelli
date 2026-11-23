@@ -296,7 +296,7 @@ void main() {
     modelsDownloaded = false;
     File('${tmp.path}/ggml-tiny-q5_1.bin').deleteSync();
     await tester.pumpWidget(const MaterialApp(debugShowCheckedModeBanner: false, home: SetupScreen()));
-    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
+    await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 800)));
     await tester.pump();
     expect(find.text('SCARICA TUTTO'), findsOneWidget);
     await _shot(tester, find.byType(SetupScreen), 'setup');

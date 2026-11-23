@@ -567,6 +567,129 @@ json transcribe(json jsonBody)
     return jsonResult;
 }
 
+// ---------------------------------------------------------------------------
+// Manga Vox: language detection only (no transcription). Runs the encoder on
+// the first 30 s and one decoder step, returning the probability of every
+// language: much faster than a full transcription with language "auto".
+// Expects a 16 kHz mono/stereo 16-bit WAV. Uses (and parks) the resident
+// model like transcribe() with keep_model_loaded.
+// ---------------------------------------------------------------------------
+json detect_language(json jsonBody)
+{
+    json jsonResult;
+    const std::string model = jsonBody["model"];
+    const std::string audio = jsonBody["audio"];
+    int threads = jsonBody.contains("threads") ? (int)jsonBody["threads"] : 4;
+    if (threads < 1) threads = 1;
+
+    struct whisper_context *ctx = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_model_cache.mutex);
+        if (g_model_cache.ctx != nullptr && g_model_cache.model == model && g_model_cache.vad_model.empty())
+        {
+            ctx = g_model_cache.ctx;
+            g_model_cache.ctx = nullptr;
+            g_model_cache.model.clear();
+        }
+    }
+    if (ctx == nullptr)
+    {
+        struct whisper_context_params cparams = whisper_context_default_params();
+        cparams.use_gpu = false;
+        ctx = whisper_init_from_file_with_params(model.c_str(), cparams);
+    }
+    if (ctx == nullptr)
+    {
+        jsonResult["@type"] = "error";
+        jsonResult["message"] = "failed to load model " + model;
+        return jsonResult;
+    }
+    auto park = [&]() noexcept
+    {
+        struct whisper_context *displaced = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(g_model_cache.mutex);
+            displaced = g_model_cache.ctx;
+            g_model_cache.ctx = ctx;
+            g_model_cache.model = model;
+            g_model_cache.vad_model.clear();
+        }
+        if (displaced != nullptr)
+        {
+            whisper_free(displaced);
+        }
+    };
+
+    std::vector<float> pcmf32;
+    {
+        drwav wav;
+        if (!drwav_init_file(&wav, audio.c_str(), NULL))
+        {
+            jsonResult["@type"] = "error";
+            jsonResult["message"] = "failed to open WAV file";
+            park();
+            return jsonResult;
+        }
+        if ((wav.channels != 1 && wav.channels != 2) || wav.sampleRate != WHISPER_SAMPLE_RATE || wav.bitsPerSample != 16)
+        {
+            jsonResult["@type"] = "error";
+            jsonResult["message"] = "WAV must be 16 kHz 16 bit mono/stereo";
+            drwav_uninit(&wav);
+            park();
+            return jsonResult;
+        }
+        const int channels = wav.channels;
+        int n = (int)wav.totalPCMFrameCount;
+        // 30 s are enough (the encoder window).
+        if (n > WHISPER_SAMPLE_RATE * 30) n = WHISPER_SAMPLE_RATE * 30;
+        std::vector<int16_t> pcm16((size_t)n * channels);
+        drwav_read_pcm_frames_s16(&wav, n, pcm16.data());
+        drwav_uninit(&wav);
+        pcmf32.resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            pcmf32[i] = channels == 1 ? float(pcm16[i]) / 32768.0f
+                                      : float(pcm16[2 * i] + pcm16[2 * i + 1]) / 65536.0f;
+        }
+    }
+    if (pcmf32.size() < WHISPER_SAMPLE_RATE / 4)
+    {
+        jsonResult["@type"] = "error";
+        jsonResult["message"] = "audio too short";
+        park();
+        return jsonResult;
+    }
+    if (!whisper_is_multilingual(ctx) || whisper_pcm_to_mel(ctx, pcmf32.data(), (int)pcmf32.size(), threads) != 0)
+    {
+        jsonResult["@type"] = "error";
+        jsonResult["message"] = "failed to compute mel";
+        park();
+        return jsonResult;
+    }
+    std::vector<float> probs(whisper_lang_max_id() + 1, 0.0f);
+    const int best = whisper_lang_auto_detect(ctx, 0, threads, probs.data());
+    if (best < 0)
+    {
+        jsonResult["@type"] = "error";
+        jsonResult["message"] = "failed to detect language";
+        park();
+        return jsonResult;
+    }
+    json probsJson = json::object();
+    for (int i = 0; i <= whisper_lang_max_id(); i++)
+    {
+        if (probs[i] >= 0.0005f)
+        {
+            probsJson[whisper_lang_str(i)] = probs[i];
+        }
+    }
+    jsonResult["@type"] = "detectLanguage";
+    jsonResult["language"] = whisper_lang_str(best);
+    jsonResult["probs"] = probsJson;
+    park();
+    return jsonResult;
+}
+
 extern "C"
 {
     char *request(char *body)
@@ -577,6 +700,11 @@ extern "C"
         if (jsonBody["@type"] == "getTextFromWavFile")
         {
             return jsonToChar(transcribe(jsonBody));
+        }
+
+        if (jsonBody["@type"] == "detectLanguage")
+        {
+            return jsonToChar(detect_language(jsonBody));
         }
 
         if (jsonBody["@type"] == "releaseModel")

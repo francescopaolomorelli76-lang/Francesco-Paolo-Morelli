@@ -6,3 +6,8 @@ Unica modifica: su iOS e macOS il plugin rifiutava `language: "auto"` con
 whisper.cpp gestisce nativamente (`whisper_full` rileva la lingua).
 
 File: `ios/Classes/whisper_flutter_plus.cpp`, `macos/Classes/whisper_ggml.cpp`.
+
+Seconda modifica (Manga Vox build 16): nuova richiesta `detectLanguage`
+(`Whisper.detectLanguage`) che restituisce la probabilità di ogni lingua
+senza trascrivere (`whisper_lang_auto_detect`), solo su iOS; e i file già in
+WAV 16 kHz 16 bit non vengono più riconvertiti con ffmpeg.

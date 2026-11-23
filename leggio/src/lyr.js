@@ -87,6 +87,9 @@ function frPronSyl(syl,open){
 
 // pronuncia sillaba per sillaba per le altre lingue (come "Traslittera" normale)
 function pronSyl(syl,lang,open){
+  // la punteggiatura attaccata alla sillaba ("Haut,") non conta nella pronuncia ma si rimette dopo
+  const P=/[,.;:!?»«()"”“]+/g, tail=syl.map(s=>(String(s).match(/[,.;:!?»«()"”]+$/)||[''])[0]);
+  if(tail.some(Boolean)){ const r=pronSyl(syl.map(s=>String(s).replace(P,'')),lang,open); return r.map((x,i)=>x+tail[i]); }
   if(lang==='fr') return frPronSyl(syl,open);
   if(!PRON[lang]) return syl.slice();
   return syl.map(s=>PRON.conv(s,lang));

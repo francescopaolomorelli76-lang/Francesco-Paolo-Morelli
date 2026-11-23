@@ -1,0 +1,265 @@
+<title>Mozart FPM</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mozart FPM, il leggio digitale nero e oro per iPad e iPhone: annota, traslittera, traduci, crea spartiti.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: scorrimento verticale in stile Apple, sezioni a tutta larghezza su nero caldo, un solo accento oro. */
+:root{
+  --stage:#0b0a08; --panel:#16130e; --panel2:#211d15; --line:#3a3326;
+  --gold:#d6a84e; --gold-hi:#f2d382; --gold-deep:#8f6a22;
+  --text:#f4ecdc; --muted:#a89c83; --paper:#fbf8f1; --ink:#1b1812; --blue:#5aa0ff; --red:#ff6b5e;
+  --f-display:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif; --f-text:"Inter",-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;background:var(--stage)}
+body{margin:0;background:var(--stage);color:var(--text);font-family:var(--f-text);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px))}
+.gold{background:linear-gradient(100deg,var(--gold-deep),var(--gold) 25%,var(--gold-hi) 50%,var(--gold) 75%,var(--gold-deep));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 7s linear infinite}
+@keyframes shine{to{background-position:-200% 0}}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h2{font-size:clamp(34px,6vw,64px);line-height:1.04}
+h3{font-size:clamp(22px,3vw,28px);line-height:1.15}
+p{margin:0;text-wrap:pretty}
+.lead{font-size:clamp(18px,2.2vw,23px);color:var(--muted);max-width:34em}
+/* barra */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(11,10,8,.72);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid rgba(214,168,78,.14)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--stage)}
+nav .wrap{display:flex;align-items:center;gap:22px;height:52px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px}
+.brand img{width:26px;height:26px;border-radius:7px}
+nav .links{display:flex;gap:24px;margin-left:auto;font-size:13.5px;color:var(--muted)}
+nav .links a:hover{color:var(--gold-hi)}
+.btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;font-weight:600;font-size:16px;border:1px solid transparent;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:focus-visible,a:focus-visible,button:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+.btn.fill{color:#1b1406;background:linear-gradient(180deg,var(--gold-hi),var(--gold));box-shadow:0 8px 30px rgba(214,168,78,.28)}
+.btn.fill:hover{transform:translateY(-1px);box-shadow:0 12px 40px rgba(214,168,78,.42)}
+.btn.line{color:var(--gold-hi);border-color:rgba(214,168,78,.45)}
+.btn.line:hover{background:rgba(214,168,78,.1)}
+nav .btn{height:32px;padding:0 14px;font-size:13px}
+@media(max-width:720px){nav .links{display:none}nav .btn{margin-left:auto}}
+/* hero */
+.hero{text-align:center;padding-block:72px 0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(214,168,78,.2),transparent 70%)}
+.hero h1{font-size:clamp(48px,11vw,128px);line-height:.95;margin:14px 0 18px}
+.hero .lead{margin-inline:auto}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.ipadStage{perspective:1600px;margin:56px auto 0;max-width:920px;padding-inline:max(14px,env(safe-area-inset-left,0px))}
+.ipad{position:relative;border-radius:30px;padding:14px;background:linear-gradient(145deg,#3a3326,#14110b 40%,#2b261c);box-shadow:0 0 0 1px rgba(214,168,78,.35),0 50px 120px rgba(0,0,0,.7),0 0 120px rgba(214,168,78,.12);transform-origin:50% 0;will-change:transform}
+.screen{position:relative;border-radius:18px;overflow:hidden;background:var(--paper);aspect-ratio:4/3}
+.screen svg{display:block;width:100%;height:100%}
+.tb{position:absolute;left:0;right:0;top:0;height:34px;background:rgba(11,10,8,.92);display:flex;align-items:center;gap:8px;padding:0 14px;color:var(--gold-hi);font-family:var(--f-display);font-size:13px}
+.tb i{width:9px;height:9px;border-radius:50%;background:var(--gold-deep)}
+.tb span{margin-left:auto;opacity:.8}
+/* disegno animato sul foglio */
+.draw{stroke-dasharray:var(--l,600);stroke-dashoffset:var(--l,600);animation:dr 2.2s ease forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+.pop{opacity:0;transform-origin:center;animation:pp .6s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes pp{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+/* sezioni */
+section{padding-block:clamp(72px,12vw,140px)}
+.head{text-align:center;display:grid;gap:16px;justify-items:center;margin-bottom:48px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,72px);align-items:center}
+.split>*{min-width:0}
+@media(max-width:820px){.split{grid-template-columns:1fr}.split .rev{order:-1}}
+.panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:26px;padding:clamp(18px,3vw,30px)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:14px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;transition:.2s}
+.seg button.on{color:#1b1406;background:linear-gradient(180deg,var(--gold-hi),var(--gold));border-color:transparent}
+.seg button:hover:not(.on){color:var(--gold-hi);border-color:var(--gold-deep)}
+/* demo pronuncia */
+.lyr{margin-top:22px;display:flex;flex-wrap:wrap;gap:6px 4px;align-items:flex-end}
+.syl{display:inline-flex;flex-direction:column;align-items:center;min-width:34px;padding:0 3px}
+.syl b{font-family:var(--f-display);font-size:clamp(20px,3.4vw,28px);font-weight:500;color:var(--text)}
+.syl em{font-style:normal;font-weight:700;font-size:15px;color:var(--blue);min-height:1.4em;transition:opacity .35s,transform .35s}
+.gapw{width:14px}
+.tr{margin-top:18px;font-family:var(--f-display);font-style:italic;font-size:clamp(18px,2.8vw,24px);color:var(--red);min-height:1.5em}
+.swap .syl em,.swap .tr{opacity:0;transform:translateY(6px)}
+/* biblioteca */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.cards{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:24px;padding:26px;display:grid;gap:10px;align-content:start;transition:transform .3s,border-color .3s}
+.card:hover{transform:translateY(-4px);border-color:var(--gold-deep)}
+.card p{color:var(--muted);font-size:16px}
+.ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(214,168,78,.12);color:var(--gold-hi);margin-bottom:4px}
+.ico svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.face{display:flex;gap:-6px}
+.composers{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.composers span{font-size:13px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.composers span.hl{color:var(--gold-hi);border-color:var(--gold-deep)}
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.bento .card{grid-column:span 2}.bento .wide{grid-column:span 3}.bento .big{grid-column:span 4}
+@media(max-width:820px){.bento{grid-template-columns:1fr 1fr}.bento .card,.bento .wide,.bento .big{grid-column:span 2}}
+.pill{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--gold-hi);background:rgba(214,168,78,.12);border-radius:999px;padding:4px 10px;width:fit-content}
+.stepper{display:flex;gap:6px;align-items:center;margin-top:8px}
+.stepper i{height:6px;border-radius:3px;background:var(--line);flex:1;position:relative;overflow:hidden}
+.stepper i::after{content:"";position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;animation:bar 4s ease-in-out infinite}
+.stepper i:nth-child(2)::after{animation-delay:.5s}.stepper i:nth-child(3)::after{animation-delay:1s}.stepper i:nth-child(4)::after{animation-delay:1.5s}
+@keyframes bar{0%,10%{transform:scaleX(0)}50%,80%{transform:scaleX(1)}100%{transform:scaleX(0)}}
+.ring{width:90px;height:90px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-family:var(--f-display);font-size:26px;color:var(--gold-hi);position:relative}
+.ring::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.key{display:flex;gap:3px;height:70px}
+.key i{flex:1;background:var(--paper);border-radius:0 0 6px 6px;position:relative}
+.key i.b{background:#111;height:60%;margin-inline:-9px;z-index:1;flex:.7;border-radius:0 0 4px 4px}
+.key i.on{background:var(--gold)}
+/* finale */
+.final{position:relative;text-align:center;overflow:hidden}
+.final .bg{position:absolute;inset:0;background:var(--cover) center/cover no-repeat;opacity:.18;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+.final .wrap{position:relative;display:grid;gap:22px;justify-items:center}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;text-align:left;width:100%}
+@media(max-width:820px){.how{grid-template-columns:1fr}}
+.how div{border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:15px}
+.how b{display:block;color:var(--text);font-family:var(--f-display);font-size:20px;margin-bottom:4px}
+footer{border-top:1px solid var(--line);padding-block:32px calc(32px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:13px}
+footer .wrap{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+footer img{width:38px;height:38px;border-radius:10px}
+/* rivelazioni allo scorrimento */
+.js .rv{opacity:0;transform:translateY(28px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.js .rv{opacity:1;transform:none}.draw{stroke-dashoffset:0}.pop{opacity:1}.gold{background-position:0 0}}
+</style>
+
+<nav><div class="wrap"><a class="brand" href="#top"><img alt="" src="__SEAL__">Mozart</a>
+  <div class="links"><a href="#annota">Annota</a><a href="#cantanti">Per i cantanti</a><a href="#crea">Crea</a><a href="#biblioteca">Biblioteca</a><a href="#altro">Tutto il resto</a></div>
+  <a class="btn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/">Apri</a></div></nav>
+
+<main id="top">
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">FPM · per iPad e iPhone</div>
+  <h1><span class="gold">Mozart.</span><br>Il leggio che<br>capisce la musica.</h1>
+  <p class="lead">Leggi, annota, traslittera, traduci e crea i tuoi spartiti. Tutto in nero e oro, pensato per chi suona e per chi canta.</p>
+  <div class="cta"><a class="btn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/">Provalo ora nel browser</a><a class="btn line" href="#annota">Scopri come funziona</a></div>
+</div>
+<div class="ipadStage"><div class="ipad" id="ipad"><div class="screen"><div class="tb"><i></i><i></i><i></i> Cantique de Jean Racine · Fauré <span>Pagina 1</span></div><svg id="heroScore" viewBox="0 0 800 600" role="img" aria-label="Spartito annotato con penna, evidenziatore e pronuncia in blu"></svg></div></div></div>
+</header>
+
+<section id="annota"><div class="wrap split">
+  <div class="rv"><div class="eyebrow">Annota</div><h2 style="margin:14px 0 18px">Scrivi sulla musica come su carta.</h2>
+    <p class="lead">Penna, evidenziatore, lazo, testo e segni musicali si ridimensionano con un dito. Ogni spartito ricorda la grandezza del testo che preferisci. Sbagliato? Un tocco e torni indietro, anche sulle modifiche al PDF.</p>
+    <div class="seg" id="tools" style="margin-top:24px"><button class="on" data-t="pen">Penna</button><button data-t="hl">Evidenziatore</button><button data-t="stamp">Segni</button><button data-t="text">Testo</button></div></div>
+  <div class="panel rv"><svg id="toolDemo" viewBox="0 0 400 260" style="width:100%;display:block;background:var(--paper);border-radius:14px" role="img" aria-label="Anteprima degli strumenti di annotazione"></svg></div>
+</div></section>
+
+<section id="cantanti" style="background:linear-gradient(180deg,var(--stage),#120f09 50%,var(--stage))"><div class="wrap">
+  <div class="head rv"><div class="eyebrow">Per i cantanti</div><h2>Ogni voce. Ogni sillaba.<br><span class="gold">Pronuncia e traduzione.</span></h2>
+    <p class="lead">Mozart legge le parole stampate sotto ogni rigo del coro, rimette insieme le sillabe divise dai trattini e scrive la pronuncia all'italiana e la traduzione, nota per nota.</p></div>
+  <div class="panel rv" style="max-width:860px;margin-inline:auto"><div class="seg" id="langs"><button class="on" data-l="fr">Francese</button><button data-l="la">Latino</button><button data-l="de">Tedesco</button></div>
+    <div class="lyr" id="lyr" aria-live="polite"></div><div class="tr" id="tr"></div>
+    <p style="margin-top:22px;color:var(--muted);font-size:15px">Trattino tra due sillabe: una sola parola. Spazio senza trattino: parola nuova. Parola che continua dopo l'a capo o al cambio pagina: la ritrova da sola.</p></div>
+  <div class="cards" style="margin-top:16px">
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><path d="M5 12h14M5 7h14M5 17h9"/></svg></div><h3>Una riga per voce</h3><p>Soprani, contralti, tenori e bassi: il testo di ogni rigo viene letto e puoi correggerlo prima di scrivere.</p></div>
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg></div><h3>Pronuncia in blu</h3><p>Sotto i versi stampati, nota per nota. Con il dito la sposti o la correggi.</p></div>
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></div><h3>Traduzione in rosso</h3><p>Anche senza internet, con il dizionario dell'app per i testi più cantati.</p></div>
+  </div></div></section>
+
+<section id="crea"><div class="wrap split">
+  <div class="panel rv rev"><svg id="creaDemo" viewBox="0 0 400 220" style="width:100%;display:block;background:var(--paper);border-radius:14px" role="img" aria-label="Note inserite su un pentagramma"></svg>
+    <div class="seg" style="margin-top:14px" id="creaBtns"><button data-n="0">Do</button><button data-n="1">Re</button><button data-n="2">Mi</button><button data-n="3">Fa</button><button data-n="4">Sol</button><button data-n="5">La</button><button data-n="6">Si</button></div></div>
+  <div class="rv"><div class="eyebrow">Crea</div><h2 style="margin:14px 0 18px">Il tuo spartito, in pochi tocchi.</h2>
+    <p class="lead">Scegli gli strumenti, la tonalità e il tempo con una procedura guidata. Poi tocca le note per nome: la tastiera ti fa scrivere Do, Re, Mi e il resto, con pause e battute che si completano da sole. Quando hai finito diventa un PDF nella tua libreria.</p>
+    <div class="stepper"><i></i><i></i><i></i><i></i></div><p style="color:var(--muted);font-size:14px;margin-top:8px">Strumenti · tempo · tonalità · titolo</p></div>
+</div></section>
+
+<section id="biblioteca" style="background:linear-gradient(180deg,var(--stage),#120f09 50%,var(--stage))"><div class="wrap">
+  <div class="head rv"><div class="eyebrow">Biblioteca</div><h2>Sa che cosa stai suonando.</h2>
+    <p class="lead">Importa i PDF e Mozart riconosce opera, brano o sinfonia. Titolo e tonalità si scrivono da soli e il volto del compositore appare accanto allo spartito.</p></div>
+  <div class="cards">
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/></svg></div><h3>Compositori</h3><p>Più di sessanta tra Bach, Mozart, Verdi, Puccini, Fauré e Poulenc, con vita e trama delle opere.</p><div class="composers"><span class="hl">Verdi</span><span>Mozart</span><span class="hl">Fauré</span><span>Puccini</span><span>Beethoven</span><span class="hl">Bizet</span></div></div>
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="12" height="14" rx="2"/><path d="M9 3h10a2 2 0 0 1 2 2v12"/></svg></div><h3>Niente doppioni</h3><p>Se trova due copie dello stesso spartito, anche quando importi da un backup, te lo dice e ne toglie una.</p></div>
+    <div class="card rv"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 20h16"/></svg></div><h3>Import da forScore</h3><p>Porti i tuoi file e le tue scalette. Se manca qualche PDF, l'elenco ti mostra quali sono e li reimporti in un colpo.</p></div>
+  </div></div></section>
+
+<section id="altro"><div class="wrap">
+  <div class="head rv"><div class="eyebrow">Tutto il resto</div><h2>Piccoli dettagli.<br><span class="gold">Grande differenza.</span></h2></div>
+  <div class="bento">
+    <div class="card big rv"><span class="pill">MIDI · BLUETOOTH</span><h3>La tua tastiera, collegata.</h3><p>Pannello chiaro per connettere tastiere e pedali Bluetooth e MIDI. Per girare pagina, senza toccare lo schermo.</p><div class="key" aria-hidden="true"><i></i><i class="b"></i><i class="on"></i><i class="b"></i><i></i><i></i><i class="b"></i><i></i><i class="b"></i><i class="on"></i><i class="b"></i><i></i></div></div>
+    <div class="card rv"><span class="pill">SVEGLIA</span><h3>Timer e orologio</h3><p>Allarmi per le prove, sempre in vista.</p><div class="ring" aria-hidden="true">4:30</div></div>
+    <div class="card wide rv"><span class="pill">SIGILLO</span><h3>Il tuo copyright, sull'angolo.</h3><p>Il sigillo FPM nei colori dell'app, dove vuoi tu sulla pagina.</p><img alt="Sigillo FPM" src="__SEAL__" style="width:84px;height:84px;border-radius:20px;margin-top:6px"></div>
+    <div class="card wide rv"><span class="pill">VELOCE</span><h3>Leggero e immediato.</h3><p>Pagine che si girano subito, anche con partiture lunghe e tante annotazioni. Funziona senza connessione.</p></div>
+    <div class="card rv"><span class="pill">GIF</span><h3>Animazioni</h3><p>Aggiungi GIF e segni sul foglio, come adesivi.</p></div>
+    <div class="card rv"><span class="pill">DITO</span><h3>Un tocco e correggi</h3><p>Sillabe, testi e segni si spostano e si cambiano con un dito.</p></div>
+    <div class="card rv"><span class="pill">iPAD · iPHONE</span><h3>Su tutti i tuoi schermi</h3><p>Pensato per il leggio, comodo anche in tasca.</p></div>
+  </div></div></section>
+
+<section class="final"><div class="bg"></div><div class="wrap">
+  <img alt="" src="__SEAL__" style="width:84px;height:84px;border-radius:22px" class="rv">
+  <h2 class="rv">Apri lo spartito.<br><span class="gold">Lascia fare a Mozart.</span></h2>
+  <p class="lead rv">Provalo subito nel browser, senza installare nulla. Per averlo su iPad o iPhone come un'app, scrivici e ti guidiamo.</p>
+  <div class="cta rv"><a class="btn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/">Apri Mozart</a></div>
+  <div class="how rv"><div><b>Browser</b>Apri il link da Safari o Chrome e inizia. I tuoi spartiti restano sul tuo dispositivo.</div><div><b>Schermata Home</b>Da Safari scegli Condividi, poi Aggiungi a Home: Mozart si apre a schermo intero.</div><div><b>App per iPad</b>Versione nativa con lettura del testo di Apple, installabile su richiesta.</div></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><div style="display:flex;gap:12px;align-items:center"><img alt="" src="__SEAL__"><div>Mozart · leggio digitale FPM<br>© FPM webdesignertech</div></div><div>Nero e oro, come un teatro d'opera.</div></div></footer>
+
+<script>
+document.documentElement.classList.add('js');
+const $=(s,r=document)=>r.querySelector(s), NS='http://www.w3.org/2000/svg';
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+document.documentElement.style.setProperty('--cover','url(__COVER__)');
+/* ---- spartito del hero ---- */
+(function(){
+  const s=$('#heroScore'); el('rect',{width:800,height:600,fill:'#fbf8f1'},s);
+  const words=[['Ver','be'],['é','gal'],['au'],['Très','Haut']], pr=[['Vèr','bö'],['e','gal'],['o'],['Trè','O']];
+  for(let st=0;st<3;st++){
+    const y=90+st*165;
+    for(let l=0;l<5;l++) el('line',{x1:50,x2:760,y1:y+l*10,y2:y+l*10,stroke:'#2a2418','stroke-width':1.1},s);
+    el('line',{x1:50,x2:50,y1:y,y2:y+40,stroke:'#2a2418','stroke-width':1.6},s);
+    el('text',{x:58,y:y+31,'font-size':44,'font-family':'serif',fill:'#2a2418'},s).textContent='𝄞';
+    const n=[8,10,12,14,16,19,21,23].map((v,i)=>[120+i*80+(st%2)*14,(y+40)-((v+st*2)%9)*5]);
+    n.forEach(([x,yy],i)=>{ el('ellipse',{cx:x,cy:yy,rx:6.4,ry:4.8,transform:`rotate(-20 ${x} ${yy})`,fill:'#1b1812'},s); el('line',{x1:x+5.6,x2:x+5.6,y1:yy,y2:yy-32,stroke:'#1b1812','stroke-width':1.4},s); });
+    if(st===0){ let k=0; words.flat().forEach((w,i)=>{ const x=n[i][0]; el('text',{x,y:y+78,'text-anchor':'middle','font-size':17,'font-family':'Georgia,serif',fill:'#1b1812'},s).textContent=w+(i<7&&[0,3,6].includes(i)?'-':''); });
+      const flat=pr.flat(); flat.forEach((w,i)=>{ const t=el('text',{x:n[i][0],y:y+98,'text-anchor':'middle','font-size':15,'font-weight':700,'font-family':'Inter,sans-serif',fill:'#1f5fd6',class:'pop',style:`animation-delay:${2.4+i*.18}s`},s); t.textContent=w; }); }
+  }
+  // evidenziatore oro
+  el('rect',{x:108,y:70,width:330,height:62,rx:6,fill:'#e6b94f',opacity:.0,id:'hl'},s);
+  const hl=$('#hl'); hl.style.transition='opacity 1s'; setTimeout(()=>hl.setAttribute('opacity',.35),1100);
+  // penna rossa: cerchia la frase e dinamica
+  const d1=el('path',{d:'M110 258 C 160 240, 330 244, 420 262 S 480 278, 360 286',fill:'none',stroke:'#d23b2f','stroke-width':3,'stroke-linecap':'round',class:'draw',style:'--l:420;animation-delay:.5s'},s);
+  const d2=el('path',{d:'M520 140 q 20 -40 60 -10 t 70 -6',fill:'none',stroke:'#1f5fd6','stroke-width':3.2,'stroke-linecap':'round',class:'draw',style:'--l:220;animation-delay:1.2s'},s);
+  el('text',{x:640,y:330,'font-size':28,'font-style':'italic','font-family':'serif',fill:'#d23b2f',class:'pop',style:'animation-delay:3.6s'},s).textContent='dolce';
+  el('text',{x:330,y:330,'font-size':30,'font-weight':700,'font-family':'serif',fill:'#1b1812',class:'pop',style:'animation-delay:2.8s'},s).textContent='p';
+})();
+/* ---- inclinazione iPad con lo scorrimento ---- */
+(function(){ const ip=$('#ipad'), reduce=matchMedia('(prefers-reduced-motion:reduce)').matches; if(reduce){ip.style.transform='none';return}
+  const f=()=>{ const r=ip.getBoundingClientRect(), p=Math.min(1,Math.max(0,1-(r.top-innerHeight*.18)/(innerHeight*.7)));
+    ip.style.transform=`rotateX(${(1-p)*16}deg) scale(${.9+p*.1})`; };
+  f(); addEventListener('scroll',f,{passive:true}); addEventListener('resize',f); })();
+/* ---- rivelazioni ---- */
+(function(){ const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }),{threshold:.12});
+  document.querySelectorAll('.rv').forEach((e,i)=>{ e.style.transitionDelay=(i%3)*90+'ms'; io.observe(e); }); })();
+/* ---- strumenti ---- */
+(function(){ const s=$('#toolDemo'); const staff=y=>{ for(let l=0;l<5;l++) el('line',{x1:20,x2:380,y1:y+l*9,y2:y+l*9,stroke:'#2a2418','stroke-width':1},s); };
+  const base=()=>{ s.innerHTML=''; el('rect',{width:400,height:260,fill:'#fbf8f1'},s); [40,130,210].forEach(staff); [60,110,160,210,260,310,350].forEach((x,i)=>{ const y=70-(i%4)*5; el('ellipse',{cx:x,cy:y,rx:5.6,ry:4.2,transform:`rotate(-20 ${x} ${y})`,fill:'#1b1812'},s); el('line',{x1:x+5,x2:x+5,y1:y,y2:y-28,stroke:'#1b1812','stroke-width':1.3},s); }); };
+  const demos={
+    pen(){ el('path',{d:'M40 118 C90 100,140 128,190 108 S300 112,350 100',fill:'none',stroke:'#d23b2f','stroke-width':3,'stroke-linecap':'round',class:'draw',style:'--l:340'},s); },
+    hl(){ el('rect',{x:50,y:28,width:200,height:60,rx:5,fill:'#e6b94f',opacity:.45,class:'pop'},s); },
+    stamp(){ ['mf','𝄐','>'].forEach((t,i)=>el('text',{x:70+i*110,y:130,'font-size':i===0?34:44,'font-family':'serif','font-style':i===0?'italic':'normal','font-weight':700,fill:'#1b1812',class:'pop',style:`animation-delay:${i*.25}s`},s).textContent=t); },
+    text(){ el('text',{x:40,y:112,'font-size':22,'font-family':'Georgia,serif','font-style':'italic',fill:'#d23b2f',class:'pop'},s).textContent='più piano · respira qui'; }
+  };
+  const go=k=>{ base(); demos[k](); document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===k)); };
+  $('#tools').onclick=e=>{ const b=e.target.closest('button'); if(b) go(b.dataset.t); }; go('pen'); })();
+/* ---- pronuncia ---- */
+(function(){
+  const D={
+    fr:{w:[[['Ver','Vèr'],['be','bö']],[['é','e'],['gal','gal']],[['au','o']],[['Très','Trè'],['Haut','O']]],t:'Verbo uguale all\'Altissimo'},
+    la:{w:[[['A','À'],['ve','ve']],[['Ma','Ma'],['ri','rì'],['a','a']],[['gra','gra'],['ti','tsi'],['a','a']],[['ple','ple'],['na','na']]],t:'Ave Maria, piena di grazia'},
+    de:{w:[[['Ich','ih']],[['lie','lì'],['be','be']],[['dich','dih']]],t:'Io ti amo'}
+  };
+  const box=$('#lyr'), tr=$('#tr'); let cur='fr';
+  const render=k=>{ cur=k; box.classList.add('swap'); tr.style.opacity=0; setTimeout(()=>{ box.innerHTML=''; D[k].w.forEach((w,wi)=>{ if(wi) box.insertAdjacentHTML('beforeend','<span class="gapw"></span>'); w.forEach(([a,b],i)=>{ box.insertAdjacentHTML('beforeend',`<span class="syl"><em>${b}</em><b>${a}${i<w.length-1?'-':''}</b></span>`); }); });
+      tr.textContent=D[k].t; tr.style.opacity=1; box.classList.remove('swap'); },260);
+    document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.l===k)); };
+  $('#langs').onclick=e=>{ const b=e.target.closest('button'); if(b) render(b.dataset.l); };
+  box.innerHTML=''; render('fr'); tr.style.transition='opacity .35s'; })();
+/* ---- crea ---- */
+(function(){ const s=$('#creaDemo'); const nm=['Do','Re','Mi','Fa','Sol','La','Si']; let x=70, count=0;
+  const frame=()=>{ s.innerHTML=''; el('rect',{width:400,height:220,fill:'#fbf8f1'},s); for(let l=0;l<5;l++) el('line',{x1:20,x2:380,y1:60+l*12,y2:60+l*12,stroke:'#2a2418','stroke-width':1.1},s); el('text',{x:26,y:112,'font-size':58,'font-family':'serif',fill:'#2a2418'},s).textContent='𝄞'; el('text',{x:80,y:96,'font-size':16,'font-weight':700,'font-family':'serif',fill:'#2a2418'},s).textContent='3'; el('text',{x:80,y:112,'font-size':16,'font-weight':700,'font-family':'serif',fill:'#2a2418'},s).textContent='4'; x=110; count=0; };
+  const add=n=>{ if(count>=7) frame(); const y=108-n*6; x+=36; count++; el('ellipse',{cx:x,cy:y,rx:6.2,ry:4.7,transform:`rotate(-20 ${x} ${y})`,fill:'#1b1812',class:'pop'},s); el('line',{x1:x+5.4,x2:x+5.4,y1:y,y2:y-30,stroke:'#1b1812','stroke-width':1.4,class:'pop'},s); el('text',{x,y:y+Math.max(26,150-y)-6,'text-anchor':'middle','font-size':12,'font-weight':600,'font-family':'Inter,sans-serif',fill:'#8f6a22',class:'pop'},s).textContent=nm[n]; if(count%4===0){ el('line',{x1:x+28,x2:x+28,y1:60,y2:108,stroke:'#2a2418','stroke-width':1.2},s); x+=18; } };
+  frame(); [2,4,6,4,2,0].forEach((n,i)=>setTimeout(()=>add(n),500+i*260));
+  $('#creaBtns').onclick=e=>{ const b=e.target.closest('button'); if(b) add(+b.dataset.n); }; })();
+</script>

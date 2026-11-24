@@ -668,6 +668,7 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .clMode{position:absolute;left:18px;height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.4);color:#fff;font-weight:700}.clMode.on{background:var(--gold);color:#1b1406;border-color:var(--gold)}
 #clThumbs{position:absolute;right:18px;display:flex}#clThumbs img{width:44px;height:58px;object-fit:cover;border-radius:6px;border:2px solid #fff;margin-left:-14px}
 .clFlash{position:absolute;inset:0;background:#fff;opacity:.85;animation:clf .25s ease-out forwards;pointer-events:none}@keyframes clf{to{opacity:0}}
+#splash .memo{position:relative;max-width:min(84vw,520px);text-align:center;color:var(--gold-hi);opacity:.85;font-family:var(--f-display);font-style:italic;font-size:clamp(12.5px,1.8vw,15px);line-height:1.35;letter-spacing:.02em;animation:splashIn 1.1s .7s both}
 
 </style>
 </head>
@@ -783,7 +784,7 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
         <button class="toolRow" data-act="forscore"><svg class="i" data-i="backup"></svg>Da forScore (.4sb)</button>
         <button class="toolRow" data-act="templates"><svg class="i" data-i="staff"></svg>Modelli (pentagrammata)</button>
         <h3>Altro</h3>
-        <button class="toolRow" data-act="piano"><svg class="i" data-i="piano"></svg>Pianoforte</button>
+        <button class="toolRow" data-act="piano"><svg class="i" data-i="piano"></svg>Pianoforte<small>tasti a schermo · senza MIDI</small></button>
         <button class="toolRow" data-act="metro"><svg class="i" data-i="metro"></svg>Metronomo e accordatore</button>
         <button class="toolRow" data-act="record"><svg class="i" data-i="mic"></svg>Registra</button>
         <button class="toolRow" data-act="first"><svg class="i" data-i="restart"></svg>Dai l'inizio</button>
@@ -815,7 +816,7 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
   </div>
 
   <div id="pianoSheet">
-    <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b>
+    <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b><span class="hint" style="font-size:12.5px;max-width:230px">Suona toccando i tasti: funziona senza tastiera MIDI o Bluetooth.</span>
       <button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
       <button class="ib" data-act="pianoClose" aria-label="Chiudi" data-i="close"></button></div>
     <div class="keys" id="keys"></div>
@@ -824,7 +825,7 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
   <span id="miniClock" class="clockPill" data-act="clock"></span>
   <div id="dimmer"></div><div id="warmer"></div>
   <div id="layerRoot"></div>
-  <div id="splash" aria-hidden="true"><img src="cover.webp" alt=""><span>Leggio digitale per cantanti e musicisti</span><div class="sealLine"><img class="seal" src="fpm_seal.webp" alt="">© 2026 FPM webdesignertech · Tutti i diritti riservati</div></div>
+  <div id="splash" aria-hidden="true"><img src="cover.webp" alt=""><span>Leggio digitale per cantanti e musicisti</span><em class="memo">In affettuosa memoria del caro collega e amico Francesco De Candia</em><div class="sealLine"><img class="seal" src="fpm_seal.webp" alt="">© 2026 FPM webdesignertech · Tutti i diritti riservati</div></div>
   <div id="toast"></div>
   <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>
   <input type="file" id="fileImg" accept="image/*" multiple hidden>
@@ -1171,6 +1172,9 @@ function glyphBox(c,g,s){
   const mt=c.measureText(g.c);
   return {w:(mt.actualBoundingBoxLeft||0)+(mt.actualBoundingBoxRight||mt.width), h:(mt.actualBoundingBoxAscent||sz*.7)+(mt.actualBoundingBoxDescent||0)};
 }
+
+// parole di tempo ed espressione: si inseriscono come testo, quindi si modificano e si ridimensionano
+const TEMPO_WORDS=new Set((STAMP_CATS.find(c=>c.id==='tempo')||{items:[]}).items.map(i=>i.c));
 
 // ================= Mozart — stato e lettore =================
 const ST = {
@@ -1877,7 +1881,7 @@ async function boot(){
   const splash=$('#splash'), t0=Date.now(); let gone=false;
   const hide=()=>{ if(gone) return; gone=true; splash.classList.add('out'); setTimeout(()=>{ if(splash.parentNode) splash.parentNode.removeChild(splash); },700); };
   splash.addEventListener('click',hide); setTimeout(hide,6000);
-  boot.ready=()=>setTimeout(hide,Math.max(0,1800-(Date.now()-t0)));
+  boot.ready=()=>setTimeout(hide,Math.max(0,2800-(Date.now()-t0)));
   try{ await document.fonts.load('40px "Noto Music"','\u{1D11E}'); await document.fonts.load('italic 600 20px "Bodoni Moda"','Allegro'); }catch(e){}
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
@@ -2003,6 +2007,7 @@ const Anno = {
     }
     const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
     if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
+    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';
@@ -3278,7 +3283,7 @@ const Singers = {
     PianoS.preload(40,84);
     this.saved=(await DB.get('vocalizzi'))||[];
     try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
-    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
+    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="piano">Pianoforte</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
       null,{eyebrow:'Riscaldamento e studio',onClose:()=>this.stopAll()});
     m2.style.width='min(720px,calc(100% - 16px))';
     $('#sgTabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){this.stopAll();this.tab=b.dataset.t;this.render()}};
@@ -3289,6 +3294,7 @@ const Singers = {
   render(){
     $$('#sgTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab));
     const B=$('#sgBody'); if(!B) return;
+    if(this.tab==='piano'){ closeLayers(); this.tab='voc'; Piano.open(); toast('Pianoforte: tocca i tasti, non serve nessuna tastiera collegata',2800); return; }
     if(this.tab==='pron'){ closeLayers(); this.tab='voc'; Pron.open(); return; }
     if(this.tab==='voc') this.renderVoc(B); else if(this.tab==='make') this.renderMake(B); else this.renderRec(B);
   },
@@ -4362,9 +4368,9 @@ const Finger = {
     draw(); $('#app').appendChild(p); const br=bar.getBoundingClientRect(); p.style.left=br.left+'px'; p.style.top=Math.max(70,Math.min(br.top,innerHeight-p.offsetHeight-10))+'px';
   },
   // Dopo una copia: se il testo è in lingua straniera chiede se traslitterare, e lo fa da solo.
-  offerTranslit(idx){
+  offerTranslit(idx,force){
     const A=Anno; const L=idx.map(k=>A.strokes[k]).filter(Boolean); if(!L.length) return;
-    let lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
+    let lang=detectLang(L.map(t=>t.text).join(' ')); if(force&&(!lang||lang==='it'||!PRON[lang])) lang=(window.Lyr&&Lyr.guess(L.map(t=>t.text).join(' ')))||'fr'; if(!lang||lang==='it'||!PRON[lang]) return;
     const p=document.createElement('div'); p.className='pop'; p.id='fgTrPop';
     const prev=()=>L.slice().sort((a,b)=>a.x-b.x).slice(0,6).map(t=>`<b>${esc(t.text)}</b> → <span style="color:#5aa0ff">${esc(PRON.conv(t.text,lang))}</span>`).join(' · ');
     p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:320px"><b>Testo in ${esc(PRON.names[lang].split(' ')[0].toLowerCase())}: vuoi la pronuncia all'italiana sopra le parole?</b>
@@ -4380,7 +4386,8 @@ const Finger = {
   writeTranslit(L,lang,where){
     const A=Anno; A.push(); const sz=TStyle.size('pron'); const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
-    L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+    const pr=new Map(); try{ for(const w of Translate.words(L)){ const syl=w.items.map(t=>String(t.text).replace(/^[-–—_]+|[-–—_]+$/g,'')); const out=pronSyl(syl,lang,false); w.items.forEach((t,i)=>pr.set(t,out[i])); } }catch(e){}
+    L.forEach(t=>A.strokes.push({t:'text',text:pr.get(t)||PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
   },
   // barretta per un tratto (riga evidenziata, linea, forma, segno): frecce, duplica, elimina
@@ -4905,12 +4912,13 @@ Anno.showSelBar=function(){
   $('#selBar')?.remove(); if(!this.selBox) return; const r=inkCanvas.getBoundingClientRect();
   const b=document.createElement('div'); b.id='selBar'; b.className='pill';
   const tIdx=this.selIdx.filter(i=>this.strokes[i]&&this.strokes[i].t==='text');
-  b.innerHTML=(tIdx.length?`<button class="ghostBtn" data-s="ed" style="height:40px">${iconSvg('text')}Modifica</button><button class="ghostBtn" data-s="tt" style="height:40px">🌐 Traduci</button><button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button>`:'')
+  b.innerHTML=(tIdx.length?`<button class="ghostBtn" data-s="ed" style="height:40px">${iconSvg('text')}Modifica</button><button class="ghostBtn" data-s="tl" style="height:40px">${iconSvg('voice')}Traslittera</button><button class="ghostBtn" data-s="tt" style="height:40px">🌐 Traduci</button><button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button>`:'')
     +`<button class="ib" data-s="hl" aria-label="Evidenzia">${iconSvg('pen')}</button><button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
   $('#app').appendChild(b); const w=b.offsetWidth||400;
   b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-w-8)+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
   b.onclick=e=>{const k=e.target.closest('[data-s]')?.dataset.s; if(!k) return;
     if(k==='ed'){ b.remove(); Finger.openFor(tIdx); return; }
+    if(k==='tl'){ b.remove(); Finger.offerTranslit(tIdx,true); return; }
     if(k==='tt'){ Translate.open(tIdx.map(i=>this.strokes[i]),b); return; }
     if(k==='hl'){ AutoHL.pick(e.target.closest('[data-s]'),c=>{ const bx=this.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0+.008,bx.x1,bx.y1-.008,c); this.clearSel(); toast('Evidenziato',1400); }); return; }
     if(k==='del'){this.push();this.strokes=this.strokes.filter((_,i)=>!this.selIdx.includes(i));this.clearSel()}
@@ -5936,6 +5944,28 @@ const K_CON={beethoven:{1:'Do maggiore',2:'Si bemolle maggiore',3:'Do minore',4:
  rachmaninov:{2:'Do minore',3:'Re minore'},cajkovskij:{1:'Si bemolle minore'},brahms:{1:'Re minore',2:'Si bemolle maggiore'},chopin:{1:'Mi minore',2:'Fa minore'},liszt:{1:'Mi bemolle maggiore',2:'La maggiore'},grieg:{1:'La minore'}};
 const K_VLN={beethoven:'Re maggiore',brahms:'Re maggiore',cajkovskij:'Re maggiore',mendelssohn:'Mi minore'};
 
+
+// Schede brevi per sinfonie e concerti: [anno, descrizione]
+const K_SYMN={beethoven:{1:[1800,"Ancora nello stile di Haydn e Mozart, ma con armonie audaci già nell'attacco."],2:[1802,"Scritta negli anni della sordità crescente e del Testamento di Heiligenstadt: brillante e vitale."],3:[1804,"L'«Eroica»: nata come omaggio a Napoleone, allarga la forma sinfonica; il secondo movimento è una Marcia funebre."],4:[1806,"Elegante e luminosa, tra la monumentale Terza e la drammatica Quinta."],5:[1808,"Si apre con il celebre motivo di quattro note: un cammino dal do minore tragico al do maggiore trionfale."],6:[1808,"La «Pastorale»: cinque movimenti con titoli descrittivi, dal risveglio in campagna al temporale e al canto di ringraziamento."],7:[1812,"Dominata dal ritmo; Wagner la chiamò «l'apoteosi della danza»."],8:[1812,"Breve e spiritosa, con un tono giocoso che guarda allo stile classico."],9:[1824,"La «Corale»: nel finale entrano coro e solisti sull'Inno alla gioia di Schiller."]},
+ mozart:{25:[1773,"La «piccola» sinfonia in sol minore, drammatica e inquieta."],29:[1774,"Luminosa e quasi cameristica, scritta a Salisburgo."],35:[1782,"La «Haffner»: nata come serenata per una festa della famiglia Haffner di Salisburgo."],36:[1783,"La «Linz»: scritta in pochi giorni nella città di Linz."],38:[1786,"La «Praga»: senza minuetto, fu accolta con entusiasmo a Praga."],39:[1788,"La prima delle ultime tre sinfonie, composte in poche settimane nell'estate del 1788."],40:[1788,"Una delle due sinfonie in tonalità minore di Mozart: inquieta e appassionata."],41:[1788,"La «Jupiter»: l'ultima sinfonia, con un finale dove i temi si intrecciano in contrappunto."]},
+ haydn:{94:[1791,"La «sorpresa»: un accordo fortissimo improvviso nel secondo movimento."],100:[1794,"La «Militare», con triangolo, piatti e grancassa."],101:[1794,"L'«Orologio»: il secondo movimento imita il ticchettio di un orologio."],103:[1795,"Si apre con un rullo di timpani; scritta per Londra."],104:[1795,"La «London»: l'ultima sinfonia di Haydn."]},
+ schubert:{5:[1816,"Delicata e cameristica, d'ispirazione mozartiana."],8:[1822,"L'«Incompiuta»: due soli movimenti, di intensa liricità."],9:[1826,"La «Grande»: ampia e ritmica, fu scoperta da Schumann dopo la morte di Schubert."]},
+ schumann:{1:[1841,"La «Primavera»: scritta in pochi giorni, dopo il matrimonio con Clara."],2:[1846,"Scritta tra malattia e ripresa, con un Adagio molto intenso."],3:[1850,"La «Renana»: ispirata al Reno e alla cattedrale di Colonia."],4:[1841,"Con i movimenti uniti senza pause, rivista nel 1851."]},
+ mendelssohn:{3:[1842,"La «Scozzese»: nata da un viaggio in Scozia."],4:[1833,"L'«Italiana»: frutto del viaggio in Italia; il finale è un saltarello."],5:[1832,"La «Riforma»: cita il corale «Ein feste Burg»."]},
+ brahms:{1:[1876,"Brahms ci lavorò per oltre vent'anni; fu chiamata «la Decima di Beethoven»."],2:[1877,"Luminosa e pastorale, scritta in estate in Carinzia."],3:[1883,"Raccolta e lirica, si chiude in pianissimo."],4:[1885,"L'ultima: il finale è una passacaglia."]},
+ dvorak:{7:[1885,"Drammatica e di respiro brahmsiano, scritta per Londra."],8:[1889,"Pastorale e popolare, d'ispirazione boema."],9:[1893,"«Dal nuovo mondo»: scritta durante il soggiorno dell'autore in America."]},
+ cajkovskij:{4:[1878,"Si apre con il tema del Destino affidato agli ottoni."],5:[1888,"Il tema del Destino ritorna in tutti i movimenti."],6:[1893,"La «Patetica»: l'ultima, termina con un Adagio che si spegne; fu eseguita pochi giorni prima della morte dell'autore."]},
+ bruckner:{4:[1874,"La «Romantica»: si apre con un richiamo di corno su un tremolo degli archi."],7:[1883,"Il suo Adagio ricorda Wagner, morto durante la composizione."],8:[1887,"Monumentale, nella versione definitiva del 1890."],9:[1896,"Rimasta incompiuta e dedicata «al buon Dio»."]},
+ mahler:{1:[1888,"Il «Titano»: si apre con un'alba sonora e usa canti popolari."],2:[1894,"La «Resurrezione»: il finale ha coro e solisti."],5:[1902,"Si apre con una marcia funebre; l'Adagietto è il brano più celebre."],9:[1909,"L'ultima sinfonia completa: termina con un Adagio che si spegne."]},
+ sostakovic:{5:[1937,"Composta dopo le critiche del regime sovietico."],7:[1941,"La «Leningrado»: scritta durante l'assedio della città."],10:[1953,"Composta dopo la morte di Stalin."]},
+ rachmaninov:{2:[1907,"Ampia sinfonia romantica, con un Adagio celebre."]}, 'saint saens':{3:[1886,"Con organo e pianoforte a quattro mani."]}, franck:{1:[1888,"L'unica sinfonia di Franck, in tre movimenti."]}, prokofiev:{1:[1917,"La «Classica»: omaggio allo stile di Haydn."],5:[1944,"Scritta nel 1944, come inno allo spirito umano."]}};
+const K_CONN={beethoven:{1:[1795,"Brillante, ancora vicino a Mozart e Haydn."],2:[1795,"Il primo scritto, ma pubblicato dopo il Primo."],3:[1803,"In do minore, drammatico; eseguito per la prima volta con Beethoven al pianoforte."],4:[1806,"Si apre con il pianoforte solo: un attacco insolito per l'epoca."],5:[1809,"L'«Imperatore»: il più grandioso dei suoi concerti per pianoforte."]},
+ mozart:{20:[1785,"Uno dei due concerti in tonalità minore, cupo e drammatico."],21:[1785,"Noto per l'Andante, diventato celebre al cinema."],23:[1786,"Luminoso e malinconico, con un Adagio in fa diesis minore."],24:[1786,"In do minore, il più drammatico e orchestrale."],27:[1791,"L'ultimo concerto per pianoforte di Mozart."]},
+ rachmaninov:{2:[1901,"Il concerto della rinascita dopo la crisi, di larghissima popolarità."],3:[1909,"Famoso per l'enorme difficoltà pianistica."]},cajkovskij:{1:[1875,"Si apre con un celebre tema d'introduzione dell'orchestra."]},
+ brahms:{1:[1859,"Ampio e drammatico, quasi una sinfonia con pianoforte."],2:[1881,"In quattro movimenti, con un Andante affidato al violoncello."]},chopin:{1:[1830,"Giovanile e virtuosistico, con una Romanza lirica."],2:[1830,"Il primo scritto, con un Larghetto ispirato a un amore giovanile."]},
+ liszt:{1:[1849,"In un solo arco, con il triangolo nello Scherzo."],2:[1861,"Unico movimento in sezioni collegate."]},grieg:{1:[1868,"L'unico concerto di Grieg, con un attacco celebre."]}};
+const K_VLNN={beethoven:[1806,"L'unico concerto per violino di Beethoven, aperto da cinque colpi di timpano."],brahms:[1878,"Scritto per Joseph Joachim."],cajkovskij:[1878,"Virtuosistico e melodico, scritto sul lago di Ginevra."],mendelssohn:[1844,"Uno dei concerti più amati: il solista entra subito."]};
+
 const K = {
   norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(); },
   comp(name){ const n=this.norm(name); if(!n) return null; return this.list.find(c=>c.nf===n)||this.list.find(c=>c.ns===n)||null; },
@@ -5976,10 +6006,12 @@ const K = {
   // sinfonie e concerti con numero: compositore dal titolo o dal campo compositore
   numbered(title,hint){ const n=this.norm(title); const sym=/\b(sinfonia|symphony|sinf|symph|sym)\b/.test(n), con=/\b(concerto|concerti|concert|konzert)\b/.test(n); if(!sym&&!con) return null;
     const c=this.inTitle(title)||this.comp(hint)||(hint&&hint.length>2?this.search(hint)[0]:null); if(!c) return null; const num=this.numIn(n);
-    if(sym){ const e=this.symTab[c.ns]&&this.symTab[c.ns][num]; if(!e) return null; return {t:`Sinfonia n. ${num} in ${e[0].toLowerCase()}${e[1]?' «'+e[1]+'»':''}`,c:c.n,g:'Sinfonica',k:e[0],p:'',a:['sinfonia'],score:92,gen:1}; }
+    if(sym){ const e=this.symTab[c.ns]&&this.symTab[c.ns][num]; if(!e) return null; const nt=(K_SYMN[c.ns]||{})[num]; return {t:`Sinfonia n. ${num} in ${e[0].toLowerCase()}${e[1]?' «'+e[1]+'»':''}`,c:c.n,g:'Sinfonica',k:e[0],y:nt&&nt[0],p:this.symText('Sinfonia n. '+num,e[0],c,nt),a:['sinfonia'],score:92,gen:1}; }
     const solo=/\b(violino|violin)\b/.test(n);
-    if(solo&&this.vlnTab[c.ns]) return {t:`Concerto per violino in ${this.vlnTab[c.ns].toLowerCase()}`,c:c.n,g:'Sinfonica',k:this.vlnTab[c.ns],p:'',a:['concerto'],score:90,gen:1};
-    const k=this.conTab[c.ns]&&this.conTab[c.ns][num]; if(k) return {t:`Concerto per pianoforte n. ${num} in ${k.toLowerCase()}`,c:c.n,g:'Sinfonica',k,p:'',a:['concerto'],score:90,gen:1}; return null; },
+    if(solo&&this.vlnTab[c.ns]){ const nt=K_VLNN[c.ns]; return {t:`Concerto per violino in ${this.vlnTab[c.ns].toLowerCase()}`,c:c.n,g:'Sinfonica',k:this.vlnTab[c.ns],y:nt&&nt[0],p:this.symText('Concerto per violino e orchestra',this.vlnTab[c.ns],c,nt),a:['concerto'],score:90,gen:1}; }
+    const k=this.conTab[c.ns]&&this.conTab[c.ns][num]; if(k){ const nt=(K_CONN[c.ns]||{})[num]; return {t:`Concerto per pianoforte n. ${num} in ${k.toLowerCase()}`,c:c.n,g:'Sinfonica',k,y:nt&&nt[0],p:this.symText('Concerto per pianoforte e orchestra n. '+num,k,c,nt),a:['concerto'],score:90,gen:1}; } return null; },
+  // scheda del brano sinfonico: forma, tonalità, compositore, anno e una nota
+  symText(form,key,c,nt){ return `${form} in ${key.toLowerCase()} di ${c.n}${c.y?' ('+c.y+')':''}${nt?', composta nel '+nt[0]:''}. ${nt?nt[1]:''}`.replace(/\s+\./g,'.').trim(); },
   // parole del titolo che il riconoscimento non spiega (se non ne restano, il titolo ufficiale si scrive da solo)
   residual(title,w){ const stop=new Set(['sp','coro','uomini','uomo','donne','voci','gravi','spartito','partitura','pdf','copia','copy','ok','vocal','score','solo','piano','canto','e','di','da','del','della','dell','atto','atti','i','ii','iii','iv','v','n','no','op','il','lo','la','le','un','una','arie','aria','parte','parti','sinf','sinfonia','symphony','concerto']);
     const known=new Set([...this.norm(w.c).split(' '),...(w.a||[]).flatMap(a=>a.split(' ')),...this.norm(w.t).split(' '),...this.norm(w.of||'').split(' ')]);
@@ -6360,6 +6392,9 @@ function palAugment(root){
     const inp=c.querySelector('.palIn'); inp.addEventListener('input',()=>{ const b=document.createElement('button'); b.type='button'; b.dataset.c=inp.value; b.hidden=true; inp.closest('details').appendChild(b); b.click(); b.remove(); });
     c.querySelector('summary').addEventListener('click',e=>e.stopPropagation()); }); }
 new MutationObserver(ms=>{ for(const m of ms) for(const n of m.addedNodes) if(n.nodeType===1) palAugment(n); }).observe(document.body,{childList:true,subtree:true});
+
+// ============ Ritocchi: uscendo da Annota il foglio torna intero, senza zoom ============
+(function(){ const ex=Anno.exit; Anno.exit=function(){ const r=ex.apply(this,arguments); try{ Zoom.reset(); }catch(e){} return r; }; })();
 
 // ============ Scanner: cornice a 8 maniglie, Annulla/Ripeti, toni e livelli ============
 (function(){

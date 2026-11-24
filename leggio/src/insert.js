@@ -264,17 +264,18 @@ function homography(from,to){
 // Migliora la foto di una partitura: toglie ombre e carta grigia, scurisce e rinforza note, gambi e righi.
 function enhance(cv,mode,p){
   const W=cv.width,H=cv.height,N=W*H; const ctx=cv.getContext('2d',{willReadFrequently:true}); const d=ctx.getImageData(0,0,W,H).data;
-  const g=new Float32Array(N); for(let i=0;i<N;i++) g[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
+  let g=new Float32Array(N); for(let i=0;i<N;i++) g[i]=d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114;
   // 1) sfondo: massimo locale a blocchi (la carta), poi sfocato → divide per togliere ombre e pieghe
   const B=Math.max(8,Math.round(Math.max(W,H)/48)); const bw=Math.ceil(W/B), bh=Math.ceil(H/B); let bg=new Float32Array(bw*bh);
   for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){ const vals=[]; for(let y=by*B;y<Math.min(H,(by+1)*B);y+=2)for(let x=bx*B;x<Math.min(W,(bx+1)*B);x+=2)vals.push(g[y*W+x]); vals.sort((a,b)=>a-b); bg[by*bw+bx]=vals[Math.floor(vals.length*.9)]||255; }
   for(let pass=0;pass<3;pass++){const t=new Float32Array(bw*bh);for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){let s=0,n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<bw&&yy<bh){s+=bg[yy*bw+xx];n++}}t[y*bw+x]=s/n}bg=t}
   const bgAt=(x,y)=>{const fx=clamp(x/B-.5,0,bw-1.001),fy=clamp(y/B-.5,0,bh-1.001);const x0=fx|0,y0=fy|0,ax=fx-x0,ay=fy-y0;const x1=Math.min(bw-1,x0+1),y1=Math.min(bh-1,y0+1);return (bg[y0*bw+x0]*(1-ax)+bg[y0*bw+x1]*ax)*(1-ay)+(bg[y1*bw+x0]*(1-ax)+bg[y1*bw+x1]*ax)*ay};
-  const norm=new Float32Array(N), bgRow=new Float32Array(N);
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;const b=Math.max(30,bgAt(x,y));bgRow[i]=b;norm[i]=clamp(g[i]/b*255,0,255)}
+  const norm=new Float32Array(N), bgRow=mode==='color'?new Float32Array(N):null;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;const b=Math.max(30,bgAt(x,y));if(bgRow)bgRow[i]=b;norm[i]=clamp(g[i]/b*255,0,255)}
+  if(mode!=='color') g=null;   // meno memoria: il grigio originale serve solo al colore
   // 2) nitidezza (maschera di contrasto)
   const sharp=p.sharp/100*1.6; let v=norm;
-  if(sharp>0){const bl=boxBlur(norm,W,H,1);v=new Float32Array(N);for(let i=0;i<N;i++)v[i]=clamp(norm[i]+sharp*(norm[i]-bl[i]),0,255)}
+  if(sharp>0){const bl=boxBlur(norm,W,H,1);for(let i=0;i<N;i++)norm[i]=clamp(norm[i]+sharp*(norm[i]-bl[i]),0,255)}
   // 3) contrasto e intensità dei segni
   const C=1+p.contrast/100, gam=1+p.ink/100*1.6, clean=p.clean/100;
   const white=255-clean*60; // sopra questa soglia → carta bianca

@@ -153,6 +153,11 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - Uscendo da Annota lo zoom torna a pagina intera (`tweaks.js`).
 - Tempo ed espressione: le parole si inseriscono come testo (modificabile con Dito ✋ e lazo).
 
+## Velocità e bordi (24 novembre 2026, sera)
+- Migliora pagina: meno memoria (`enhance` senza copie inutili, risoluzione 1500 px per la lettura e 1700 per "per sempre", anteprima a 1100 px, tele liberate alla chiusura). Prefetch solo della pagina dopo quando Migliora è attivo. Analisi dei bordi solo quando serve.
+- Bordi: il ritaglio è solo manuale (partenza = pagina intera, "Bordi automatici" a richiesta; `fixBox`, flag `cropAuto`). Maniglie con trascinamento relativo, senza saltare né ricrearsi durante il gesto.
+- `Fix.check` analizza una sola volta ogni pagina.
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

@@ -91,7 +91,7 @@ function cacheKey(p,W,H,dpr){const c=ST.cur.crop||{};return `${ST.cur.id}|${ST.c
 async function drawPageTo(p,W,H,dpr){
   const key=cacheKey(p,W,H,dpr); if(pageCache.has(key)){const v=pageCache.get(key);pageCache.delete(key);pageCache.set(key,v);return v;}
   const pg=await ST.doc.getPage(p+1); let crop=ST.cur.crop||{l:0,t:0,r:0,b:0};
-  { const f=fixOfPage(ST.cur,p); if(f.on){ try{ const a=await autoAnalyze(ST.cur,p,pg); if(f.crop&&(f.box||a.box)) crop=f.box||a.box; }catch(e){} } }
+  { const f=fixOfPage(ST.cur,p); if(f.on){ try{ const a=await autoAnalyze(ST.cur,p,pg,f.crop&&f.cropAuto); const bb=fixBox(f,a); if(bb) crop=bb; }catch(e){} } }
   const vp1=pg.getViewport({scale:1}); const cw=vp1.width*(1-crop.l-crop.r), ch=vp1.height*(1-crop.t-crop.b);
   const scale=Math.min((W-16)/cw,(H-16)/ch);
   // limite di memoria delle tele su iPhone/iPad (circa 16 milioni di pixel)
@@ -134,7 +134,7 @@ async function renderPage(dir,opts={}){
 }
 function prefetch(seq){
   const W=stage.clientWidth,H=stage.clientHeight,d=baseDpr();
-  [ST.page+1,ST.page-1,ST.page+2].forEach((p,i)=>{ if(p>=0&&p<ST.cur.pages) setTimeout(()=>{ if(seq===renderSeq) drawPageTo(p,W,H,d).catch(()=>{}); },i*120); });
+  const fx=fixOfPage(ST.cur,ST.page); (fx.on&&fx.sharpen?[ST.page+1]:[ST.page+1,ST.page-1,ST.page+2]).forEach((p,i)=>{ if(p>=0&&p<ST.cur.pages) setTimeout(()=>{ if(seq===renderSeq) drawPageTo(p,W,H,d).catch(()=>{}); },i*120); });
 }
 // Fotografa la pagina visibile (con annotazioni) per l'effetto voltapagina.
 function snapshotPage(){
@@ -703,7 +703,7 @@ async function boot(){
   const splash=$('#splash'), t0=Date.now(); let gone=false;
   const hide=()=>{ if(gone) return; gone=true; splash.classList.add('out'); setTimeout(()=>{ if(splash.parentNode) splash.parentNode.removeChild(splash); },700); };
   splash.addEventListener('click',hide); setTimeout(hide,6000);
-  boot.ready=()=>setTimeout(hide,Math.max(0,2800-(Date.now()-t0)));
+  boot.ready=()=>setTimeout(hide,Math.max(0,2300-(Date.now()-t0)));
   try{ await document.fonts.load('40px "Noto Music"','\u{1D11E}'); await document.fonts.load('italic 600 20px "Bodoni Moda"','Allegro'); }catch(e){}
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}

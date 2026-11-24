@@ -1544,13 +1544,16 @@ function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">
   <div><h2 style="font-size:1.25rem;font-weight:800">${esc(r.name)} · ${r.mq} mq</h2><p class="tiny">${ROOM_TYPES[r.type].label}</p>${r.desc?`<p class="small muted" style="margin-top:6px">${esc(r.desc)}</p>`:""}</div>
   ${r.dot?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.dot.map(x=>`<span class="badge grey">${esc(x)}</span>`).join("")}</div>`:""}
   ${attrCards(r)}<section class="card"><h3 style="margin-bottom:8px">Tariffe mensili</h3>${tariffeMeseHTML(r)}</section></div></div></div>`}
+const statoOre=id=>{const acc=oreAccreditate(id),res=oreResidue(id),att=oreInAttesa(id);if(!acc)return "";
+  if(res<=0)return att?`<span class="badge warn">Rinnovo da confermare</span>`:`<span class="badge red">Ore finite · serve rinnovo</span>`;
+  if(res<=4)return `<span class="badge warn">Ore in esaurimento</span>`;return ""};
 const iscritto=id=>!!((S.iscritti&&S.iscritti[id])||(S.proProfile[id]&&S.proProfile[id].done));
 function creditiDi(id){return S.crediti.filter(c=>c.docId===id).sort((a,b)=>b.at-a.at)}
 function cliniaDottori(){const l=SPECIALISTI();return `<p class="tiny">Quando un dottore firma il contratto, scrivi qui le ore firmate e allega il contratto: FPM conferma e il dottore le vede subito nella sua app. Le ore scalano a ogni studio prenotato.</p>`+
   l.map(d=>{const acc=oreAccreditate(d.id),usa=orePrenotate(d.id),att=oreInAttesa(d.id),cr=creditiDi(d.id);return `<div class="card stack" style="gap:12px">
-   <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
+   <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p>${statoOre(d.id)}</div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
    <dl class="ledger small"><dt>Ore confermate</dt><dd>${oreFmt(acc)}</dd><dt>Prenotate</dt><dd>${oreFmt(usa)}</dd><dt><b>Disponibili</b></dt><dd><b>${oreFmt(r2(acc-usa))}</b></dd>${att?`<dt>In attesa di conferma FPM</dt><dd>${oreFmt(att)}</dd>`:""}</dl>
-   <form class="stack" data-form="contratto" data-id="${d.id}" style="gap:8px" novalidate><div class="fgrid"><label class="field"><span>Ore firmate</span><input name="ore" inputmode="decimal" placeholder="50"></label><label class="field"><span>Data contratto</span><input name="data" type="date" value="${today()}" max="${today()}"></label></div>
+   <form class="stack" data-form="contratto" data-id="${d.id}" style="gap:8px" novalidate><div class="fgrid"><label class="field"><span>${oreAccreditate(d.id)?"Rinnovo: ore firmate":"Ore firmate"}</span><input name="ore" inputmode="decimal" placeholder="50"></label><label class="field"><span>Data contratto</span><input name="data" type="date" value="${today()}" max="${today()}"></label></div>
     <label class="field"><span>Contratto firmato (PDF o foto)</span><input name="file" type="file" accept="application/pdf,image/*"></label>
     <p class="err" id="ct-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra e invia a FPM</button></form>
    ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"?"red":"warn"}">${c.stato==="confermata"?"Confermate":c.stato==="rifiutata"?"Non confermate":"In attesa"}</span></div>`).join("")}</div>`:""}
@@ -1671,7 +1674,7 @@ function fpmDottoriTab(){const l=SPECIALISTI(),att=S.crediti.filter(c=>c.stato==
   ${l.map(d=>{const acc=oreAccreditate(d.id),usa=orePrenotate(d.id),pp=S.proProfile[d.id]||{},pub=S.pubblica[d.id]||{},foto=docPhoto(d.id),nuova=S.fotoNuove&&S.fotoNuove[d.id];return `<div class="card stack" style="gap:12px">
    <div class="row" style="gap:14px;align-items:flex-start">${foto?`<img src="${foto}" alt="Foto di ${esc(d.name)}" style="width:72px;height:128px;object-fit:cover;border-radius:12px;flex:none">`:docAv(d)}
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><b>${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span>
-     <span class="row" style="gap:6px;flex-wrap:wrap">${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}${pp.pubblica?`<span class="badge">Consenso pubblicazione</span>`:""}${nuova?`<span class="badge warn">Foto nuova</span>`:""}</span></div></div>
+     <span class="row" style="gap:6px;flex-wrap:wrap">${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}${statoOre(d.id)}${pp.pubblica?`<span class="badge">Consenso pubblicazione</span>`:""}${nuova?`<span class="badge warn">Foto nuova</span>`:""}</span></div></div>
    <dl class="ledger small"><dt>Ore accreditate</dt><dd>${oreFmt(acc)}</dd><dt>Prenotate</dt><dd>${oreFmt(usa)}</dd><dt>Disponibili</dt><dd>${oreFmt(r2(acc-usa))}</dd><dt><b>Tuo compenso</b><small>${oreFmt(acc)} × ${eur(CANONE_ORA)}</small></dt><dd><b>${eur(r2(acc*CANONE_ORA))}</b></dd></dl>
    <form class="row" data-form="creditoFpm" data-id="${d.id}" style="gap:8px" novalidate><input name="ore" inputmode="decimal" placeholder="Ore, es. 50" aria-label="Ore da accreditare a ${esc(d.name)}" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)"><button class="btn primary sm" type="submit">${ic("plus","sm")} Accredita ore</button></form>
    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="fotoScarica" data-id="${d.id}" ${foto?"":"disabled"}>${ic("upload","sm")} Scarica foto</button><label class="btn ghost sm" for="fpf-${d.id}">${ic("upload","sm")} Carica foto 9:16</label><input id="fpf-${d.id}" type="file" accept="image/*" class="hidden" data-change="fotoFpm" data-id="${d.id}"></div>
@@ -2142,7 +2145,7 @@ const ACT={
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
   creditoEsito:d=>{const c=S.crediti.find(x=>x.id===d.id);if(!c)return;const nm=doc(c.docId).name;
-    if(d.v==="ok"){c.stato="confermata";c.confAt=Date.now();addNotif("spec:"+c.docId,"ore","Ore accreditate",`Clinia e FPM hanno attivato ${oreFmt(c.ore)}: le trovi nella tua app e scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore confermate da FPM",`${nm}: ${oreFmt(c.ore)} attive.`);toast(`${oreFmt(c.ore)} accreditate a ${nm}`)}
+    if(d.v==="ok"){c.stato="confermata";c.confAt=Date.now();addNotif("spec:"+c.docId,"ore",oreResidue(c.docId)-c.ore<=0&&oreAccreditate(c.docId)>c.ore?"Rinnovo attivo":"Ore accreditate",`Clinia e FPM hanno attivato ${oreFmt(c.ore)}: le trovi nella tua app e scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore confermate da FPM",`${nm}: ${oreFmt(c.ore)} attive.`);toast(`${oreFmt(c.ore)} accreditate a ${nm}`)}
     else{if(!confirm(`Non confermare le ${oreFmt(c.ore)} di ${nm}?`))return;c.stato="rifiutata";addNotif("titolare","ore","Ore non confermate da FPM",`${nm}: ${oreFmt(c.ore)}. Controlla il contratto.`);toast("Richiesta non confermata")}
     save();render()},
   apriContratto:async d=>{const c=S.crediti.find(x=>x.id===d.id);const f=c&&c.file&&await IDB.get("contr:"+c.id);if(!f||!f.blob)return toast("Contratto non disponibile su questo dispositivo.");
@@ -2242,6 +2245,9 @@ const ACT={
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
     if(true){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
       if(!isOwner())addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)}${perc?" · a percentuale":""}`);
+      if(!isOwner()){const res=oreResidue(S.proId),nm=doc(S.proId).name;
+        if(res<=0){addNotif("titolare","ore","Ore finite: serve il rinnovo",`${nm} ha usato tutte le ore. Registra il nuovo contratto in Clinia › Dottori e ore.`);notifFPM("ore","Ore finite",`${nm}: ore esaurite. Riparte dopo il rinnovo con Clinia e la tua conferma.`);addNotif("spec:"+S.proId,"ore","Ore finite","Hai usato tutte le ore del pacchetto. Per continuare a prenotare gli studi rinnova con Clinia.")}
+        else if(res<=4){addNotif("titolare","ore","Ore in esaurimento",`${nm}: restano ${oreFmt(res)}.`);notifFPM("ore","Ore in esaurimento",`${nm}: restano ${oreFmt(res)}.`)}}
       notifFPM("studio_prenotato","Studio prenotato",`${isOwner()?"Clinia":doc(S.proId).name} · ${r.name} · ${oreFmt(oreServono)}${isOwner()?"":" scalate · restano "+oreFmt(oreResidue(S.proId))}`);render();
       return toast(`${r.name} prenotato${isOwner()?"":" · "+oreFmt(oreServono)+" scalate"}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
@@ -2391,6 +2397,7 @@ const FORMS={
     S.crediti.push({id:uid(),docId:id,ore:r2(ore),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});save();
     addNotif("spec:"+id,"ore","Ore accreditate",`Hai ${oreFmt(ore)} in più: scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore accreditate da FPM",`${doc(id).name}: ${oreFmt(ore)}.`);
     toast(`${oreFmt(ore)} accreditate a ${doc(id).name}`);render()},
+
   incasso:f=>{const err=$("#inc-err");err.textContent="";const voce=f.voce.value.trim(),data=f.data.value,imp=parseFloat(String(f.importo.value).replace(/\./g,"").replace(",","."));
     if(!voce)return err.textContent="Scrivi la descrizione, per esempio “Pagamento rata app”.";
     if(!data||data>today())return err.textContent="Indica il giorno dell’incasso (non nel futuro).";

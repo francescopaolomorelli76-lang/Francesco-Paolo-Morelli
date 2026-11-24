@@ -1083,7 +1083,7 @@ const CONFIG = {
   ],
   /* Specialisti. Foto: img/specialisti/<id>.jpg  ·  area: chirurgia | medicina | riabilitazione */
   specialists: [
-    {id:"marco-morelli", name:"Dott. Marco Morelli", role:"Fisioterapista", area:"riabilitazione", booking:"https://www.miodottore.it/profilo/marco-morelli-3", rating:"5,0", reviews:23,
+    {id:"marco-morelli", hidden:true, name:"Dott. Marco Morelli", role:"Fisioterapista", area:"riabilitazione", booking:"https://www.miodottore.it/profilo/marco-morelli-3", rating:"5,0", reviews:23,
      bio:["Fisioterapista, valutazione 5 stelle con 23 recensioni verificate su MioDottore",
           "Formazione presso l’Università Aldo Moro (Bari)",
           "Tirocinio presso l’Ospedale Madonna delle Grazie (Matera)",
@@ -1220,7 +1220,7 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const safeUrl=u=>/^(https?:\/\/|\/_blob\/|data:image\/|data:application\/pdf|img\/)/.test(u||"")?u:"";
 let EXTRA={};                         // modifiche salvate: id -> dati
 const allSP=()=>{
-  const list=BASE.map(b=>EXTRA[b.id]?{...b,...EXTRA[b.id],builtin:true}:{...b,builtin:true}).filter(s=>!s.hidden);
+  const list=BASE.map(b=>EXTRA[b.id]?{...b,...EXTRA[b.id],builtin:true}:{...b,builtin:true}).filter(s=>!s.hidden&&(!ATTIVI||ATTIVI.has(s.id)));
   Object.values(EXTRA).forEach(e=>{ if(!BASE.some(b=>b.id===e.id)&&!e.hidden&&e.name) list.push({area:"medicina",bio:[],...e}); });
   return list;
 };
@@ -1230,9 +1230,10 @@ const photoSrc=s=>safeUrl(s.photo)||`img/specialisti/${s.id}.jpg`;
 const photo=s=>`<span class="ini">${esc(initials(s.name))}</span><img src="${esc(photoSrc(s))}" alt="${esc(s.name)}" loading="lazy" onerror="this.remove()">`;
 let spArea="all", spQ="";
 /* Giorni e orari di visita da Clinia App (spazio pronto: si accende con CONFIG.app.attivo) */
-let ORARI={};
+let ORARI={}, ATTIVI=null;   // ATTIVI: elenco dei dottori ancora in Clinia, letto dall'app (chi viene rimosso sparisce da solo)
 async function caricaOrari(){if(!CONFIG.app.attivo||!CONFIG.app.chiave)return;
-  try{const oggi=new Date().toISOString().slice(0,10);
+  try{const h={apikey:CONFIG.app.chiave,Authorization:"Bearer "+CONFIG.app.chiave};
+    const m=await fetch(`${CONFIG.app.url}/rest/v1/medici_attivi?select=id`,{headers:h});if(m.ok){ATTIVI=new Set((await m.json()).map(x=>x.id));renderSP()}const oggi=new Date().toISOString().slice(0,10);
     const r=await fetch(`${CONFIG.app.url}/rest/v1/calendario_pubblico?select=specialist_id,giorno,inizio,fine,studio&giorno=gte.${oggi}&order=giorno`,{headers:{apikey:CONFIG.app.chiave,Authorization:"Bearer "+CONFIG.app.chiave}});
     if(!r.ok)return;const g={},GG=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"];
     for(const x of await r.json()){const d=new Date(x.giorno+"T12:00");const t=`${GG[d.getDay()]} ${d.getDate()}/${d.getMonth()+1} ${x.inizio.slice(0,5)}–${x.fine.slice(0,5)}`;(g[x.specialist_id]=g[x.specialist_id]||[]).push(t)}

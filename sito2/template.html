@@ -41,7 +41,8 @@ header.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-inde
 header.top .wrap{display:flex;align-items:center;gap:14px;height:72px}
 header.top>.wrap>*{pointer-events:auto}
 .brand{font-family:var(--f-display);font-weight:900;font-size:26px;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:12px}
-.brand .logo{width:42px;height:42px;border-radius:11px;box-shadow:0 0 0 1px rgba(214,168,78,.5),0 6px 22px rgba(214,168,78,.25)}
+.brand .logo{width:56px;height:56px;border-radius:15px;box-shadow:0 0 0 1px rgba(214,168,78,.6),0 8px 30px rgba(214,168,78,.35);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.brand:hover .logo{transform:scale(1.06) rotate(-3deg);box-shadow:0 0 0 1px var(--gold-hi),0 10px 40px rgba(214,168,78,.55)}
 .pillBtn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:999px;border:1px solid rgba(244,236,220,.28);background:rgba(11,10,8,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-weight:600;font-size:14px;transition:background .25s,color .25s,border-color .25s}
 .pillBtn:hover{background:var(--gold);color:#1b1406;border-color:var(--gold)}
 .pillBtn.fill{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#1b1406;border-color:transparent}
@@ -78,7 +79,7 @@ body.ready .hero h1 .l>span{transform:none}body.ready .hero h1 .l:nth-child(2)>s
 .statement{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,5.4vw,78px);line-height:1.08;max-width:19em}
 .statement em{font-style:italic;font-weight:500;color:var(--gold-hi)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,5vw,80px);align-items:end;margin-top:48px}
-.two>*{min-width:0}@media(max-width:820px){.two{grid-template-columns:1fr}}
+.two>*{min-width:0}.two h2{overflow-wrap:break-word;hyphens:auto}@media(max-width:820px){.two{grid-template-columns:1fr}}
 /* elenco funzioni con anteprima */
 .list{border-top:1px solid var(--line);margin-top:56px}
 .row{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);position:relative;transition:padding .35s}
@@ -164,6 +165,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 #player .disc img{width:100%;height:100%;object-fit:cover;display:block}
 #player .disc::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:11px;margin:-5.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--gold)}
 @keyframes spin{to{transform:rotate(360deg)}}
+#player .pHint{position:absolute;left:70px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--gold-hi);opacity:0;pointer-events:none;transition:opacity .4s;text-shadow:0 1px 10px #000}#player .pHint.on{opacity:1;animation:hintp 1.6s ease-in-out infinite}#player.open .pHint{display:none}
+@keyframes hintp{50%{transform:translateY(-50%) translateX(4px)}}
 #player .pb{display:none;align-items:center;gap:10px;padding:0 14px 0 12px}
 #player.open .pb{display:flex}
 #player .ttl{display:grid;line-height:1.2;min-width:0;max-width:170px}#player .ttl b{font-family:var(--f-display);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#player .ttl small{font-size:11px;color:var(--muted);letter-spacing:.06em}
@@ -213,7 +216,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 <div id="cur" aria-hidden="true"><svg viewBox="0 0 40 28" width="40" height="28"><defs><mask id="sbm"><rect width="40" height="28" fill="#fff"/><ellipse cx="20" cy="14" rx="6.2" ry="11" transform="rotate(-38 20 14)" fill="#000"/></mask></defs><ellipse cx="20" cy="14" rx="17" ry="11" fill="#f2d382" mask="url(#sbm)"/></svg></div>
 <canvas id="gl" aria-hidden="true"></canvas>
 
-<header class="top"><div class="wrap"><a class="brand" href="#top" data-cur><img class="logo" alt="" src="__LOGO__">Mozart</a><span class="sp"></span>
+<header class="top"><div class="wrap"><a class="brand" href="#top" data-cur aria-label="Mozart FPM, torna in alto"><img class="logo" alt="Mozart FPM" src="__LOGO__"></a><span class="sp"></span>
   <a class="pillBtn fill" href="#scarica" data-cur>Scarica</a>
   <button class="pillBtn menuBtn" id="menuBtn" aria-expanded="false" aria-controls="menu" data-cur><span class="bars"></span><span id="menuT">Menu</span></button></div></header>
 <div id="menu"><nav><a href="#funzioni">Funzioni</a><a href="#cantanti">Per i cantanti</a><a href="#studio">Studio di canto</a><a href="#scansiona">Scansiona</a><a href="#recensioni">Recensioni</a><a href="#contatti">Contatti</a></nav></div>
@@ -259,7 +262,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 </div></section>
 
 <section id="annota" style="padding-top:0"><div class="wrap">
-  <div class="two" style="margin-top:0"><div><div class="eyebrow rv">Annota</div><h2 class="rv" style="margin-top:14px;font-size:clamp(40px,7vw,100px);line-height:1">Scrivi sulla musica come su carta.</h2></div>
+  <div class="two" style="margin-top:0"><div><div class="eyebrow rv">Annota</div><h2 class="rv" style="margin-top:14px;font-size:clamp(34px,5.4vw,78px);line-height:1.02;overflow-wrap:break-word">Scrivi sulla musica come su carta.</h2></div>
     <p class="lead rv">Penna, evidenziatore giallo fluo, lazo, testo e segni musicali. Una tavolozza con ogni sfumatura. Un tocco annulla, anche sulle modifiche al PDF. Le parole di tempo ed espressione, come Allegro e dolce, si modificano e si ingrandiscono.</p></div>
   <figure class="photo rv"><img alt="Leggio dorato con tablet e spartito in un teatro d'opera" data-im="10" loading="lazy"></figure>
   <div class="shots" id="schermate"><figure class="shot rv"><div class="dev"><div><img alt="Spartito annotato con la barra degli strumenti" src="__SHSCORE__"></div></div><figcaption>Evidenziatore, penna, testo e pronuncia direttamente sulla pagina.</figcaption></figure>
@@ -314,7 +317,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 
 <section id="contatti"><div class="wrap">
   <div class="two" style="align-items:start;margin-top:0">
-    <div><div class="eyebrow rv">Contatti</div><h2 class="rv" style="margin:14px 0 18px;font-size:clamp(40px,7vw,100px);line-height:1">Hai un suggerimento?<br><span class="gold">Scrivici.</span></h2>
+    <div><div class="eyebrow rv">Contatti</div><h2 class="rv" style="margin:14px 0 18px;font-size:clamp(34px,5vw,74px);line-height:1.02;overflow-wrap:break-word">Hai un<br>suggerimento?<br><span class="gold">Scrivici.</span></h2>
       <p class="lead rv">Mozart cresce con le idee di chi lo usa. Dicci cosa manca, cosa si può fare meglio o quale spartito non viene letto bene.</p>
       <div class="mail rv"><span id="mailAddr">fpm@fpmwebdesignertech.it</span><button type="button" class="pillBtn" id="copyMail" data-cur>Copia</button></div>
       <div class="owner rv"><img alt="Logo FPM webdesignertech" src="__SEAL__"><div><b>FPM webdesignertech</b><span>Siti web, app e strumenti per i musicisti</span></div></div></div>
@@ -411,8 +414,15 @@ $$('.thumb[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
   const load=n=>{ i=(n+T.length)%T.length; A.src=T[i].f; $('#pT').textContent=T[i].t; $('#pFill').style.width='0'; };
   const play=()=>A.play().then(()=>{ P.classList.add('on'); $('#pIc').innerHTML='<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>'; $('#pPlay').setAttribute('aria-label','Pausa'); }).catch(()=>{});
   const pause=()=>{ A.pause(); P.classList.remove('on'); $('#pIc').innerHTML='<path d="M7 4l13 8-13 8z"/>'; $('#pPlay').setAttribute('aria-label','Riproduci'); };
-  load(0); $('#pDisc').onclick=()=>{ P.classList.toggle('open'); if(P.classList.contains('open')&&A.paused&&!A.currentTime) play(); };
-  $('#pPlay').onclick=()=>A.paused?play():pause(); $('#pNext').onclick=()=>{ const w=!A.paused; load(i+1); if(w) play(); }; $('#pPrev').onclick=()=>{ const w=!A.paused; load(i-1); if(w) play(); };
+  load(0); let started=false, userStopped=false;
+  const hint=document.createElement('div'); hint.className='pHint'; hint.textContent='Tocca per la musica'; P.appendChild(hint);
+  const fade=()=>{ A.volume=0; let v=0; const t=setInterval(()=>{ v=Math.min(.7,v+.04); A.volume=v; if(v>=.7) clearInterval(t); },120); };
+  const autoStart=()=>{ if(started||userStopped) return; A.volume=0; A.play().then(()=>{ started=true; P.classList.add('on'); $('#pIc').innerHTML='<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>'; $('#pPlay').setAttribute('aria-label','Pausa'); hint.classList.remove('on'); fade(); EV.forEach(e=>removeEventListener(e,onAct,true)); }).catch(()=>{ if(!started&&scrollY>10) hint.classList.add('on'); }); };
+  const EV=['wheel','touchmove','scroll','keydown','pointerdown','touchend','click'];
+  const onAct=e=>{ if(e.type==='scroll'||e.type==='wheel'||e.type==='touchmove'){ if(scrollY>10||e.type==='wheel') autoStart(); } else autoStart(); };
+  EV.forEach(e=>addEventListener(e,onAct,{capture:true,passive:true}));
+  $('#pDisc').onclick=()=>{ P.classList.toggle('open'); };
+  $('#pPlay').onclick=()=>{ if(A.paused){ userStopped=false; A.volume=.7; play(); hint.classList.remove('on'); } else { userStopped=true; pause(); } }; $('#pNext').onclick=()=>{ const w=!A.paused; load(i+1); if(w) play(); }; $('#pPrev').onclick=()=>{ const w=!A.paused; load(i-1); if(w) play(); };
   A.addEventListener('ended',()=>{ load(i+1); play(); }); A.addEventListener('timeupdate',()=>{ if(A.duration) $('#pFill').style.width=(A.currentTime/A.duration*100)+'%'; });
   $('#pBar').onclick=e=>{ const r=e.currentTarget.getBoundingClientRect(); if(A.duration) A.currentTime=A.duration*Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); }; })();
 /* ---------- menu, cursore, rivelazioni ---------- */

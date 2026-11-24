@@ -115,7 +115,7 @@ function fixPage(off,sc,p){
   if(f.sharpen){
     const lim=2400, k=Math.min(1,lim/Math.max(off.width,off.height));
     let w=off; if(k<1){ w=document.createElement('canvas'); w.width=Math.round(off.width*k); w.height=Math.round(off.height*k); const x=w.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(off,0,0,w.width,w.height); }
-    let e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55});
+    let e=enhance(w,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55,lo:f.lo,hi:f.hi,expo:f.expo});
     e=cleanCanvas(e,f.crop&&a?(f.box||a.box):null,f.clean>0);
     if(k<1){ const c=document.createElement('canvas'); c.width=off.width; c.height=off.height; const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(e,0,0,c.width,c.height); off=c; } else off=e;
   } else if(f.crop&&a) off=cleanCanvas(off,f.box||a.box,false);
@@ -210,7 +210,7 @@ Fix.preview=async function(scopeAll,f0){
   let box={...(f.box||a.box)};
   const make=()=>{ // pagina migliorata senza ritaglio (il ritaglio si vede con il riquadro)
     let c=f.straighten?rotateCanvas(orig,a.skew):orig;
-    if(f.sharpen) c=enhance(c,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55});
+    if(f.sharpen) c=enhance(c,f.mode==='bw'?'score':'gray',{contrast:25,bright:0,sharp:60,clean:f.clean,ink:55,lo:f.lo,hi:f.hi,expo:f.expo});
     return c; };
   let after=make(), view='after';
   const m2=modal('Prima e dopo',`
@@ -221,8 +221,11 @@ Fix.preview=async function(scopeAll,f0){
       <div class="seg"><button id="pvAuto">${iconSvg('wand')} Bordi automatici</button><button id="pvAll">Tutta la pagina</button>
         <button id="pvBw" class="${f.mode==='bw'?'on':''}">Bianco e nero</button><button id="pvStr" class="${f.straighten?'on':''}">Raddrizza</button><button id="pvSh" class="${f.sharpen?'on':''}">Pulizia</button></div>
       <div class="sl"><span>Intensità della pulizia<em id="pvCv">${f.clean}</em></span><input type="range" id="pvClean" min="0" max="100" value="${f.clean}" style="--v:${f.clean}%"></div>
+      <div class="eyebrow">Tono della pagina</div><div class="toneRow" id="pvTone">${['#0c0c0c','#4d4d4d','#8e8e8e','#cfcfcf','#fafafa'].map((c,i)=>`<button data-t="${i}" class="${(f.tone??2)===i?'on':''}" style="background:${c}" aria-label="Tono ${i+1} di 5"></button>`).join('')}</div>
+      <div class="sl"><span>Punto nero<em id="pvLov">${f.lo||0}</em></span><input type="range" id="pvLo" min="0" max="60" value="${f.lo||0}" style="--v:${(f.lo||0)/60*100}%"></div>
+      <div class="sl"><span>Punto bianco<em id="pvHiv">${f.hi==null?100:f.hi}</em></span><input type="range" id="pvHi" min="40" max="100" value="${f.hi==null?100:f.hi}" style="--v:${((f.hi==null?100:f.hi)-40)/60*100}%"></div>
     </div>`,
-    `<button class="ghostBtn" data-no>Annulla</button><button class="ghostBtn" id="pvRead">${iconSvg('eye')}Usa in lettura</button><button class="goldBtn" id="pvBake">${iconSvg('check')}Correggi per sempre${scopeAll?': tutto lo spartito':''}</button>`,
+    `<button class="ib" id="pvUn" aria-label="Annulla l'ultima modifica" title="Annulla">${iconSvg('undo')}</button><button class="ib" id="pvRe" aria-label="Ripeti" title="Ripeti">${iconSvg('redo')}</button><button class="ghostBtn" data-no>Chiudi</button><button class="ghostBtn" id="pvRead">${iconSvg('eye')}Usa in lettura</button><button class="goldBtn" id="pvBake">${iconSvg('check')}Correggi per sempre${scopeAll?': tutto lo spartito':''}</button>`,
     {full:true,id:'scanModal',sticky:true,eyebrow:`${sc.title} · pagina ${p+1}`});
   m2.querySelector('.mBody').style.cssText='padding:0;flex:1;overflow:hidden;display:flex;flex-direction:column';
   const C=$('#pvC'), ov=$('#pvOv'), stg=$('#pvStage'); let scale=1, offx=0, offy=0;
@@ -260,6 +263,23 @@ Fix.preview=async function(scopeAll,f0){
   const tg=(id,fn)=>{ const b=$('#'+id); b.onclick=()=>{ fn(); b.classList.toggle('on'); redo(); }; };
   tg('pvBw',()=>f.mode=f.mode==='bw'?'gray':'bw'); tg('pvStr',()=>f.straighten=!f.straighten); tg('pvSh',()=>f.sharpen=!f.sharpen);
   const cl=$('#pvClean'), later=debounce(redo,300); cl.oninput=()=>{ f.clean=+cl.value; $('#pvCv').textContent=cl.value; cl.style.setProperty('--v',cl.value+'%'); later(); };
+  // Annulla / Ripeti per bordi e impostazioni, tono e livelli
+  const EXPO=[1.7,1.3,1,.8,.62], keys=['mode','straighten','sharpen','clean','lo','hi','expo','tone'];
+  const state=()=>JSON.stringify({box,f:Object.fromEntries(keys.map(k=>[k,f[k]]))}); const hist=[], fut=[];
+  const upUR=()=>{ $('#pvUn').classList.toggle('dis',!hist.length); $('#pvRe').classList.toggle('dis',!fut.length); };
+  const snap=()=>{ const t=state(); if(hist[hist.length-1]!==t){ hist.push(t); if(hist.length>80) hist.shift(); } fut.splice(0); upUR(); };
+  const sync=()=>{ $('#pvBw').classList.toggle('on',f.mode==='bw'); $('#pvStr').classList.toggle('on',!!f.straighten); $('#pvSh').classList.toggle('on',!!f.sharpen);
+    const setS=(id,vid,v,min,max)=>{ const i=$('#'+id); i.value=v; $('#'+vid).textContent=v; i.style.setProperty('--v',(v-min)/(max-min)*100+'%'); };
+    setS('pvClean','pvCv',f.clean,0,100); setS('pvLo','pvLov',f.lo||0,0,60); setS('pvHi','pvHiv',f.hi==null?100:f.hi,40,100);
+    $$('#pvTone button').forEach(x=>x.classList.toggle('on',+x.dataset.t===(f.tone??2))); };
+  const restore=t=>{ const o=JSON.parse(t); box=o.box; keys.forEach(k=>{ f[k]=o.f[k]; }); sync(); redo(); overlay(); };
+  $('#pvUn').onclick=()=>{ if(!hist.length) return; fut.push(state()); restore(hist.pop()); upUR(); };
+  $('#pvRe').onclick=()=>{ if(!fut.length) return; hist.push(state()); restore(fut.pop()); upUR(); };
+  m2.querySelector('.scanCtl').addEventListener('pointerdown',snap,true);
+  ov.addEventListener('pointerdown',e=>{ if(e.target.closest('[data-h]')) snap(); },true);
+  $('#pvTone').onclick=e=>{ const b=e.target.closest('[data-t]'); if(!b) return; f.tone=+b.dataset.t; f.expo=EXPO[f.tone]; sync(); redo(); };
+  const lvl=(id,vid,key,min,max)=>{ const i=$('#'+id), l2=debounce(redo,250); i.oninput=()=>{ f[key]=+i.value; $('#'+vid).textContent=i.value; i.style.setProperty('--v',(i.value-min)/(max-min)*100+'%'); l2(); }; };
+  lvl('pvLo','pvLov','lo',0,60); lvl('pvHi','pvHiv','hi',40,100); upUR();
   const save=()=>{ const crop=box.l+box.r+box.t+box.b>0.001; const ff={...f,crop,box:crop?{...box}:undefined};
     if(scopeAll){ const {box:_b,...rest}=ff; sc.fix=rest; sc.pfix={}; sc.pfix[p]=ff; } else { sc.pfix=sc.pfix||{}; sc.pfix[p]=ff; } DB.putScore(sc); };
   m2.querySelector('[data-no]').onclick=closeLayers;

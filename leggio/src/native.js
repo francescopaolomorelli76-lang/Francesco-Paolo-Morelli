@@ -16,6 +16,10 @@
       return call({cmd:'fileShare',id});
     },
     async ocr(dataUrl){ return call({cmd:'ocr',image:dataUrl}); },
+    // scanner di documenti di iPhone/iPad (VisionKit): restituisce le pagine come immagini JPEG
+    async scanDocs(){ return call({cmd:'scanDocs'}); },
+    // scarica un file dal web senza i blocchi del browser: {name,mime,data(base64)}
+    async download(url){ return call({cmd:'download',url}); },
     keepAwake(on){ return call({cmd:'keepAwake',on:!!on}); },
     // file arrivati da fuori: l'app li serve su mozart://localhost/__inbox/...
     async receive(list){

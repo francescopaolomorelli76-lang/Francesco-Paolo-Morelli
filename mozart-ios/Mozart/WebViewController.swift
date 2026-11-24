@@ -1,6 +1,7 @@
 import UIKit
 import WebKit
 import Vision
+import VisionKit
 
 /// Mostra Mozart (la web-app nel pacchetto) a tutto schermo e offre all'app le funzioni native.
 final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandlerWithReply {
@@ -10,6 +11,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
     private var loaded = false
     private var uploads: [String: (name: String, data: Data)] = [:]
     private var midi: MidiBridge?
+    fileprivate var scanReply: ((Any?, String?) -> Void)?
 
     override var prefersStatusBarHidden: Bool { true }
     override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -128,6 +130,31 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         case "ocr":
             guard let s = body["image"] as? String else { replyHandler(nil, "immagine mancante"); return }
             recognizeText(dataURL: s) { words, err in replyHandler(words, err) }
+        case "scanDocs":
+            // scanner di documenti di iPhone/iPad: trova il foglio, scatta, raddrizza, più pagine
+            guard VNDocumentCameraViewController.isSupported else { replyHandler(nil, "scanner non disponibile"); return }
+            scanReply = replyHandler
+            let cam = VNDocumentCameraViewController()
+            cam.delegate = self
+            cam.modalPresentationStyle = .fullScreen
+            present(cam, animated: true)
+        case "download":
+            guard let s = body["url"] as? String, let url = URL(string: s), let sc = url.scheme?.lowercased(), sc == "http" || sc == "https" else {
+                replyHandler(nil, "indirizzo non valido"); return
+            }
+            var req = URLRequest(url: url)
+            req.timeoutInterval = 60
+            req.setValue("Mozart/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+            URLSession.shared.dataTask(with: req) { data, resp, err in
+                DispatchQueue.main.async {
+                    if let err = err { replyHandler(nil, err.localizedDescription); return }
+                    guard let data = data, let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                        replyHandler(nil, "il sito non ha dato il file"); return
+                    }
+                    if data.count > 120_000_000 { replyHandler(nil, "file troppo grande"); return }
+                    replyHandler(["name": resp?.suggestedFilename ?? "", "mime": resp?.mimeType ?? "", "data": data.base64EncodedString()], nil)
+                }
+            }.resume()
         case "midiStatus":
             midi?.connectAll()
             replyHandler(midi?.names() ?? [], nil)
@@ -192,6 +219,31 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         DispatchQueue.global(qos: .userInitiated).async {
             do { try VNImageRequestHandler(cgImage: cg, options: [:]).perform([request]) }
             catch { DispatchQueue.main.async { done(nil, error.localizedDescription) } }
+        }
+    }
+}
+
+// MARK: scanner di documenti (VisionKit)
+extension WebViewController: VNDocumentCameraViewControllerDelegate {
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+        var pages: [String] = []
+        for i in 0..<scan.pageCount {
+            if let d = scan.imageOfPage(at: i).jpegData(compressionQuality: 0.92) {
+                pages.append("data:image/jpeg;base64," + d.base64EncodedString())
+            }
+        }
+        controller.dismiss(animated: true) { [weak self] in
+            self?.scanReply?(pages, nil); self?.scanReply = nil
+        }
+    }
+    func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
+        controller.dismiss(animated: true) { [weak self] in
+            self?.scanReply?([String](), nil); self?.scanReply = nil
+        }
+    }
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
+        controller.dismiss(animated: true) { [weak self] in
+            self?.scanReply?(nil, error.localizedDescription); self?.scanReply = nil
         }
     }
 }

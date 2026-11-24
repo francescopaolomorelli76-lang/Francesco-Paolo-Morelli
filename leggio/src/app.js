@@ -21,6 +21,7 @@ async function loadAll(){
   const pr = await DB.get('presets'); if(pr&&pr.length) Anno.presets=pr;
   if(pr&&pr.length&&!ST.settings.presetsV2){ Anno.presets=Anno.presets.filter(p=>p.k!=='hl'); const hi=Anno.presets.findIndex(p=>p.k==='mask'); Anno.presets.splice(hi<0?Anno.presets.length:hi,0,{k:'hl',color:'#fff200',size:40,alpha:.5}); DB.set('presets',Anno.presets); }
   ST.settings.presetsV2=1; ST.settings.neonV=1;
+  if(!ST.settings.fluoY){ const h0=Anno.presets.find(p=>p.k==='hl'); if(h0&&h0.color==='#fff200'&&!h0.rainbow) h0.color='#f7ff00'; ST.settings.fluoY=1; DB.set('presets',Anno.presets); DB.set('settings',ST.settings); }
   // un solo evidenziatore nella barra (le versioni precedenti ne avevano aggiunti tanti): colore e tipo si scelgono al secondo tocco
   { const hl=Anno.presets.filter(p=>p.k==='hl'); if(hl.length!==1){ const keep=hl[0]||{k:'hl',color:'#fff200',size:40,alpha:.5}; let put=false;
       Anno.presets=Anno.presets.filter(p=>{ if(p.k!=='hl') return true; if(!put){ put=true; return true; } return false; });
@@ -324,6 +325,7 @@ const ACTIONS = {
   annoDone:()=>Anno.exit(), annoCancel:()=>Anno.cancel(),
   insert:(el)=>{closeSides();Insert.open()},
   scanInsert:()=>{closeSides();Insert.fromPhoto('insert')},
+  web:()=>{closeSides();WebImport.open(ST.cur?'insert':'new')},
   scanNew:()=>{closeSides();Insert.fromPhoto('new')},
   importPdf:()=>{closeSides();Insert.pickPdf('new')},
   templates:()=>{closeSides();Insert.templatesNew()},
@@ -431,13 +433,14 @@ function libMenu(el){
   const p=popover(el,`<div class="toolList" style="padding:0;min-width:240px">
     <button class="toolRow" data-m="select">${iconSvg('check')}Seleziona più spartiti</button>
     <button class="toolRow" data-m="import">${iconSvg('file')}Importa PDF</button>
-    <button class="toolRow" data-m="scan">${iconSvg('camera')}Scansione in nuovo spartito</button>
+    <button class="toolRow" data-m="scan">${iconSvg('camera')}Scansiona (fotocamera)</button>
+    <button class="toolRow" data-m="web">${iconSvg('file')}Importa dal web</button>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}Crea: scrivi le note</button>
     <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Apri backup forScore (.4sb)</button></div>`);
   p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();const m2=b.dataset.m;
-    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='crea')Compose.open('new'); if(m2==='dups')Dups.open(); if(m2==='fs')FS4.pick();};
+    if(m2==='select'){ST.libSelect=true;ST.selected.clear();renderLibrary()} if(m2==='import')Insert.pickPdf('new'); if(m2==='scan')Insert.fromPhoto('new'); if(m2==='web')WebImport.open('new'); if(m2==='tpl')Insert.templatesNew(); if(m2==='crea')Compose.open('new'); if(m2==='dups')Dups.open(); if(m2==='fs')FS4.pick();};
 }
 async function drawThumb(id, el){
   const sc=ST.scores.find(s=>s.id===id); if(!sc) return;
@@ -528,6 +531,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="pdf">${iconSvg('file')}PDF dai File</button>
     <button class="toolRow" data-m="cam">${iconSvg('camera')}Scansione (foto → spartito)</button>
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
+    <button class="toolRow" data-m="web">${iconSvg('file')}Dal web (link a PDF o foto)</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}<b>Crea</b>&nbsp;· scrivi le note</button>
     <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
@@ -535,7 +539,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),web:()=>WebImport.open('new'),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------

@@ -12,6 +12,7 @@ const Insert = {
         ${ST.cur.compose?`<button class="srcCard" data-src="creaEdit">${iconSvg('wand')}<b>Modifica lo spartito creato</b><span>Riapri “${esc(ST.cur.title)}” nel compositore.</span></button>`:''}
         <button class="srcCard" data-src="cam">${iconSvg('camera')}<b>Scatta una foto</b><span>Ritaglia la zona, raddrizza e migliora note e dettagli.</span></button>
         <button class="srcCard" data-src="img">${iconSvg('image')}<b>Foto dalla libreria</b><span>Una o più immagini già sull'iPad.</span></button>
+        <button class="srcCard" data-src="web">${iconSvg('file')}<b>Da un link web</b><span>Incolla l'indirizzo di un PDF o di una foto.</span></button>
         <button class="srcCard" data-src="pdf">${iconSvg('file')}<b>Da un altro PDF</b><span>Tutte le pagine o solo alcune.</span></button>
         <button class="srcCard" data-src="staff">${iconSvg('staff')}<b>Pentagrammata</b><span>Pagina vuota con 12 righi per scrivere a mano.</span></button>
         <button class="srcCard" data-src="blank">${iconSvg('plusDoc')}<b>Pagina bianca</b><span>Per appunti, testi, diteggiature.</span></button>
@@ -21,7 +22,7 @@ const Insert = {
       null,{eyebrow:'Spartito aperto'});
     m2.querySelector('#insPos').onclick=e=>{const b=e.target.closest('[data-pos]');if(!b)return;this.pos=b.dataset.pos;m2.querySelectorAll('#insPos button').forEach(x=>x.classList.toggle('on',x===b))};
     m2.querySelector('.srcCards').onclick=e=>{const b=e.target.closest('[data-src]');if(!b)return;const s=b.dataset.src;
-      if(s==='cam') this.fromPhoto('insert'); if(s==='img') this.fromPhoto('insert',true); if(s==='pdf') this.pickPdf('insert');
+      if(s==='cam') this.fromPhoto('insert'); if(s==='img') this.fromPhoto('insert',true); if(s==='pdf') this.pickPdf('insert'); if(s==='web') WebImport.open('insert');
       if(s==='staff') this.addTemplate('staff'); if(s==='blank') this.addTemplate('blank');
       if(s==='crea'){ closeLayers(); Compose.open('insert'); } if(s==='creaEdit'){ closeLayers(); Compose.open('edit',ST.cur); } };
   },
@@ -277,7 +278,8 @@ function enhance(cv,mode,p){
   // 3) contrasto e intensità dei segni
   const C=1+p.contrast/100, gam=1+p.ink/100*1.6, clean=p.clean/100;
   const white=255-clean*60; // sopra questa soglia → carta bianca
-  for(let i=0;i<N;i++){let t=v[i];t=(t-128)*C+128;t=clamp(t/white,0,1);t=Math.pow(t,gam);v[i]=t*255}
+  const lo=(p.lo||0)/100, hi=Math.max(lo+.1,(p.hi==null?100:p.hi)/100), ex=p.expo||1;
+  for(let i=0;i<N;i++){let t=v[i];t=(t-128)*C+128;t=clamp(t/white,0,1);t=Math.pow(t,gam);if(lo>0||hi<1)t=clamp((t-lo)/(hi-lo),0,1);if(ex!==1)t=Math.pow(t,ex);v[i]=t*255}
   const out=ctx.createImageData(W,H), o=out.data;
   if(mode==='score'){
     // 4) bianco/nero adattivo + ispessimento leggero per note sottili

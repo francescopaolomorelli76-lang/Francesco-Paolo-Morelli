@@ -136,6 +136,15 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - Scrive pronuncia in blu sotto i versi e traduzione rossa in corsivo (una per voce, o tutte); senza internet usa dizionario offline (`FR_LINES`, Cantique de Jean Racine incluso).
 - `readLyrics` ora restituisce anche estremi (`a`,`b`) e `meta` per cercare i trattini.
 
+## Scansiona, scanner a 8 maniglie, tavolozza completa, import dal web (24 novembre 2026)
+- `scanlive.js` (Scansiona): nell'app apre lo scanner di iPhone/iPad (VisionKit, comando Swift `scanDocs`); nel browser fotocamera dal vivo con bordi rilevati, scatto automatico, più pagine; in alternativa foto singola/libreria/web. Tutte le entrate "Scansiona/Scatta" aprono questa sezione.
+- `scan2.js`: cornice con 4 angoli + 4 maniglie sui lati (area interna colorata), Annulla/Ripeti, 5 toni della pagina, punto nero e bianco. `enhance()` ha `lo`,`hi`,`expo`.
+- `fix.js` (Migliora pagina, Prima/Dopo): Annulla/Ripeti su bordi e impostazioni, toni e livelli; i bordi restano modificabili riaprendo.
+- `palette.js`: "Tavolozza completa" (117 sfumature + colore libero) aggiunta da sola ai pannelli colore (pennello, evidenziatore, forme, segni, testo).
+- Giallo fluo `#f7ff00` primo tra gli evidenziatori (migrazione `fluoY` per chi aveva il giallo vecchio).
+- `webimp.js` (Importa dal web): link a PDF/foto/pagina con PDF; nell'app il download passa da Swift (`download`), nel browser dipende dal sito (CORS). Link Drive e Dropbox convertiti.
+- Swift: `WebViewController.swift` ha `import VisionKit`, casi `scanDocs` e `download`: da compilare con la build su GitHub (non compilabile qui).
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

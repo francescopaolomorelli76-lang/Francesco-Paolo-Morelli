@@ -1,5 +1,5 @@
 // ================= Annotazioni =================
-const NEON=['#fff200','#39ff14','#ff3cac','#00e5ff','#ff9f1c','#b388ff','#ff5252','#7dffd4'];
+const NEON=['#f7ff00','#fff200','#39ff14','#ff3cac','#00e5ff','#ff9f1c','#b388ff','#ff5252','#7dffd4'];
 const SWATCHES=['#111111','#d23b2f','#1f5fd6','#1d8a4a','#c8962e','#7a4a2a','#8b3fc4','#f4e04d','#ff8a3d','#5fd0e6','#ff6fae','#ffffff'];
 // Segni dei pannelli che si disegnano trascinando (lunghezza a piacere)
 const STRETCH={hairCresc:'cresc',hairDim:'dim',slurUp:'slurUp',slurDown:'slurDown',tie:'tie',vowelLink:'slurDown',trillLine:'trill',vibrato:'wavy',volta1:'volta',volta2:'volta',pedLine:'ped',octLine:'octave',lineH:'line',dashedH:'dashed'};
@@ -14,7 +14,7 @@ const Anno = {
     {k:'stamp',g:{c:U(0x1D110),f:'m'},color:'#d23b2f',size:30,alpha:1},
     {k:'shape',shape:'dim',color:'#d23b2f',size:6,alpha:1},
     {k:'pen',color:'#111111',size:5,alpha:1},{k:'pen',color:'#d23b2f',size:5,alpha:1},{k:'pen',color:'#1f5fd6',size:5,alpha:1},
-    {k:'pen',color:'#111111',size:12,alpha:1},{k:'hl',color:'#fff200',size:40,alpha:.5},{k:'mask',color:'#ffffff',size:40,alpha:1},
+    {k:'pen',color:'#111111',size:12,alpha:1},{k:'hl',color:'#f7ff00',size:40,alpha:.5},{k:'mask',color:'#ffffff',size:40,alpha:1},
   ],
   sel:2, mode:'preset', ruler:false, layers:[{name:'Livello 1',vis:true},{name:'Livello 2',vis:true}], layer:0,
   hist:{}, snapshot:null, live:null, selIdx:[], selBox:null, stampCat:0,

@@ -109,7 +109,7 @@
         <button class="toolRow" data-act="forscore"><svg class="i" data-i="backup"></svg>Da forScore (.4sb)</button>
         <button class="toolRow" data-act="templates"><svg class="i" data-i="staff"></svg>Modelli (pentagrammata)</button>
         <h3>Altro</h3>
-        <button class="toolRow" data-act="piano"><svg class="i" data-i="piano"></svg>Pianoforte</button>
+        <button class="toolRow" data-act="piano"><svg class="i" data-i="piano"></svg>Pianoforte<small>tasti a schermo · senza MIDI</small></button>
         <button class="toolRow" data-act="metro"><svg class="i" data-i="metro"></svg>Metronomo e accordatore</button>
         <button class="toolRow" data-act="record"><svg class="i" data-i="mic"></svg>Registra</button>
         <button class="toolRow" data-act="first"><svg class="i" data-i="restart"></svg>Dai l'inizio</button>
@@ -141,7 +141,7 @@
   </div>
 
   <div id="pianoSheet">
-    <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b>
+    <div class="pianoHead"><b style="font-family:var(--f-display);font-size:20px">Pianoforte</b><span class="hint" style="font-size:12.5px;max-width:230px">Suona toccando i tasti: funziona senza tastiera MIDI o Bluetooth.</span>
       <button class="ghostBtn" data-act="midi" style="height:36px">🎹 Tastiera MIDI / Bluetooth</button><div class="seg" id="pianoOct"><button data-o="-1">Ottava −</button><button data-o="1">Ottava +</button></div>
       <button class="ib" data-act="pianoClose" aria-label="Chiudi" data-i="close"></button></div>
     <div class="keys" id="keys"></div>
@@ -150,7 +150,7 @@
   <span id="miniClock" class="clockPill" data-act="clock"></span>
   <div id="dimmer"></div><div id="warmer"></div>
   <div id="layerRoot"></div>
-  <div id="splash" aria-hidden="true"><img src="__COVER__" alt=""><span>Leggio digitale per cantanti e musicisti</span><div class="sealLine"><img class="seal" src="__SEAL__" alt="">© 2026 FPM webdesignertech · Tutti i diritti riservati</div></div>
+  <div id="splash" aria-hidden="true"><img src="__COVER__" alt=""><span>Leggio digitale per cantanti e musicisti</span><em class="memo">In affettuosa memoria del caro collega e amico Francesco De Candia</em><div class="sealLine"><img class="seal" src="__SEAL__" alt="">© 2026 FPM webdesignertech · Tutti i diritti riservati</div></div>
   <div id="toast"></div>
   <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>
   <input type="file" id="fileImg" accept="image/*" multiple hidden>

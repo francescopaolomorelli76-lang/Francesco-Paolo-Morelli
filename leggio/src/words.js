@@ -196,12 +196,13 @@ Anno.showSelBar=function(){
   $('#selBar')?.remove(); if(!this.selBox) return; const r=inkCanvas.getBoundingClientRect();
   const b=document.createElement('div'); b.id='selBar'; b.className='pill';
   const tIdx=this.selIdx.filter(i=>this.strokes[i]&&this.strokes[i].t==='text');
-  b.innerHTML=(tIdx.length?`<button class="ghostBtn" data-s="ed" style="height:40px">${iconSvg('text')}Modifica</button><button class="ghostBtn" data-s="tt" style="height:40px">🌐 Traduci</button><button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button>`:'')
+  b.innerHTML=(tIdx.length?`<button class="ghostBtn" data-s="ed" style="height:40px">${iconSvg('text')}Modifica</button><button class="ghostBtn" data-s="tl" style="height:40px">${iconSvg('voice')}Traslittera</button><button class="ghostBtn" data-s="tt" style="height:40px">🌐 Traduci</button><button class="ghostBtn" data-s="lc" style="height:40px">${iconSvg('staff')}Copia sui righi</button>`:'')
     +`<button class="ib" data-s="hl" aria-label="Evidenzia">${iconSvg('pen')}</button><button class="ib" data-s="dup" aria-label="Duplica">${iconSvg('copy')}</button><button class="ib" data-s="del" aria-label="Elimina">${iconSvg('trash')}</button><button class="ib" data-s="done" aria-label="Fine">${iconSvg('check')}</button>`;
   $('#app').appendChild(b); const w=b.offsetWidth||400;
   b.style.left=clamp(r.left+this.selBox.x0*r.width,8,innerWidth-w-8)+'px'; b.style.top=clamp(r.top+this.selBox.y0*r.height-60,120,innerHeight-60)+'px';
   b.onclick=e=>{const k=e.target.closest('[data-s]')?.dataset.s; if(!k) return;
     if(k==='ed'){ b.remove(); Finger.openFor(tIdx); return; }
+    if(k==='tl'){ b.remove(); Finger.offerTranslit(tIdx,true); return; }
     if(k==='tt'){ Translate.open(tIdx.map(i=>this.strokes[i]),b); return; }
     if(k==='hl'){ AutoHL.pick(e.target.closest('[data-s]'),c=>{ const bx=this.selBox; if(!bx) return; AutoHL.rect(bx.x0,bx.y0+.008,bx.x1,bx.y1-.008,c); this.clearSel(); toast('Evidenziato',1400); }); return; }
     if(k==='del'){this.push();this.strokes=this.strokes.filter((_,i)=>!this.selIdx.includes(i));this.clearSel()}

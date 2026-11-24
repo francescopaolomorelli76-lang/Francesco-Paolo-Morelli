@@ -216,3 +216,6 @@ function glyphBox(c,g,s){
   const mt=c.measureText(g.c);
   return {w:(mt.actualBoundingBoxLeft||0)+(mt.actualBoundingBoxRight||mt.width), h:(mt.actualBoundingBoxAscent||sz*.7)+(mt.actualBoundingBoxDescent||0)};
 }
+
+// parole di tempo ed espressione: si inseriscono come testo, quindi si modificano e si ridimensionano
+const TEMPO_WORDS=new Set((STAMP_CATS.find(c=>c.id==='tempo')||{items:[]}).items.map(i=>i.c));

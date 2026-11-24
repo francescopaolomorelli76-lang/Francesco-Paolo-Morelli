@@ -111,6 +111,7 @@ const Anno = {
     }
     const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
     if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
+    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';

@@ -91,9 +91,9 @@ const Finger = {
     draw(); $('#app').appendChild(p); const br=bar.getBoundingClientRect(); p.style.left=br.left+'px'; p.style.top=Math.max(70,Math.min(br.top,innerHeight-p.offsetHeight-10))+'px';
   },
   // Dopo una copia: se il testo è in lingua straniera chiede se traslitterare, e lo fa da solo.
-  offerTranslit(idx){
+  offerTranslit(idx,force){
     const A=Anno; const L=idx.map(k=>A.strokes[k]).filter(Boolean); if(!L.length) return;
-    let lang=detectLang(L.map(t=>t.text).join(' ')); if(!lang||lang==='it'||!PRON[lang]) return;
+    let lang=detectLang(L.map(t=>t.text).join(' ')); if(force&&(!lang||lang==='it'||!PRON[lang])) lang=(window.Lyr&&Lyr.guess(L.map(t=>t.text).join(' ')))||'fr'; if(!lang||lang==='it'||!PRON[lang]) return;
     const p=document.createElement('div'); p.className='pop'; p.id='fgTrPop';
     const prev=()=>L.slice().sort((a,b)=>a.x-b.x).slice(0,6).map(t=>`<b>${esc(t.text)}</b> → <span style="color:#5aa0ff">${esc(PRON.conv(t.text,lang))}</span>`).join(' · ');
     p.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;width:320px"><b>Testo in ${esc(PRON.names[lang].split(' ')[0].toLowerCase())}: vuoi la pronuncia all'italiana sopra le parole?</b>
@@ -109,7 +109,8 @@ const Finger = {
   writeTranslit(L,lang,where){
     const A=Anno; A.push(); const sz=TStyle.size('pron'); const y0=L[0].y; const ny=where==='up'?y0-(L[0].size*.55+sz*.6):y0+(L[0].size*.55+sz*.7);
     A.strokes=A.strokes.filter(t=>!(t.t==='text'&&t.pron&&Math.abs(t.y-ny)<.004));
-    L.forEach(t=>A.strokes.push({t:'text',text:PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
+    const pr=new Map(); try{ for(const w of Translate.words(L)){ const syl=w.items.map(t=>String(t.text).replace(/^[-–—_]+|[-–—_]+$/g,'')); const out=pronSyl(syl,lang,false); w.items.forEach((t,i)=>pr.set(t,out[i])); } }catch(e){}
+    L.forEach(t=>A.strokes.push({t:'text',text:pr.get(t)||PRON.conv(t.text,lang),x:t.x,y:ny,size:sz,align:t.align||'c',lyric:1,pron:1,font:'sans',bold:true,color:'#1f5fd6',alpha:1,layer:t.layer||0}));
     A.redraw(); saveAnn(); A.buildBar();
   },
   // barretta per un tratto (riga evidenziata, linea, forma, segno): frecce, duplica, elimina

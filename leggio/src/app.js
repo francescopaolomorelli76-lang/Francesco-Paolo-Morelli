@@ -703,7 +703,7 @@ async function boot(){
   const splash=$('#splash'), t0=Date.now(); let gone=false;
   const hide=()=>{ if(gone) return; gone=true; splash.classList.add('out'); setTimeout(()=>{ if(splash.parentNode) splash.parentNode.removeChild(splash); },700); };
   splash.addEventListener('click',hide); setTimeout(hide,6000);
-  boot.ready=()=>setTimeout(hide,Math.max(0,1800-(Date.now()-t0)));
+  boot.ready=()=>setTimeout(hide,Math.max(0,2800-(Date.now()-t0)));
   try{ await document.fonts.load('40px "Noto Music"','\u{1D11E}'); await document.fonts.load('italic 600 20px "Bodoni Moda"','Allegro'); }catch(e){}
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}

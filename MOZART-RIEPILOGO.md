@@ -145,6 +145,14 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - `webimp.js` (Importa dal web): link a PDF/foto/pagina con PDF; nell'app il download passa da Swift (`download`), nel browser dipende dal sito (CORS). Link Drive e Dropbox convertiti.
 - Swift: `WebViewController.swift` ha `import VisionKit`, casi `scanDocs` e `download`: da compilare con la build su GitHub (non compilabile qui).
 
+## Ritocchi del 24 novembre 2026 (sera)
+- Lazo su testo: nuovo pulsante "Traslittera" (lingua scelta/riconosciuta, francese sillaba per sillaba).
+- Pianoforte a schermo: scheda "Pianoforte" in Per Cantanti; avviso che funziona senza MIDI/Bluetooth.
+- Info: sinfonie e concerti (K_SYMN, K_CONN, K_VLNN in `info.js`) mostrano anno e breve scheda oltre alla tonalità.
+- Apertura: dedica a Francesco De Candia sotto il logo (splash 2,8 s).
+- Uscendo da Annota lo zoom torna a pagina intera (`tweaks.js`).
+- Tempo ed espressione: le parole si inseriscono come testo (modificabile con Dito ✋ e lazo).
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

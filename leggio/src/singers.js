@@ -25,7 +25,7 @@ const Singers = {
     PianoS.preload(40,84);
     this.saved=(await DB.get('vocalizzi'))||[];
     try{ const v=localStorage.getItem('mz-voice'); if(v) this.start=+v; }catch(e){}
-    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
+    const m2=modal('Per Cantanti',`<div class="seg" id="sgTabs"><button data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo vocalizzo</button><button data-t="rec">Registra performance</button><button data-t="piano">Pianoforte</button><button data-t="pron">Pronuncia</button></div><div id="sgBody" style="display:flex;flex-direction:column;gap:14px"></div>`,
       null,{eyebrow:'Riscaldamento e studio',onClose:()=>this.stopAll()});
     m2.style.width='min(720px,calc(100% - 16px))';
     $('#sgTabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){this.stopAll();this.tab=b.dataset.t;this.render()}};
@@ -36,6 +36,7 @@ const Singers = {
   render(){
     $$('#sgTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab));
     const B=$('#sgBody'); if(!B) return;
+    if(this.tab==='piano'){ closeLayers(); this.tab='voc'; Piano.open(); toast('Pianoforte: tocca i tasti, non serve nessuna tastiera collegata',2800); return; }
     if(this.tab==='pron'){ closeLayers(); this.tab='voc'; Pron.open(); return; }
     if(this.tab==='voc') this.renderVoc(B); else if(this.tab==='make') this.renderMake(B); else this.renderRec(B);
   },

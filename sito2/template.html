@@ -61,8 +61,9 @@ body.menu #menu a:nth-child(2){transition-delay:.05s}body.menu #menu a:nth-child
 @media (pointer:fine){#cur{display:block}}
 /* sezioni */
 section{position:relative;padding-block:clamp(90px,14vw,190px)}
+.hero .wrap{width:100%}
 .hero{min-height:100svh;display:grid;align-content:end;padding-block:120px clamp(40px,8vw,90px)}
-.hero h1{font-size:clamp(46px,10.5vw,170px);line-height:.95;font-weight:900}
+.hero h1{font-size:clamp(44px,8.4vw,136px);line-height:.95;font-weight:900}
 .hero h1 .l{display:block;overflow:hidden}.hero h1 .l>span{display:block;transform:translateY(110%);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
 body.ready .hero h1 .l>span{transform:none}body.ready .hero h1 .l:nth-child(2)>span{transition-delay:.12s}body.ready .hero h1 .l:nth-child(3)>span{transition-delay:.24s}
 .heroFoot{display:flex;gap:24px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-top:44px}
@@ -143,6 +144,36 @@ input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px;bord
 .btn.line{color:var(--gold-hi);border-color:rgba(214,168,78,.5)}.btn.line:hover{background:rgba(214,168,78,.12)}
 footer{border-top:1px solid var(--line);padding-block:30px calc(30px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:13px;background:var(--ink)}footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+/* store, fasce e foto */
+.stores{display:flex;gap:12px;flex-wrap:wrap}
+.store{display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 24px 0 18px;border-radius:16px;background:#000;border:1px solid rgba(244,236,220,.35);transition:transform .25s,border-color .25s,box-shadow .25s}
+.store:hover{transform:translateY(-2px);border-color:var(--gold-hi);box-shadow:0 12px 40px rgba(214,168,78,.25)}
+.store svg{width:28px;height:28px;fill:var(--text)}.store span{display:grid;line-height:1.1;font-weight:700;font-size:18px}.store small{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.band{position:relative;min-height:70svh;display:grid;align-items:end;overflow:hidden}
+.band>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.band::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--ink) 0,rgba(11,10,8,.2) 35%,rgba(11,10,8,.2) 55%,var(--ink) 100%)}
+.bandT{position:relative;z-index:2;padding-block:80px;display:grid;gap:14px}
+.photo{margin:56px 0 0;border-radius:28px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.55),0 0 0 1px rgba(214,168,78,.3)}
+.photo img{display:block;width:100%;height:auto}
+.paper .photo{box-shadow:0 30px 80px rgba(60,40,10,.3)}
+.studio{overflow:hidden}.studioBg{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:.22;mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent)}
+.studio .wrap{position:relative}
+.cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:44px}@media(max-width:900px){.cards4{grid-template-columns:1fr 1fr}}@media(max-width:520px){.cards4{grid-template-columns:1fr}}
+.c4{background:rgba(22,19,14,.82);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;gap:8px;align-content:start;backdrop-filter:blur(8px);transition:transform .3s,border-color .3s}.c4:hover{transform:translateY(-4px);border-color:var(--gold-deep)}
+.c4 b{font-family:var(--f-display);font-size:23px}.c4 p{color:var(--muted);font-size:15px}
+.stBody{display:grid;grid-template-columns:1fr 1.1fr;gap:28px;align-items:center;margin-top:24px}@media(max-width:820px){.stBody{grid-template-columns:1fr}}.stBody>*{min-width:0}
+.stTx p{color:var(--muted);font-size:16px}.stTx ul{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}.stTx li{font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.stViz{min-height:230px;border-radius:22px;background:#0e0c08;border:1px solid var(--line);padding:20px;display:grid;gap:14px;align-content:center;justify-items:center;text-align:center}
+.keyN{font-family:var(--f-display);font-weight:700;font-size:64px;line-height:1;color:var(--gold-hi)}.row2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.mini{font-size:13px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 13px}.mini.on{color:#1b1406;background:var(--gold);border-color:transparent}.mini:hover:not(.on){color:var(--gold-hi)}
+.beats{display:flex;gap:12px}.beats i{width:18px;height:18px;border-radius:50%;background:var(--line);transition:.15s}.beats i.on{background:var(--gold);transform:scale(1.35);box-shadow:0 0 18px rgba(214,168,78,.7)}
+.recb{width:74px;height:74px;border-radius:50%;border:3px solid var(--text);background:transparent;display:grid;place-items:center}.recb::after{content:"";width:46px;height:46px;border-radius:50%;background:#e0624f;transition:.2s}.recb.go::after{border-radius:10px;width:28px;height:28px;animation:rp 1.2s ease-in-out infinite}@keyframes rp{50%{opacity:.5}}
+.vu{display:flex;gap:4px;align-items:flex-end;height:44px}.vu i{width:6px;height:6px;border-radius:3px;background:var(--gold-deep);transition:height .12s}
+.kb{position:relative;display:flex;width:100%;height:150px;touch-action:none;user-select:none;-webkit-user-select:none}
+.kb .w{flex:1;background:linear-gradient(180deg,#fffdf6,#e8e0cc);border:1px solid #2a2418;border-radius:0 0 8px 8px;position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;font-weight:600;color:#6b5f46}
+.kb .w.dn{background:linear-gradient(180deg,var(--gold-hi),var(--gold))}
+.kb .k{position:absolute;top:0;width:5.2%;height:62%;background:linear-gradient(180deg,#222,#000);border-radius:0 0 6px 6px;z-index:2;transform:translateX(-50%)}.kb .k.dn{background:linear-gradient(180deg,var(--gold),var(--gold-deep))}
+
 .js .rv{opacity:0;transform:translateY(34px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}.js .rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.js .rv{opacity:1;transform:none}.hero h1 .l>span{transform:none}#loader{display:none}.gold{background-position:0 0}}
 </style>
@@ -152,9 +183,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 <canvas id="gl" aria-hidden="true"></canvas>
 
 <header class="top"><div class="wrap"><a class="brand" href="#top" data-cur>Mozart</a><span class="sp"></span>
-  <a class="pillBtn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/" data-cur>Apri l'app</a>
+  <a class="pillBtn fill" href="#scarica" data-cur>Scarica</a>
   <button class="pillBtn menuBtn" id="menuBtn" aria-expanded="false" aria-controls="menu" data-cur><span class="bars"></span><span id="menuT">Menu</span></button></div></header>
-<div id="menu"><nav><a href="#funzioni">Funzioni</a><a href="#cantanti">Per i cantanti</a><a href="#scansiona">Scansiona</a><a href="#recensioni">Recensioni</a><a href="#contatti">Contatti</a></nav></div>
+<div id="menu"><nav><a href="#funzioni">Funzioni</a><a href="#cantanti">Per i cantanti</a><a href="#studio">Studio di canto</a><a href="#scansiona">Scansiona</a><a href="#recensioni">Recensioni</a><a href="#contatti">Contatti</a></nav></div>
 <div id="peek" aria-hidden="true"></div>
 
 <main id="top">
@@ -163,15 +194,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
   <h1 style="margin-top:20px"><span class="l"><span class="gold">Mozart.</span></span><span class="l"><span>Il leggio che</span></span><span class="l"><span>capisce la musica.</span></span></h1>
   <div class="heroFoot"><p class="lead rv">Leggi, annota, traslittera, traduci, scansiona e crea i tuoi spartiti. Pensato per chi suona e per chi canta.</p>
     <div class="scrollHint"><i></i>Scorri per esplorare</div></div>
+  <div class="rv" style="margin-top:28px"><div class="stores"><a class="store" href="#scarica" data-cur><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.9zM14.2 5.8c.6-.8 1.1-1.8.9-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2.1-.5 2.8-1.4z"/></svg><span><small>Presto su</small>App Store</span></a><a class="store" href="#scarica" data-cur><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3.5v17c0 .5.5.8.9.5l9.6-8.5L4.9 3c-.4-.3-.9 0-.9.5zm11.4 7.6L6.2 2.8l11.3 6.6-2.1 1.7zm0 1.8 2.1 1.7-11.3 6.6 9.2-8.3zm3.3-2.6-2.1 1.2-2.4-2.1 2.4-2.1 2.1 1.2c.9.5.9 1.3 0 1.8z"/></svg><span><small>Presto su</small>Google Play</span></a></div></div>
 </div></section>
 
 <section><div class="wrap">
   <p class="statement rv">Uno spartito non è un file. È un luogo dove <em>studi, sbagli, correggi</em> e canti con sicurezza.</p>
   <div class="two"><p class="lead rv">Mozart rimette in ordine le sillabe del coro, scrive la pronuncia sotto ogni nota, scansiona le pagine come lo scanner di iPhone e ti lascia annotare con la penna, senza uscire dall'app.</p>
-    <div class="rv" style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/" data-cur>Provalo nel browser</a><a class="btn line" href="#funzioni" data-cur>Scopri le funzioni</a></div></div>
+    <div class="rv" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><a class="btn line" href="#funzioni" data-cur>Scopri le funzioni</a><a class="btn fill" href="#scarica" data-cur>Scarica Mozart</a></div></div>
 </div></section>
 
-<section id="funzioni" style="padding-top:0"><div class="wrap">
+<div class="band"><img alt="Interno di un teatro d'opera nero e oro" data-im="11" loading="lazy"><div class="bandT wrap"><div class="eyebrow">Nato per il teatro</div><p class="statement" style="font-size:clamp(28px,4.6vw,64px);max-width:16em">Il palco, il coro, la prova del mattino: tutto in un leggio.</p></div></div>
+
+<section id="funzioni" style="padding-top:clamp(70px,10vw,130px)"><div class="wrap">
   <div class="eyebrow rv">Funzioni in evidenza</div>
   <div class="list" id="list">
     <a class="row rv" href="#annota" data-img="a" data-cur><h3>Annota</h3><span class="tags">penna · evidenziatore fluo · lazo · testo · segni</span><span class="arr"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><div class="thumb" data-t="a"></div></a>
@@ -185,6 +219,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 <section id="annota" style="padding-top:0"><div class="wrap">
   <div class="two" style="margin-top:0"><div><div class="eyebrow rv">Annota</div><h2 class="rv" style="margin-top:14px;font-size:clamp(40px,7vw,100px);line-height:1">Scrivi sulla musica come su carta.</h2></div>
     <p class="lead rv">Penna, evidenziatore giallo fluo, lazo, testo e segni musicali. Una tavolozza con ogni sfumatura. Un tocco annulla, anche sulle modifiche al PDF. Le parole di tempo ed espressione, come Allegro e dolce, si modificano e si ingrandiscono.</p></div>
+  <figure class="photo rv"><img alt="Leggio dorato con tablet e spartito in un teatro d'opera" data-im="10" loading="lazy"></figure>
   <div class="shots" id="schermate"><figure class="shot rv"><div class="dev"><div><img alt="Spartito annotato con la barra degli strumenti" src="__SHSCORE__"></div></div><figcaption>Evidenziatore, penna, testo e pronuncia direttamente sulla pagina.</figcaption></figure>
     <figure class="shot rv"><div class="dev"><div><img alt="Pannello Pronuncia e traduzione" src="__SHPRON__"></div></div><figcaption>Pronuncia e traduzione: una riga per ogni voce del coro.</figcaption></figure></div>
 </div></section>
@@ -193,6 +228,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
   <div class="eyebrow rv">Per i cantanti</div>
   <h2 class="rv" style="margin:14px 0 22px;font-size:clamp(40px,7.4vw,112px);line-height:1">Ogni voce.<br>Ogni sillaba.<br><span class="gold">Pronuncia e traduzione.</span></h2>
   <p class="lead rv">Mozart legge le parole stampate sotto ogni rigo del coro, rimette insieme le sillabe divise dai trattini e scrive la pronuncia all'italiana e la traduzione, nota per nota.</p>
+  <figure class="photo rv" style="margin-top:44px"><img alt="Mani di un cantante con lo spartito del coro" data-im="7" loading="lazy"></figure>
   <div class="demo rv" style="margin-top:44px"><div class="seg" id="langs"><button class="on" data-l="fr">Francese</button><button data-l="la">Latino</button><button data-l="de">Tedesco</button></div>
     <div class="lyr" id="lyr" aria-live="polite"></div><div class="tr" id="tr"></div>
     <ol class="steps"><li><span class="n">1</span><b>Tocca il libro</b><p>Nella barra delle annotazioni e in Attrezzi.</p></li><li><span class="n">2</span><b>Mozart legge</b><p>Voce per voce: soprani, contralti, tenori e bassi.</p></li><li><span class="n">3</span><b>Controlli e scegli</b><p>La lingua e, se serve, correggi a mano.</p></li><li><span class="n">4</span><b>Scrivi sullo spartito</b><p>Pronuncia in blu, traduzione in rosso.</p></li></ol>
@@ -202,10 +238,24 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 
 <div class="marq" aria-hidden="true"><div><span>Annota</span><span>Traslittera</span><span>Traduci</span><span>Scansiona</span><span>Crea</span><span>Canta</span><span>Annota</span><span>Traslittera</span><span>Traduci</span><span>Scansiona</span><span>Crea</span><span>Canta</span></div></div>
 
+<section id="studio" class="studio"><div class="studioBg"></div><div class="wrap">
+  <div class="eyebrow rv">Studio di canto</div>
+  <h2 class="rv" style="margin:14px 0 20px;font-size:clamp(40px,7.4vw,112px);line-height:1">Scaldati, registrati,<br><span class="gold">riascoltati.</span></h2>
+  <p class="lead rv">Nella sezione Per Cantanti trovi tutto per il riscaldamento e lo studio, senza uscire da Mozart.</p>
+  <div class="cards4">
+    <div class="c4 rv"><b>Dieci vocalizzi</b><p>Pronti da trasportare sulla tua voce: scegli la nota di partenza e sali o scendi di mezzo tono.</p></div>
+    <div class="c4 rv"><b>I tuoi vocalizzi</b><p>Li crei suonando sulla tastiera: le note si allineano al tempo e li ritrovi in ogni tonalità.</p></div>
+    <div class="c4 rv"><b>Registra e invia</b><p>Registra la prova, riascoltala e mandala con WhatsApp o AirDrop.</p></div>
+    <div class="c4 rv"><b>Pianoforte a schermo</b><p>Funziona anche senza tastiera MIDI o Bluetooth: tocca i tasti e suona.</p></div></div>
+  <div class="demo rv" style="margin-top:44px"><div class="seg" id="stTabs"><button class="on" data-t="voc">Vocalizzi</button><button data-t="make">Crea il tuo</button><button data-t="rec">Registra</button><button data-t="piano">Pianoforte</button></div>
+    <div class="stBody"><div class="stTx" id="stTx"></div><div class="stViz" id="stViz" aria-live="polite"></div></div></div>
+</div></section>
+
 <section id="scansiona" class="paper"><div class="wrap">
   <div class="eyebrow rv">Scansiona</div>
   <h2 class="rv" style="margin:14px 0 20px;font-size:clamp(40px,7.4vw,112px);line-height:1;max-width:11em">Una foto. <span style="color:var(--gold-deep)">Una pagina perfetta.</span></h2>
   <p class="lead rv">Inquadra lo spartito: Mozart trova i bordi, raddrizza la pagina e la migliora. Nell'app usa lo scanner di iPhone e iPad, anche per più pagine di fila. Trascini la cornice con otto maniglie e annulli quando vuoi.</p>
+  <figure class="photo rv" style="margin-top:44px"><img alt="Mani con un telefono sopra uno spartito antico" data-im="9" loading="lazy"></figure>
   <div class="scanner rv"><svg viewBox="0 0 420 320" id="scanSvg" role="img" aria-label="Foglio con cornice a otto maniglie"></svg>
     <div><b style="font-family:var(--f-display);font-size:26px">Importa da dove vuoi</b><ul><li>Fotocamera con scatto automatico</li><li>Link a un PDF o a una foto dal web</li><li>Backup e PDF dai File, senza doppioni</li><li>Toni, punto nero e punto bianco regolabili</li></ul></div></div>
 </div></section>
@@ -232,18 +282,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
       <button class="btn fill" type="submit" data-cur>Apri la mail</button><p class="small">Si apre il tuo programma di posta con il messaggio pronto. Se non succede, copia l'indirizzo e scrivici da lì.</p></form>
   </div></div></section>
 
-<section style="padding-top:0"><div class="wrap cta"><h2 class="rv">Apri lo spartito.<br><span class="gold">Lascia fare a Mozart.</span></h2>
-  <div class="rv" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><a class="btn fill" href="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/mozart/" data-cur>Apri Mozart</a></div>
-  <p class="lead rv" style="margin-inline:auto">Nel browser subito, senza installare nulla. Su iPad e iPhone come app: scrivici e ti guidiamo.</p></div></section>
+<section style="padding-top:0"><div class="wrap cta"><h2 class="rv">Scarica Mozart.<br><span class="gold">Lascia fare alla musica.</span></h2>
+  <div class="rv" id="scarica" style="display:grid;gap:18px;justify-items:center"><div class="stores"><a class="store" href="#scarica" data-cur><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.9zM14.2 5.8c.6-.8 1.1-1.8.9-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2.1-.5 2.8-1.4z"/></svg><span><small>Presto su</small>App Store</span></a><a class="store" href="#scarica" data-cur><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3.5v17c0 .5.5.8.9.5l9.6-8.5L4.9 3c-.4-.3-.9 0-.9.5zm11.4 7.6L6.2 2.8l11.3 6.6-2.1 1.7zm0 1.8 2.1 1.7-11.3 6.6 9.2-8.3zm3.3-2.6-2.1 1.2-2.4-2.1 2.4-2.1 2.1 1.2c.9.5.9 1.3 0 1.8z"/></svg><span><small>Presto su</small>Google Play</span></a></div><a class="btn line" href="mailto:fpm@fpmwebdesignertech.it?subject=Avvisami%20quando%20Mozart%20esce%20su%20App%20Store%20e%20Google%20Play" data-cur>Avvisami quando esce</a></div>
+  <p class="lead rv" style="margin-inline:auto">Mozart arriva su App Store e Google Play. Lascia la tua e-mail e ti avvisiamo appena è disponibile.</p></div></section>
 </main>
 <footer><div class="wrap"><div>Mozart · leggio digitale FPM<br>© FPM webdesignertech</div><div>Nero e oro, come un teatro d'opera.</div></div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 document.documentElement.classList.add('js');
+const IM={7:'__IMG7__',8:'__IMG8__',9:'__IMG9__',10:'__IMG10__',11:'__IMG11__'};
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches, fine=matchMedia('(pointer:fine)').matches;
 const NSV='http://www.w3.org/2000/svg';
+document.querySelectorAll('[data-im]').forEach(i=>{ i.src=IM[i.dataset.im]; }); const sb=document.querySelector('.studioBg'); if(sb) sb.style.backgroundImage='url('+IM[8]+')';
 const el=(t,a,p)=>{const e=document.createElementNS(NSV,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 /* ---------- immagini vive dell'elenco (disegni, si sostituiscono con le immagini vere) ---------- */
 const ART={
@@ -253,7 +305,8 @@ const ART={
  d:`<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#fbf8f1"/>${[0,1,2,3,4].map(l=>`<line x1="18" x2="302" y1="${70+l*12}" y2="${70+l*12}" stroke="#2a2418"/>`).join('')}${[[60,2],[100,4],[140,6],[180,4],[220,2],[260,0]].map(([x,n])=>{const y=130-n*6;return `<ellipse cx="${x}" cy="${y}" rx="7" ry="5" fill="#1b1812" transform="rotate(-20 ${x} ${y})"/><line x1="${x+6}" x2="${x+6}" y1="${y}" y2="${y-32}" stroke="#1b1812" stroke-width="1.5"/>`}).join('')}</svg>`,
  e:`<svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice"><rect width="320" height="200" fill="#16130e"/>${[0,1,2].map(i=>`<g transform="translate(${34+i*92} ${30+i*10})"><rect width="80" height="120" rx="8" fill="#211d15" stroke="#3a3326"/><circle cx="40" cy="38" r="20" fill="#d6a84e" opacity=".85"/><rect x="14" y="74" width="52" height="6" rx="3" fill="#a89c83"/><rect x="22" y="88" width="36" height="6" rx="3" fill="#3a3326"/></g>`).join('')}</svg>`
 };
-$$('[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
+const PH={a:IM[10],b:IM[7],c:IM[9],d:IM[8],e:IM[11]}; Object.keys(PH).forEach(k=>{ ART[k]=`<img alt="" src="${PH[k]}">`; });
+$$('.thumb[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
 (function(){ const pk=$('#peek'); if(!fine) return; let on=false, tx=0,ty=0,x=0,y=0;
   $$('.row').forEach(r=>{ r.addEventListener('pointerenter',()=>{ pk.innerHTML=ART[r.dataset.img]; pk.classList.add('on'); on=true; }); r.addEventListener('pointerleave',()=>{ pk.classList.remove('on'); on=false; }); });
   addEventListener('pointermove',e=>{ tx=e.clientX+120; ty=e.clientY; });
@@ -272,6 +325,40 @@ $$('[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
   const box=$('#lyr'), tr=$('#tr'); const render=k=>{ box.classList.add('swap'); tr.style.opacity=0; setTimeout(()=>{ box.innerHTML=''; D[k].w.forEach((w,wi)=>{ if(wi) box.insertAdjacentHTML('beforeend','<span class="gapw"></span>'); w.forEach(([a,b],i)=>box.insertAdjacentHTML('beforeend',`<span class="syl"><em>${b}</em><b>${a}${i<w.length-1?'-':''}</b></span>`)); }); tr.textContent=D[k].t; tr.style.opacity=1; box.classList.remove('swap'); },260);
     $$('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.l===k)); };
   $('#langs').onclick=e=>{ const b=e.target.closest('button'); if(b) render(b.dataset.l); }; render('fr'); })();
+/* ---------- studio di canto ---------- */
+(function(){ const TX=$('#stTx'), VZ=$('#stViz'); let timer=null, ctx=null;
+  const NM=['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si'], nm=m=>NM[m%12]+(Math.floor(m/12)-1);
+  const VO=[['Soprano',60],['Mezzosoprano',57],['Contralto',55],['Tenore',48],['Baritono',45],['Basso',41]];
+  const ex=['Scala di 5 note','Arpeggio','Terze','Scala di nona','Triade staccata','Nota ribattuta',"Salto d'ottava",'Sirena','Quinta discendente','Agilità'];
+  const AC=()=>{ if(!ctx){ const A=window.AudioContext||window.webkitAudioContext; ctx=new A(); } if(ctx.state==='suspended') ctx.resume(); return ctx; };
+  function voice(m){ const c=AC(), t=c.currentTime, f=440*Math.pow(2,(m-69)/12), g=c.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.32,t+.008); g.gain.exponentialRampToValueAtTime(.12,t+.35); g.connect(c.destination);
+    const o1=c.createOscillator(); o1.type='triangle'; o1.frequency.value=f; const o2=c.createOscillator(); o2.type='sine'; o2.frequency.value=f*2; const g2=c.createGain(); g2.gain.value=.25; o2.connect(g2).connect(g); o1.connect(g); o1.start(t); o2.start(t); return {g,o1,o2}; }
+  function stopV(v){ if(!v) return; const c=ctx, t=c.currentTime; v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0,t,.12); v.o1.stop(t+.7); v.o2.stop(t+.7); }
+  const T={
+    voc:{p:'Dieci vocalizzi pronti, da trasportare sulla tua voce: scegli la nota di partenza, sali o scendi di mezzo tono alla volta, regola velocità e direzione. Un accordo ti dà l\'intonazione prima di ogni ripetizione.',l:ex,
+      viz(){ let m=60; VZ.innerHTML='<div class="keyN" id="kn"></div><div class="row2"><button class="mini" data-d="-1">½ tono giù</button><button class="mini" data-d="1">½ tono su</button></div><div class="row2" id="vv">'+VO.map(([n,v],i)=>`<button class="mini${i===0?' on':''}" data-m="${v}">${n}</button>`).join('')+'</div>';
+        const up=()=>$('#kn').textContent=nm(m); up(); VZ.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.d) m=Math.max(36,Math.min(84,m+ +b.dataset.d)); if(b.dataset.m){ m=+b.dataset.m; $$('#vv button').forEach(x=>x.classList.toggle('on',x===b)); } up(); const v=voice(m); setTimeout(()=>stopV(v),700); }; }},
+    make:{p:'Inventa il tuo vocalizzo: scegli la velocità, premi Registra e dopo quattro colpi di metronomo suoni sulla tastiera. Le note vengono allineate al tempo. Ascolti, dai un nome e lo salvi: lo ritrovi tra i vocalizzi, trasportabile in ogni tonalità.',l:['Metronomo','Tastiera','Note allineate','Salva e trasporta'],
+      viz(){ VZ.innerHTML='<div class="beats"><i></i><i></i><i></i><i></i></div><div class="keyN" style="font-size:40px" id="mk">Pronto</div><button class="mini on" id="mkGo">Registra</button>'; let k=0; const bs=$$('.beats i',VZ);
+        $('#mkGo').onclick=()=>{ clearInterval(timer); k=0; const seq=['Mi','Sol','Do']; timer=setInterval(()=>{ bs.forEach((b,i)=>b.classList.toggle('on',i===k%4&&k<4)); $('#mk').textContent=k<4?String(k+1):seq[(k-4)%3]; k++; if(k>8){ clearInterval(timer); bs.forEach(b=>b.classList.remove('on')); $('#mk').textContent='Salvato'; } },420); }; }},
+    rec:{p:'Premi Registra e canta: il microfono ascolta senza filtri che alterano la voce e un indicatore mostra il livello. Poi riascolti la presa e la invii con WhatsApp, Messaggi, Mail o AirDrop.',l:['Microfono','Livello in tempo reale','Riascolto','WhatsApp · Mail · AirDrop'],
+      viz(){ VZ.innerHTML='<div class="vu">'+'<i></i>'.repeat(16)+'</div><button class="recb" id="rc" aria-label="Registra"></button><div class="small" id="rt">Premi per registrare</div>'; const bars=$$('.vu i',VZ); let s=0;
+        $('#rc').onclick=e=>{ const on=!e.currentTarget.classList.contains('go'); e.currentTarget.classList.toggle('go',on); clearInterval(timer); if(!on){ bars.forEach(b=>b.style.height='6px'); $('#rt').textContent='Presa salvata: riascolta e invia'; return; } s=0;
+          timer=setInterval(()=>{ s++; bars.forEach((b,i)=>b.style.height=(6+Math.abs(Math.sin(s*.7+i*.6))*34*Math.random())+'px'); $('#rt').textContent='Sto registrando… 0:'+String(Math.floor(s*.12)).padStart(2,'0'); },120); }; }},
+    piano:{p:'Il pianoforte è già dentro Mozart: due ottave a schermo, con il suono di un vero pianoforte. Funziona anche senza tastiera MIDI o Bluetooth, e si trova anche nella sezione Per Cantanti. Provalo qui: tocca i tasti o usa la tastiera del computer (A W S E D F T G Y H U J).',l:['Senza MIDI','Senza Bluetooth','Due ottave','Anche nei Cantanti'],
+      viz(){ VZ.innerHTML='<div class="kb" id="kb"></div><div class="small">Tocca i tasti · tastiera: A W S E D F T G Y H U J</div>'; const kb=$('#kb'); const W=[0,2,4,5,7,9,11], names=['Do','Re','Mi','Fa','Sol','La','Si']; const base=60; let h='';
+        for(let i=0;i<14;i++){ const o=Math.floor(i/7), w=i%7; h+=`<div class="w" data-m="${base+o*12+W[w]}">${w===0?'Do'+(4+o):''}</div>`; } kb.innerHTML=h;
+        [0,1,3,4,5].forEach(w=>{ for(let o=0;o<2;o++){ const i=o*7+w; const d=document.createElement('div'); d.className='k'; d.dataset.m=base+o*12+W[w]+1; d.style.left=((i+1)*100/14)+'%'; kb.appendChild(d); } });
+        const held=new Map(); const down=(e,el)=>{ el.classList.add('dn'); held.set(e.pointerId,{el,v:voice(+el.dataset.m)}); };
+        kb.addEventListener('pointerdown',e=>{ const el=e.target.closest('[data-m]'); if(!el) return; e.preventDefault(); kb.setPointerCapture&&0; down(e,el); });
+        const up=e=>{ const h=held.get(e.pointerId); if(!h) return; held.delete(e.pointerId); h.el.classList.remove('dn'); stopV(h.v); }; kb.addEventListener('pointerup',up); kb.addEventListener('pointercancel',up); kb.addEventListener('pointerleave',up);
+        const map={a:0,w:1,s:2,e:3,d:4,f:5,t:6,g:7,y:8,h:9,u:10,j:11}, kd=new Map();
+        const kdn=e=>{ if(e.metaKey||e.ctrlKey||e.altKey||e.target.matches('input,textarea')) return; const k=e.key.toLowerCase(); if(!(k in map)||kd.has(k)) return; const el=kb.querySelector(`[data-m="${base+map[k]}"]`); if(!el) return; el.classList.add('dn'); kd.set(k,{el,v:voice(base+map[k])}); };
+        const kup=e=>{ const k=e.key.toLowerCase(), h=kd.get(k); if(!h) return; kd.delete(k); h.el.classList.remove('dn'); stopV(h.v); };
+        addEventListener('keydown',kdn); addEventListener('keyup',kup); VZ._off=()=>{ removeEventListener('keydown',kdn); removeEventListener('keyup',kup); }; }}
+  };
+  const show=k=>{ clearInterval(timer); if(VZ._off){ VZ._off(); VZ._off=null; } VZ.onclick=null; const d=T[k]; TX.innerHTML='<p></p><ul></ul>'; TX.querySelector('p').textContent=d.p; TX.querySelector('ul').innerHTML=d.l.map(x=>'<li>'+x+'</li>').join(''); d.viz(); $$('#stTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===k)); };
+  $('#stTabs').onclick=e=>{ const b=e.target.closest('button'); if(b) show(b.dataset.t); }; show('voc'); })();
 /* ---------- menu, cursore, rivelazioni ---------- */
 (function(){ const b=$('#menuBtn'); const set=o=>{ document.body.classList.toggle('menu',o); b.setAttribute('aria-expanded',o); $('#menuT').textContent=o?'Chiudi':'Menu'; };
   b.onclick=()=>set(!document.body.classList.contains('menu')); $$('#menu a').forEach(a=>a.addEventListener('click',()=>set(false))); addEventListener('keydown',e=>{ if(e.key==='Escape') set(false); }); })();

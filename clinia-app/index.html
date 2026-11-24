@@ -529,10 +529,13 @@ const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"2cc
 const PAYEES={rooms:"Clinia Srl",sub:"Clinia Srl",visite:"Clinia, che gira il compenso allo specialista"};
 // Compenso a FPM WebDesignTech (autore del software), pagato da Clinia:
 // Contratto FPM–Clinia (12/11/2026): cessione dei diritti d'autore sul software con corrispettivo misto (fisso + royalty).
-// Acquisto del software in 12 rate da 300 € netti (o 3.000 € netti subito); compenso di 1,50 € per ora accreditata ai dottori resta a FPM a tempo indeterminato.
-// Acquisto del software: 12 rate da 300 € netti oppure 3.000 € netti in unica soluzione.
+// Compenso fisso annuale in 12 rate da 300 € netti (o 3.000 € netti subito); compenso di 1,50 € per ora accreditata ai dottori resta a FPM a tempo indeterminato.
+// Compenso fisso annuale: 12 rate da 300 € netti oppure 3.000 € netti in unica soluzione.
 // Al pagamento completo il software diventa di Clinia Srl; abbonamenti e royalty restano a FPM a tempo indeterminato.
-const LICENZA={netto:300,mesi:12,inizio:"2026-12",unica:3000};
+const LICENZA={netto:300,mesi:12,inizio:"2026-12",unica:3000}; // (storico) acquisto a rate: non più usato
+// Compenso di FPM: 1,50 € per ogni ora firmata dai dottori + un compenso fisso annuale concordato con Clinia,
+// dovuto ogni anno nel mese di avvio (dicembre). L'importo lo scrive FPM nella sua area quando è concordato.
+const fissoAnnuo=()=>+((S.fpm&&S.fpm.fissoAnnuo)||0);
 // Beneficenza: il 3 % del compenso FPM sulle ore accreditate (1,50 € per ora) va a Progetto Arca (IBAN da prendere dal sito ufficiale della fondazione)
 const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",pct:0.03,
   storia:[["1994","Nasce a Milano per dare aiuto concreto a chi vive in grave povertà ed emarginazione. Il primo intervento è un centro di accoglienza residenziale per persone senza dimora con problemi di dipendenza."],
@@ -1398,18 +1401,18 @@ function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lor
   for(const c of S.crediti.filter(c=>c.stato==="confermata"&&stampDi(c.confAt).startsWith(m))){const ore=c.ore,dd=doc(c.docId);
     add({at:stampDi(c.confAt),tipo:"Ore accreditate",pren:true,ore,ini:"",svc:`${oreFmt(ore)} × ${eur(CANONE_ORA)}`,spec:dd?dd.name:"",lordo:CANONE_ORA*ore/(1-RIT()),netto:CANONE_ORA*ore,pagato:CANONE_ORA*ore,da:"clinia-canone"})}
   if(ABBONAMENTO_ATTIVO)for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
-  const k=monthIndex(m),pl=pagStato(m);if(pl.dovuto&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Acquisto software",ini:"",svc:(p=>`${rataTxt(p)}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:pl.dovuto/(1-RIT()),netto:pl.dovuto,da:"clinia"});
+  const k=monthIndex(m),pl=pagStato(m);if(pl.dovuto&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Compenso fisso annuale",ini:"",svc:(p=>`${rataTxt(p)}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:pl.dovuto/(1-RIT()),netto:pl.dovuto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
 /* ---------- Voce "Pagato": licenza del mese da Clinia a FPM ---------- */
 const PAG_METODI={automatico:"Automatico (carta o conto)",bonifico:"Bonifico",contanti:"Contanti con ricevuta"};
-function pagStato(m){const k=monthIndex(m),dovuto=S.licModo==="unica"?(k===1?LICENZA.unica:0):(k>=1&&k<=LICENZA.mesi?LICENZA.netto:0),p=S.pag[m];
+function pagStato(m){const k=monthIndex(m),dovuto=fissoAnnuo()&&m>=LICENZA.inizio&&m.slice(5)===LICENZA.inizio.slice(5)?fissoAnnuo():0,p=S.pag[m];
   if(p)return{k,dovuto,pagato:true,...p};
   if(dovuto&&stripeAttivo()&&S.licMetodo==="automatico"&&S.cliniaPay&&m+"-01 06:00"<=nowStamp())return{k,dovuto,pagato:true,metodo:"automatico",data:m+"-01",importo:dovuto,conf:true,auto:true};
   return{k,dovuto,pagato:false,metodo:metodoLic(),scaduto:dovuto&&m+"-01"<=today()}}
 // Il software passa a Clinia quando l'ultima rata (o l'unica soluzione) risulta pagata
-function proprietaClinia(){let m=LICENZA.inizio;const n=S.licModo==="unica"?1:LICENZA.mesi;let ultimo=null;
+function proprietaClinia(){return null;let m=LICENZA.inizio;const n=S.licModo==="unica"?1:LICENZA.mesi;let ultimo=null;
   for(let i=0;i<n;i++){const p=pagStato(m);if(!p.pagato)return null;ultimo=p.data;m=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7)}return ultimo}
-const rataTxt=p=>S.licModo==="unica"?"acquisto in unica soluzione":"rata "+p.k+" di "+LICENZA.mesi;
+const rataTxt=p=>"compenso fisso annuale";
 const metodoLic=()=>!stripeAttivo()&&S.licMetodo==="automatico"?"bonifico":S.licMetodo;
 // Finché Stripe non è attivo, abbonamenti e servizio li incassa Clinia e li versa a FPM con lo stesso bonifico mensile
 const stripeAttivo=()=>!MODALITA_PROVA&&!!STRIPE.publishableKey;
@@ -1577,7 +1580,7 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <dt>Abbonamenti girati a FPM<small>netti per FPM</small></dt><dd class="neg">− ${eur(r2(c.girato-c.canone))}</dd>
    <dt>Compenso FPM sulle ore dei dottori<small>${String(c.ore).replace(".",",")} ore accreditate × ${eur(CANONE_ORA)} · royalty d’autore</small></dt><dd class="neg">− ${eur(c.canone)}</dd>
    <dt>Ritenute sui compensi FPM<small>a carico di Clinia, da versare con F24</small></dt><dd class="neg">− ${eur(c.ritPass)}</dd>
-   <dt>Acquisto del software<small>${c.lic?`${eur(c.lic)} netti a FPM + ${eur(c.licRit)} di ritenuta · ${rataTxt(pagStato(m))}`:proprietaClinia()?"software già di proprietà di Clinia":c.k<1?"prima dell’avvio":"nessuna rata questo mese"}</small></dt><dd class="neg">− ${eur(c.licLordo)}</dd>
+   <dt>Compenso fisso annuale<small>${c.lic?`${eur(c.lic)} netti a FPM + ${eur(c.licRit)} di ritenuta · ${rataTxt(pagStato(m))}`:proprietaClinia()?"software già di proprietà di Clinia":c.k<1?"prima dell’avvio":"nessun compenso fisso questo mese"}</small></dt><dd class="neg">− ${eur(c.licLordo)}</dd>
    <dt>Commissioni di pagamento<small>stima 1,5 % + 0,25 € a operazione</small></dt><dd class="neg">− ${eur(c.commissioni)}</dd>
    <dt>Spese aggiuntive<small>${S.expenses.filter(e=>e.date.startsWith(m)).length} voci segnate da te</small></dt><dd class="neg">− ${eur(r2(c.spese))}</dd>
    <dt class="tot">Saldo</dt><dd class="tot">${eur(c.saldo)}</dd></dl>
@@ -1585,10 +1588,10 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <div class="row between small"><span>F24 entro il 16: ritenute su compensi FPM</span><b class="num">${eur(c.f24)}</b></div>
    <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
   ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:metodoLic(),ex=extraFPM(m),tot=r2((p.dovuto||0)+ex.tot),A=S.fpm.anag||{};return `<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Pagamento del software a FPM":"Pagamento mensile a FPM"}</h3>${pagBadge(p)}</div>
-   ${(()=>{const own=proprietaClinia();return own?`<div class="card row small" style="gap:10px;background:var(--accent-soft);border-color:var(--accent)">${ic("check","sm")}<span>Il software Clinia App è di proprietà di <b>Clinia Srl</b> dal ${esc(new Date(own).toLocaleDateString("it-IT"))}. Le royalty d’autore (abbonamenti e 4,99 € per ora di studio) restano a FPM.</span></div>`:`<div class="seg"><button class="${S.licModo!=="unica"?"on":""}" data-act="licModo" data-v="rate">12 rate da ${eur(LICENZA.netto)}</button><button class="${S.licModo==="unica"?"on":""}" data-act="licModo" data-v="unica">${eurM(LICENZA.unica)} in un’unica soluzione</button></div><p class="tiny">Il software diventa di Clinia al pagamento completo.</p>`})()}
-   ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Acquisto del software<small>${p.dovuto?rataTxt(p):"nessuna rata"}</small></dt><dd>${eur(p.dovuto||0)}</dd>${ex.abb?`<dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd>`:""}<dt>Ore accreditate ai dottori<small>${String(fpmMese(m).ore).replace(".",",")} ore × ${eur(CANONE_ORA)}</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
-   <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${fpmIban()?`: <b>${esc((S.payAcc.fpm||{}).holder||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(fpmIban())}</span>`:S.payAcc.fpm&&S.payAcc.fpm.tipo==="paypal"?`, oppure con PayPal a <b>${esc(S.payAcc.fpm.email)}</b>`:"."} Causale: “Clinia App – software e royalty ${esc(meseNome(m))}”.</p>`:""}
-   ${!p.dovuto?`<p class="small muted">${proprietaClinia()?"Software già pagato: questo mese resta solo il compenso sulle ore accreditate.":p.k<1?"L’acquisto parte a "+esc(meseNome(LICENZA.inizio))+".":"Nessuna rata del software questo mese."}</p>`
+   ${(()=>{const own=proprietaClinia();return own?`<div class="card row small" style="gap:10px;background:var(--accent-soft);border-color:var(--accent)">${ic("check","sm")}<span>Il software Clinia App è di proprietà di <b>Clinia Srl</b> dal ${esc(new Date(own).toLocaleDateString("it-IT"))}. Le royalty d’autore (abbonamenti e 4,99 € per ora di studio) restano a FPM.</span></div>`:`<p class="small">Compenso a FPM: <b>${eur(CANONE_ORA)}</b> per ogni ora firmata dai dottori${fissoAnnuo()?` + <b>${eur(fissoAnnuo())}</b> fissi l’anno, a dicembre`:" + un compenso fisso annuale (in definizione)"}.</p>`})()}
+   ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Compenso fisso annuale<small>${p.dovuto?rataTxt(p):"nessun fisso"}</small></dt><dd>${eur(p.dovuto||0)}</dd>${ex.abb?`<dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd>`:""}<dt>Ore accreditate ai dottori<small>${String(fpmMese(m).ore).replace(".",",")} ore × ${eur(CANONE_ORA)}</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
+   <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${fpmIban()?`: <b>${esc((S.payAcc.fpm||{}).holder||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(fpmIban())}</span>`:S.payAcc.fpm&&S.payAcc.fpm.tipo==="paypal"?`, oppure con PayPal a <b>${esc(S.payAcc.fpm.email)}</b>`:"."} Causale: “Clinia App – compenso FPM ${esc(meseNome(m))}”.</p>`:""}
+   ${!p.dovuto?`<p class="small muted">${proprietaClinia()?"":p.k<1?"Il compenso parte a "+esc(meseNome(LICENZA.inizio))+".":"Questo mese niente compenso fisso: solo le ore firmate dai dottori."}</p>`
    :p.pagato?`<p class="small">${ic("check","sm")} ${cap(rataTxt(p))}: ${pagDesc(p)}.</p><p class="tiny">${p.conf?"FPM ha confermato di averlo ricevuto.":"In attesa della conferma di FPM."} La ritenuta (${eur(r2(lordoDaNetto(p.dovuto)-p.dovuto))}) va comunque versata con F24 entro il 16 del mese dopo.</p>
      <div class="row" style="gap:8px;flex-wrap:wrap">${p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta del mese</button>`:""}${!p.auto&&!p.conf?`<button class="btn ghost sm" data-act="pagAnnulla" data-v="${m}">Annulla</button>`:""}</div>`
    :`<p class="small">${cap(rataTxt(p))}: <b>${eur(p.dovuto)}</b> netti a FPM.</p>
@@ -1636,7 +1639,7 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
   <div class="card" style="text-align:center"><span class="label">Incassato netto nel mese</span><div class="big">${eur(f.netto)}</div>
    <p class="tiny">${!stripeAttivo()?`Versato da Clinia con bonifico mensile${S.payAcc.fpm?" · "+esc(accDesc(S.payAcc.fpm)):""}`:acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
   <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Dottori con ore</span></div><div class="stat"><b>${String(f.ore).replace(".",",")} h</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
-  <dl class="card ledger"><dt>Acquisto del software<small>${pagStato(m).dovuto?`${rataTxt(pagStato(m))}, ${eur(pagStato(m).dovuto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:proprietaClinia()?"software di Clinia: restano abbonamenti e royalty":"nessuna rata questo mese"}</small></dt><dd>${eur(f.licN)}</dd>
+  <dl class="card ledger"><dt>Compenso fisso annuale<small>${pagStato(m).dovuto?`${rataTxt(pagStato(m))}, ${eur(pagStato(m).dovuto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:proprietaClinia()?"software di Clinia: restano abbonamenti e royalty":"nessun compenso fisso questo mese"}</small></dt><dd>${eur(f.licN)}</dd>
    ${f.abbN?`<dt>Abbonamenti specialisti<small>${f.abbN} netti</small></dt><dd>${eur(f.abbNet)}</dd>`:""}
    <dt>Ore accreditate ai dottori<small>${String(f.ore).replace(".",",")} ore × ${eur(CANONE_ORA)} netti, versati da Clinia</small></dt><dd>${eur(f.prenNet)}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
@@ -1668,6 +1671,7 @@ const PUBBLICAZIONE_ATTIVA=false; // si accende quando colleghiamo monitor, sito
 function fpmDottoriTab(){const l=SPECIALISTI(),att=S.crediti.filter(c=>c.stato==="richiesta").sort((a,b)=>a.at-b.at);
   const totOre=r2(l.reduce((t,d)=>t+oreAccreditate(d.id),0));
   return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Dottori</h1></div>
+  <form class="card row" data-form="fissoAnnuo" style="gap:10px;align-items:flex-end;flex-wrap:wrap" novalidate><label class="field" style="flex:1;min-width:180px"><span>Compenso fisso annuale da Clinia (netto)</span><input name="importo" inputmode="decimal" value="${fissoAnnuo()?String(fissoAnnuo()).replace(".",","):""}" placeholder="da concordare"></label><button class="btn ghost sm" type="submit">Salva</button><p class="tiny" style="flex-basis:100%">Si aggiunge alle ${eur(CANONE_ORA)} per ora firmata. Clinia lo vede nel suo pagamento di dicembre.</p></form>
   <div class="stats"><div class="stat"><b>${oreFmt(totOre)}</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(r2(totOre*CANONE_ORA))}</b><span>Tuo compenso (${eur(CANONE_ORA)}/h)</span></div><div class="stat"><b>${att.length}</b><span>Da confermare</span></div></div>
   ${att.length?`<section class="card stack" style="gap:10px;border-color:var(--warn);background:var(--warn-soft)"><h3>Ore da confermare</h3><p class="tiny">Inviate da Clinia dopo la firma del contratto. Confermando, il dottore le vede subito.</p>
    ${att.map(c=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docAv(doc(c.docId),"sm")}<span style="flex:1;min-width:170px"><b class="small" style="display:block">${esc(doc(c.docId).name)}</b><span class="tiny">${oreFmt(c.ore)} · contratto del ${new Date(c.data||c.at).toLocaleDateString("it-IT")} · ${eur(r2(c.ore*CANONE_ORA))} per te${c.file?` · <button class="link tiny" data-act="apriContratto" data-id="${c.id}">vedi contratto</button>`:""}</span></span><button class="btn primary sm" data-act="creditoEsito" data-id="${c.id}" data-v="ok">Conferma</button><button class="iconbtn" data-act="creditoEsito" data-id="${c.id}" data-v="no" aria-label="Non confermare">${ic("x","sm")}</button></div>`).join("")}</section>`:""}
@@ -1687,7 +1691,7 @@ async function fotoRidotta(file){const url=await new Promise((ok,ko)=>{const r=n
   const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext("2d").drawImage(im,(W-w)/2,0,w,h);return c.toDataURL("image/jpeg",0.86)}
 
 /* ---------- FPM: registro incassi e rendicontazione ---------- */
-const INC_VOCI=["Rata acquisto software Clinia App","Compenso ore accreditate ai dottori (1,50 €/ora)","Pagamento fattura / richiesta","Sito web","Nuovo progetto / collaborazione","Altro"];
+const INC_VOCI=["Compenso fisso annuale Clinia","Compenso ore accreditate ai dottori (1,50 €/ora)","Pagamento fattura / richiesta","Sito web","Nuovo progetto / collaborazione","Altro"];
 const INC_METODI=["Bonifico","Bonifico istantaneo","Addebito automatico","Carta","PayPal","Contanti","Altro"];
 function incassiRighe(y,m){const man=S.incassi.filter(x=>x.data.startsWith(m||y)).map(x=>({...x,auto:false}));
   let aut=[];if(UI.incAuto!==false){const ms=m?[m]:[...Array(12)].map((_,i)=>y+"-"+pad2(i+1)).filter(k=>k<=today().slice(0,7));
@@ -1697,10 +1701,10 @@ function incassiTab(){const y=UI.incAnno||today().slice(0,4),m=UI.incMese||"",l=
   const man=l.filter(x=>!x.auto),aut=l.filter(x=>x.auto),anni=[...new Set([today().slice(0,4),"2026","2027","2028",...S.incassi.map(x=>x.data.slice(0,4))])].sort();
   return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Incassi</h1></div>
   <form class="card stack" data-form="incasso" style="gap:10px" novalidate><h3>Registra un incasso</h3><p class="tiny">Ogni volta che ti arriva un pagamento scrivilo qui: finisce nella rendicontazione e nel PDF.</p>
-   <label class="field"><span>Descrizione*</span><input name="voce" list="inc-voci" placeholder="es. Pagamento rata app, Pagamento fattura richiesta…"><datalist id="inc-voci">${INC_VOCI.map(v=>`<option value="${esc(v)}">`).join("")}</datalist></label>
+   <label class="field"><span>Descrizione*</span><input name="voce" list="inc-voci" placeholder="es. Compenso ore dottori, Pagamento fattura richiesta…"><datalist id="inc-voci">${INC_VOCI.map(v=>`<option value="${esc(v)}">`).join("")}</datalist></label>
    <div class="fgrid"><label class="field"><span>Giorno*</span><input name="data" type="date" value="${today()}" max="${today()}"></label><label class="field"><span>Importo €*</span><input name="importo" inputmode="decimal" placeholder="300,00"></label></div>
    <div class="fgrid"><label class="field"><span>Da chi</span><input name="da" value="Clinia Srl"></label><label class="field"><span>Come</span><select name="metodo">${INC_METODI.map(x=>`<option>${x}</option>`).join("")}</select></label></div>
-   <label class="field"><span>Note</span><input name="note" placeholder="es. rata 3 di 12, fattura n. 5, CRO del bonifico"></label>
+   <label class="field"><span>Note</span><input name="note" placeholder="es. 50 ore Dott. Rossi, fattura n. 5, CRO del bonifico"></label>
    <p class="err" id="inc-err"></p><button class="btn primary block" type="submit">${ic("plus","sm")} Registra incasso</button></form>
   <section class="card stack" style="gap:12px"><h3>Rendicontazione</h3>
    <div class="fgrid"><label class="field"><span>Anno</span><select data-change="incAnno">${anni.map(a=>`<option ${a===y?"selected":""}>${a}</option>`).join("")}</select></label>
@@ -1768,7 +1772,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
   <div class="card"><h3 style="margin-bottom:6px">Mesi dell’anno</h3>${ms.map(x=>{const st=S.fpm.ric[x.m]||{},p=pagStato(x.m);return `<div class="ccard"><span style="flex:1;text-transform:capitalize">${esc(meseNome(x.m))}<span class="tiny" style="display:block;text-transform:none">${p.dovuto?(p.pagato?"Licenza pagata "+(p.metodo==="contanti"?"in contanti":p.metodo==="bonifico"?"con bonifico":"in automatico"):"Licenza da pagare"):""}</span></span><b class="num">${eur(x.lordo)}</b><span class="badge ${st.pagata||(p.dovuto&&p.pagato)?"":"grey"}">${(p.dovuto?p.pagato:st.pagata)?"Pagato":st.emessa?"Ricevuta emessa":x.lordo?"Da emettere":"—"}</span></div>`}).join("")}</div></div>`}
 /* ---------- Ricevuta mensile FPM in PDF ---------- */
 function ricevutaDati(m){const f=fpmMese(m),p=pagStato(m),q=quotaImp(),rr=n=>Math.round(n*100)/100;
-  const righe=[];if(p.dovuto)righe.push([S.licModo==="unica"?"Cessione del software “Clinia App” – unica soluzione":`Cessione del software “Clinia App” – rata ${p.k} di ${LICENZA.mesi}`,"1",rr(lordoDaNetto(p.dovuto))]);
+  const righe=[];if(p.dovuto)righe.push([`Compenso fisso annuale – Clinia App ${m.slice(0,4)}`,"1",rr(lordoDaNetto(p.dovuto))]);
   if(f.abbN)righe.push(["Royalty d’autore su abbonamenti degli specialisti",String(f.abbN),rr(f.abbL)]);
   if(f.prenN)righe.push([`Royalty d’autore: ${String(f.ore).replace(".",",")} ore accreditate ai dottori × ${String(CANONE_ORA.toFixed(2)).replace(".",",")} €`,String(f.ore).replace(".",","),rr(f.prenL)]);
   const lordo=rr(righe.reduce((t,x)=>t+x[2],0)),imp=rr(lordo*q),rit=rr(imp*0.2),netto=rr(lordo-rit);
@@ -1836,7 +1840,7 @@ ${CLINIC.ragione} – ${CLINIC.address} – P.IVA: [inserire]
 
 Compensi di ${meseNome(m)} per la licenza dei diritti di utilizzazione
 economica dell’opera dell’ingegno "Clinia App" (software):
- - software${f.licN?"":" (nessuna rata)"}           ${L(f.licN?lordoDaNetto(LICENZA.netto):0)}
+ - software${f.licN?"":" (nessun fisso)"}           ${L(f.licN?lordoDaNetto(LICENZA.netto):0)}
  - quota abbonamenti specialisti (${f.abbN})      ${L(f.abbL)}
  - ore accreditate ai dottori (${f.ore} ore × 1,50 €) ${L(f.prenL)}
 
@@ -2359,7 +2363,7 @@ const FORMS={
     if(!data||data>today())return err.textContent="Indica la data del pagamento (non nel futuro).";
     if(!(imp>0))return err.textContent="Indica l’importo pagato.";
     if(S.licMetodo==="contanti"&&imp>=5000)return err.textContent="Sopra il limite per i contanti: usa il bonifico.";
-    S.pag[m]={metodo:S.licMetodo,data,importo:r2(imp),nota:f.nota.value.trim(),conf:false,at:Date.now()};save();DB.savePag(m,S.pag[m]);notifFPM("pagamento_fpm","Clinia ha pagato",`${meseNome(m)}: ${eur(r2(imp))} netti con ${S.licMetodo} (software e royalty). Conferma la ricezione nella tua area.`);toast("Segnato pagato: FPM lo vede subito");render()},
+    S.pag[m]={metodo:S.licMetodo,data,importo:r2(imp),nota:f.nota.value.trim(),conf:false,at:Date.now()};save();DB.savePag(m,S.pag[m]);notifFPM("pagamento_fpm","Clinia ha pagato",`${meseNome(m)}: ${eur(r2(imp))} netti con ${S.licMetodo} (ore dottori e fisso). Conferma la ricezione nella tua area.`);toast("Segnato pagato: FPM lo vede subito");render()},
   addAppt:f=>{const sh=UI.sheet,err=$("#aa-err"),nome=f.nome.value.trim().replace(/\s+/g," "),svc=services(S.proId)[sh.svc||0],ds=sh.day||giorniTurno(S.proId)[0];
     if(nome.length<2)return err.textContent="Scrivi nome e cognome del paziente.";if(!sh.time)return err.textContent="Scegli un orario libero.";
     const slot=slotsFor(S.proId,ds,svc.dur).find(x=>x.time===sh.time);
@@ -2393,6 +2397,7 @@ const FORMS={
     if(file&&!(await IDB.set("contr:"+c.id,{name:file.name,blob:file})))return err.textContent="Non riesco a salvare il contratto su questo dispositivo.";
     S.crediti.push(c);save();notifFPM("ore","Ore da confermare",`${doc(id).name}: ${oreFmt(c.ore)} firmate${file?" · contratto allegato":""}. Confermale in Dottori.`);
     toast("Inviato a FPM per la conferma");render()},
+  fissoAnnuo:f=>{const v=String(f.importo.value).trim(),n=v?parseFloat(v.replace(/\./g,"").replace(",",".")):0;if(v&&!(n>=0))return toast("Scrivi l’importo, per esempio 1.200");S.fpm.fissoAnnuo=r2(n);save();toast(n?`Compenso fisso annuale: ${eur(n)}`:"Compenso fisso annuale: da concordare");render()},
   creditoFpm:f=>{const id=f.dataset.id,ore=parseFloat(String(f.ore.value).replace(",","."));if(!(ore>0&&ore<=2000))return toast("Scrivi le ore da accreditare, per esempio 50.");
     S.crediti.push({id:uid(),docId:id,ore:r2(ore),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});save();
     addNotif("spec:"+id,"ore","Ore accreditate",`Hai ${oreFmt(ore)} in più: scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore accreditate da FPM",`${doc(id).name}: ${oreFmt(ore)}.`);

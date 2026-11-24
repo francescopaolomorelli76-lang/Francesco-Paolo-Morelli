@@ -86,3 +86,14 @@ create trigger notifiche_crediti after insert or update of stato on public.credi
 alter table public.specialists add column if not exists consenso_pubblicazione boolean not null default false;
 alter table public.specialists add column if not exists pubblicazione jsonb not null default '{"monitor":false,"sito":false,"instagram":false,"facebook":false}';
 alter table public.specialists add column if not exists foto_916_url text;
+
+-- Calendario pubblico per sito clinia.it e monitor in sala: solo nome, studio, giorno e orario,
+-- solo dei medici che hanno dato il consenso e hanno il canale "sito" acceso. Mai dati dei pazienti.
+create or replace view public.calendario_pubblico as
+select b.specialist_id, s.nome_visualizzato as medico, b.giorno, b.inizio, b.fine, r.nome as studio
+from public.room_bookings b
+join public.specialists s on s.id = b.specialist_id
+left join public.rooms r on r.id = b.room_id
+where b.stato = 'confermata' and b.giorno between current_date and current_date + 21
+  and s.consenso_pubblicazione and coalesce((s.pubblicazione->>'sito')::boolean, false);
+grant select on public.calendario_pubblico to anon, authenticated;

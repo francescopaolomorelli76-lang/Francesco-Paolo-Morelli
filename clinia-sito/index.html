@@ -1,0 +1,1630 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clinia Matera</title>
+<meta name="description" content="Clinia è un centro professionale a Matera: studi moderni, climatizzati e attrezzati per professionisti e specialisti. Prenota con il Dott. Marco Morelli su MioDottore.">
+<meta name="theme-color" content="#14a6b4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green-700:#0a7d68; --green-600:#0e9f84; --green-100:#dcf5ec;
+  --teal-700:#126a74; --teal-500:#14a6b4;
+  --azure-700:#135fa8; --azure-600:#1a7fd0;
+  --sky-400:#62c3ef; --sky-200:#bfe7fa; --celeste-50:#f0f9fe;
+  --navy:#1f4f6e;
+  --ink:#0b2b38; --ink-2:#3d5a66; --ink-3:#6b8590;
+  --line:#dbeaf0; --bg-soft:#f4fafc;
+  --grad:linear-gradient(120deg,var(--green-600) 0%,var(--teal-500) 45%,var(--azure-600) 100%);
+  --grad-deep:linear-gradient(135deg,#0b4f5c 0%,#0f6c78 40%,#164f86 100%);
+  --grad-soft:linear-gradient(140deg,#e9f8f2 0%,#e6f5fb 55%,#eaf3fd 100%);
+  --shadow-sm:0 1px 2px rgba(11,43,56,.06),0 2px 8px rgba(11,43,56,.05);
+  --shadow:0 10px 30px -10px rgba(14,95,120,.22),0 4px 10px -4px rgba(11,43,56,.08);
+  --shadow-lg:0 30px 60px -20px rgba(14,95,120,.38);
+  --r:18px; --r-lg:28px; --maxw:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:#fff;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 16px}
+@media(min-width:768px){.container{padding:0 32px}}
+h1,h2,h3{line-height:1.15;letter-spacing:-.02em}
+.serif{font-family:Fraunces,Georgia,serif;font-weight:500}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.76rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-700);background:#e1f4f6;padding:6px 12px;border-radius:999px}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--grad)}
+.section{position:relative;padding:88px 0}
+@media(min-width:960px){.section{padding:120px 0}}
+.section-head{max-width:700px;margin-bottom:48px}
+.section-head h2{font-size:clamp(1.9rem,3.6vw,2.8rem);margin:14px 0 12px}
+.section-head p{color:var(--ink-2);font-size:1.08rem}
+.center{text-align:center;margin-left:auto;margin-right:auto}
+
+/* Motivo del logo (mezzaluna + punto) come pattern di sfondo */
+.pattern{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='%23d7eef4'%3E%3Cpath d='M40 40c40 10 62 50 50 92-6 22-24 40-44 48 30-22 40-60 26-96C66 66 54 50 40 40z'/%3E%3Ccircle cx='86' cy='40' r='14'/%3E%3C/g%3E%3C/svg%3E")}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 22px;border-radius:999px;font-weight:700;font-size:.97rem;transition:transform .2s,box-shadow .25s,background .25s,border-color .25s;white-space:nowrap}
+.btn svg{width:18px;height:18px}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 24px -8px rgba(20,140,170,.6)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(20,140,170,.7)}
+.btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--teal-500);color:var(--azure-700)}
+.btn-white{background:#fff;color:var(--azure-700)}
+.btn-white:hover{transform:translateY(-2px)}
+.btn-line{color:#fff;border:1.5px solid rgba(255,255,255,.55)}
+.btn-line:hover{background:rgba(255,255,255,.12)}
+
+/* Nav */
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--grad);z-index:100;width:0}
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
+.nav.scrolled{border-color:var(--line);box-shadow:var(--shadow-sm)}
+.nav .container{display:flex;align-items:center;justify-content:space-between;height:76px}
+.logo{display:flex;align-items:center;gap:6px}
+.logo svg{height:44px;width:auto}
+.nav-links{display:none;gap:2px}
+.nav-links a{padding:10px 14px;border-radius:999px;font-weight:600;font-size:.94rem;color:var(--ink-2);transition:color .2s,background .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--teal-700);background:#e1f4f6}
+.nav-cta{display:none}
+.burger{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1.5px solid var(--line)}
+.burger span{display:block;width:20px;height:2px;background:var(--ink);border-radius:2px;position:relative;transition:.3s}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0;width:20px;height:2px;background:var(--ink);border-radius:2px;transition:.3s}
+.burger span::before{top:-6px}.burger span::after{top:6px}
+.burger[aria-expanded=true] span{background:transparent}
+.burger[aria-expanded=true] span::before{top:0;transform:rotate(45deg)}
+.burger[aria-expanded=true] span::after{top:0;transform:rotate(-45deg)}
+.mobile-menu{display:none;padding:8px 16px 20px;border-top:1px solid var(--line);background:#fff}
+.mobile-menu.open{display:block}
+.mobile-menu a{display:block;padding:14px 4px;font-weight:600;border-bottom:1px solid var(--line)}
+.mobile-menu .btn{width:100%;margin-top:16px;border:0}
+@media(min-width:1080px){.nav-links{display:flex}.nav-cta{display:inline-flex}.burger,.mobile-menu,.mobile-menu.open{display:none}}
+
+/* Hero */
+.hero{position:relative;overflow:hidden;background:var(--grad-soft);padding:64px 0 110px}
+@media(min-width:960px){.hero{padding:90px 0 140px}}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;animation:float 16s ease-in-out infinite}
+.blob.b1{width:460px;height:460px;background:#7fe0c2;top:-160px;left:-140px}
+.blob.b2{width:520px;height:520px;background:#8fd3f6;bottom:-220px;right:-160px;animation-delay:-5s}
+.blob.b3{width:300px;height:300px;background:#9cc4f5;top:30%;left:42%;animation-delay:-9s;opacity:.35}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-25px) scale(1.06)}66%{transform:translate(-20px,20px) scale(.96)}}
+.hero-grid{position:relative;display:grid;gap:56px;align-items:center}
+@media(min-width:960px){.hero-grid{grid-template-columns:1.1fr .9fr}}
+.hero h1{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:clamp(2.1rem,4.8vw,3.6rem);margin:20px 0 22px;letter-spacing:-.025em}
+.hero h1 .q{color:var(--teal-500);font-size:1.2em;line-height:0;vertical-align:-.12em;margin-right:.04em}
+.hero p.lead{font-size:clamp(1.05rem,1.5vw,1.18rem);color:var(--ink-2);max-width:560px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.trust{display:flex;flex-wrap:wrap;gap:22px;margin-top:36px;color:var(--ink-2);font-size:.92rem;font-weight:600}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.trust svg{width:20px;height:20px;color:var(--teal-500)}
+.hero-visual{position:relative}
+.photo{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--grad);box-shadow:var(--shadow-lg)}
+.photo img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.photo:hover img{transform:scale(1.04)}
+.photo.ph::after{content:attr(data-label);position:absolute;inset:auto 16px 16px;color:#fff;font-size:.75rem;font-weight:600;opacity:.6}
+.photo.ph::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 70'%3E%3Cpath d='M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z' fill='%23fff' fill-opacity='.85'/%3E%3Ccircle cx='44' cy='10' r='9' fill='%23fff' fill-opacity='.85'/%3E%3C/svg%3E") center/26% no-repeat,radial-gradient(circle at 25% 15%,rgba(255,255,255,.3),transparent 55%)}
+.photo.ph{background:var(--grad)}
+.photo.ph img{display:none}
+.hero .photo{aspect-ratio:4/5;max-height:560px}
+.float-chip{position:absolute;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;font-size:.88rem;font-weight:700;animation:bob 6s ease-in-out infinite}
+.float-chip .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--green-100);color:var(--green-700);font-weight:800;font-size:1.1rem}
+.float-chip .ic.az{background:#e3f1fc;color:var(--azure-700)}
+.float-chip small{display:block;color:var(--ink-3);font-weight:500;font-size:.78rem}
+.float-chip.c1{top:28px;left:-28px}
+.float-chip.c2{bottom:36px;right:-22px;animation-delay:-3s}
+@media(max-width:700px){.float-chip.c1{left:10px;top:12px}.float-chip.c2{right:10px;bottom:12px}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* Facts strip */
+.facts{position:relative;margin-top:-60px;z-index:2}
+.facts-grid{display:grid;grid-template-columns:repeat(2,1fr);background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden}
+@media(min-width:860px){.facts-grid{grid-template-columns:repeat(4,1fr)}}
+.fact{padding:26px 20px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.fact b{display:block;font-size:clamp(1.7rem,3vw,2.3rem);font-weight:800;letter-spacing:-.03em}
+.fact span{color:var(--ink-3);font-size:.88rem;font-weight:600}
+
+/* Chi siamo */
+.about-grid{display:grid;gap:40px;align-items:center}
+@media(min-width:960px){.about-grid{grid-template-columns:1fr 1fr;gap:64px}}
+.about-photos{position:relative;display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:end}
+.about-photos .photo:first-child{aspect-ratio:3/4}
+.about-photos .photo:last-child{aspect-ratio:3/4;transform:translateY(40px)}
+.about-text p{color:var(--ink-2);font-size:1.05rem;margin-bottom:16px}
+.about-text blockquote{margin-top:24px;padding:22px 24px;border-radius:var(--r);background:var(--grad-soft);border-left:4px solid var(--teal-500);font-family:Fraunces,serif;font-size:1.15rem;color:var(--navy)}
+
+/* Mission / Vision */
+.mv{background:var(--bg-soft);overflow:hidden}
+.mv-grid{position:relative;display:grid;gap:20px}
+@media(min-width:860px){.mv-grid{grid-template-columns:1fr 1fr}}
+.mv-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:36px;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.mv-card:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.mv-card .ic{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:var(--grad);color:#fff;margin-bottom:22px}
+.mv-card .ic svg{width:28px;height:28px}
+.mv-card h3{font-family:Fraunces,serif;font-weight:500;font-size:2rem;margin-bottom:12px}
+.mv-card p{color:var(--ink-2)}
+.mv-card::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:var(--grad-soft);right:-80px;bottom:-80px;z-index:0}
+.mv-card>*{position:relative;z-index:1}
+
+/* Valori */
+.values{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:640px){.values{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.values{grid-template-columns:repeat(6,1fr)}.values .val:nth-child(-n+3){grid-column:span 2}.values .val:nth-child(n+4){grid-column:span 3}}
+.val{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:28px;transition:transform .3s,box-shadow .3s,border-color .3s;overflow:hidden}
+.val::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.val:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:transparent}
+.val:hover::after{transform:scaleX(1)}
+.val .ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--grad-soft);color:var(--teal-500);margin-bottom:16px}
+.val .ic svg{width:26px;height:26px}
+.val h3{font-size:1.2rem;margin-bottom:6px}
+.val p{color:var(--ink-2);font-size:.96rem}
+
+/* A chi ci rivolgiamo */
+.dark{background:var(--grad-deep);color:#e7f4f7;overflow:hidden}
+.dark .eyebrow{background:rgba(255,255,255,.12);color:#cdeff5}
+.dark h2{color:#fff}
+.dark .blob{opacity:.25}
+.who-grid{position:relative;display:grid;gap:44px;align-items:center}
+@media(min-width:960px){.who-grid{grid-template-columns:1.1fr .9fr;gap:64px}}
+.who-list{display:grid;gap:14px;margin-top:28px}
+.who-item{display:flex;gap:16px;padding:20px;border-radius:var(--r);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(6px);transition:background .3s}
+.who-item:hover{background:rgba(255,255,255,.12)}
+.who-item .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#22b892,#62c3ef);color:#fff}
+.who-item .ic svg{width:22px;height:22px}
+.who-item p{color:#d3e8ee}
+.who-item b{color:#fff;display:block;margin-bottom:2px}
+.dark .photo{aspect-ratio:4/5;max-height:600px}
+
+/* Spazi */
+.spaces-grid{display:grid;gap:40px}
+@media(min-width:960px){.spaces-grid{grid-template-columns:1fr 1fr;gap:56px;align-items:start}}
+.tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px;margin-bottom:20px;width:fit-content;max-width:100%;overflow-x:auto}
+.tabs button{padding:10px 16px;border-radius:999px;font-weight:700;font-size:.9rem;color:var(--ink-2);white-space:nowrap;transition:background .2s,color .2s}
+.tabs button.on{background:var(--grad);color:#fff}
+.tab-panel{display:none;background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:28px;box-shadow:var(--shadow-sm)}
+.tab-panel.on{display:block;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tab-panel h4{font-size:1.2rem;margin-bottom:8px}
+.tab-panel p{color:var(--ink-2)}
+.chk{list-style:none;display:grid;gap:10px;margin-top:14px}
+.chk li{display:flex;gap:10px;color:var(--ink-2)}
+.chk li::before{content:"";flex:none;width:20px;height:20px;margin-top:3px;border-radius:50%;background:var(--green-100) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a7d68' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat}
+.amen{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:22px}
+.amen div{display:flex;align-items:center;gap:10px;padding:14px;border-radius:14px;background:var(--bg-soft);border:1px solid var(--line);font-weight:600;font-size:.9rem}
+.amen svg{width:22px;height:22px;color:var(--teal-500);flex:none}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.gallery .photo{aspect-ratio:3/4;cursor:zoom-in;box-shadow:var(--shadow)}
+.gallery .photo.wide{grid-column:span 2;aspect-ratio:16/9}
+
+/* Lightbox */
+.lb{position:fixed;inset:0;z-index:200;background:rgba(6,24,32,.88);display:none;place-items:center;padding:16px}
+.lb.open{display:grid}
+.lb img{max-height:88vh;border-radius:16px;box-shadow:var(--shadow-lg)}
+.lb button{position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:50%;background:#fff;font-size:1.4rem}
+
+/* Specialisti */
+.specs{background:var(--bg-soft);overflow:hidden}
+.doc-grid{position:relative;display:grid;gap:32px;align-items:start}
+@media(min-width:960px){.doc-grid{grid-template-columns:.85fr 1.15fr;gap:48px}}
+.doc-card{background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line)}
+.doc-photo{position:relative;aspect-ratio:4/3;background:var(--grad);display:grid;place-items:center;overflow:hidden}
+.doc-photo::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 50%)}
+.doc-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.doc-initials{position:relative;width:128px;height:128px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);display:grid;place-items:center;color:#fff;font-family:Fraunces,serif;font-size:2.8rem}
+.doc-badge{position:absolute;left:18px;bottom:18px;background:#fff;border-radius:999px;padding:8px 14px;font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-sm)}
+.doc-badge i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.2);animation:ping 2s infinite}
+@keyframes ping{50%{box-shadow:0 0 0 8px rgba(34,197,94,0)}}
+.doc-body{padding:28px}
+.doc-body h3{font-size:1.55rem}
+.doc-body .role{color:var(--teal-700);font-weight:700;margin:4px 0 14px}
+.doc-body p{color:var(--ink-2)}
+.md-chip{display:inline-flex;align-items:center;gap:8px;margin:18px 0 22px;padding:8px 14px;border-radius:12px;background:#e6faf6;color:#008f7a;font-weight:700;font-size:.88rem}
+.md-chip svg{width:18px;height:18px}
+.stars{color:#00b39b;letter-spacing:1px;font-size:1rem}
+.widget-wrap{min-height:180px}
+.widget-fallback{display:grid;gap:16px;text-align:center;padding:24px 8px}
+.widget-fallback p{color:var(--ink-2)}
+.join{margin-top:24px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:22px 24px;border-radius:var(--r);border:1.5px dashed #b8dde6;background:#fff}
+.join b{display:block}
+.join span{color:var(--ink-2);font-size:.94rem}
+
+/* CTA band */
+.cta-band{position:relative;border-radius:var(--r-lg);background:var(--grad);color:#fff;padding:44px 28px;overflow:hidden;display:grid;gap:24px;align-items:center}
+@media(min-width:860px){.cta-band{grid-template-columns:1.4fr auto;padding:56px}}
+.cta-band::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.12);right:-120px;top:-170px}
+.cta-band h2{position:relative;font-size:clamp(1.6rem,3vw,2.3rem)}
+.cta-band p{position:relative;opacity:.93;margin-top:8px}
+.cta-band .acts{position:relative;display:flex;flex-wrap:wrap;gap:12px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:16px;padding:0 22px;transition:box-shadow .3s}
+.faq details[open]{box-shadow:var(--shadow-sm);border-color:#c5e4ec}
+.faq summary{list-style:none;cursor:pointer;padding:20px 0;font-weight:700;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--celeste-50);color:var(--azure-700);font-size:1.2rem;transition:transform .3s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{padding:0 0 20px;color:var(--ink-2)}
+
+/* Contatti */
+.contact-grid{display:grid;gap:24px}
+@media(min-width:960px){.contact-grid{grid-template-columns:1fr 1.1fr}}
+.info-card{background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--r-lg);padding:30px;display:grid;gap:20px;align-content:start}
+.info-row{display:flex;gap:14px}
+.info-row .ic{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;background:#fff;color:var(--teal-500);box-shadow:var(--shadow-sm)}
+.info-row .ic svg{width:22px;height:22px}
+.info-row b{display:block}
+.info-row span,.info-row a{color:var(--ink-2)}
+.info-row a:hover{color:var(--azure-700)}
+.map{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);aspect-ratio:16/10;background:var(--celeste-50)}
+.map iframe{width:100%;height:100%;border:0}
+form.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:30px;display:grid;gap:16px;box-shadow:var(--shadow-sm)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:14px;background:var(--bg-soft);border:1px solid var(--line)}
+.seg label{display:block;cursor:pointer;position:relative}
+.seg input{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:11px;border-radius:10px;font-weight:700;font-size:.92rem;color:var(--ink-2);transition:.2s}
+.seg input:checked+span{background:#fff;color:var(--teal-700);box-shadow:var(--shadow-sm)}
+.seg input:focus-visible+span{outline:2px solid var(--teal-500)}
+.row2{display:grid;gap:16px}
+@media(min-width:600px){.row2{grid-template-columns:1fr 1fr}}
+label.f{font-size:.86rem;font-weight:700;display:grid;gap:6px}
+input,select,textarea{font:inherit;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fbfdfe;color:var(--ink);transition:border-color .2s,box-shadow .2s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal-500);box-shadow:0 0 0 4px rgba(20,166,180,.15)}
+textarea{min-height:120px;resize:vertical}
+.check{display:flex;gap:10px;align-items:flex-start;color:var(--ink-2);font-size:.86rem}
+.check input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--teal-500)}
+.form-msg{display:none;padding:14px;border-radius:12px;background:var(--green-100);color:var(--green-700);font-weight:600}
+.form-msg.show{display:block}
+
+/* Footer */
+footer{background:#0b2b38;color:#b5ccd5;padding:64px 0 28px}
+.foot-grid{display:grid;gap:36px}
+@media(min-width:860px){.foot-grid{grid-template-columns:1.4fr 1fr 1fr 1fr}}
+footer h4{color:#fff;font-size:.95rem;margin-bottom:14px}
+footer ul{list-style:none;display:grid;gap:8px;font-size:.93rem}
+footer a:hover{color:#fff}
+.foot-bottom{margin-top:48px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.84rem}
+
+/* Floating */
+.fab{position:fixed;right:16px;bottom:16px;z-index:60}
+.fab a{display:flex;align-items:center;gap:10px;height:56px;padding:0 20px 0 16px;border-radius:999px;color:#fff;background:var(--grad);box-shadow:var(--shadow-lg);font-weight:700;transition:transform .2s}
+.fab a:hover{transform:translateY(-3px)}
+.fab svg{width:24px;height:24px}
+@media(max-width:520px){.fab a span{display:none}.fab a{width:56px;padding:0;justify-content:center}}
+.to-top{position:fixed;left:16px;bottom:16px;z-index:60;width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);display:grid;place-items:center;opacity:0;pointer-events:none;transition:.3s}
+.to-top.show{opacity:1;pointer-events:auto}
+
+/* Servizi inclusi */
+.inc-grid{display:grid;gap:18px}
+@media(min-width:900px){.inc-grid{grid-template-columns:repeat(3,1fr)}}
+.inc-col{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:28px;box-shadow:var(--shadow-sm)}
+.inc-col h3{display:flex;align-items:center;gap:12px;font-size:1.15rem;margin-bottom:18px}
+.inc-col h3 i{width:40px;height:40px;border-radius:12px;background:var(--grad);display:grid;place-items:center;color:#fff;font-style:normal;font-size:.9rem;font-weight:800}
+.inc-col ul{list-style:none;display:grid;gap:14px}
+.inc-col li{display:flex;gap:12px;color:var(--ink-2);font-size:.97rem}
+.inc-col li svg{flex:none;width:26px;height:30px;margin-top:-2px}
+
+/* Perché Clinia */
+.why-grid{display:grid;gap:16px}
+@media(min-width:720px){.why-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.why-grid{grid-template-columns:repeat(5,1fr)}}
+.why{padding:26px;border-radius:var(--r);background:var(--grad-soft);border:1px solid #d6eef3;transition:transform .3s}
+.why:hover{transform:translateY(-6px)}
+.why .n{font-family:Fraunces,serif;font-size:2.2rem;line-height:1}
+.why h3{font-size:1.05rem;margin:12px 0 6px}
+.why p{color:var(--ink-2);font-size:.93rem}
+
+/* Specialisti */
+.sp-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:28px}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{padding:10px 16px;border-radius:999px;border:1.5px solid var(--line);font-weight:600;font-size:.9rem;color:var(--ink-2);background:#fff;transition:.2s}
+.filters button:hover{border-color:var(--teal-500)}
+.filters button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.search{position:relative;flex:1;min-width:220px;max-width:340px}
+.search input{padding-left:42px;border-radius:999px;background:#fff}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--ink-3)}
+.sp-orari{font-size:.88rem;color:var(--ink,#1c3144);background:rgba(44,94,102,.08);border-radius:10px;padding:6px 10px;margin:6px 0 2px}.sp-orari b{color:#2c5e66;margin-right:4px}
+.sp-app-note{display:inline-block;margin-top:10px;font-size:.92rem;font-weight:600;color:#2c5e66;background:rgba(44,94,102,.08);border-radius:999px;padding:6px 14px}
+.sp-grid{position:relative;display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:620px){.sp-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.sp-grid{grid-template-columns:repeat(3,1fr)}}
+.sp{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s;animation:fade .45s ease backwards}
+.sp:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.sp-ph{position:relative;aspect-ratio:4/3.4;background:var(--grad);display:grid;place-items:center;overflow:hidden}
+.sp-ph .ini{font-family:Fraunces,serif;font-size:2.6rem;color:#fff;opacity:.95}
+.sp-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;transition:transform 1s}
+.sp:hover .sp-ph img{transform:scale(1.05)}
+.sp-area{position:absolute;left:14px;top:14px;background:rgba(255,255,255,.92);backdrop-filter:blur(4px);border-radius:999px;padding:5px 11px;font-size:.74rem;font-weight:700;color:var(--teal-700)}
+.sp-online{position:absolute;right:14px;top:14px;background:#00c3a5;color:#fff;border-radius:999px;padding:5px 11px;font-size:.74rem;font-weight:700}
+.sp-b{padding:22px;display:flex;flex-direction:column;gap:6px;flex:1}
+.sp-b h3{font-size:1.15rem}
+.sp-b .r{color:var(--teal-700);font-weight:600;font-size:.9rem}
+.sp-b .h{color:var(--ink-2);font-size:.92rem;margin-top:6px}
+.sp-b .acts{display:flex;gap:8px;margin-top:auto;padding-top:16px}
+.sp-b .btn{padding:11px 16px;font-size:.88rem;flex:1}
+.sp-rate{font-size:.85rem;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.sp-rate .stars{font-size:.9rem}
+.sp-empty{grid-column:1/-1;text-align:center;color:var(--ink-3);padding:40px}
+.modal{position:fixed;inset:0;z-index:210;background:rgba(6,24,32,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:var(--r-lg);max-width:760px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow-lg);display:grid;animation:fade .35s ease}
+@media(min-width:720px){.modal-box{grid-template-columns:260px 1fr}}
+.modal-ph{position:relative;background:var(--grad);min-height:220px;display:grid;place-items:center}
+.modal-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.modal-ph .ini{font-family:Fraunces,serif;font-size:3rem;color:#fff}
+.modal-c{padding:28px;position:relative}
+.modal-c h3{font-size:1.5rem;padding-right:40px}
+.modal-c .r{color:var(--teal-700);font-weight:700;margin:4px 0 6px}
+.modal-x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;background:var(--bg-soft);font-size:1.4rem}
+.modal-c .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.socials{display:flex;gap:10px;margin-top:6px}
+.socials a{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--grad);color:#fff;transition:transform .2s}
+.socials a:hover{transform:translateY(-3px)}
+.socials svg{width:20px;height:20px}
+.fab .wa{background:#25d366;margin-bottom:10px}
+
+[class$="-grid"]>*,.gallery>*{min-width:0}
+@media(max-width:520px){.amen{grid-template-columns:1fr}}
+.hero,.dark,.mv,.specs,#servizi{overflow:hidden}
+
+
+/* Area riservata */
+.admin-link{display:flex;align-items:center;gap:8px;margin:18px auto 0;font-size:.86rem;font-weight:600;color:var(--ink-3);padding:8px 12px;border-radius:999px}
+.admin-link:hover{color:var(--teal-700);background:#e1f4f6}
+.admin-link svg{width:16px;height:16px}
+.login-box{position:relative;background:#fff;border-radius:var(--r-lg);padding:36px 28px 28px;width:100%;max-width:400px;display:grid;gap:14px;text-align:center;box-shadow:var(--shadow-lg);animation:fade .3s ease}
+.login-box .lock{width:60px;height:60px;border-radius:18px;background:var(--grad);color:#fff;display:grid;place-items:center;margin:0 auto}
+.login-box .lock svg{width:28px;height:28px}
+.login-box p{color:var(--ink-2);font-size:.95rem}
+.login-box .err{color:#b91c1c;font-size:.88rem;min-height:1.2em;font-weight:600}
+.admin-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:1040px;max-height:92vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden;animation:fade .3s ease}
+.admin-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:var(--grad-soft)}
+.admin-head h3{font-size:1.25rem}
+.admin-head small{color:var(--ink-2);font-size:.82rem}
+.admin-head-acts{display:flex;gap:8px;align-items:center}
+.admin-head .modal-x{position:static}
+.admin-head .btn{padding:9px 16px;font-size:.88rem}
+.admin-body{display:grid;overflow:auto;flex:1}
+@media(min-width:820px){.admin-body{grid-template-columns:300px 1fr;overflow:hidden}.admin-body>*{overflow:auto}}
+.admin-body aside{padding:18px;border-right:1px solid var(--line);background:var(--bg-soft);display:grid;gap:12px;align-content:start}
+.adm-list{display:grid;gap:6px}
+.adm-item{display:flex;gap:10px;align-items:center;text-align:left;padding:8px;border-radius:12px;border:1px solid transparent;transition:.2s;width:100%}
+.adm-item:hover{background:#fff;border-color:var(--line)}
+.adm-item.on{background:#fff;border-color:var(--teal-500);box-shadow:var(--shadow-sm)}
+.adm-item.off{opacity:.6}
+.adm-item b{display:block;font-size:.88rem;line-height:1.3}
+.adm-item small{display:block;color:var(--ink-3);font-size:.75rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.adm-ph,.adm-prev{position:relative;flex:none;width:44px;height:44px;border-radius:12px;overflow:hidden;background:var(--grad);display:grid;place-items:center;color:#fff;font-weight:700;font-size:.8rem}
+.adm-ph img,.adm-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.adm-form{padding:22px;display:grid;gap:14px;align-content:start}
+.adm-form h4{font-size:1.15rem}
+.adm-photo{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.adm-prev{width:110px;height:130px;border-radius:16px;font-family:Fraunces,serif;font-size:2rem}
+.adm-files{display:grid;gap:10px;flex:1;min-width:200px}
+.adm-files input{padding:9px;font-size:.85rem}
+.adm-files small{color:var(--ink-3);font-size:.82rem}
+.adm-acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.adm-msg{font-size:.88rem;font-weight:600;color:var(--teal-700)}
+.btn.danger{color:#b91c1c}
+.btn.danger:hover{border-color:#fca5a5;color:#991b1b}
+.btn:disabled{opacity:.6;cursor:wait}
+
+
+/* Player musica */
+.player{position:fixed;left:16px;bottom:16px;z-index:61;display:none;align-items:center;gap:10px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 6px;box-shadow:var(--shadow);max-width:calc(100vw - 110px)}
+.player.ready{display:flex}
+.player .pp{flex:none;width:44px;height:44px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center}
+.player .pp svg{width:20px;height:20px}
+.player .meta{min-width:0;display:grid;line-height:1.25}
+.player .meta small{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-700)}
+.player .meta b{font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.player .ctl{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
+.player .ctl:hover{background:var(--bg-soft);color:var(--teal-700)}
+.player .ctl svg{width:18px;height:18px}
+.player .vol{width:70px;accent-color:var(--teal-500)}
+.eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px;margin-left:6px}
+.eq i{width:3px;background:var(--teal-500);border-radius:2px;height:4px}
+.player.playing .eq i{animation:eq 1s ease-in-out infinite}
+.player.playing .eq i:nth-child(2){animation-delay:-.3s}.player.playing .eq i:nth-child(3){animation-delay:-.6s}
+@keyframes eq{50%{height:12px}}
+.pl-list{position:absolute;left:0;bottom:calc(100% + 10px);width:280px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:8px;display:none}
+.pl-list.open{display:grid;gap:2px}
+.pl-list button{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:10px 12px;border-radius:12px;font-size:.88rem;font-weight:600;color:var(--ink-2)}
+.pl-list button:hover{background:var(--bg-soft)}
+.pl-list button.on{background:#e1f4f6;color:var(--teal-700)}
+.pl-list span{color:var(--ink-3);font-weight:500;font-size:.8rem}
+@media(max-width:620px){.player .vol,.player .ctl.list-btn{display:none}.player .meta b{max-width:120px}}
+body.has-player .to-top{bottom:80px}
+
+
+/* ===== Effetti visivi dinamici ===== */
+#heroFx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hero .container{z-index:1}
+.grad-text{background-size:220% 100%;animation:shine 9s ease-in-out infinite}
+@keyframes shine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero h1 .w{display:inline-block;opacity:0;transform:translateY(.45em) rotate(2deg);filter:blur(6px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1),filter .9s}
+.hero h1.go .w{opacity:1;transform:none;filter:none}
+.fx-glow{position:relative;isolation:isolate}
+.fx-glow::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;opacity:0;transition:opacity .4s;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(20,166,180,.13),transparent 45%)}
+.fx-glow:hover::before{opacity:1}
+.fx-glow::after{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;z-index:3;opacity:0;transition:opacity .4s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(14,159,132,.85),rgba(26,127,208,.5) 40%,transparent 70%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.fx-glow:hover::after{opacity:1}
+.fx-tilt{transform-style:preserve-3d;will-change:transform}
+.btn-primary{position:relative;overflow:hidden}
+.btn-primary::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .7s}
+.btn-primary:hover::after{left:130%}
+.cursor-orb{position:fixed;left:0;top:0;width:360px;height:360px;margin:-180px 0 0 -180px;border-radius:50%;pointer-events:none;z-index:45;
+  background:radial-gradient(circle,rgba(98,195,239,.16),rgba(34,184,146,.08) 40%,transparent 70%);transition:opacity .5s;opacity:0;mix-blend-mode:multiply}
+body.orb-on .cursor-orb{opacity:1}
+.stagger>*{opacity:0;transform:translateY(22px) scale(.98);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.stagger.in>*{opacity:1;transform:none}
+.photo img{will-change:transform}
+.pp{position:relative}
+.pp::before{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(20,166,180,.5);opacity:0;pointer-events:none}
+.player.playing .pp::before{animation:ring 1.8s ease-out infinite}
+@keyframes ring{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.35);opacity:0}}
+.section-head h2{background-image:linear-gradient(transparent 0 0)}
+.sep-wave{position:absolute;left:0;right:0;bottom:-1px;height:70px;pointer-events:none;z-index:1}
+.sep-wave path{animation:wave 12s ease-in-out infinite alternate}
+@keyframes wave{to{d:path("M0 40 C 240 10, 480 70, 720 40 S 1200 10, 1440 40 V70 H0 Z")}}
+@media(prefers-reduced-motion:reduce){#heroFx,.cursor-orb{display:none}.hero h1 .w,.stagger>*{opacity:1;transform:none;filter:none}}
+@media(hover:none){.cursor-orb{display:none}}
+
+
+/* Mappa interattiva */
+.map-card{position:relative;margin-top:24px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);background:#fff;display:grid}
+@media(min-width:960px){.map-card{grid-template-columns:1fr 380px}}
+.map-frame{position:relative;min-height:340px;background:var(--grad-soft)}
+@media(min-width:960px){.map-frame{min-height:520px}}
+.map-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
+.map-fallback{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;padding:24px;color:var(--teal-700);z-index:0;
+  background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.9),transparent 40%),
+  repeating-linear-gradient(28deg,transparent 0 46px,rgba(20,166,180,.10) 46px 50px),
+  repeating-linear-gradient(-62deg,transparent 0 70px,rgba(26,127,208,.08) 70px 76px),var(--grad-soft)}
+.map-fallback b{font-size:1.1rem;color:var(--ink)}
+.map-fallback small{color:var(--ink-3);font-size:.8rem;max-width:280px}
+.mf-pin{width:64px;height:64px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;animation:pinBob 2.4s ease-in-out infinite}
+.mf-pin svg{width:32px;height:36px;transform:rotate(45deg)}
+@keyframes pinBob{50%{translate:0 -8px}}
+.mf-btn{display:inline-flex;padding:12px 20px;border-radius:999px;background:var(--grad);color:#fff;font-weight:700;box-shadow:0 10px 24px -8px rgba(20,140,170,.6)}
+.map-frame.preview .map-fallback{z-index:2}
+.map-panel{position:relative;padding:28px;display:grid;gap:12px;align-content:start;background:linear-gradient(180deg,#fff,var(--bg-soft))}
+.map-panel .eyebrow{justify-self:start}
+.map-pin{width:54px;height:54px;border-radius:16px;background:#fff;box-shadow:var(--shadow-sm);display:grid;place-items:center}
+.map-pin svg{width:30px;height:34px}
+.map-panel h3{font-size:1.5rem}
+.map-panel .addr{color:var(--ink-2);font-weight:600}
+.map-status{font-size:.9rem;font-weight:700;color:var(--teal-700);min-height:1.2em}
+.map-go{width:100%;padding:16px 22px;font-size:1.02rem}
+.map-hint{color:var(--ink-3);font-size:.8rem;text-align:center;margin-top:-4px}
+.map-apps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.map-apps a{display:grid;justify-items:center;gap:6px;padding:12px 6px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:.78rem;font-weight:700;color:var(--ink-2);transition:transform .2s,border-color .2s,box-shadow .2s;text-align:center}
+.map-apps a:hover{transform:translateY(-3px);border-color:var(--teal-500);box-shadow:var(--shadow-sm)}
+.map-apps svg{width:26px;height:26px}
+.map-more{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.map-more>*{flex:1 1 auto;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;font-size:.84rem;font-weight:700;color:var(--ink-2);background:var(--bg-soft)}
+.map-more>*:hover{color:var(--teal-700);background:#e1f4f6}
+.map-more svg{width:16px;height:16px}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.about-photos .photo.reveal.in:last-child{transform:translateY(40px)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="cursor-orb" id="orb" aria-hidden="true"></div>
+
+<!-- Logo riutilizzabile -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lgc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e9f84"/><stop offset=".5" stop-color="#14a6b4"/><stop offset="1" stop-color="#1a7fd0"/>
+    </linearGradient>
+    <symbol id="mark" viewBox="0 0 60 70">
+      <path d="M6 14c22 4 36 22 32 42-2 7-6 11-12 14 14-8 24-22 22-38C46 22 30 10 6 14z" fill="url(#lgc)"/>
+      <circle cx="44" cy="10" r="9" fill="#1f4f6e"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="container">
+    <!-- Per usare il logo ufficiale: <a class="logo" href="#top"><img src="img/logo.png" alt="Clinia" height="44"></a> -->
+    <a href="#top" class="logo" aria-label="Clinia, torna all'inizio">
+      <svg viewBox="0 0 210 70" role="img"><title>Clinia</title>
+        <use href="#mark" x="0" y="0" width="60" height="70"/>
+        <text x="62" y="50" font-family="Manrope,sans-serif" font-size="38" font-weight="600" fill="#1f4f6e" letter-spacing="-.5">Clinia</text>
+      </svg>
+    </a>
+    <nav class="nav-links" aria-label="Principale">
+      <a href="#chi-siamo">Chi siamo</a>
+      <a href="#spazi">Spazi</a>
+      <a href="#servizi">Servizi inclusi</a>
+      <a href="#specialisti">Specialisti</a>
+      <a href="#prenota">Prenota</a>
+      <a href="#contatti">Contatti</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" data-bind="bookingLink" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Prenota visita</a>
+    <button class="burger" id="burger" aria-label="Apri menu" aria-expanded="false" aria-controls="mmenu"><span></span></button>
+  </div>
+  <div class="mobile-menu" id="mmenu">
+    <a href="#chi-siamo">Chi siamo</a><a href="#spazi">Spazi</a><a href="#servizi">Servizi inclusi</a><a href="#specialisti">Specialisti</a><a href="#prenota">Prenota</a><a href="#contatti">Contatti</a>
+    <a class="btn btn-primary" data-bind="bookingLink" target="_blank" rel="noopener">Prenota su MioDottore</a>
+  </div>
+</header>
+
+<main id="top">
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <canvas id="heroFx" aria-hidden="true"></canvas>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="container hero-grid">
+    <div class="reveal">
+      <span class="eyebrow">Centro professionale · Matera</span>
+      <h1><span class="q">“</span>Dove professionisti e specialisti trovano un ambiente <span class="grad-text">su misura</span>, per offrire a pazienti e clienti comfort, qualità e attenzione.</h1>
+      <p class="lead">Spazi moderni, accoglienti e funzionali, già allestiti e pronti all’uso, con servizi di supporto, visibilità e promozione.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#specialisti">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Prenota con i nostri specialisti</a>
+        <a class="btn btn-ghost" href="#contatti" data-role="pro">Sei un professionista?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="trust">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></svg>Studi pronti all’uso</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>Senza oneri gestionali</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg>Approccio multidisciplinare</span>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <div class="photo" data-label="img/reception.jpg"><img src="img/reception.jpg" alt="Reception di Clinia con il logo a parete" loading="eager"></div>
+      <div class="float-chip c1"><div class="ic">6</div><div>Studi attrezzati<small>climatizzati e pronti all’uso</small></div></div>
+      <div class="float-chip c2"><div class="ic az"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg></div><div>Prenotazione online<small>tramite MioDottore</small></div></div>
+    </div>
+  </div>
+  <svg class="sep-wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 240 60, 480 0, 720 30 S 1200 60, 1440 30 V70 H0 Z" fill="#fff"/></svg>
+</section>
+
+<!-- ============ FACTS ============ -->
+<div class="facts">
+  <div class="container">
+    <div class="facts-grid reveal">
+      <div class="fact"><b class="grad-text" data-n="6">0</b><span>Studi attrezzati</span></div>
+      <div class="fact"><b class="grad-text" data-n="10" id="factSpec">0</b><span>Professionisti e specialisti</span></div>
+      <div class="fact"><b class="grad-text" data-n="12">0</b><span>Servizi inclusi</span></div>
+      <div class="fact"><b class="grad-text" data-n="100" data-s="%">0</b><span>Ambienti climatizzati</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CHI SIAMO ============ -->
+<section class="section" id="chi-siamo">
+  <div class="container about-grid">
+    <div class="about-photos">
+      <div class="photo reveal" data-label="img/reception.jpg"><img src="img/reception.jpg" alt="Reception e sala d'attesa di Clinia" loading="lazy"></div>
+      <div class="photo reveal" data-label="img/ingresso.jpg"><img src="img/ingresso.jpg" alt="Ingresso di Clinia con vetrate decorate" loading="lazy"></div>
+    </div>
+    <div class="about-text reveal">
+      <span class="eyebrow">Chi siamo</span>
+      <h2 style="font-size:clamp(1.9rem,3.6vw,2.8rem);margin:14px 0 20px">Un centro professionale <span class="grad-text">nato a Matera</span></h2>
+      <p>Clinia è un centro professionale nato a Matera per offrire a professionisti e specialisti spazi moderni, accoglienti e funzionali.</p>
+      <p>La nostra struttura è progettata per semplificare il lavoro quotidiano, fornendo ambienti già allestiti e pronti all’uso, oltre a servizi di supporto, visibilità e promozione.</p>
+      <blockquote>Clinia non è soltanto un luogo fisico: è una comunità che condivide valori comuni e che, attraverso la collaborazione, genera valore aggiunto per i propri pazienti e clienti.</blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / VISION ============ -->
+<section class="section mv">
+  <div class="pattern"></div>
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Mission &amp; Vision</span>
+      <h2>Il nostro <span class="grad-text">impegno</span>, ogni giorno</h2>
+    </div>
+    <div class="mv-grid">
+      <article class="mv-card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <h3>Mission</h3>
+        <p>Clinia nasce per offrire a professionisti e specialisti uno spazio moderno, funzionale e condiviso, in cui esercitare la propria attività con serenità e supporto costante.</p>
+        <p style="margin-top:12px">La nostra missione è creare un ambiente accogliente e organizzato che semplifichi la gestione quotidiana, garantendo a pazienti e clienti un’esperienza caratterizzata da comfort, professionalità e attenzione.</p>
+      </article>
+      <article class="mv-card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Vision</h3>
+        <p>Diventare un punto di riferimento nel territorio di Matera per la collaborazione tra professionisti e specialisti, promuovendo un approccio multidisciplinare e contribuendo a migliorare la qualità dei servizi offerti a pazienti e clienti.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VALORI ============ -->
+<section class="section" id="valori">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Valori</span>
+      <h2>Ciò in cui <span class="grad-text">crediamo</span></h2>
+      <p>Cinque principi guidano ogni scelta: dall’allestimento degli spazi al rapporto con professionisti, pazienti e clienti.</p>
+    </div>
+    <div class="values">
+      <article class="val reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l8.8 8.8 8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg></div><h3>Accoglienza</h3><p>Offriamo un ambiente sereno e confortevole, pensato per mettere a proprio agio professionisti, specialisti e i loro pazienti e clienti.</p></article>
+      <article class="val reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/></svg></div><h3>Professionalità</h3><p>Offriamo spazi moderni e curati, che favoriscono il lavoro del professionista e trasmettono fiducia a chi si rivolge al centro.</p></article>
+      <article class="val reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9"/></svg></div><h3>Collaborazione</h3><p>Promuoviamo la sinergia tra diverse specializzazioni e attività, incentivando lo scambio di competenze e opportunità.</p></article>
+      <article class="val reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div><h3>Efficienza</h3><p>Organizziamo ambienti e servizi in modo da semplificare la gestione quotidiana e rendere più fluido il lavoro dei professionisti e specialisti.</p></article>
+      <article class="val reveal"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Integrità</h3><p>Operiamo con trasparenza, correttezza e nel pieno rispetto delle normative vigenti.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A CHI CI RIVOLGIAMO ============ -->
+<section class="section dark">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="container who-grid">
+    <div class="reveal">
+      <span class="eyebrow">A chi ci rivolgiamo</span>
+      <h2 style="font-size:clamp(1.9rem,3.6vw,2.8rem);margin:14px 0 12px">Per chi cerca uno spazio <span style="color:#8fe3d0">moderno</span> e <span style="color:#9fdcf8">funzionale</span></h2>
+      <div class="who-list">
+        <div class="who-item"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div><div><b>Professionisti e specialisti</b><p>Clinia si rivolge a professionisti e specialisti che desiderano usufruire di uno spazio moderno e funzionale dove ricevere i propri pazienti e clienti.</p></div></div>
+        <div class="who-item"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 15 8.5l7 .9-5 4.8 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.8 7-.9z"/></svg></div><div><b>Comfort e praticità</b><p>Gli studi e i servizi sono progettati per offrire comfort, professionalità e praticità, garantendo un ambiente accogliente e funzionale.</p></div></div>
+        <div class="who-item"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div><div><b>Tutto già organizzato</b><p>Il centro è pensato per chi cerca soluzioni già organizzate, con servizi inclusi e senza oneri gestionali.</p></div></div>
+      </div>
+      <a class="btn btn-white" href="#contatti" data-role="pro" style="margin-top:28px">Richiedi informazioni sugli studi</a>
+    </div>
+    <div class="photo reveal" data-label="img/corridoio.jpg"><img src="img/corridoio.jpg" alt="Corridoio luminoso con gli studi di Clinia" loading="lazy"></div>
+  </div>
+</section>
+
+<!-- ============ SPAZI ============ -->
+<section class="section" id="spazi">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">I nostri spazi</span>
+      <h2><span class="grad-text">6 studi</span> climatizzati e attrezzati</h2>
+      <p>Clinia mette a disposizione n. 6 studi di diversa dimensione, climatizzati e attrezzati, progettati per garantire comfort e funzionalità.</p>
+    </div>
+    <div class="spaces-grid">
+      <div class="reveal">
+        <div class="tabs" role="tablist" data-group="spazi">
+          <button class="on" data-tab="s-std" role="tab">Studi standard</button>
+          <button data-tab="s-ampio" role="tab">Studio ampio</button>
+          <button data-tab="s-compatti" role="tab">Studi compatti</button>
+        </div>
+        <div class="tab-panel on" id="s-std" role="tabpanel"><h4>Studi standard</h4><p>Ideali per consulenze e attività specialistiche.</p></div>
+        <div class="tab-panel" id="s-ampio" role="tabpanel"><h4>Studio ampio e luminoso</h4><p>Perfetto per attività riabilitative o incontri formativi.</p></div>
+        <div class="tab-panel" id="s-compatti" role="tabpanel"><h4>Studi compatti</h4><p>Adatti a consulenze riservate e incontri individuali.</p></div>
+        <h4 style="margin-top:28px;font-size:1.05rem">Completano la struttura</h4>
+        <div class="amen">
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Reception dedicata</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0z"/><path d="M4 18v2M20 18v2"/></svg>Sala d’attesa accogliente</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>Studi climatizzati</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M19 8v8M15 12h8"/></svg>Servizi igienici distinti per professionisti e pazienti</div>
+        </div>
+      </div>
+      <div class="gallery reveal">
+        <div class="photo wide" data-label="img/corridoio.jpg"><img src="img/corridoio.jpg" alt="Corridoio degli studi" loading="lazy"></div>
+        <div class="photo" data-label="img/studio-1.jpg"><img src="img/studio-1.jpg" alt="Studio attrezzato con lettino e scrivania" loading="lazy"></div>
+        <div class="photo" data-label="img/studio-2.jpg"><img src="img/studio-2.jpg" alt="Studio luminoso con lettino" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVIZI INCLUSI ============ -->
+<section class="section" id="servizi" style="background:var(--bg-soft);overflow:hidden">
+  <div class="pattern"></div>
+  <div class="container" style="position:relative">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Servizi inclusi</span>
+      <h2>Tutto ciò che serve, <span class="grad-text">già incluso</span></h2>
+      <p>Pensati per permettere a professionisti e specialisti di concentrarsi esclusivamente sui propri pazienti e clienti.</p>
+    </div>
+    <div class="inc-grid" id="incGrid"></div>
+  </div>
+</section>
+
+<!-- ============ PERCHÉ CLINIA ============ -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Perché scegliere Clinia</span>
+      <h2>Cinque buoni motivi per <span class="grad-text">lavorare con noi</span></h2>
+    </div>
+    <div class="why-grid">
+      <div class="why reveal"><div class="n grad-text">01</div><h3>Nessuna preoccupazione gestionale</h3><p>Gli spazi sono già pronti all’uso, con servizi inclusi.</p></div>
+      <div class="why reveal"><div class="n grad-text">02</div><h3>Massima flessibilità</h3><p>Studi di dimensioni diverse per esigenze differenti.</p></div>
+      <div class="why reveal"><div class="n grad-text">03</div><h3>Visibilità e promozione</h3><p>Sosteniamo i professionisti e specialisti anche nella comunicazione.</p></div>
+      <div class="why reveal"><div class="n grad-text">04</div><h3>Comunità multidisciplinare</h3><p>Lavorare in Clinia significa entrare in una rete di competenze e opportunità.</p></div>
+      <div class="why reveal"><div class="n grad-text">05</div><h3>Ambiente curato</h3><p>Comfort e professionalità pensati per accogliere al meglio pazienti e clienti.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPECIALISTI ============ -->
+<section class="section specs" id="specialisti">
+  <div class="pattern"></div>
+  <div class="container" style="position:relative">
+    <div class="section-head reveal">
+      <span class="eyebrow">I nostri specialisti</span>
+      <h2>Competenze <span class="grad-text">multidisciplinari</span> sotto lo stesso tetto</h2>
+      <p>Medici, chirurghi e professionisti della salute e del movimento: scopri il profilo di ciascuno e contattali direttamente.</p>
+      <p class="sp-app-note" id="spAppNote">Presto qui anche i giorni e gli orari di visita di ogni specialista, sempre aggiornati dall’app Clinia.</p>
+    </div>
+    <div class="sp-tools reveal">
+      <div class="filters" id="spFilters" role="tablist" aria-label="Filtra per area"></div>
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="spSearch" type="search" placeholder="Cerca specialista o competenza…" aria-label="Cerca specialista"></label>
+    </div>
+    <div class="sp-grid" id="spGrid"></div>
+  </div>
+</section>
+
+<!-- ============ PRENOTA / MIODOTTORE ============ -->
+<section class="section" id="prenota">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Prenotazione online</span>
+      <h2>Prenota con il <span class="grad-text">Dott. Marco Morelli</span> su MioDottore</h2>
+      <p>Disponibilità aggiornata in tempo reale, recensioni verificate e prenotazione immediata.</p>
+    </div>
+    <div class="doc-grid">
+      <article class="doc-card reveal">
+        <div class="doc-photo">
+          <div class="doc-initials">MM</div>
+          <!-- Foto del medico: salvare come img/marco-morelli.jpg -->
+          <img src="img/specialisti/marco-morelli.jpg" alt="Dott. Marco Morelli" id="mmPhoto" onerror="this.remove()">
+          <div class="doc-badge"><i></i>Prenotabile online</div>
+        </div>
+        <div class="doc-body">
+          <h3>Dott. Marco Morelli</h3>
+          <div class="role" data-bind="doctorRole"></div>
+          <p data-bind="doctorBio"></p>
+          <div class="md-chip"><span class="stars" aria-label="5 stelle su 5">★★★★★</span>5,0 · 23 recensioni verificate su MioDottore</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <a class="btn btn-primary" data-bind="bookingLink" target="_blank" rel="noopener">Prenota ora</a>
+            <a class="btn btn-ghost" data-bind="bookingLink" target="_blank" rel="noopener">Profilo e recensioni</a>
+          </div>
+        </div>
+      </article>
+
+      <div class="reveal">
+        <div class="tabs" role="tablist" data-group="doc">
+          <button class="on" data-tab="d-cal" role="tab">Calendario</button>
+          <button data-tab="d-how" role="tab">Come prenotare</button>
+          <button data-tab="d-bring" role="tab">Cosa portare</button>
+        </div>
+        <div class="tab-panel on" id="d-cal" role="tabpanel">
+          <h4>Disponibilità in tempo reale</h4>
+          <div class="widget-wrap" id="mdWidget">
+            <!-- Widget ufficiale MioDottore (Docplanner): si attiva quando il sito è online -->
+            <a id="zl-url" class="zl-url" href="https://www.miodottore.it/profilo/marco-morelli-3" rel="nofollow" data-zlw-doctor="marco-morelli-3" data-zlw-type="big_with_calendar" data-zlw-opinion="false" data-zlw-hide-branding="true" data-zlw-saas-only="false" data-zlw-a11y-title="Widget di prenotazione visite mediche">Dott. Marco Morelli – MioDottore.it</a>
+            <div class="widget-fallback" id="mdFallback">
+              <p>Consulta gli orari disponibili e prenota direttamente sul profilo ufficiale del Dott. Marco Morelli.</p>
+              <a class="btn btn-primary" data-bind="bookingLink" target="_blank" rel="noopener" style="justify-self:center">Apri il calendario su MioDottore</a>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="d-how" role="tabpanel">
+          <h4>Prenotare è semplice</h4>
+          <ul class="chk">
+            <li>Apri il calendario del Dott. Morelli su MioDottore</li>
+            <li>Scegli giorno, orario e tipo di visita</li>
+            <li>Ricevi la conferma via email e SMS</li>
+            <li>Ti aspettiamo da Clinia, accolto dalla nostra reception</li>
+          </ul>
+        </div>
+        <div class="tab-panel" id="d-bring" role="tabpanel">
+          <h4>Cosa portare alla visita</h4>
+          <ul class="chk">
+            <li>Documento d’identità e tessera sanitaria</li>
+            <li>Esami, referti e documentazione clinica precedente</li>
+            <li>Elenco dei farmaci assunti abitualmente</li>
+          </ul>
+        </div>
+        <div class="join">
+          <div><b>Sei uno specialista?</b><span>Entra nella comunità Clinia: studi pronti all’uso e servizi inclusi.</span></div>
+          <a class="btn btn-ghost" href="#contatti" data-role="pro">Scopri come</a>
+        </div>
+        <button class="admin-link" id="adminOpen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Area riservata · gestione specialisti e CV</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="section" style="padding-bottom:0">
+  <div class="container">
+    <div class="cta-band reveal">
+      <div><h2>Cerchi uno studio pronto all’uso a Matera?</h2><p>Ambienti già allestiti, servizi inclusi e nessun onere gestionale. Concentrati solo sui tuoi pazienti.</p></div>
+      <div class="acts">
+        <a class="btn btn-white" href="#contatti" data-role="pro">Richiedi informazioni</a>
+        <a class="btn btn-line" data-bind="phoneLink">Chiamaci</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Domande frequenti</span>
+      <h2>Tutto quello che c’è da sapere</h2>
+    </div>
+    <div class="faq">
+      <details class="reveal" open><summary>Come prenoto una visita con uno specialista di Clinia?</summary><p>Per il Dott. Marco Morelli puoi prenotare online in qualsiasi momento dal suo calendario su MioDottore. Per gli altri specialisti usa il pulsante “Contatta” sulla loro scheda, chiamaci o scrivici su WhatsApp.</p></details>
+      <details class="reveal"><summary>Sono un professionista: come posso lavorare da Clinia?</summary><p>Compila il modulo nella sezione Contatti selezionando “Sono un professionista”: ti ricontatteremo per presentarti gli studi disponibili e le modalità di utilizzo.</p></details>
+      <details class="reveal"><summary>Che tipo di studi sono disponibili?</summary><p>Sei studi climatizzati e attrezzati: studi standard per consulenze e attività specialistiche, uno studio ampio e luminoso per attività riabilitative o incontri formativi e studi compatti per consulenze riservate.</p></details>
+      <details class="reveal"><summary>Quali servizi sono inclusi?</summary><p>Ambienti già allestiti e pronti all’uso, reception dedicata, sala d’attesa, servizi igienici distinti per professionisti e pazienti, oltre a servizi di supporto, visibilità e promozione.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTATTI ============ -->
+<section class="section" id="contatti" style="background:var(--bg-soft)">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Contatti</span>
+      <h2>Vieni a trovarci a <span class="grad-text">Matera</span></h2>
+      <p>Pazienti o professionisti: scrivici e ti ricontatteremo al più presto.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="info-card reveal" style="background:#fff">
+        <div class="info-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><b>Indirizzo</b><span data-bind="address"></span></div></div>
+        <div class="info-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div><div><b>Telefono</b><a data-bind="phoneLink"><span data-bind="phone"></span></a></div></div>
+        <div class="info-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></div><div><b>Email</b><a data-bind="emailLink"><span data-bind="email"></span></a></div></div>
+        <div class="info-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div><div><b>Seguici</b>
+          <div class="socials">
+            <a data-bind="instagramLink" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+            <a data-bind="facebookLink" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v8h4v-8h3l1-4h-4V8.5c0-.3.2-.5.5-.5z"/></svg></a>
+          </div></div></div>
+      </div>
+      <form class="card reveal" id="contactForm" novalidate>
+        <div class="seg" role="radiogroup" aria-label="Chi sei">
+          <label><input type="radio" name="ruolo" value="Paziente" checked><span>Sono un paziente</span></label>
+          <label><input type="radio" name="ruolo" value="Professionista"><span>Sono un professionista</span></label>
+        </div>
+        <div class="row2">
+          <label class="f">Nome e cognome<input name="nome" required autocomplete="name"></label>
+          <label class="f">Telefono<input name="tel" type="tel" required autocomplete="tel"></label>
+        </div>
+        <label class="f">Email<input name="email" type="email" required autocomplete="email"></label>
+        <label class="f" id="extraLabel"><span id="extraTxt">Motivo del contatto</span><select name="extra" id="extra"></select></label>
+        <label class="f">Messaggio<textarea name="msg" placeholder="Scrivi qui la tua richiesta"></textarea></label>
+        <label class="check"><input type="checkbox" name="privacy" required>Acconsento al trattamento dei dati personali ai sensi del Regolamento UE 2016/679 (GDPR).</label>
+        <button class="btn btn-primary" type="submit">Invia richiesta
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button>
+        <div class="form-msg" id="formMsg" role="status"></div>
+      </form>
+    </div>
+
+    <div class="map-card reveal" id="dove">
+      <div class="map-frame">
+        <iframe id="map" loading="lazy" title="Mappa interattiva: Clinia, Via La Martella 5/D, Matera" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="map-fallback" data-bind="mapsOpen" target="_blank" rel="noopener">
+          <span class="mf-pin"><svg viewBox="0 0 60 70"><use href="#mark"/></svg></span>
+          <b>Via La Martella 5/D · Matera</b>
+          <span class="mf-btn">Apri la mappa interattiva ↗</span>
+          <small>Sul sito pubblicato la mappa Google compare direttamente qui.</small>
+        </a>
+      </div>
+      <div class="map-panel">
+        <div class="map-pin"><svg viewBox="0 0 60 70"><use href="#mark"/></svg></div>
+        <span class="eyebrow">Vienici a trovare</span>
+        <h3>Clinia Matera</h3>
+        <p class="addr" data-bind="address"></p>
+                <a class="btn btn-primary map-go" id="goNow" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 19-9-9 19-2-8z"/></svg>Portami qui</a>
+        <small class="map-hint" id="goHint">Apre la navigazione sul tuo telefono partendo dalla tua posizione.</small>
+        <div class="map-apps">
+          <a data-bind="gmapsDir" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="#34a853" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Google Maps</a>
+          <a data-bind="appleDir" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1a7fd0"/><path d="m7 16 5-10 5 10-5-2.5z" fill="#fff"/></svg>Apple Mappe</a>
+          <a data-bind="wazeDir" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><circle cx="12" cy="11" r="9" fill="#33ccff"/><circle cx="9" cy="10" r="1.3" fill="#0b2b38"/><circle cx="15" cy="10" r="1.3" fill="#0b2b38"/><path d="M8.5 13.5c1.8 1.6 5.2 1.6 7 0" stroke="#0b2b38" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>Waze</a>
+        </div>
+        <div class="map-more">
+          <button type="button" id="copyAddr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copia indirizzo</span></button>
+          <button type="button" id="shareAddr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>Condividi</span></button>
+          <a data-bind="phoneLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg><span>Chiama</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div>
+        <svg viewBox="0 0 210 70" height="44" role="img" aria-label="Clinia"><use href="#mark" x="0" y="0" width="60" height="70"/><text x="62" y="50" font-family="Manrope,sans-serif" font-size="38" font-weight="600" fill="#ffffff">Clinia</text></svg>
+        <p style="margin-top:16px;max-width:340px;font-size:.93rem">Dove professionisti e specialisti trovano un ambiente su misura, per offrire a pazienti e clienti comfort, qualità e attenzione.</p>
+      </div>
+      <div><h4>Il centro</h4><ul><li><a href="#chi-siamo">Chi siamo</a></li><li><a href="#valori">Valori</a></li><li><a href="#spazi">I nostri spazi</a></li><li><a data-bind="newsLink" target="_blank" rel="noopener">News</a></li></ul></div>
+      <div><h4>Pazienti</h4><ul><li><a href="#specialisti">Specialisti</a></li><li><a data-bind="bookingLink" target="_blank" rel="noopener">Prenota su MioDottore</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div><h4>Contatti</h4><ul><li data-bind="address"></li><li><a data-bind="phoneLink"><span data-bind="phone"></span></a></li><li><a data-bind="emailLink"><span data-bind="email"></span></a></li></ul></div>
+    </div>
+    <div class="foot-bottom"><span>© <span id="year"></span> Clinia Matera · <span data-bind="vat"></span></span><span><a href="#">Privacy policy</a> · <a href="#">Cookie policy</a></span></div>
+  </div>
+</footer>
+
+<div class="fab"><a class="wa" data-bind="whatsappLink" target="_blank" rel="noopener" aria-label="Scrivici su WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2.1-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 2.5 1 3 .8 3.6.7.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z"/></svg><span>WhatsApp</span></a><a data-bind="bookingLink" target="_blank" rel="noopener" aria-label="Prenota su MioDottore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg><span>Prenota</span></a></div>
+<div class="player" id="player" aria-label="Musica di sottofondo">
+  <div class="pl-list" id="plList" role="listbox" aria-label="Playlist"></div>
+  <button class="pp" id="plPlay" aria-label="Riproduci"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+  <div class="meta"><small>Clinia Relax<span class="eq"><i></i><i></i><i></i></span></small><b id="plTitle">—</b></div>
+  <button class="ctl" id="plNext" aria-label="Brano successivo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm10-12v12h2V6h-2z"/></svg></button>
+  <input class="vol" id="plVol" type="range" min="0" max="1" step="0.05" value="0.5" aria-label="Volume">
+  <button class="ctl list-btn" id="plListBtn" aria-label="Mostra playlist" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h13M3 12h13M3 18h9M19 15v6M16 18h6"/></svg></button>
+  <audio id="plAudio" preload="auto"></audio>
+</div>
+<button class="to-top" id="toTop" aria-label="Torna su"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg></button>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto"><img alt=""><button aria-label="Chiudi">×</button></div>
+<div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginT">
+  <form class="login-box" id="loginForm">
+    <button type="button" class="modal-x" data-close aria-label="Chiudi">×</button>
+    <div class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h3 id="loginT">Area riservata</h3>
+    <p>Inserisci la password per gestire specialisti, foto e CV.</p>
+    <input id="loginPw" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+    <div class="err" id="loginErr" role="alert"></div>
+    <button class="btn btn-primary" type="submit">Entra</button>
+  </form>
+</div>
+<div class="modal" id="adminModal" role="dialog" aria-modal="true" aria-labelledby="adminT">
+  <div class="admin-box">
+    <div class="admin-head">
+      <div><h3 id="adminT">Gestione specialisti</h3><small id="adminMode"></small></div>
+      <div class="admin-head-acts"><button type="button" class="btn btn-ghost" id="adminLogout">Esci</button><button type="button" class="modal-x" data-close aria-label="Chiudi">×</button></div>
+    </div>
+    <div class="admin-body">
+      <aside>
+        <button type="button" class="btn btn-primary" id="afNew" style="width:100%">+ Nuovo specialista</button>
+        <div class="adm-list" id="adminList"></div>
+      </aside>
+      <form id="adminForm" class="adm-form" novalidate>
+        <h4 id="afTitle">Nuovo specialista</h4>
+        <div class="adm-photo">
+          <div class="adm-prev" id="afPhotoPrev"></div>
+          <div class="adm-files">
+            <label class="f">Foto (JPG o PNG)<input type="file" name="photo" accept="image/*"></label>
+            <label class="f">Curriculum (PDF, facoltativo)<input type="file" name="cv" accept="application/pdf"></label>
+            <small id="afCvInfo"></small>
+          </div>
+        </div>
+        <div class="row2">
+          <label class="f">Nome e titolo<input name="name" placeholder="Es. Dott.ssa Anna Rossi" required></label>
+          <label class="f">Area<select name="area"><option value="chirurgia">Chirurgia</option><option value="medicina">Medicina specialistica</option><option value="riabilitazione">Riabilitazione e movimento</option></select></label>
+        </div>
+        <label class="f">Qualifica / specializzazione<input name="role" placeholder="Es. Specialista in Cardiologia" required></label>
+        <label class="f">Curriculum: un punto per riga<textarea name="bio" rows="7" placeholder="Laurea in Medicina e Chirurgia presso…&#10;Specializzazione in…&#10;Esperienza in…"></textarea></label>
+        <label class="f">Link prenotazione online (facoltativo, es. MioDottore)<input name="booking" type="url" placeholder="https://www.miodottore.it/…"></label>
+        <div class="adm-acts">
+          <button class="btn btn-primary" id="afSave" type="submit">Salva</button>
+          <button class="btn btn-ghost danger" id="afDelete" type="button" hidden>Elimina</button>
+          <span class="adm-msg" id="afMsg" role="status"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal" id="spModal" role="dialog" aria-modal="true" aria-labelledby="mName">
+  <div class="modal-box">
+    <div class="modal-ph" id="mPh"></div>
+    <div class="modal-c">
+      <button class="modal-x" id="mX" aria-label="Chiudi">×</button>
+      <h3 id="mName"></h3><div class="r" id="mRole"></div>
+      <ul class="chk" id="mList"></ul>
+      <div class="acts" id="mActs"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAZIONE: inserire qui i dati reali (i valori tra [ ] sono segnaposto).
+   Foto: copiare le immagini nella cartella img/ con i nomi indicati nell'HTML
+   (reception.jpg, ingresso.jpg, corridoio.jpg, studio-1.jpg, studio-2.jpg, marco-morelli.jpg).
+   ===================================================================== */
+const CONFIG = {
+  /* Clinia App: quando "attivo" è true, ogni scheda mostra giorni e orari di visita presi in automatico
+     dai turni prenotati nell'app (solo i medici che hanno dato il consenso alla pubblicazione sul sito). */
+  app: {attivo:false, url:"https://iuydwatobtrpzhotcfyd.supabase.co", appStore:"", googlePlay:""},
+  phone: "+39 392 994 8545",
+  phoneRaw: "+393929948545",
+  whatsapp: "393929948545",
+  email: "info@cliniamatera.it",
+  address: "Via La Martella 5/D – 75100 Matera (MT)",
+  mapQuery: "Via La Martella 5/D, 75100 Matera MT",
+  mapLabel: "Clinia, Via La Martella 5/D, 75100 Matera",
+  vat: "P.IVA [00000000000]",
+  instagram: "https://www.instagram.com/",   // [inserire link profilo Instagram]
+  facebook: "https://www.facebook.com/",     // [inserire link pagina Facebook]
+  booking: "https://www.miodottore.it/profilo/marco-morelli-3",
+  news: "https://cliniamatera.it/news/",
+  doctorRole: "Fisioterapista",
+  doctorBio: "Fisioterapista formato all’Università Aldo Moro di Bari, con tirocini presso l’Ospedale Madonna delle Grazie di Matera e l’Ospedale Don Gnocchi di Tricarico. Riceve i pazienti presso Clinia.",
+  /* Musica di sottofondo (brani creati con Suno): file MP3 nella cartella audio/.
+     Il player compare solo se almeno un brano è disponibile. */
+  music: [
+    {t:"Morning Light", src:"audio/01-morning-light.mp3"},
+    {t:"Amalfi Twilight", src:"audio/02-amalfi-twilight.mp3"}
+  ],
+  reasons: {
+    Paziente: null, // generato automaticamente dall'elenco specialisti
+    Professionista: ["Studio standard","Studio ampio e luminoso","Studio compatto","Informazioni generali"]
+  },
+  services: [
+    {t:"Spazi e accoglienza", items:[
+      "Studi moderni, accoglienti, già allestiti e pronti all’uso",
+      "Sala d’attesa confortevole con reception dedicata",
+      "Servizi igienici distinti per professionisti e pazienti",
+      "Servizio di pulizia ed igienizzazione periodico"]},
+    {t:"Visibilità e promozione", items:[
+      "Inserimento del profilo del professionista nel sito web ufficiale del centro",
+      "Visibilità sui canali social istituzionali e nelle brochure informative",
+      "Promozione coordinata del centro attraverso attività pubblicitarie mirate",
+      "Opportunità di collaborazione e scambio reciproco di pazienti tra i professionisti del centro"]},
+    {t:"Supporto e rete", items:[
+      "Cura degli studi e delle aree condivise",
+      "Connessione internet e Wi-Fi ad alta velocità",
+      "Inserimento in una rete multidisciplinare che valorizza la professionalità",
+      "Condivisione dei valori fondanti del centro: accoglienza, professionalità, benessere e innovazione"]}
+  ],
+  /* Specialisti. Foto: img/specialisti/<id>.jpg  ·  area: chirurgia | medicina | riabilitazione */
+  specialists: [
+    {id:"marco-morelli", name:"Dott. Marco Morelli", role:"Fisioterapista", area:"riabilitazione", booking:"https://www.miodottore.it/profilo/marco-morelli-3", rating:"5,0", reviews:23,
+     bio:["Fisioterapista, valutazione 5 stelle con 23 recensioni verificate su MioDottore",
+          "Formazione presso l’Università Aldo Moro (Bari)",
+          "Tirocinio presso l’Ospedale Madonna delle Grazie (Matera)",
+          "Tirocinio presso l’Ospedale Don Gnocchi (Tricarico)",
+          "Prenotazione online con calendario in tempo reale su MioDottore"]},
+    {id:"enrico-pierangeli", name:"Prof. Enrico Pierangeli", role:"Specialista in Neurochirurgia, Neurologia e Oncologia", area:"chirurgia",
+     bio:["Professore a contratto di Neurochirurgia presso la L.U.M. di Casamassima",
+          "Direttore della Struttura Complessa di Neurochirurgia dell’Ospedale SS. Annunziata di Taranto (1997–2011)",
+          "Formazione internazionale presso centri d’eccellenza come l’Università della California di San Francisco (UCSF) e la Cook County School di Chicago",
+          "Pioniere nel Sud Italia delle tecniche di neurochirurgia mini-invasiva, endoscopica e stereotassica",
+          "Tra i primi specialisti ad applicare la cifoplastica per il trattamento dei crolli vertebrali",
+          "Oltre 4.000 interventi eseguiti come primo operatore",
+          "Autore di circa 200 pubblicazioni scientifiche",
+          "In Clinia offre consulenze specialistiche di neurochirurgia ad alta competenza clinica e chirurgica"]},
+    {id:"feliciana-pellegrino", name:"Dott.ssa Feliciana Pellegrino", role:"Fisioterapista – Riabilitazione del pavimento pelvico", area:"riabilitazione",
+     bio:["Fisioterapista con esperienza in ambito ambulatoriale e riabilitativo",
+          "Laureata in Fisioterapia presso l’Università degli Studi Aldo Moro con votazione 110 e lode",
+          "Competenze in riabilitazione ortopedica, neurologica, pediatrica, oncologica e cardio-respiratoria",
+          "Formazione in Kinesio Taping Method",
+          "Formazione nel trattamento del distretto temporo-mandibolare",
+          "In formazione nell’ambito della riabilitazione del pavimento pelvico",
+          "Approccio empatico, orientato al benessere del paziente e al lavoro in équipe"]},
+    {id:"michele-picciallo", name:"Dott. Michele Picciallo", role:"Medico chirurgo – Specialista in Dermatologia e Venereologia", area:"medicina",
+     bio:["Medico chirurgo specialista in Dermatologia e Venereologia",
+          "Specializzazione conseguita presso l’Università degli Studi di Bari con votazione 70/70 e lode",
+          "Master di II livello in Laser in Dermatologia presso Sapienza Università di Roma",
+          "Formazione in medicina estetica presso la Scuola di Medicina Estetica NICALOS",
+          "Esperienza in dermoscopia e gestione dei pazienti con tumori cutanei",
+          "Competenze nella valutazione e nel trattamento delle principali patologie dermatologiche",
+          "Esperienza come medico di continuità assistenziale e medico USCA"]},
+    {id:"vincenzo-de-leo", name:"Dott. Vincenzo De Leo", role:"Chirurgo generale – Chirurgia oncologica, laparoscopica e robotica", area:"chirurgia",
+     bio:["Medico specialista in Chirurgia Generale",
+          "Esperto in chirurgia oncologica maggiore",
+          "Competenze in chirurgia mininvasiva, laparoscopica e robotica",
+          "Si occupa di patologie del colon-retto, tiroide, colecisti, ernie e proctologia",
+          "Esperienza nella gestione chirurgica di patologie oncologiche complesse",
+          "Collaborazione con la Scuola di Riferimento Nazionale S.I.C. di Chirurgia Laparoscopica Avanzata",
+          "Attività presso Mater Dei Hospital di Bari"]},
+    {id:"donato-panetta", name:"Dott. Donato Panetta", role:"Medico chirurgo – Specialista in Ortopedia e Traumatologia", area:"chirurgia",
+     bio:["Chirurgo ortopedico con oltre vent’anni di esperienza professionale",
+          "Chirurgia artroscopica del ginocchio per lesioni meniscali, legamentose e cartilaginee",
+          "Chirurgia del piede per alluce valgo, dita a martello, metatarsalgia e neuroma di Morton",
+          "Chirurgia della mano per tunnel carpale, dito a scatto e altre patologie specifiche",
+          "Trattamento chirurgico di fratture ossee e distorsioni gravi",
+          "Esperienza in ortopedia pediatrica e trattamento delle patologie degenerative e infiammatorie"]},
+    {id:"maria-alessandra-lassandro", name:"Dott.ssa Maria Alessandra Lassandro", role:"Medico chirurgo – Specialista in Allergologia e Immunologia Clinica", area:"medicina",
+     bio:["Specialista in Allergologia e Immunologia Clinica, laureata e specializzata con lode presso l’Università degli Studi di Bari",
+          "Esperienza nella diagnosi e gestione di allergie respiratorie, alimentari, cutanee, farmacologiche e da veleno di imenotteri",
+          "Competenze in prick test, patch test, test a farmaci, spirometria e test di broncodilatazione",
+          "Esperienza in immunoterapia desensibilizzante e terapie biologiche per asma severo, poliposi nasale, orticaria cronica e dermatite atopica",
+          "Formazione quadriennale in Medicina Estetica presso la Fondazione Carlo Alberto Bartoletti di Roma",
+          "Esegue trattamenti medico-estetici personalizzati per qualità della pelle, invecchiamento cutaneo, lassità, macchie, cellulite e adiposità localizzate",
+          "Formazione specialistica in Ecografia Clinica SIUMB, con ecografie addominali, tiroidee, di cute e sottocute, del volto e valutazione ecografica della cellulite"]},
+    {id:"francesca-trabace", name:"Francesca Trabace", role:"Osteopata D.O. – Trattamenti osteopatici", area:"riabilitazione",
+     bio:["Osteopata D.O. diplomata presso ATSAI Still Academy Italia",
+          "Competenze nella valutazione osteopatica",
+          "Formazione in tecniche manipolative H.V.T.T.",
+          "Approccio osteopatico alle disfunzioni dell’ATM e della sfera stomatologica",
+          "Formazione in osteopatia pediatrica",
+          "Competenze nella valutazione biomeccanica della spalla",
+          "Formazione in Cupping Therapy e BLSD"]},
+    {id:"angelo-costantiello", name:"Dott. Angelo Costantiello", role:"Tecnico ortopedico", area:"riabilitazione",
+     bio:["Tecnico Ortopedico con oltre 30 anni di esperienza",
+          "Specializzato in biomeccanica del piede, baropodometria e valutazione posturale",
+          "Analisi statica e dinamica dell’appoggio, stabilometria e analisi del cammino",
+          "Progettazione e realizzazione di plantari personalizzati con tecnologie CAD-CAM",
+          "Competenze nella realizzazione di ortesi per il piede diabetico e nella prevenzione delle lesioni da pressione",
+          "Esperienza nell’analisi del gesto sportivo e nella progettazione di soluzioni ortesiche dedicate",
+          "Collaborazione multidisciplinare con medici, fisioterapisti, podologi e centri riabilitativi"]},
+    {id:"rossella-conversano", name:"Rossella Conversano", role:"Personal Trainer e Attività Motoria Funzionale", area:"riabilitazione",
+     bio:["Laureata in Scienze Motorie e Attività Sportive",
+          "Personal Trainer qualificata ENDAS",
+          "Esperienza nella preparazione atletica, nel lavoro sulla forza e sulla biomeccanica",
+          "Percorsi personalizzati di attività motoria funzionale",
+          "Attenzione alla qualità del movimento e alla sostenibilità dell’allenamento",
+          "Esperienza sportiva agonistica nel judo a livello nazionale",
+          "Approccio orientato al benessere della persona e al miglioramento della qualità della vita"]},
+    {id:"maria-paola-simeone", name:"Dott.ssa Maria Paola Simeone", role:"Ginecologa · Sessuologa · Chirurga", area:"chirurgia",
+     bio:["Medico chirurgo, specialista in Ginecologia e Ostetricia",
+          "Sessuologia clinica",
+          "Chirurgia ginecologica"]}
+  ]
+};
+const AREAS={all:"Tutti",chirurgia:"Chirurgia",medicina:"Medicina specialistica",riabilitazione:"Riabilitazione e movimento"};
+/* ===================================================================== */
+
+const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
+
+/* Bind */
+const binds={...CONFIG,
+  phoneLink:el=>el.href="tel:"+CONFIG.phoneRaw,
+  emailLink:el=>el.href="mailto:"+CONFIG.email,
+  bookingLink:el=>el.href=CONFIG.booking,
+  newsLink:el=>el.href=CONFIG.news,
+  whatsappLink:el=>el.href="https://wa.me/"+CONFIG.whatsapp,
+  instagramLink:el=>el.href=CONFIG.instagram,
+  facebookLink:el=>el.href=CONFIG.facebook};
+$$("[data-bind]").forEach(el=>{const v=binds[el.dataset.bind]; if(typeof v==="function") v(el); else if(v!=null) el.textContent=v;});
+$("#year").textContent=new Date().getFullYear();
+const IN_PREVIEW=!!(window.claude&&window.claude.use);   // anteprima su claude.ai: iframe esterni bloccati
+if(IN_PREVIEW){ $(".map-frame").classList.add("preview"); $("#map").remove(); }
+else $("#map").src="https://maps.google.com/maps?q="+encodeURIComponent(CONFIG.mapQuery)+"&z=16&hl=it&output=embed";
+
+/* Come arrivare: apre la navigazione nell'app di mappe del telefono */
+(function(){
+  const dest=encodeURIComponent(CONFIG.mapQuery);
+  const L={
+    gmaps:"https://www.google.com/maps/dir/?api=1&destination="+dest+"&travelmode=driving",
+    apple:"https://maps.apple.com/?daddr="+dest+"&dirflg=d",
+    waze:"https://waze.com/ul?q="+dest+"&navigate=yes",
+    open:"https://www.google.com/maps/search/?api=1&query="+dest
+  };
+  const set=(sel,u)=>$$(`[data-bind="${sel}"]`).forEach(a=>a.href=u);
+  set("gmapsDir",L.gmaps); set("appleDir",L.apple); set("wazeDir",L.waze); set("mapsOpen",L.open);
+  const ua=navigator.userAgent, iOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const go=$("#goNow"); go.href=iOS?L.apple:L.gmaps;
+  $("#goHint").textContent=iOS?"Apre Apple Mappe con il percorso dalla tua posizione.":
+    (/Android/.test(ua)?"Apre Google Maps con il percorso dalla tua posizione.":"Apre il percorso in Google Maps dalla tua posizione.");
+
+  /* Copia e condividi */
+  const flash=(btn,t)=>{const sp=$("span",btn),o=sp.textContent;sp.textContent=t;setTimeout(()=>sp.textContent=o,1800)};
+  $("#copyAddr").onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(CONFIG.mapLabel);flash(b,"Copiato ✓")}catch(_){prompt("Indirizzo:",CONFIG.mapLabel)}};
+  $("#shareAddr").onclick=async e=>{const b=e.currentTarget,data={title:"Clinia Matera",text:CONFIG.mapLabel,url:L.open};
+    if(navigator.share){try{await navigator.share(data)}catch(_){}} else {try{await navigator.clipboard.writeText(CONFIG.mapLabel+" – "+L.open);flash(b,"Link copiato ✓")}catch(_){}}};
+})();
+
+/* Servizi inclusi */
+const MARK='<svg viewBox="0 0 60 70"><use href="#mark"/></svg>';
+$("#incGrid").innerHTML=CONFIG.services.map((c,i)=>`<div class="inc-col reveal"><h3><i>0${i+1}</i>${c.t}</h3><ul>${c.items.map(t=>`<li>${MARK}<span>${t}</span></li>`).join("")}</ul></div>`).join("");
+
+/* Specialisti: griglia, filtri, ricerca, scheda + area riservata */
+const BASE=CONFIG.specialists, spGrid=$("#spGrid");
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl=u=>/^(https?:\/\/|\/_blob\/|data:image\/|data:application\/pdf|img\/)/.test(u||"")?u:"";
+let EXTRA={};                         // modifiche salvate: id -> dati
+const allSP=()=>{
+  const list=BASE.map(b=>EXTRA[b.id]?{...b,...EXTRA[b.id],builtin:true}:{...b,builtin:true}).filter(s=>!s.hidden);
+  Object.values(EXTRA).forEach(e=>{ if(!BASE.some(b=>b.id===e.id)&&!e.hidden&&e.name) list.push({area:"medicina",bio:[],...e}); });
+  return list;
+};
+const findSP=id=>allSP().find(x=>x.id===id);
+const initials=n=>n.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ").filter(Boolean).map(w=>w[0]).slice(0,2).join("");
+const photoSrc=s=>safeUrl(s.photo)||`img/specialisti/${s.id}.jpg`;
+const photo=s=>`<span class="ini">${esc(initials(s.name))}</span><img src="${esc(photoSrc(s))}" alt="${esc(s.name)}" loading="lazy" onerror="this.remove()">`;
+let spArea="all", spQ="";
+/* Giorni e orari di visita da Clinia App (spazio pronto: si accende con CONFIG.app.attivo) */
+let ORARI={};
+async function caricaOrari(){if(!CONFIG.app.attivo||!CONFIG.app.chiave)return;
+  try{const oggi=new Date().toISOString().slice(0,10);
+    const r=await fetch(`${CONFIG.app.url}/rest/v1/calendario_pubblico?select=specialist_id,giorno,inizio,fine,studio&giorno=gte.${oggi}&order=giorno`,{headers:{apikey:CONFIG.app.chiave,Authorization:"Bearer "+CONFIG.app.chiave}});
+    if(!r.ok)return;const g={},GG=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"];
+    for(const x of await r.json()){const d=new Date(x.giorno+"T12:00");const t=`${GG[d.getDay()]} ${d.getDate()}/${d.getMonth()+1} ${x.inizio.slice(0,5)}–${x.fine.slice(0,5)}`;(g[x.specialist_id]=g[x.specialist_id]||[]).push(t)}
+    ORARI=Object.fromEntries(Object.entries(g).map(([k,v])=>[k,v.slice(0,3).join(" · ")]));renderSP()}catch(e){}}
+const renderSP=()=>{
+  const SP=allSP(), q=spQ.toLowerCase();
+  const list=SP.filter(s=>(spArea==="all"||s.area===spArea)&&(!q||(s.name+" "+s.role+" "+(s.bio||[]).join(" ")).toLowerCase().includes(q)));
+  spGrid.innerHTML=list.length?list.map(s=>`
+    <article class="sp">
+      <div class="sp-ph">${photo(s)}<span class="sp-area">${esc(AREAS[s.area]||"")}</span>${s.booking?'<span class="sp-online">Prenota online</span>':""}</div>
+      <div class="sp-b"><h3>${esc(s.name)}</h3><div class="r">${esc(s.role)}</div>${ORARI[s.id]?`<div class="sp-orari"><b>Riceve</b> ${esc(ORARI[s.id])}</div>`:""}${s.reviews?`<div class="sp-rate"><span class="stars">★★★★★</span> ${esc(s.rating)} · ${esc(s.reviews)} recensioni</div>`:""}<p class="h">${esc((s.bio||[])[0]||"")}</p>
+        <div class="acts"><button class="btn btn-ghost" data-open="${esc(s.id)}">Scopri di più</button>
+        ${safeUrl(s.booking)?`<a class="btn btn-primary" href="${esc(s.booking)}" target="_blank" rel="noopener">Prenota</a>`:`<button class="btn btn-primary" data-contact="${esc(s.id)}">Contatta</button>`}</div></div>
+    </article>`).join(""):`<p class="sp-empty">Nessuno specialista corrisponde alla ricerca.</p>`;
+  const f=$("#factSpec"); f.dataset.n=SP.length; if(f.closest(".in")) f.textContent=SP.length;
+  CONFIG.reasons.Paziente=[...SP.map(s=>s.name),"Informazioni generali"];
+  const mm=SP.find(x=>x.id==="marco-morelli"), dp=$(".doc-photo");
+  if(mm&&dp){ let im=$("img",dp); if(!im){im=document.createElement("img");im.alt=mm.name;im.onerror=()=>im.remove();dp.insertBefore(im,$(".doc-badge",dp));}
+    const src=photoSrc(mm); if(im.getAttribute("src")!==src) im.src=src; }
+  if(typeof renderAdminList==="function") renderAdminList();
+};
+if(CONFIG.app.attivo){const n=document.getElementById("spAppNote");if(n)n.textContent="Giorni e orari di visita aggiornati in tempo reale dall’app Clinia.";caricaOrari()}
+Object.entries(AREAS).forEach(([k,v])=>{const b=document.createElement("button");b.textContent=v;b.setAttribute("role","tab");if(k==="all")b.classList.add("on");
+  b.onclick=()=>{spArea=k;$$("#spFilters button").forEach(x=>x.classList.toggle("on",x===b));renderSP()};$("#spFilters").appendChild(b)});
+$("#spSearch").addEventListener("input",e=>{spQ=e.target.value.trim();renderSP()});
+
+const modal=$("#spModal");
+const openSP=id=>{const s=findSP(id);if(!s)return;
+  $("#mPh").innerHTML=photo(s); $("#mName").textContent=s.name; $("#mRole").textContent=s.role;
+  $("#mList").innerHTML=(s.bio||[]).map(b=>`<li>${esc(b)}</li>`).join("");
+  $("#mActs").innerHTML=(safeUrl(s.booking)?`<a class="btn btn-primary" href="${esc(s.booking)}" target="_blank" rel="noopener">Prenota su MioDottore</a>`:`<button class="btn btn-primary" data-contact="${esc(s.id)}">Richiedi un appuntamento</button>`)+
+    (safeUrl(s.cv)?`<button class="btn btn-ghost" type="button" data-cv="${esc(s.id)}">Scarica CV (PDF)</button>`:"")+
+    `<a class="btn btn-ghost" href="https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent("Buongiorno, vorrei informazioni per una visita con "+s.name)}" target="_blank" rel="noopener">WhatsApp</a>`;
+  openModal(modal); $("#mX").focus();};
+const openModal=m=>{m.classList.add("open");document.body.style.overflow="hidden"};
+const closeModal=m=>{m.classList.remove("open");if(!$(".modal.open"))document.body.style.overflow=""};
+const closeSP=()=>closeModal(modal);
+$("#mX").onclick=closeSP;
+$$(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m)}));
+addEventListener("keydown",e=>{if(e.key==="Escape")$$(".modal.open").forEach(closeModal)});
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]"); if(o) openSP(o.dataset.open);
+  const cvb=e.target.closest("[data-cv]"); if(cvb) downloadCv(findSP(cvb.dataset.cv));
+  const c=e.target.closest("[data-contact]"); if(c){closeSP(); setRole("Paziente");
+    const s=findSP(c.dataset.contact); if(s) $("#extra").value=s.name; $("#contatti").scrollIntoView({behavior:"smooth"});}
+});
+
+async function downloadCv(s){
+  if(!s||!safeUrl(s.cv)) return;
+  const filename="CV - "+s.name.replace(/[\\/:*?"<>|]/g,"")+".pdf";
+  const dl=(window.claude&&claude.use)?await claude.use("downloads").catch(()=>null):null;
+  if(dl){ try{ const blob=await (await fetch(s.cv)).blob(); await dl.save({filename,data:blob}); }catch(e){} return; }
+  const a=document.createElement("a"); a.href=s.cv; a.download=filename; a.target="_blank"; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove();
+}
+/* ---------- Archivio: cloud (artifact pubblicato) oppure questo browser ---------- */
+const LS_KEY="clinia-specialisti";
+const Store={mode:"local",db:null,assets:null,user:null,
+  async init(){
+    try{ if(window.claude&&claude.use){
+      const [db,assets,user]=await Promise.all([claude.use("db"),claude.use("assets"),claude.use("user")]);
+      if(db){this.mode="cloud";this.db=db;this.assets=assets;this.user=user;
+        const t=setTimeout(()=>{},10000);
+        db.collection("specialisti").onSnapshot(snap=>{clearTimeout(t);EXTRA={};snap.docs.forEach(d=>EXTRA[d.id]={id:d.id,...d.data()});renderSP()},
+          err=>{clearTimeout(t);console.warn("db",err.code)});
+        return;}
+    }}catch(e){}
+    try{EXTRA=JSON.parse(localStorage.getItem(LS_KEY)||"{}")}catch(e){EXTRA={}}
+    renderSP();
+  },
+  canWrite(){ return this.mode==="local" || (this.user ? this.user.canEdit() : true); },
+  async save(doc){
+    const {id,...data}=doc; data.updatedAt=Date.now();
+    if(this.mode==="cloud") await this.db.collection("specialisti").doc(id).set(data);
+    else{ EXTRA[id]={id,...data}; localStorage.setItem(LS_KEY,JSON.stringify(EXTRA)); renderSP(); }
+  },
+  async remove(id){
+    if(this.mode==="cloud") await this.db.collection("specialisti").doc(id).delete();
+    else{ delete EXTRA[id]; localStorage.setItem(LS_KEY,JSON.stringify(EXTRA)); renderSP(); }
+  },
+  async upload(file,kind){            // kind: "photo" | "cv"
+    let blob=file;
+    if(kind==="photo") blob=await resizeImage(file,700);
+    if(this.mode==="cloud"){
+      if(!this.assets) throw new Error("Per caricare file devi essere Editor di questa pagina.");
+      const r=await this.assets.upload(blob,{type:blob.type||file.type}); return "/_blob/"+r.id;
+    }
+    if(kind==="cv"&&file.size>1.5e6) throw new Error("In questa versione locale il CV può pesare al massimo 1,5 MB.");
+    return await new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=ko;fr.readAsDataURL(blob)});
+  }
+};
+const resizeImage=(file,max)=>new Promise((ok,ko)=>{
+  const img=new Image(), u=URL.createObjectURL(file);
+  img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");
+    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(u); c.toBlob(b=>b?ok(b):ko(new Error("Immagine non valida")),"image/jpeg",.86);};
+  img.onerror=()=>ko(new Error("Immagine non valida")); img.src=u;});
+
+/* ---------- Login con password ---------- */
+const PASS_HASH="dbd339be4a66af71e91b119ce5d5b72569da536d1503b1c6c902cacb0793bfee"; // SHA-256 di "CLINIA"
+const sha256=async t=>{ if(!crypto.subtle) return t==="CLINIA"?PASS_HASH:""; const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");};
+const loginM=$("#loginModal"), adminM=$("#adminModal");
+$("#adminOpen").onclick=()=>{ if(sessionStorage.getItem("clinia-admin")==="1"){openAdmin();return;}
+  $("#loginErr").textContent=""; $("#loginPw").value=""; openModal(loginM); setTimeout(()=>$("#loginPw").focus(),50); };
+$("#loginForm").addEventListener("submit",async e=>{e.preventDefault();
+  if(await sha256($("#loginPw").value.trim().toUpperCase())===PASS_HASH){
+    try{sessionStorage.setItem("clinia-admin","1")}catch(_){}
+    closeModal(loginM); openAdmin();
+  } else { $("#loginErr").textContent="Password non corretta."; $("#loginPw").select(); }
+});
+$$("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.closest(".modal")));
+$("#adminLogout").onclick=()=>{try{sessionStorage.removeItem("clinia-admin")}catch(_){} closeModal(adminM)};
+
+/* ---------- Pannello di gestione ---------- */
+const af=$("#adminForm");
+let editing=null, pendingPhoto=null, pendingCv=null;
+const slug=t=>t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/^(prof\.?|dott\.?(ssa)?\.?)\s+/,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"specialista";
+function openAdmin(){
+  $("#adminMode").textContent = Store.mode==="cloud"
+    ? (Store.canWrite()?"Le modifiche sono pubblicate subito per tutti i visitatori.":"Hai solo accesso in lettura: per salvare serve il ruolo di Editor su questa pagina.")
+    : "Versione locale: le modifiche restano salvate solo in questo browser. Una volta pubblicato il sito, verranno condivise con tutti.";
+  fillForm(null); renderAdminList(); openModal(adminM);
+}
+function renderAdminList(){
+  const box=$("#adminList"); if(!box) return;
+  box.innerHTML=allSP().map(s=>`<button type="button" class="adm-item${editing===s.id?" on":""}" data-edit="${esc(s.id)}">
+    <span class="adm-ph">${photo(s)}</span><span><b>${esc(s.name)}</b><small>${esc(s.role)}</small></span></button>`).join("")+
+    BASE.filter(b=>EXTRA[b.id]?.hidden).map(b=>`<button type="button" class="adm-item off" data-restore="${esc(b.id)}"><span class="adm-ph"><span class="ini">${esc(initials(b.name))}</span></span><span><b>${esc(b.name)}</b><small>Nascosto · clicca per ripristinare</small></span></button>`).join("");
+}
+function fillForm(id){
+  editing=id; pendingPhoto=pendingCv=null; af.reset();
+  const s=id?findSP(id):null;
+  $("#afTitle").textContent=s?"Modifica: "+s.name:"Nuovo specialista";
+  af.name.value=s?.name||""; af.role.value=s?.role||""; af.area.value=s?.area||"medicina";
+  af.bio.value=(s?.bio||[]).join("\n"); af.booking.value=s?.booking||"";
+  $("#afPhotoPrev").innerHTML=s?photo(s):'<span class="ini">+</span>';
+  $("#afCvInfo").textContent=s?.cv?"CV PDF già caricato":"Nessun CV PDF";
+  $("#afDelete").hidden=!s; $("#afDelete").textContent=s?.builtin?(EXTRA[s.id]?"Ripristina originale / Nascondi":"Nascondi dal sito"):"Elimina specialista";
+  $("#afMsg").textContent=""; renderAdminList();
+}
+$("#adminList").addEventListener("click",async e=>{
+  const ed=e.target.closest("[data-edit]"); if(ed) fillForm(ed.dataset.edit);
+  const rs=e.target.closest("[data-restore]"); if(rs){ await Store.remove(rs.dataset.restore).catch(err=>alert(err.message)); }
+});
+$("#afNew").onclick=()=>fillForm(null);
+af.photo.addEventListener("change",()=>{const f=af.photo.files[0]; if(!f) return; pendingPhoto=f;
+  $("#afPhotoPrev").innerHTML=`<img src="${URL.createObjectURL(f)}" alt="">`;});
+af.cv.addEventListener("change",()=>{const f=af.cv.files[0]; if(!f) return;
+  if(f.type!=="application/pdf"){ $("#afCvInfo").textContent="Il CV deve essere un file PDF."; af.cv.value=""; return; }
+  pendingCv=f; $("#afCvInfo").textContent="Nuovo CV: "+f.name;});
+af.addEventListener("submit",async e=>{
+  e.preventDefault(); const msg=$("#afMsg");
+  if(!af.name.value.trim()||!af.role.value.trim()){ msg.textContent="Nome e qualifica sono obbligatori."; return; }
+  if(!Store.canWrite()){ msg.textContent="Non hai i permessi per salvare."; return; }
+  const btn=$("#afSave"); btn.disabled=true; msg.textContent="Salvataggio in corso…";
+  try{
+    const cur=editing?findSP(editing):null;
+    let id=editing; if(!id){ id=slug(af.name.value); while(findSP(id)||EXTRA[id]) id+="-2"; }
+    const prev=EXTRA[id]||{};
+    const doc={id, name:af.name.value.trim(), role:af.role.value.trim(), area:af.area.value,
+      bio:af.bio.value.split("\n").map(x=>x.replace(/^[\s•\-–]+/,"").trim()).filter(Boolean),
+      booking:af.booking.value.trim(), photo:prev.photo||"", cv:prev.cv||""};
+    if(pendingPhoto) doc.photo=await Store.upload(pendingPhoto,"photo");
+    if(pendingCv) doc.cv=await Store.upload(pendingCv,"cv");
+    await Store.save(doc);
+    msg.textContent="✓ Salvato. La scheda è aggiornata nella sezione Specialisti.";
+    editing=id; pendingPhoto=pendingCv=null; renderSP(); fillForm(id); msg.textContent="✓ Salvato.";
+  }catch(err){ msg.textContent="Errore: "+(err.message||err.code||"salvataggio non riuscito"); }
+  btn.disabled=false;
+});
+$("#afDelete").onclick=async()=>{
+  const s=findSP(editing); if(!s) return;
+  if(!confirm(s.builtin?`Nascondere ${s.name} dal sito? Potrai ripristinarlo in qualsiasi momento.`:`Eliminare definitivamente ${s.name}?`)) return;
+  try{
+    if(s.builtin) await Store.save({id:s.id,hidden:true}); else await Store.remove(s.id);
+    fillForm(null);
+  }catch(err){ $("#afMsg").textContent="Errore: "+(err.message||err.code); }
+};
+
+renderSP();
+Store.init();
+
+
+/* ---------- Effetti visivi dinamici ---------- */
+(function(){
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches, fine=matchMedia("(hover:hover) and (pointer:fine)").matches;
+
+  /* Titolo: parole che emergono una alla volta */
+  const h1=$(".hero h1");
+  (function split(el){[...el.childNodes].forEach(n=>{
+    if(n.nodeType===3){const f=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach(t=>{
+      if(!t) return; if(/^\s+$/.test(t)){f.appendChild(document.createTextNode(t));return;}
+      const sp=document.createElement("span");sp.className="w";sp.textContent=t;f.appendChild(sp);});n.replaceWith(f);}
+    else if(n.nodeType===1&&!n.classList.contains("grad-text")&&!n.classList.contains("q")) split(n);
+    else if(n.nodeType===1) n.classList.add("w");
+  });})(h1);
+  $$(".w",h1).forEach((w,k)=>w.style.transitionDelay=(120+k*55)+"ms");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>h1.classList.add("go")));
+
+  /* Comparsa a cascata delle griglie */
+  $$(".values,.why-grid,.inc-grid,.facts-grid,.amen,.who-list").forEach(g=>{
+    g.classList.add("stagger"); [...g.children].forEach((c,k)=>c.style.transitionDelay=(k*90)+"ms");
+    const o=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){g.classList.add("in");o.disconnect()}}),{threshold:.15}); o.observe(g);
+  });
+  new MutationObserver(()=>{$$(".sp",spGrid).forEach((c,k)=>c.style.animationDelay=(k%6)*70+"ms");bindCards();}).observe(spGrid,{childList:true});
+
+  if(reduce) return;
+
+  /* Particelle nell'apertura: mezzelune e punti del logo che fluttuano */
+  const cv=$("#heroFx"), ctx=cv.getContext("2d"), hero=$(".hero");
+  let W,H,DPR,parts=[],mouse={x:-999,y:-999},heroVisible=true;
+  const COLORS=["14,159,132","20,166,180","26,127,208","98,195,239"];
+  const resize=()=>{DPR=Math.min(devicePixelRatio||1,2);W=hero.clientWidth;H=hero.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+    const n=Math.round(Math.min(34,W/38)); parts=Array.from({length:n},()=>mk(true));};
+  const mk=init=>({x:Math.random()*W,y:init?Math.random()*H:H+30,r:4+Math.random()*14,vy:.12+Math.random()*.35,vx:(Math.random()-.5)*.15,
+    a:Math.random()*Math.PI*2,va:(Math.random()-.5)*.004,c:COLORS[Math.random()*COLORS.length|0],o:.12+Math.random()*.28,moon:Math.random()<.45,ph:Math.random()*6});
+  const draw=t=>{
+    if(heroVisible){ctx.clearRect(0,0,W,H);
+      parts.forEach(p=>{
+        const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.hypot(dx,dy);
+        if(d<140){p.x+=dx/d*1.2;p.y+=dy/d*1.2;}
+        p.y-=p.vy;p.x+=p.vx+Math.sin(t/2400+p.ph)*.18;p.a+=p.va;
+        if(p.y<-30) Object.assign(p,mk(false));
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.globalAlpha=p.o*(.75+.25*Math.sin(t/1600+p.ph));
+        if(p.moon){ctx.beginPath();ctx.arc(0,0,p.r,-.9,2.6);ctx.arc(p.r*.35,-p.r*.2,p.r*.78,2.4,-.75,true);ctx.closePath();ctx.fillStyle=`rgb(${p.c})`;ctx.fill();}
+        else{const g=ctx.createRadialGradient(0,0,0,0,0,p.r*.6);g.addColorStop(0,`rgba(${p.c},1)`);g.addColorStop(1,`rgba(${p.c},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,p.r*.6,0,7);ctx.fill();}
+        ctx.restore();});}
+    requestAnimationFrame(draw);};
+  new IntersectionObserver(es=>heroVisible=es[0].isIntersecting).observe(hero);
+  addEventListener("resize",resize); resize(); requestAnimationFrame(draw);
+  hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;});
+  hero.addEventListener("pointerleave",()=>{mouse.x=mouse.y=-999});
+
+  /* Parallasse: macchie di colore e foto seguono scroll e mouse */
+  const blobs=$$(".hero .blob"), heroPhoto=$(".hero .photo"), chips=$$(".float-chip");
+  let mx=0,my=0;
+  addEventListener("pointermove",e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5;},{passive:true});
+  const pPhotos=$$(".photo img");
+  const loop=()=>{
+    const y=scrollY;
+    blobs.forEach((b,k)=>b.style.translate=`${mx*(30+k*20)}px ${my*(30+k*20)+y*(.08+k*.04)}px`);
+    if(heroPhoto&&fine) heroPhoto.style.transform=`perspective(1000px) rotateY(${mx*6}deg) rotateX(${-my*6}deg)`;
+    chips.forEach((c,k)=>c.style.translate=`${mx*(k?-18:18)}px ${my*(k?-14:14)}px`);
+    pPhotos.forEach(im=>{const r=im.parentElement.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight) return;
+      const k=(r.top+r.height/2-innerHeight/2)/innerHeight; im.style.transform=`translateY(${k*-26}px) scale(1.08)`;});
+    requestAnimationFrame(loop);};
+  requestAnimationFrame(loop);
+
+  if(!fine) return;
+  /* Bagliore che segue il cursore */
+  const orb=$("#orb"); let ox=0,oy=0,tx=0,ty=0;
+  addEventListener("pointermove",e=>{tx=e.clientX;ty=e.clientY;document.body.classList.add("orb-on")},{passive:true});
+  document.addEventListener("pointerleave",()=>document.body.classList.remove("orb-on"));
+  (function f(){ox+=(tx-ox)*.12;oy+=(ty-oy)*.12;orb.style.transform=`translate(${ox}px,${oy}px)`;requestAnimationFrame(f)})();
+
+  /* Schede: riflesso luminoso, bordo sfumato e inclinazione 3D */
+  window.bindCards=bindCards;
+  function bindCards(){
+    $$(".val,.why,.inc-col,.mv-card,.sp,.step,.who-item,.info-card,.doc-card,.tab-panel,form.card").forEach(c=>{
+      if(c.dataset.fx) return; c.dataset.fx=1; c.classList.add("fx-glow");
+      const tilt=c.matches(".sp,.val,.why,.mv-card");
+      if(tilt) c.classList.add("fx-tilt");
+      c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+        c.style.setProperty("--mx",x+"px");c.style.setProperty("--my",y+"px");
+        if(tilt) c.style.transform=`perspective(900px) rotateX(${(.5-y/r.height)*6}deg) rotateY(${(x/r.width-.5)*7}deg) translateY(-6px)`;});
+      c.addEventListener("pointerleave",()=>{c.style.transform=""});
+    });
+  }
+  bindCards();
+
+  /* Pulsanti magnetici */
+  $$(".btn-primary,.btn-white").forEach(b=>{
+    b.addEventListener("pointermove",e=>{const r=b.getBoundingClientRect();b.style.translate=`${(e.clientX-r.left-r.width/2)*.18}px ${(e.clientY-r.top-r.height/2)*.25}px`});
+    b.addEventListener("pointerleave",()=>b.style.translate="");
+  });
+})();
+function bindCards(){}
+
+/* Player: anello che pulsa mentre la musica suona (solo CSS, non tocca l'audio) */
+
+/* ---------- Player musica relax ---------- */
+(function(){
+  const P=$("#player"),A=$("#plAudio"),list=$("#plList"),play=$("#plPlay");
+  const ICON_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+        ICON_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  let tracks=[], i=0;
+  const store=(k,v)=>{try{v===undefined?0:localStorage.setItem(k,v)}catch(e){} try{return localStorage.getItem(k)}catch(e){return null}};
+  const probe=t=>new Promise(ok=>{const a=new Audio();a.preload="metadata";
+    const done=r=>{a.src="";ok(r?{...t,dur:a.duration}:null)}; a.onloadedmetadata=()=>done(true); a.onerror=()=>done(false);
+    setTimeout(()=>done(false),8000); a.src=t.src;});
+  const fmt=d=>isFinite(d)?Math.floor(d/60)+":"+String(Math.round(d%60)).padStart(2,"0"):"";
+  const renderList=()=>{list.innerHTML=tracks.map((t,k)=>`<button role="option" data-k="${k}" class="${k===i?"on":""}">${esc(t.t)}<span>${fmt(t.dur)}</span></button>`).join("")};
+  const load=k=>{i=(k+tracks.length)%tracks.length;A.src=tracks[i].src;$("#plTitle").textContent=tracks[i].t;store("clinia-track",i);renderList()};
+  const setUI=()=>{const on=!A.paused;P.classList.toggle("playing",on);play.innerHTML=on?ICON_PAUSE:ICON_PLAY;play.setAttribute("aria-label",on?"Pausa":"Riproduci")};
+  let userPaused=store("clinia-paused2")==="1", autoArmed=false;
+  play.onclick=()=>{ if(A.paused){userPaused=false;store("clinia-paused2","0");A.play().catch(()=>{});} else {userPaused=true;store("clinia-paused2","1");A.pause();} };
+  /* Avvio automatico: si tenta al caricamento e a ogni gesto finché il browser lo consente.
+     I browser permettono l'audio solo dopo un gesto "attivo" (clic, tocco, tasto):
+     movimento del mouse e scroll provano subito, il primo clic/tocco lo sblocca di sicuro. */
+  const EVTS=["pointermove","pointerdown","touchstart","touchend","click","keydown","wheel","scroll"];
+  const tryStart=e=>{ if(e&&e.target&&e.target.closest&&e.target.closest("#player")) return; if(userPaused||!A.paused||!tracks.length) return;
+    A.play().then(disarm).catch(()=>{}); };
+  const disarm=()=>{ EVTS.forEach(e=>removeEventListener(e,tryStart,{capture:true})); autoArmed=false; };
+  const arm=()=>{ if(autoArmed||userPaused) return; autoArmed=true; EVTS.forEach(e=>addEventListener(e,tryStart,{capture:true,passive:true})); tryStart(); };
+  $("#plNext").onclick=()=>{const was=!A.paused;load(i+1);if(was)A.play().catch(()=>{})};
+  A.onended=()=>{load(i+1);A.play().catch(()=>{})};
+  A.onplay=A.onpause=setUI;
+  A.muted=false;
+  $("#plVol").oninput=e=>{A.volume=+e.target.value;store("clinia-vol",e.target.value)};
+  $("#plListBtn").onclick=()=>{const o=list.classList.toggle("open");$("#plListBtn").setAttribute("aria-expanded",o)};
+  list.onclick=e=>{const b=e.target.closest("[data-k]");if(!b)return;load(+b.dataset.k);A.play().catch(()=>{})};
+  document.addEventListener("click",e=>{if(!P.contains(e.target))list.classList.remove("open")});
+  Promise.all((CONFIG.music||[]).map(probe)).then(r=>{
+    tracks=r.filter(Boolean); if(!tracks.length) return;
+    const v=store("clinia-vol"); A.volume=v!=null?+v:.5; $("#plVol").value=A.volume;
+    load(+(store("clinia-track")||0)||0); P.classList.add("ready"); document.body.classList.add("has-player");
+    arm();
+  });
+})();
+
+
+/* Foto mancanti: mostra un riquadro sfumato al loro posto */
+$$(".photo img").forEach(img=>{
+  const fail=()=>img.closest(".photo").classList.add("ph");
+  if(img.complete && !img.naturalWidth) fail(); else img.addEventListener("error",fail);
+});
+
+/* Lightbox galleria */
+const lb=$("#lb");
+$$(".gallery .photo").forEach(p=>p.addEventListener("click",()=>{
+  const i=$("img",p); if(p.classList.contains("ph")) return;
+  $("img",lb).src=i.src; $("img",lb).alt=i.alt; lb.classList.add("open");
+}));
+lb.addEventListener("click",e=>{ if(e.target!==$("img",lb)) lb.classList.remove("open") });
+addEventListener("keydown",e=>{ if(e.key==="Escape") lb.classList.remove("open") });
+
+/* Contatori */
+const countUp=el=>{const n=+el.dataset.n,s=el.dataset.s||"",t0=performance.now(),d=1400;
+  const st=t=>{const p=Math.min((t-t0)/d,1),e=1-Math.pow(1-p,3); el.textContent=Math.round(n*e)+s; if(p<1) requestAnimationFrame(st)}; requestAnimationFrame(st)};
+
+/* Reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting) return;
+  e.target.classList.add("in"); $$("[data-n]",e.target).forEach(countUp); io.unobserve(e.target);
+}),{threshold:.12,rootMargin:"0px 0px -40px 0px"});
+$$(".reveal").forEach((el,i)=>{el.style.transitionDelay=(i%3)*80+"ms"; io.observe(el)});
+
+/* Nav: stato, progresso, link attivo */
+const nav=$("#nav"),prog=$("#progress"),tt=$("#toTop"),secs=$$("main section[id]"),links=$$(".nav-links a");
+const onScroll=()=>{const y=scrollY,h=document.documentElement.scrollHeight-innerHeight;
+  nav.classList.toggle("scrolled",y>10); prog.style.width=(y/h*100)+"%"; tt.classList.toggle("show",y>700);
+  let cur=""; secs.forEach(s=>{if(y>=s.offsetTop-120) cur=s.id});
+  links.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+cur));};
+addEventListener("scroll",onScroll,{passive:true}); onScroll();
+tt.onclick=()=>scrollTo({top:0,behavior:"smooth"});
+
+/* Menu mobile */
+const bg=$("#burger"),mm=$("#mmenu");
+bg.onclick=()=>{const o=mm.classList.toggle("open"); bg.setAttribute("aria-expanded",o)};
+$$("a",mm).forEach(a=>a.addEventListener("click",()=>{mm.classList.remove("open"); bg.setAttribute("aria-expanded",false)}));
+
+/* Tabs (gruppi indipendenti) */
+$$(".tabs").forEach(t=>{const btns=$$("button",t);
+  btns.forEach(b=>b.onclick=()=>{btns.forEach(x=>{x.classList.toggle("on",x===b); $("#"+x.dataset.tab).classList.toggle("on",x===b)})});});
+
+/* Form: paziente / professionista */
+const form=$("#contactForm"),extra=$("#extra");
+const setRole=r=>{
+  $$('input[name=ruolo]').forEach(i=>i.checked=i.value===r);
+  $("#extraTxt").textContent=r==="Professionista"?"Tipologia di studio di interesse":"Specialista di interesse";
+  extra.innerHTML='<option value="">Seleziona…</option>'+(CONFIG.reasons[r]||[]).map(o=>`<option>${esc(o)}</option>`).join("");
+};
+setRole("Paziente");
+$$('input[name=ruolo]').forEach(i=>i.addEventListener("change",()=>setRole(i.value)));
+$$('[data-role="pro"]').forEach(a=>a.addEventListener("click",()=>setRole("Professionista")));
+form.addEventListener("submit",e=>{
+  e.preventDefault(); if(!form.checkValidity()){form.reportValidity(); return;}
+  const d=Object.fromEntries(new FormData(form));
+  const body=`Ruolo: ${d.ruolo}\nNome: ${d.nome}\nTelefono: ${d.tel}\nEmail: ${d.email}\nInteresse: ${d.extra||"-"}\n\n${d.msg||""}`;
+  location.href=`mailto:${CONFIG.email}?subject=${encodeURIComponent(`Richiesta ${d.ruolo} - Clinia`)}&body=${encodeURIComponent(body)}`;
+  const m=$("#formMsg"); m.textContent="Grazie! Si sta aprendo la tua app di posta per completare l’invio."; m.classList.add("show");
+  form.reset(); setRole("Paziente");
+});
+
+/* Widget MioDottore ufficiale; se non si carica resta il pulsante */
+(function(){
+  $("#zl-url").style.display="none";
+  const s=document.createElement("script"); s.id="zl-widget-s"; s.async=true;
+  s.src="https://platform.docplanner.com/js/widget.js";
+  s.onload=()=>setTimeout(()=>{ if($("#mdWidget iframe")) $("#mdFallback").style.display="none" },1500);
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

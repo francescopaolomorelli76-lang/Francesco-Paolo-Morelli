@@ -1,6 +1,7 @@
 <title>Mozart FPM</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Mozart FPM, il leggio digitale nero e oro per iPad e iPhone: annota, traslittera, traduci, scansiona e crea spartiti.">
+<meta property="og:title" content="Mozart FPM"><meta property="og:description" content="Il leggio digitale nero e oro per iPad e iPhone."><meta property="og:image" content="https://francescopaolomorelli76-lang.github.io/francesco-paolo-morelli/sito/media/og.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,500;0,700;0,900;1,500&family=Inter:wght@400;500;600;700&display=swap">
 <style>
@@ -39,10 +40,12 @@ p{margin:0;text-wrap:pretty}
 header.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;pointer-events:none}
 header.top .wrap{display:flex;align-items:center;gap:14px;height:72px}
 header.top>.wrap>*{pointer-events:auto}
-.brand{font-family:var(--f-display);font-weight:900;font-size:26px;letter-spacing:-.01em}
+.brand{font-family:var(--f-display);font-weight:900;font-size:26px;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:12px}
+.brand .logo{width:42px;height:42px;border-radius:11px;box-shadow:0 0 0 1px rgba(214,168,78,.5),0 6px 22px rgba(214,168,78,.25)}
 .pillBtn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 20px;border-radius:999px;border:1px solid rgba(244,236,220,.28);background:rgba(11,10,8,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);font-weight:600;font-size:14px;transition:background .25s,color .25s,border-color .25s}
 .pillBtn:hover{background:var(--gold);color:#1b1406;border-color:var(--gold)}
 .pillBtn.fill{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:#1b1406;border-color:transparent}
+header.top .wrap{position:relative;z-index:1}
 header.top .sp{flex:1}
 header.top::before{content:"";position:absolute;inset:0 0 -26px;background:linear-gradient(180deg,rgba(11,10,8,.88),rgba(11,10,8,0));pointer-events:none}
 .lead,.statement{text-shadow:0 1px 18px rgba(0,0,0,.85)}
@@ -56,8 +59,9 @@ body.menu #menu a{transform:none;opacity:1}
 body.menu #menu a:nth-child(2){transition-delay:.05s}body.menu #menu a:nth-child(3){transition-delay:.1s}body.menu #menu a:nth-child(4){transition-delay:.15s}body.menu #menu a:nth-child(5){transition-delay:.2s}body.menu #menu a:nth-child(6){transition-delay:.25s}
 #menu a:hover{color:var(--gold-hi)}
 /* cursore */
-#cur{position:fixed;left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--gold-hi);z-index:120;pointer-events:none;mix-blend-mode:difference;transition:width .25s,height .25s,margin .25s;display:none}
-#cur.big{width:70px;height:70px;margin:-35px 0 0 -35px}
+#cur{position:fixed;left:0;top:0;width:40px;height:28px;margin:-14px 0 0 -20px;z-index:120;pointer-events:none;display:none;filter:drop-shadow(0 0 8px rgba(242,211,130,.55))}
+#cur svg{display:block;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#cur.big svg{transform:scale(1.7) rotate(-14deg)}
 @media (pointer:fine){#cur{display:block}}
 /* sezioni */
 section{position:relative;padding-block:clamp(90px,14vw,190px)}
@@ -144,6 +148,33 @@ input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px;bord
 .btn.line{color:var(--gold-hi);border-color:rgba(214,168,78,.5)}.btn.line:hover{background:rgba(214,168,78,.12)}
 footer{border-top:1px solid var(--line);padding-block:30px calc(30px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:13px;background:var(--ink)}footer .wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
 a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+/* video, lettore */
+.hero .wrap{position:relative;z-index:1}
+.bgv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;mix-blend-mode:screen;pointer-events:none;mask-image:linear-gradient(180deg,#000 55%,transparent);-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent)}
+.reel{position:relative;border-radius:30px;overflow:hidden;box-shadow:0 40px 110px rgba(0,0,0,.6),0 0 0 1px rgba(214,168,78,.35);background:#000;aspect-ratio:16/9}
+.reel video{width:100%;height:100%;object-fit:cover;display:block}
+.reelPlay{position:absolute;left:50%;top:50%;width:92px;height:92px;margin:-46px 0 0 -46px;border-radius:50%;border:1px solid rgba(244,236,220,.55);background:rgba(11,10,8,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;transition:transform .3s,background .3s,opacity .3s}
+.reelPlay svg{width:30px;height:30px;fill:var(--text);margin-left:4px}.reelPlay:hover{background:var(--gold);transform:scale(1.08)}.reelPlay:hover svg{fill:#1b1406}
+.reel.playing .reelPlay{opacity:0;pointer-events:none}.reel.playing:hover .reelPlay{opacity:.9;pointer-events:auto}
+.reel .cap{position:absolute;left:24px;bottom:20px;font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi);text-shadow:0 1px 12px #000}
+.studioVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);pointer-events:none}
+#player{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:70;display:flex;align-items:center;gap:0;border-radius:999px;background:rgba(11,10,8,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(214,168,78,.4);box-shadow:0 14px 50px rgba(0,0,0,.55);padding:6px;transition:padding .35s}
+#player .disc{width:56px;height:56px;border-radius:50%;padding:0;border:2px solid var(--gold);background:#000;overflow:hidden;position:relative;flex:none;animation:spin 9s linear infinite;animation-play-state:paused}
+#player.on .disc{animation-play-state:running}
+#player .disc img{width:100%;height:100%;object-fit:cover;display:block}
+#player .disc::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:11px;margin:-5.5px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--gold)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#player .pb{display:none;align-items:center;gap:10px;padding:0 14px 0 12px}
+#player.open .pb{display:flex}
+#player .ttl{display:grid;line-height:1.2;min-width:0;max-width:170px}#player .ttl b{font-family:var(--f-display);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#player .ttl small{font-size:11px;color:var(--muted);letter-spacing:.06em}
+#player .ctl{display:flex;gap:2px;align-items:center}
+#player .ctl button{width:36px;height:36px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center}#player .ctl button:hover{background:rgba(214,168,78,.2)}
+#player .ctl svg{width:18px;height:18px;fill:var(--text)}#player .ctl .pp{background:linear-gradient(180deg,var(--gold-hi),var(--gold))}#player .ctl .pp svg{fill:#1b1406}
+#player .bar{width:120px;height:4px;border-radius:2px;background:var(--line);position:relative;cursor:pointer}#player .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--gold);width:0}
+#player .eq{display:flex;gap:2px;align-items:flex-end;height:16px}#player .eq i{width:3px;height:4px;background:var(--gold);border-radius:1px}
+#player.on .eq i{animation:eq 1s ease-in-out infinite}#player .eq i:nth-child(2){animation-delay:.2s}#player .eq i:nth-child(3){animation-delay:.4s}#player .eq i:nth-child(4){animation-delay:.1s}
+@keyframes eq{0%,100%{height:4px}50%{height:16px}}
+@media(max-width:560px){#player .bar,#player .eq{display:none}#player .ttl{max-width:110px}}
 /* store, fasce e foto */
 .stores{display:flex;gap:12px;flex-wrap:wrap}
 .store{display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 24px 0 18px;border-radius:16px;background:#000;border:1px solid rgba(244,236,220,.35);transition:transform .25s,border-color .25s,box-shadow .25s}
@@ -179,17 +210,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 </style>
 
 <div id="loader" aria-hidden="true"><div class="in"><b>Mozart</b><div class="bar"><i id="ldBar"></i></div><small id="ldN">0</small></div></div>
-<div id="cur"></div>
+<div id="cur" aria-hidden="true"><svg viewBox="0 0 40 28" width="40" height="28"><defs><mask id="sbm"><rect width="40" height="28" fill="#fff"/><ellipse cx="20" cy="14" rx="6.2" ry="11" transform="rotate(-38 20 14)" fill="#000"/></mask></defs><ellipse cx="20" cy="14" rx="17" ry="11" fill="#f2d382" mask="url(#sbm)"/></svg></div>
 <canvas id="gl" aria-hidden="true"></canvas>
 
-<header class="top"><div class="wrap"><a class="brand" href="#top" data-cur>Mozart</a><span class="sp"></span>
+<header class="top"><div class="wrap"><a class="brand" href="#top" data-cur><img class="logo" alt="" src="__LOGO__">Mozart</a><span class="sp"></span>
   <a class="pillBtn fill" href="#scarica" data-cur>Scarica</a>
   <button class="pillBtn menuBtn" id="menuBtn" aria-expanded="false" aria-controls="menu" data-cur><span class="bars"></span><span id="menuT">Menu</span></button></div></header>
 <div id="menu"><nav><a href="#funzioni">Funzioni</a><a href="#cantanti">Per i cantanti</a><a href="#studio">Studio di canto</a><a href="#scansiona">Scansiona</a><a href="#recensioni">Recensioni</a><a href="#contatti">Contatti</a></nav></div>
 <div id="peek" aria-hidden="true"></div>
+<aside id="player" aria-label="Lettore musicale"><button class="disc" id="pDisc" aria-label="Apri o chiudi il lettore" data-cur><img alt="Mozart" src="__FACE__"></button>
+  <div class="pb"><div class="ttl"><b id="pT">Forma sonata viennese</b><small id="pS">Mozart FPM · musica</small></div>
+    <div class="ctl"><button id="pPrev" aria-label="Brano precedente"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button><button class="pp" id="pPlay" aria-label="Riproduci"><svg id="pIc" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg></button><button id="pNext" aria-label="Brano successivo"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z"/></svg></button></div>
+    <div class="bar" id="pBar"><i id="pFill"></i></div><div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+  <audio id="aud" preload="none"></audio></aside>
 
 <main id="top">
-<section class="hero"><div class="wrap">
+<section class="hero"><video class="bgv" id="vHero" src="media/hero.mp4" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video><div class="wrap">
   <div class="eyebrow rv">FPM · leggio digitale per iPad e iPhone</div>
   <h1 style="margin-top:20px"><span class="l"><span class="gold">Mozart.</span></span><span class="l"><span>Il leggio che</span></span><span class="l"><span>capisce la musica.</span></span></h1>
   <div class="heroFoot"><p class="lead rv">Leggi, annota, traslittera, traduci, scansiona e crea i tuoi spartiti. Pensato per chi suona e per chi canta.</p>
@@ -204,6 +240,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 </div></section>
 
 <div class="band"><img alt="Interno di un teatro d'opera nero e oro" data-im="11" loading="lazy"><div class="bandT wrap"><div class="eyebrow">Nato per il teatro</div><p class="statement" style="font-size:clamp(28px,4.6vw,64px);max-width:16em">Il palco, il coro, la prova del mattino: tutto in un leggio.</p></div></div>
+
+<section id="video" style="padding-top:clamp(70px,10vw,130px);padding-bottom:0"><div class="wrap">
+  <div class="eyebrow rv">Guarda come funziona</div>
+  <h2 class="rv" style="margin:14px 0 36px;font-size:clamp(36px,6.2vw,92px);line-height:1;max-width:12em">Una penna, una pagina, <span class="gold">una nota alla volta.</span></h2>
+  <div class="reel rv" id="reel"><video id="vReel" src="media/reel.mp4" poster="media/reel.jpg" muted loop playsinline preload="metadata"></video><button class="reelPlay" id="reelPlay" aria-label="Riproduci il video" data-cur><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></button><div class="cap">Annota · pronuncia · traduci</div></div>
+</div></section>
 
 <section id="funzioni" style="padding-top:clamp(70px,10vw,130px)"><div class="wrap">
   <div class="eyebrow rv">Funzioni in evidenza</div>
@@ -238,7 +280,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 
 <div class="marq" aria-hidden="true"><div><span>Annota</span><span>Traslittera</span><span>Traduci</span><span>Scansiona</span><span>Crea</span><span>Canta</span><span>Annota</span><span>Traslittera</span><span>Traduci</span><span>Scansiona</span><span>Crea</span><span>Canta</span></div></div>
 
-<section id="studio" class="studio"><div class="studioBg"></div><div class="wrap">
+<section id="studio" class="studio"><video class="studioVid" id="vStudio" src="media/studio.mp4" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video><div class="wrap">
   <div class="eyebrow rv">Studio di canto</div>
   <h2 class="rv" style="margin:14px 0 20px;font-size:clamp(40px,7.4vw,112px);line-height:1">Scaldati, registrati,<br><span class="gold">riascoltati.</span></h2>
   <p class="lead rv">Nella sezione Per Cantanti trovi tutto per il riscaldamento e lo studio, senza uscire da Mozart.</p>
@@ -295,7 +337,7 @@ const IM={7:'__IMG7__',8:'__IMG8__',9:'__IMG9__',10:'__IMG10__',11:'__IMG11__'};
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches, fine=matchMedia('(pointer:fine)').matches;
 const NSV='http://www.w3.org/2000/svg';
-document.querySelectorAll('[data-im]').forEach(i=>{ i.src=IM[i.dataset.im]; }); const sb=document.querySelector('.studioBg'); if(sb) sb.style.backgroundImage='url('+IM[8]+')';
+document.querySelectorAll('[data-im]').forEach(i=>{ i.src=IM[i.dataset.im]; }); 
 const el=(t,a,p)=>{const e=document.createElementNS(NSV,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 /* ---------- immagini vive dell'elenco (disegni, si sostituiscono con le immagini vere) ---------- */
 const ART={
@@ -346,7 +388,7 @@ $$('.thumb[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
         $('#rc').onclick=e=>{ const on=!e.currentTarget.classList.contains('go'); e.currentTarget.classList.toggle('go',on); clearInterval(timer); if(!on){ bars.forEach(b=>b.style.height='6px'); $('#rt').textContent='Presa salvata: riascolta e invia'; return; } s=0;
           timer=setInterval(()=>{ s++; bars.forEach((b,i)=>b.style.height=(6+Math.abs(Math.sin(s*.7+i*.6))*34*Math.random())+'px'); $('#rt').textContent='Sto registrando… 0:'+String(Math.floor(s*.12)).padStart(2,'0'); },120); }; }},
     piano:{p:'Il pianoforte è già dentro Mozart: due ottave a schermo, con il suono di un vero pianoforte. Funziona anche senza tastiera MIDI o Bluetooth, e si trova anche nella sezione Per Cantanti. Provalo qui: tocca i tasti o usa la tastiera del computer (A W S E D F T G Y H U J).',l:['Senza MIDI','Senza Bluetooth','Due ottave','Anche nei Cantanti'],
-      viz(){ VZ.innerHTML='<div class="kb" id="kb"></div><div class="small">Tocca i tasti · tastiera: A W S E D F T G Y H U J</div>'; const kb=$('#kb'); const W=[0,2,4,5,7,9,11], names=['Do','Re','Mi','Fa','Sol','La','Si']; const base=60; let h='';
+      viz(){ VZ.style.backgroundImage='linear-gradient(rgba(14,12,8,.7),rgba(14,12,8,.9)),url(media/piano.jpg)'; VZ.style.backgroundSize='cover'; VZ.innerHTML='<div class="kb" id="kb"></div><div class="small">Tocca i tasti · tastiera: A W S E D F T G Y H U J</div>'; const kb=$('#kb'); const W=[0,2,4,5,7,9,11], names=['Do','Re','Mi','Fa','Sol','La','Si']; const base=60; let h='';
         for(let i=0;i<14;i++){ const o=Math.floor(i/7), w=i%7; h+=`<div class="w" data-m="${base+o*12+W[w]}">${w===0?'Do'+(4+o):''}</div>`; } kb.innerHTML=h;
         [0,1,3,4,5].forEach(w=>{ for(let o=0;o<2;o++){ const i=o*7+w; const d=document.createElement('div'); d.className='k'; d.dataset.m=base+o*12+W[w]+1; d.style.left=((i+1)*100/14)+'%'; kb.appendChild(d); } });
         const held=new Map(); const down=(e,el)=>{ el.classList.add('dn'); held.set(e.pointerId,{el,v:voice(+el.dataset.m)}); };
@@ -357,13 +399,27 @@ $$('.thumb[data-t]').forEach(t=>t.innerHTML=ART[t.dataset.t]);
         const kup=e=>{ const k=e.key.toLowerCase(), h=kd.get(k); if(!h) return; kd.delete(k); h.el.classList.remove('dn'); stopV(h.v); };
         addEventListener('keydown',kdn); addEventListener('keyup',kup); VZ._off=()=>{ removeEventListener('keydown',kdn); removeEventListener('keyup',kup); }; }}
   };
-  const show=k=>{ clearInterval(timer); if(VZ._off){ VZ._off(); VZ._off=null; } VZ.onclick=null; const d=T[k]; TX.innerHTML='<p></p><ul></ul>'; TX.querySelector('p').textContent=d.p; TX.querySelector('ul').innerHTML=d.l.map(x=>'<li>'+x+'</li>').join(''); d.viz(); $$('#stTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===k)); };
+  const show=k=>{ VZ.style.backgroundImage=''; clearInterval(timer); if(VZ._off){ VZ._off(); VZ._off=null; } VZ.onclick=null; const d=T[k]; TX.innerHTML='<p></p><ul></ul>'; TX.querySelector('p').textContent=d.p; TX.querySelector('ul').innerHTML=d.l.map(x=>'<li>'+x+'</li>').join(''); d.viz(); $$('#stTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===k)); };
   $('#stTabs').onclick=e=>{ const b=e.target.closest('button'); if(b) show(b.dataset.t); }; show('voc'); })();
+/* ---------- video e lettore ---------- */
+(function(){ const vh=$('#vHero'), vs=$('#vStudio'), vr=$('#vReel'), reel=$('#reel');
+  if(reduce){ [vh,vs].forEach(v=>v&&v.pause()); }
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ const v=e.target; if(v===vr) return; if(reduce) return; if(e.isIntersecting) v.play().catch(()=>{}); else v.pause(); }),{threshold:.05}); [vh,vs].forEach(v=>v&&io.observe(v));
+  const setP=on=>{ reel.classList.toggle('playing',on); }; $('#reelPlay').onclick=()=>{ if(vr.paused){ vr.play().then(()=>setP(true)).catch(()=>{}); } else { vr.pause(); setP(false); } }; vr.onclick=()=>$('#reelPlay').click();
+  const io2=new IntersectionObserver(es=>es.forEach(e=>{ if(!e.isIntersecting&&!vr.paused){ vr.pause(); setP(false); } }),{threshold:.1}); io2.observe(reel);
+  const P=$('#player'), A=$('#aud'), T=[{t:'Forma sonata viennese',f:'media/brano1.mp3'},{t:'Tema contrappuntistico di corte',f:'media/brano2.mp3'}]; let i=0;
+  const load=n=>{ i=(n+T.length)%T.length; A.src=T[i].f; $('#pT').textContent=T[i].t; $('#pFill').style.width='0'; };
+  const play=()=>A.play().then(()=>{ P.classList.add('on'); $('#pIc').innerHTML='<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>'; $('#pPlay').setAttribute('aria-label','Pausa'); }).catch(()=>{});
+  const pause=()=>{ A.pause(); P.classList.remove('on'); $('#pIc').innerHTML='<path d="M7 4l13 8-13 8z"/>'; $('#pPlay').setAttribute('aria-label','Riproduci'); };
+  load(0); $('#pDisc').onclick=()=>{ P.classList.toggle('open'); if(P.classList.contains('open')&&A.paused&&!A.currentTime) play(); };
+  $('#pPlay').onclick=()=>A.paused?play():pause(); $('#pNext').onclick=()=>{ const w=!A.paused; load(i+1); if(w) play(); }; $('#pPrev').onclick=()=>{ const w=!A.paused; load(i-1); if(w) play(); };
+  A.addEventListener('ended',()=>{ load(i+1); play(); }); A.addEventListener('timeupdate',()=>{ if(A.duration) $('#pFill').style.width=(A.currentTime/A.duration*100)+'%'; });
+  $('#pBar').onclick=e=>{ const r=e.currentTarget.getBoundingClientRect(); if(A.duration) A.currentTime=A.duration*Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); }; })();
 /* ---------- menu, cursore, rivelazioni ---------- */
 (function(){ const b=$('#menuBtn'); const set=o=>{ document.body.classList.toggle('menu',o); b.setAttribute('aria-expanded',o); $('#menuT').textContent=o?'Chiudi':'Menu'; };
   b.onclick=()=>set(!document.body.classList.contains('menu')); $$('#menu a').forEach(a=>a.addEventListener('click',()=>set(false))); addEventListener('keydown',e=>{ if(e.key==='Escape') set(false); }); })();
 (function(){ const c=$('#cur'); if(!fine) return; let x=0,y=0,tx=0,ty=0; addEventListener('pointermove',e=>{ tx=e.clientX; ty=e.clientY; });
-  (function l(){ x+=(tx-x)*.25; y+=(ty-y)*.25; c.style.transform=`translate(${x}px,${y}px)`; requestAnimationFrame(l); })();
+  (function l(){ x+=(tx-x)*.25; y+=(ty-y)*.25; c.style.transform=`translate(${x}px,${y}px)`;  requestAnimationFrame(l); })();
   document.addEventListener('pointerover',e=>{ c.classList.toggle('big',!!e.target.closest('[data-cur]')); }); })();
 (function(){ const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }),{threshold:.12});
   $$('.rv').forEach((e,i)=>{ e.style.transitionDelay=(i%3)*80+'ms'; io.observe(e); }); })();

@@ -1,0 +1,42 @@
+<!-- =====================================================================
+ Clinia · sezione "I nostri medici" per il sito clinia.it
+ Da incollare nella pagina del sito dove devono comparire i medici.
+ Oggi mostra le schede dei medici; quando attiviamo la pubblicazione dall'app
+ (area FPM › Dottori › Pubblicazione) legge in automatico da Clinia App solo i medici
+ che hanno dato il consenso, con i giorni e gli orari di visita prenotati negli studi.
+ © 2026 FPM WebDesignTech – Francesco Paolo Morelli
+====================================================================== -->
+<section id="clinia-medici" aria-labelledby="cm-titolo">
+<style>
+#clinia-medici{--cm-navy:#1c3144;--cm-teal:#2c5e66;--cm-soft:#eef3f3;--cm-gold:#a38258;font-family:"Source Sans 3",-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--cm-navy);padding:48px max(16px,env(safe-area-inset-left)) 56px;background:var(--cm-soft)}
+#clinia-medici .cm-wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+#clinia-medici .cm-eyebrow{font-size:14px;font-weight:700;letter-spacing:3px;color:var(--cm-teal);text-transform:uppercase;margin:0}
+#clinia-medici h2{font-family:Lora,Georgia,serif;font-size:clamp(28px,4vw,42px);font-weight:600;margin:0;text-wrap:balance}
+#clinia-medici .cm-lead{font-size:18px;line-height:1.5;color:#465a6b;margin:0;max-width:62ch}
+#clinia-medici .cm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+#clinia-medici .cm-card{background:#fff;border:1px solid #dde3e7;border-radius:20px;overflow:hidden;display:flex;flex-direction:column}
+#clinia-medici .cm-card img{width:100%;aspect-ratio:9/16;max-height:340px;object-fit:cover;object-position:center top;display:block;background:#dde7ee}
+#clinia-medici .cm-body{padding:14px 16px 18px;display:flex;flex-direction:column;gap:6px}
+#clinia-medici .cm-nome{font-weight:700;font-size:18px;margin:0}
+#clinia-medici .cm-ruolo{font-size:15px;color:#465a6b;margin:0;line-height:1.35}
+#clinia-medici .cm-orari{font-size:14px;font-weight:700;color:var(--cm-teal);margin:4px 0 0}
+#clinia-medici .cm-prenota{display:inline-block;margin-top:8px;background:var(--cm-teal);color:#fff;text-decoration:none;font-weight:700;font-size:15px;border-radius:999px;padding:9px 16px;align-self:flex-start}
+#clinia-medici .cm-prenota:focus-visible{outline:2px solid var(--cm-gold);outline-offset:2px}
+</style>
+<div class="cm-wrap">
+ <p class="cm-eyebrow">I nostri medici</p>
+ <h2 id="cm-titolo">Chi riceve in Clinia</h2>
+ <p class="cm-lead">Specialisti di diverse discipline in un unico centro, in Via La Martella 5/D a Matera. Giorni e orari si aggiornano da soli dall’app Clinia.</p>
+ <div class="cm-grid" id="cm-grid"></div>
+</div>
+<script>
+(function(){
+  // Elenco di partenza (le foto stanno nella cartella img/specialisti del sito).
+  // Quando la pubblicazione è attiva, MEDICI arriva da Clinia App con orari e consenso.
+  var FOTO="img/specialisti/";
+  var MEDICI=[{"id": "enrico-pierangeli", "nome": "Prof. Enrico Pierangeli", "ruolo": "Specialista in Neurochirurgia, Neurologia e Oncologia"}, {"id": "feliciana-pellegrino", "nome": "Dott.ssa Feliciana Pellegrino", "ruolo": "Fisioterapista – Riabilitazione del pavimento pelvico"}, {"id": "michele-picciallo", "nome": "Dott. Michele Picciallo", "ruolo": "Medico chirurgo – Specialista in Dermatologia e Venereologia"}, {"id": "vincenzo-de-leo", "nome": "Dott. Vincenzo De Leo", "ruolo": "Chirurgo generale – Chirurgia oncologica, laparoscopica e robotica"}, {"id": "donato-panetta", "nome": "Dott. Donato Panetta", "ruolo": "Medico chirurgo – Specialista in Ortopedia e Traumatologia"}, {"id": "maria-alessandra-lassandro", "nome": "Dott.ssa Maria Alessandra Lassandro", "ruolo": "Medico chirurgo – Specialista in Allergologia e Immunologia Clinica"}, {"id": "francesca-trabace", "nome": "Francesca Trabace", "ruolo": "Osteopata D.O. – Trattamenti osteopatici"}, {"id": "angelo-costantiello", "nome": "Dott. Angelo Costantiello", "ruolo": "Tecnico ortopedico"}, {"id": "rossella-conversano", "nome": "Rossella Conversano", "ruolo": "Personal Trainer e Attività Motoria Funzionale"}, {"id": "maria-paola-simeone", "nome": "Dott.ssa Maria Paola Simeone", "ruolo": "Ginecologa · Sessuologa · Chirurga"}];
+  var g=document.getElementById("cm-grid");
+  g.innerHTML=MEDICI.map(function(m){return '<article class="cm-card"><img src="'+FOTO+m.id+'.jpg" alt="'+m.nome+'" loading="lazy"><div class="cm-body"><p class="cm-nome">'+m.nome+'</p><p class="cm-ruolo">'+m.ruolo+'</p>'+(m.orari?'<p class="cm-orari">'+m.orari+'</p>':'')+'<a class="cm-prenota" href="#prenota">Prenota con l’app</a></div></article>'}).join("");
+})();
+</script>
+</section>

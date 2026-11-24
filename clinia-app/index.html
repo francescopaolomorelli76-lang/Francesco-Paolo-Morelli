@@ -529,11 +529,11 @@ const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"2cc
 const PAYEES={rooms:"Clinia Srl",sub:"Clinia Srl",visite:"Clinia, che gira il compenso allo specialista"};
 // Compenso a FPM WebDesignTech (autore del software), pagato da Clinia:
 // Contratto FPM–Clinia (12/11/2026): cessione dei diritti d'autore sul software con corrispettivo misto (fisso + royalty).
-// Acquisto del software in 12 rate da 300 € netti (o 3.000 € netti subito); royalty 50 €/specialista e 4,99 €/ora restano a FPM a tempo indeterminato.
+// Acquisto del software in 12 rate da 300 € netti (o 3.000 € netti subito); compenso di 1,50 € per ora accreditata ai dottori resta a FPM a tempo indeterminato.
 // Acquisto del software: 12 rate da 300 € netti oppure 3.000 € netti in unica soluzione.
 // Al pagamento completo il software diventa di Clinia Srl; abbonamenti e royalty restano a FPM a tempo indeterminato.
 const LICENZA={netto:300,mesi:12,inizio:"2026-12",unica:3000};
-// Beneficenza: il 3 % della royalty d'autore (4,99 € per ora di studio) va a Progetto Arca (IBAN da prendere dal sito ufficiale della fondazione)
+// Beneficenza: il 3 % del compenso FPM sulle ore accreditate (1,50 € per ora) va a Progetto Arca (IBAN da prendere dal sito ufficiale della fondazione)
 const ARCA={nome:"Fondazione Progetto Arca ETS",cf:"11183570156",sede:"Milano",pct:0.03,
   storia:[["1994","Nasce a Milano per dare aiuto concreto a chi vive in grave povertà ed emarginazione. Il primo intervento è un centro di accoglienza residenziale per persone senza dimora con problemi di dipendenza."],
     ["2009","Diventa fondazione."],
@@ -569,10 +569,11 @@ const videoKey=()=>{const b=new Uint8Array(12);crypto.getRandomValues(b);return[
 const FPM={email:FPM_MAIL,hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
 let APP_FEE=0; // niente più servizio di prenotazione per pazienti e specialisti (contratto FPM–Clinia, 12/11/2026)
-// Royalty d'autore: Clinia versa a FPM 4,99 € netti per ogni ora di studio gestita con l'app, con qualsiasi formula
-// (a ore, pacchetti, percentuale, mensile), a tempo indeterminato, come parte variabile del prezzo di cessione del software.
-// FPM dona il 3 % a Progetto Arca.
-const CANONE_ORA=4.99;
+// Ore dei dottori: Clinia firma con ogni dottore un pacchetto di ore; FPM le conferma (crediti) e il dottore le vede scalare
+// a ogni prenotazione di studio. Il dottore non paga abbonamento e non paga nulla nell’app: paga Clinia fuori dall’app.
+// Compenso di FPM: 1,50 € netti per ogni ora accreditata a un dottore (royalty d’autore, versata da Clinia).
+const ABBONAMENTO_ATTIVO=false;
+const CANONE_ORA=1.5;
 // Database Supabase: incolla qui URL e chiave pubblica (anon) del progetto. Vuoti = versione di prova sul telefono.
 const SUPABASE={url:"https://iuydwatobtrpzhotcfyd.supabase.co",anonKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eWR3YXRvYnRycHpob3RjZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyODAwNDgsImV4cCI6MjEwOTg1NjA0OH0.T8HNEAJn5h-fEb6ZPEH-Xl838DXZk_j2sTm9B_bCYOA"};
 // Stripe: chiave pubblicabile (pk_...). Vuota = pagamenti con carta non ancora attivi quando il database è collegato.
@@ -590,7 +591,7 @@ const TARIFFE_ORE={ora:40,pacchetti:[[10,35],[20,30],[30,25],[40,20],[50,15]]};
 const PERC_BASE=null; // studi senza macchinari: percentuale da concordare con la direzione
 const PREZZI_PRESTAZIONI_UFFICIALI=false;
 // Appuntamenti inseriti dallo specialista in Agenda (paziente contattato per telefono o di persona):
-// nessun costo per pazienti o specialisti: la royalty la versa Clinia (4,99 € per ora di studio)
+// nessun costo nell’app per pazienti o specialisti: il compenso FPM lo versa Clinia (1,50 € per ora accreditata)
 // e l'app lo addebita sulla sua carta registrata quando la visita è pagata (contanti o POS in sede)
 const servizioAgenda=()=>0;
 // Versione di prova: tutto resta sul telefono e i pagamenti (carta, studi, pacchetti) sono simulati.
@@ -603,22 +604,24 @@ const DOCTORS=[
   bio:["Formazione presso l’Università Aldo Moro (Bari)","Tirocinio presso l’Ospedale Madonna delle Grazie (Matera)","Tirocinio presso l’Ospedale Don Gnocchi (Tricarico)"]},
  {id:"enrico-pierangeli",name:"Prof. Enrico Pierangeli",role:"Specialista in Neurochirurgia, Neurologia e Oncologia",area:"chirurgia",
   bio:["Professore a contratto di Neurochirurgia presso la L.U.M. di Casamassima","Direttore della Neurochirurgia dell’Ospedale SS. Annunziata di Taranto (1997–2011)","Oltre 4.000 interventi eseguiti come primo operatore","Autore di circa 200 pubblicazioni scientifiche"]},
- {id:"feliciana-pellegrino",name:"Dott.ssa Feliciana Pellegrino",role:"Fisioterapista",area:"riabilitazione",
+ {id:"feliciana-pellegrino",name:"Dott.ssa Feliciana Pellegrino",role:"Fisioterapista – Riabilitazione del pavimento pelvico",area:"riabilitazione",
   bio:["Laureata in Fisioterapia all’Università Aldo Moro con 110 e lode","Riabilitazione ortopedica, neurologica, pediatrica, oncologica e cardio-respiratoria","Formazione in Kinesio Taping Method"]},
  {id:"michele-picciallo",name:"Dott. Michele Picciallo",role:"Medico chirurgo – Specialista in Dermatologia e Venereologia",area:"medicina",
   bio:["Specializzazione all’Università di Bari con 70/70 e lode","Master di II livello in Laser in Dermatologia (Sapienza, Roma)","Esperienza in dermoscopia e tumori cutanei"]},
  {id:"vincenzo-de-leo",name:"Dott. Vincenzo De Leo",role:"Chirurgo generale – Chirurgia oncologica, laparoscopica e robotica",area:"chirurgia",
   bio:["Specialista in Chirurgia Generale","Chirurgia mininvasiva, laparoscopica e robotica","Patologie del colon-retto, tiroide, colecisti, ernie e proctologia"]},
- {id:"donato-panetta",name:"Dott. Donato Panetta",role:"Specialista in Ortopedia e Traumatologia",area:"chirurgia",
+ {id:"donato-panetta",name:"Dott. Donato Panetta",role:"Medico chirurgo – Specialista in Ortopedia e Traumatologia",area:"chirurgia",
   bio:["Chirurgo ortopedico con oltre vent’anni di esperienza","Chirurgia artroscopica del ginocchio","Chirurgia del piede e della mano"]},
- {id:"maria-alessandra-lassandro",name:"Dott.ssa Maria Alessandra Lassandro",role:"Medico chirurgo – Allergologia e Immunologia Clinica, Medicina Estetica ed Ecografia Clinica",area:"medicina",
+ {id:"maria-alessandra-lassandro",name:"Dott.ssa Maria Alessandra Lassandro",role:"Medico chirurgo – Specialista in Allergologia e Immunologia Clinica",area:"medicina",
   bio:["Specialista in Allergologia e Immunologia Clinica (Università di Bari, con lode)","Prick test, patch test, spirometria","Formazione in Medicina Estetica ed Ecografia Clinica SIUMB"]},
- {id:"francesca-trabace",name:"Francesca Trabace",role:"Osteopata D.O.",area:"riabilitazione",
+ {id:"francesca-trabace",name:"Francesca Trabace",role:"Osteopata D.O. – Trattamenti osteopatici",area:"riabilitazione",
   bio:["Osteopata D.O. diplomata presso ATSAI Still Academy Italia","Formazione in osteopatia pediatrica","Approccio osteopatico alle disfunzioni dell’ATM"]},
- {id:"angelo-costantiello",name:"Angelo Costantiello",role:"Tecnico ortopedico – Biomeccanica del piede e ortesi personalizzate",area:"riabilitazione",
+ {id:"angelo-costantiello",name:"Dott. Angelo Costantiello",role:"Tecnico ortopedico",area:"riabilitazione",
   bio:["Tecnico ortopedico con oltre 30 anni di esperienza","Baropodometria e valutazione posturale","Plantari personalizzati con tecnologie CAD-CAM"]},
- {id:"rossella-conversano",name:"Rossella Conversano",role:"Laureata in Scienze Motorie – Personal Trainer e Attività Motoria Funzionale",area:"riabilitazione",
-  bio:["Laureata in Scienze Motorie e Attività Sportive","Personal Trainer qualificata ENDAS","Percorsi personalizzati di attività motoria funzionale"]}
+ {id:"rossella-conversano",name:"Rossella Conversano",role:"Personal Trainer e Attività Motoria Funzionale",area:"riabilitazione",
+  bio:["Laureata in Scienze Motorie e Attività Sportive","Personal Trainer qualificata ENDAS","Percorsi personalizzati di attività motoria funzionale"]},
+ {id:"maria-paola-simeone",name:"Dott.ssa Maria Paola Simeone",role:"Ginecologa · Sessuologa · Chirurga",area:"chirurgia",professione:"Medico chirurgo",specs:["Ginecologia e ostetricia","Sessuologia","Chirurgia ginecologica"],
+  bio:["Medico chirurgo, specialista in Ginecologia e Ostetricia","Sessuologia clinica","Chirurgia ginecologica"]}
 ];
 // Prestazioni: [nome, durata in minuti, prezzo € di ESEMPIO]
 const SERVICES={
@@ -626,6 +629,7 @@ const SERVICES={
  "enrico-pierangeli":[["Consulenza neurochirurgica",30,150],["Visita di controllo",20,100],["Consulenza online su esami e referti",30,100,1]],
  "feliciana-pellegrino":[["Valutazione fisioterapica",45,50],["Seduta di fisioterapia",45,40],["Kinesio taping",30,30]],
  "michele-picciallo":[["Visita dermatologica",30,100],["Mappatura nei in dermoscopia",30,120],["Visita di controllo",20,70],["Consulenza dermatologica online",20,60,1]],
+ "maria-paola-simeone":[["Prima visita ginecologica",30,120],["Visita di controllo",20,80],["Consulenza sessuologica",45,100]],
  "vincenzo-de-leo":[["Visita chirurgica",30,120],["Visita proctologica",30,120],["Visita di controllo",20,80]],
  "donato-panetta":[["Visita ortopedica",30,120],["Visita di controllo",20,80]],
  "maria-alessandra-lassandro":[["Visita allergologica",30,110],["Prick test",30,80],["Ecografia clinica",30,90],["Consulenza di medicina estetica",30,80],["Consulenza allergologica online",20,60,1]],
@@ -654,15 +658,16 @@ const DEMO_NAMES=["Mario Prova","Laura Esempio","Paolo Demo","Giulia Prova","Luc
 const HORIZON=21;
 
 /* ===================== Stato ===================== */
-const KEY="clinia-app-v2"; // v2: dati di prova azzerati il 10/11/2026
-try{localStorage.removeItem("clinia-app-v1")}catch(e){}
+const KEY="clinia-app-v3"; // v3: dati azzerati il 24/11/2026 per l’uscita su App Store e Google Play
+const DEMO=false;          // niente turni, appuntamenti e incassi di esempio
+try{localStorage.removeItem("clinia-app-v1");localStorage.removeItem("clinia-app-v2")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -699,14 +704,14 @@ function roomCost(k,min){const r=ROOMS.find(x=>x.id===k);return r2((r?roomTariff
 
 /* Prenotazioni degli studi: turni di esempio + prenotazioni fatte nell'app */
 function allBookings(){
-  const out=[];const t0=today();if(DB.on)return S.rooms.slice();
+  const out=[];const t0=today();if(DB.on||!DEMO)return S.rooms.slice();
   for(let k=-7;k<=HORIZON;k++){const ds=addDays(t0,k),wd=parseD(ds).getDay();
     for(const[id,days,a,b,r] of SCHEDULE){if(!days.includes(wd))continue;const bid=`seed-${id}-${ds}-${a}`;
       if(S.cancelled.includes(bid))continue;out.push({id:bid,doctorId:id,date:ds,start:a,end:b,roomId:r,seed:true})}}
   return out.concat(S.rooms)}
 const bookingsOn=(ds,f)=>allBookings().filter(b=>b.date===ds&&(!f||f(b)));
 /* Appuntamenti di esempio (altri pazienti), stabili per data e orario */
-function demoBusy(docId,ds){if(DB.on)return[];const base=services(docId)[0].dur,out=[];
+function demoBusy(docId,ds){if(DB.on||!DEMO)return[];const base=services(docId)[0].dur,out=[];
   for(const b of bookingsOn(ds,b=>b.doctorId===docId))for(let t=toMin(b.start);t+base<=toMin(b.end);t+=base)
     if(hash(docId+ds+t)%100<32)out.push({start:t,end:t+base,name:DEMO_NAMES[hash(ds+t+docId)%DEMO_NAMES.length],svc:services(docId)[hash(t+docId)%services(docId).length].name,roomId:b.roomId});
   return out}
@@ -851,20 +856,20 @@ async function sha256(t){try{const b=await crypto.subtle.digest("SHA-256",new Te
 const mySub=()=>S.auth&&S.subs?S.subs[S.auth.email]:null;
 const planFor=()=>SUB;
 const isFpm=()=>!!(S.auth&&S.auth.fpm);
-const subActive=()=>isOwner()||!!mySub()&&(mySub().status==="attivo"||(mySub().status==="disdetto"&&mySub().next>today()));
+const subActive=()=>!ABBONAMENTO_ATTIVO||isOwner()||!!mySub()&&(mySub().status==="attivo"||(mySub().status==="disdetto"&&mySub().next>today()));
 function welcomeScreen(){return `<div class="screen"><div class="content"><div class="pad stack" style="gap:18px;padding-top:44px">
   <div><img src="img/clinia-logo.svg" alt="Clinia" style="width:170px;height:auto;display:block"><p class="payoff">${esc(CLINIC.payoff)}</p></div><h1 class="h-xl">Benvenuto in <b>Clinia</b></h1><p class="lead">Come vuoi usare l’app?</p>
   <button class="rolecard" data-act="chooseRole" data-v="paziente"><span class="ri">${ic("user")}</span><span style="flex:1;min-width:0"><b>Sono un paziente</b><span class="muted small" style="display:block;margin:4px 0 10px">Prenota le visite, ricevi i promemoria, conserva referti ed esami.</span><span class="badge">Gratis</span></span>${ic("right")}</button>
-  <button class="rolecard" data-act="chooseRole" data-v="professionista"><span class="ri az">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b>Sono uno specialista</b><span class="muted small" style="display:block;margin:4px 0 10px">Agenda, prenotazione degli studi, pazienti, messaggi e pagamenti.</span><span class="badge az">Abbonamento mensile · ${eur(SUB.price)}/mese</span></span>${ic("right")}</button>
+  <button class="rolecard" data-act="chooseRole" data-v="professionista"><span class="ri az">${ic("heartplus")}</span><span style="flex:1;min-width:0"><b>Sono uno specialista</b><span class="muted small" style="display:block;margin:4px 0 10px">Agenda, prenotazione degli studi, pazienti, messaggi e pagamenti.</span><span class="badge az">Con le ore concordate con Clinia</span></span>${ic("right")}</button>
   <button class="card r3dthumb" data-act="room3d" data-id="reception" style="padding:0;overflow:hidden;width:100%;text-align:left"><img src="${SPAZI.reception.foto}" alt="Reception di Clinia" loading="lazy"><span class="r3dcap"><b>Entra in Clinia</b><small>Guarda la reception in 3D</small></span><span class="r3dbadge">3D</span></button>
   <div class="row" style="gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn ghost sm" data-act="openPage" data-v="chisiamo">Chi siamo</button><button class="btn ghost sm" data-act="openPage" data-v="offerta">Offerta per professionisti</button></div>
   <div class="stack" style="gap:6px;margin-top:6px"><span class="label" style="text-align:center">Accesso riservato</span><div class="reserved"><button data-act="chooseRole" data-v="titolare">${ic("lock","sm")} Direzione Clinia</button><button data-act="chooseRole" data-v="fpm">${ic("lock","sm")} Area FPM</button></div></div>
   <p class="tiny" style="text-align:center;margin-top:10px">Clinia · ${esc(CLINIC.address)}</p></div></div></div>`}
 function authScreen(){const r=UI.authRole,pro=r==="professionista";return `<div class="screen"><div class="topbar plain"><button class="iconbtn" data-act="authClose" aria-label="Indietro">${ic("back")}</button><span style="flex:1"></span></div>
   <div class="content"><div class="pad stack" style="align-items:center;text-align:center;gap:18px">${authIllo()}
-   <span class="badge ${pro?"az":""}">${pro?"Area specialisti · abbonamento mensile":"Area pazienti · gratis"}</span>
+   <span class="badge ${pro?"az":""}">${pro?"Area specialisti · ore concordate con Clinia":"Area pazienti · gratis"}</span>
    <h1 style="font-size:1.45rem;font-weight:800">${pro?"Accedi come specialista":"Accedi a Clinia"}</h1>
-   <p class="lead">${pro?"Gestisci agenda, studi e pazienti. Dopo la registrazione attivi l’abbonamento mensile.":"Prenota le visite con gli specialisti di Clinia a Matera, ricevi i promemoria e scrivi alla reception."}</p>
+   <p class="lead">${pro?"Gestisci agenda, studi e pazienti. Prenoti gli studi con le ore del tuo pacchetto concordato con Clinia.":"Prenota le visite con gli specialisti di Clinia a Matera, ricevi i promemoria e scrivi alla reception."}</p>
    <p class="small muted">Dopo il login proteggi l’app con un codice di 4 cifre o con Face ID.</p>
    <button class="btn primary" style="min-width:160px" data-act="goLogin" data-v="login">Login</button>
    <p class="muted">Non hai un account? <button class="link" data-act="goLogin" data-v="register">Registrati</button></p>
@@ -986,7 +991,7 @@ function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u
   <form class="screen" data-form="proprof" novalidate><div class="content"><div class="pad stack" style="gap:16px">
    <p class="muted small">Questi dati compaiono ai pazienti (foto, nome, specializzazione, esperienza, contatti social) e servono per le fatture (P.IVA, codice fiscale, PEC, codice destinatario). I campi si compilano da soli con i dati che hai già inserito e con il riempimento automatico del telefono.</p>
    <span class="label">Foto</span>
-   <div class="drop" data-drop="photo"><span class="av pp-photo" id="pp-prev">${esc(initials(d.name))}${photo?`<img src="${photo}" alt="">`:""}</span>
+   <div class="drop" data-drop="photo"><span class="av pp-photo" id="pp-prev" style="width:126px;height:224px;border-radius:16px">${esc(initials(d.name))}${photo?`<img src="${photo}" alt="" style="object-position:center top">`:""}</span>
     <span class="small">Trascina qui la tua foto oppure</span>
     <div class="btns"><label class="btn ghost sm" for="pp-cam">${ic("user","sm")} Scatta foto</label><label class="btn ghost sm" for="pp-up">${ic("upload","sm")} Carica dal dispositivo</label></div>
     <input id="pp-cam" type="file" accept="image/*" capture="user" class="hidden" data-change="ppPhoto"><input id="pp-up" type="file" accept="image/*" class="hidden" data-change="ppPhoto"></div>
@@ -1015,6 +1020,8 @@ function proProfScreen(onb){const id=S.proId,d=doc(id),pp=S.proProfile[id]||{},u
    ${f("linkedin","LinkedIn",{ph:"linkedin.com/in/…"})}
    <span class="label">Esperienza</span>
    <textarea id="pp-bio" name="bio" placeholder="Una riga per ogni punto: formazione, specializzazioni, esperienze">${esc((pp.bio||d.bio||[]).join("\n"))}</textarea>
+   <span class="label">Monitor, sito e social di Clinia</span>
+   <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm);align-items:flex-start;gap:12px"><input type="checkbox" name="pubblica" ${pp.pubblica?"checked":""} style="width:22px;height:22px;accent-color:var(--accent);flex:none"><span class="small">Acconsento che nome, foto, specialità e orari di ricevimento compaiano sul monitor in sala, sul sito clinia.it e sui profili social di Clinia. Mai dati dei pazienti. Posso cambiare idea quando voglio.</span></label>
    <span class="label">Curriculum (PDF)</span>
    <div class="drop" data-drop="cv">${ic("file")}<span id="pp-cvname" class="small">${cv?`<b>${esc(cv.name)}</b> · ${(cv.size/1024).toFixed(0)} KB`:"Trascina qui il curriculum in PDF oppure"}</span>
     <label class="btn ghost sm" for="pp-cv">${ic("upload","sm")} Scegli il file</label><input id="pp-cv" type="file" accept="application/pdf,.pdf" class="hidden" data-change="ppCv"></div>
@@ -1038,11 +1045,15 @@ function ibanScreen(onb){const a=S.payAcc[accKey()]||{},u=S.user||{},fpm=isFpm()
    <div class="demo-note">${ic("lock","sm")}<span>Salviamo solo intestatario e ultime 4 cifre. Il conto completo lo custodisce il circuito di pagamento (Stripe).</span></div>
    <p class="err" id="ib-err"></p></div></div>
   <div class="actions"><button class="btn primary block" type="submit">Salva il conto</button></div></form></div>`}
-function proPickScreen(){return `<div class="screen"><div class="content"><div class="pad stack">
-  <h1 class="h-xl" style="margin-top:20px"><b>Chi sei</b> in Clinia?</h1><p class="lead">Collega il tuo account al tuo profilo di specialista. In produzione l’abbinamento sarà verificato dalla reception.</p>
-  ${SPECIALISTI().map(d=>`<button class="doc" data-act="pickPro" data-id="${d.id}">${docAv(d,"sm")}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span></span>${ic("right")}</button>`).join("")}
-  <button class="btn ghost block" data-act="newPro">${ic("plus","sm")} Non sono in elenco: crea il mio profilo</button>
+function proPickScreen(){return `<div class="screen"><div class="content"><div class="pad stack" style="gap:16px">
+  <h1 class="h-xl" style="margin-top:20px"><b>Chi sei</b> in Clinia?</h1><p class="lead">Scrivi le prime lettere del tuo nome o cognome: se sei già in Clinia trovi la tua scheda con la foto.</p>
+  <label class="field"><span>Nome o cognome</span><input id="pp-cerca" autocomplete="off" placeholder="es. Pell…" data-cerca="dott"></label>
+  <div id="pp-trovati" class="stack" style="gap:10px">${trovatiHTML("")}</div>
+  <button class="btn ghost block" data-act="newPro">${ic("plus","sm")} Sono nuovo in Clinia: crea la mia scheda</button>
  </div></div></div>`}
+function trovatiHTML(q){q=q.trim().toLowerCase();if(q.length<2)return `<p class="tiny">Bastano due lettere.</p>`;
+  const l=SPECIALISTI().filter(d=>d.name.toLowerCase().replace(/^(prof\.ssa|prof\.|dott\.ssa|dott\.|dottor)\s*/,"").split(/\s+/).concat(d.name.toLowerCase()).some(w=>w.startsWith(q)||d.name.toLowerCase().includes(q)));
+  return l.length?l.map(d=>`<button class="card row" data-act="pickPro" data-id="${d.id}" style="gap:14px;text-align:left;width:100%;padding:10px">${docPhoto(d.id)?`<img src="${docPhoto(d.id)}" alt="" style="width:63px;height:112px;object-fit:cover;border-radius:12px;flex:none">`:docAv(d)}<span style="flex:1;min-width:0"><b style="display:block">${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span><span class="small" style="display:block;color:var(--accent);margin-top:6px">Sono io ${ic("right","sm")}</span></span></button>`).join(""):`<p class="small muted">Nessun dottore con questo nome: tocca “Sono nuovo in Clinia”.</p>`}
 function notifScreen(){return `<div class="screen"><div class="topbar plain"><span style="flex:1"></span><button class="iconbtn" data-act="notifs" data-v="no" aria-label="Chiudi">${ic("x")}</button></div>
  <div class="content"><div class="pad stack" style="gap:20px">
   <div style="display:grid;place-items:center"><svg viewBox="0 0 200 110" style="width:220px" aria-hidden="true"><ellipse cx="100" cy="70" rx="90" ry="40" fill="var(--bg-2)"/><circle cx="64" cy="44" r="20" fill="var(--accent)"/><path d="m55 44 6 6 12-12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M124 30a16 16 0 0 1 32 0c0 18 8 22 8 22h-48s8-4 8-22" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><circle cx="140" cy="60" r="5" fill="#f2c94c"/><circle cx="30" cy="20" r="4" fill="#f2c94c"/><circle cx="180" cy="26" r="3" fill="var(--accent)"/></svg></div>
@@ -1053,7 +1064,7 @@ function notifScreen(){return `<div class="screen"><div class="topbar plain"><sp
 
 /* ---------- Area principale ---------- */
 const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
-const FPM_TABS=[["fpm","euro","Entrate"],["fpminc","plus","Incassi"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
+const FPM_TABS=[["fpm","euro","Entrate"],["fpmdott","users","Dottori"],["fpminc","plus","Incassi"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
 const proTabs=()=>isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 function mainScreen(){
   const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=tabs[0][0];
@@ -1064,7 +1075,7 @@ function mainScreen(){
 function tabHTML(){const h=tabHTML0(),b=notifBanner();return b?h.replace(/^<div class="pad stack"([^>]*)>/,m=>m+b):h}
 function tabHTML0(){switch(UI.tab){
   case "home":return homeTab();case "visite":return visiteTab();case "files":return filesTab();case "msg":return msgTab();case "profile":return profileTab();
-  case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();case "fpm":return fpmTab();case "fpmdoc":return fpmDocTab();case "fpmfisco":return fpmFiscoTab();case "fpminc":return incassiTab();}}
+  case "agenda":return agendaTab();case "stanze":return stanzeTab();case "tariffe":return tariffeTab();case "pazienti":return pazientiTab();case "clinia":return cliniaTab();case "fpm":return fpmTab();case "fpmdoc":return fpmDocTab();case "fpmfisco":return fpmFiscoTab();case "fpminc":return incassiTab();case "fpmdott":return fpmDottoriTab();}}
 function needLogin(title,text){return `<div class="pad stack"><h1 class="h-sec">${title}</h1><div class="card center">${markSvg(44)}<h3>${text}</h3><p class="muted small">Accedi o crea un account in meno di un minuto.</p><button class="btn primary" data-act="openAuth">Accedi o registrati</button></div></div>`}
 function docCard(d){const n=nextAvail(d.id);return `<button class="doc" data-act="openDoc" data-id="${d.id}" data-name="${esc((d.name+" "+d.role).toLowerCase())}">
   ${docAv(d)}<span class="info"><b>${esc(d.name)}</b><span class="r">${esc(d.role)}</span>
@@ -1263,7 +1274,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["ibanpage","card","Conto per gli accrediti"+(S.payAcc[S.proId]?" · ••••"+S.payAcc[S.proId].last4:"")],["proprof","user","Profilo professionale"],["subscription","card","Abbonamento"+(mySub()?(mySub().status==="attivo"?" · attivo":" · disdetto"):"")],["settings","gear","Impostazioni e privacy"],["tariffe","euro","Le mie visite, durata e prezzi · studi e pacchetti"],["tab:stanze","door","I miei turni negli studi"]]
+  const items0=isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["settings","gear","Impostazioni e privacy"],["tariffe","clock","Le mie ore · visite, durata e prezzi"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1342,7 +1353,7 @@ function ricavi(m){const v=proAll().filter(a=>a.date.startsWith(m)),sum=f=>v.fil
   const perc=isOwner()||modalita(S.proId)!=="percentuale"?0:r2(v.filter(a=>a.paid&&a.roomId&&percStudio(a.roomId)!=null).reduce((t,a)=>t+a.price*percStudio(a.roomId),0));
   const studi=isOwner()?0:S.roomPayments.filter(p=>p.doctorId===S.proId&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0)+pacch+perc;
   const affitti=isOwner()?S.roomPayments.filter(p=>dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0):0;
-  const abb=isOwner()?0:SUB.price;return{v,carta,strutt,da,nStr,nCarta,comm,studi,pacch,perc,affitti,abb,netto:carta+strutt+affitti-comm-studi-abb}}
+  const abb=isOwner()||!ABBONAMENTO_ATTIVO?0:SUB.price;return{v,carta,strutt,da,nStr,nCarta,comm,studi,pacch,perc,affitti,abb,netto:carta+strutt+affitti-comm-studi-abb}}
 const meseNome=m=>parseD(m+"-01").toLocaleDateString("it-IT",{month:"long",year:"numeric"});
 function ricaviPage(){const m=UI.ricMese||today().slice(0,7),r=ricavi(m),own=isOwner();const prev=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()-1))).slice(0,7),next=dstr(new Date(parseD(m+"-01").setMonth(parseD(m+"-01").getMonth()+1))).slice(0,7);
   return `<div class="screen">${bar("Ricavi")}<div class="content"><div class="pad stack" style="gap:18px">
@@ -1355,7 +1366,7 @@ function ricaviPage(){const m=UI.ricMese||today().slice(0,7),r=ricavi(m),own=isO
    ${own?`<dt>Affitti degli studi<small>pagati dagli specialisti a Clinia</small></dt><dd>+ ${eur(r.affitti)}</dd>`:""}
    ${r.comm?`<dt>Servizio app per visite in struttura<small>${r.nStr} × ${eur(APP_FEE)}</small></dt><dd class="neg">− ${eur(r.comm)}</dd>`:""}
    ${own?"":`<dt>Studi a Clinia<small>${modalita(S.proId)==="percentuale"?"a percentuale ("+eur(r.perc)+")":"affitto e pacchetti"}, IVA esclusa</small></dt><dd class="neg">− ${eur(r2(r.studi))}</dd>`}
-   ${own?"":`<dt>Abbonamento Clinia App<small>${esc(SUB.name)}, pagato a Clinia</small></dt><dd class="neg">− ${eur(r.abb)}</dd>`}
+   ${own||!r.abb?"":`<dt>Abbonamento Clinia App<small>${esc(SUB.name)}, pagato a Clinia</small></dt><dd class="neg">− ${eur(r.abb)}</dd>`}
    <dt class="tot">Netto</dt><dd class="tot">${eur(Math.round(r.netto*100)/100)}</dd></dl>
   <div class="card stack" style="gap:6px"><b>Ancora da incassare: ${eur(r.da)}</b><p class="tiny">Visite del mese non ancora pagate. Le segni pagate dalla scheda Pazienti.</p></div>
   <p class="tiny">Nessun costo di servizio sulle tue visite.</p>
@@ -1384,9 +1395,9 @@ function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lor
   for(const d of DOCTORS){const own=d.id===OWNER.doctorId;for(const a of proAllOf(d.id).filter(a=>a.date.startsWith(m))){
     if(APP_FEE&&a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"paziente",demo:a.demo});
     else if(APP_FEE&&a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:a.origine==="agenda"?"Appuntamento in Agenda":"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
-  for(const bk of allBookings().filter(x=>x.date.startsWith(m))){const ore=(toMin(bk.end)-toMin(bk.start))/60,dd=doc(bk.doctorId);if(!(ore>0))continue;
-    add({at:bk.date+" "+bk.end,tipo:"Royalty ore di studio",pren:true,ore,ini:"",svc:`${room(bk.roomId)?room(bk.roomId).name:"Studio"} · ${String(ore).replace(".",",")} h × ${eur(CANONE_ORA)}`,spec:dd?dd.name:"",lordo:CANONE_ORA*ore/(1-RIT()),netto:CANONE_ORA*ore,pagato:CANONE_ORA*ore,da:"clinia-canone",demo:bk.seed})}
-  for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
+  for(const c of S.crediti.filter(c=>c.stato==="confermata"&&stampDi(c.confAt).startsWith(m))){const ore=c.ore,dd=doc(c.docId);
+    add({at:stampDi(c.confAt),tipo:"Ore accreditate",pren:true,ore,ini:"",svc:`${oreFmt(ore)} × ${eur(CANONE_ORA)}`,spec:dd?dd.name:"",lordo:CANONE_ORA*ore/(1-RIT()),netto:CANONE_ORA*ore,pagato:CANONE_ORA*ore,da:"clinia-canone"})}
+  if(ABBONAMENTO_ATTIVO)for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
   const k=monthIndex(m),pl=pagStato(m);if(pl.dovuto&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Acquisto software",ini:"",svc:(p=>`${rataTxt(p)}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:pl.dovuto/(1-RIT()),netto:pl.dovuto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
 /* ---------- Voce "Pagato": licenza del mese da Clinia a FPM ---------- */
@@ -1411,7 +1422,7 @@ function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(
     const affitti=S.roomPayments.filter(p=>p.doctorId===d.id&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.amount-(p.refund||0),0);
     const pacch=(S.pacchetti||[]).filter(p=>p.docId===d.id&&dstr(new Date(p.at)).startsWith(m)).reduce((t,p)=>t+p.base,0);
     const perc=!own&&modalita(d.id)==="percentuale"?r2(v.filter(a=>a.paid&&a.roomId&&percStudio(a.roomId)!=null).reduce((t,a)=>t+a.price*percStudio(a.roomId),0)):0;
-    return{d,own,pacch,perc,visite:v.length,carta:sum(a=>a.paid&&a.method==="carta"),strutt:sum(a=>a.paid&&a.method==="struttura"),nCard,nCash,affitti,abb:own?0:SUB.price,iban:S.payAcc[d.id]}});
+    return{d,own,pacch,perc,visite:v.length,carta:sum(a=>a.paid&&a.method==="carta"),strutt:sum(a=>a.paid&&a.method==="struttura"),nCard,nCash,affitti,abb:own||!ABBONAMENTO_ATTIVO?0:SUB.price,iban:S.payAcc[d.id]}});
   const tot=k=>rows.reduce((t,r)=>t+r[k],0),own=rows.find(r=>r.own)||{carta:0,strutt:0};
   const mov=fpmMovimenti(m),sm=f=>r2(mov.filter(f).reduce((t,x)=>t+x[f.k||"lordo"],0));
   const feePaz=tot("nCard")*APP_FEE,feeSpec=tot("nCash")*APP_FEE,abb=tot("abb"),affitti=tot("affitti"),pacch=r2(tot("pacch")),perc=r2(tot("perc"));
@@ -1419,7 +1430,7 @@ function cliniaMese(m){const rows=DOCTORS.map(d=>{const v=proAllOf(d.id).filter(
   const k=monthIndex(m),lic=pagStato(m).dovuto||0,licLordo=lic?lordoDaNetto(lic):0,licRit=lic?r2(licLordo-lic):0;
   const canone=r2(mov.filter(x=>x.da==="clinia-canone").reduce((t,x)=>t+x.netto,0)),ore=r2(mov.filter(x=>x.da==="clinia-canone").reduce((t,x)=>t+x.ore,0));
   const visiteOwn=r2(own.carta+own.strutt),visiteSpecCarta=r2(rows.filter(r=>!r.own).reduce((t,r)=>t+r.carta,0));
-  const commissioni=r2(rows.reduce((t,r)=>t+r.nCard*(0.015*APP_FEE+0.25),0)+0.015*(visiteSpecCarta+own.carta)+rows.filter(r=>!r.own).length*(0.015*SUB.price+0.25)+(lic?0.015*lic+0.25:0));
+  const commissioni=r2(rows.reduce((t,r)=>t+r.nCard*(0.015*APP_FEE+0.25),0)+0.015*(visiteSpecCarta+own.carta)+(ABBONAMENTO_ATTIVO?rows.filter(r=>!r.own).length*(0.015*SUB.price+0.25):0)+(lic?0.015*lic+0.25:0));
   const spese=S.expenses.filter(e=>e.date.startsWith(m)).reduce((t,e)=>t+e.amount,0);
   const entrate=r2(visiteOwn+affitti+pacch+perc+passaggio),uscite=r2(girato+ritPass+licLordo+commissioni+spese);
   return{rows,feePaz,feeSpec,abb,affitti,pacch,perc,passaggio,arca,girato,canone,ore,ritPass,lic,licLordo,licRit,k,visiteOwn,visiteSpecCarta,commissioni,spese,entrate,uscite,saldo:r2(entrate-uscite),f24:r2(ritPass+licRit)}}
@@ -1448,7 +1459,17 @@ const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stan
   tecar:{nome:"Tecar",breve:"Tecar",stanza:"s3",perc:0.3,desc:"Apparecchio per tecarterapia su carrello, accanto al lettino elettrico dello Studio 3.",sonde:[],foto:["img/attrezzature/tecar-1.jpg"]}};
 const percStudio=id=>{const r=room(id),l=attrDi(r).map(a=>a.perc).filter(x=>x!=null);return l.length?Math.max(...l):PERC_BASE};
 const modalita=id=>(S.modalita&&S.modalita[id])||"fitto";
-const oreResidue=id=>r2((S.pacchetti||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0)-(S.oreUsate||[]).filter(x=>x.docId===id).reduce((t,x)=>t+x.ore,0));
+const oreAccreditate=id=>r2(S.crediti.filter(c=>c.docId===id&&c.stato==="confermata").reduce((t,c)=>t+c.ore,0));
+const oreInAttesa=id=>r2(S.crediti.filter(c=>c.docId===id&&c.stato==="richiesta").reduce((t,c)=>t+c.ore,0));
+const orePrenotate=id=>r2(allBookings().filter(b=>b.doctorId===id).reduce((t,b)=>t+(toMin(b.end)-toMin(b.start))/60,0));
+const oreResidue=id=>r2(oreAccreditate(id)-orePrenotate(id));
+const oreFmt=n=>String(r2(n)).replace(".",",")+" h";
+const stampDi=ts=>{const d=new Date(ts);return dstr(d)+" "+toT(d.getHours()*60+d.getMinutes())};
+function oreCard(){if(isOwner()||!S.proId)return "";const acc=oreAccreditate(S.proId),usa=orePrenotate(S.proId),res=r2(acc-usa),att=oreInAttesa(S.proId);
+  return `<section class="card stack" style="gap:10px;background:var(--accent-soft);border-color:var(--accent)"><div class="row between"><h3>Le tue ore in Clinia</h3>${ic("clock","sm")}</div>
+   ${acc?`<div class="stats" style="margin:0"><div class="stat"><b>${oreFmt(res)}</b><span>Disponibili</span></div><div class="stat"><b>${oreFmt(usa)}</b><span>Prenotate</span></div><div class="stat"><b>${oreFmt(acc)}</b><span>Del pacchetto</span></div></div>
+   <p class="tiny">Ogni studio che prenoti scala le ore. ${res<=4?"<b>Stanno finendo: chiedi a Clinia un nuovo pacchetto.</b>":""}</p>`:`<p class="small">Non hai ancora ore attive. Clinia le inserisce dopo la firma del contratto e appena sono confermate le vedi qui.</p>`}
+   ${att?`<p class="tiny">${oreFmt(att)} in attivazione.</p>`:""}</section>`}
 const IVA=0.22,ivaDi=x=>r2(x*IVA);
 const attrDi=r=>(r&&r.attr||[]).map(k=>({k,...ATTREZZATURE[k]}));
 function attrCards(r){const l=attrDi(r);return l.length?`<section class="stack" style="gap:10px"><h3 class="h-sec" style="font-size:1.1rem">Attrezzatura</h3>${l.map(a=>`<button class="card row" data-act="attr3d" data-id="${a.k}" style="width:100%;text-align:left;gap:12px"><img src="${a.poster||a.foto[3]||a.foto[0]}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:12px"><span style="flex:1;min-width:0"><b>${esc(a.nome)}</b><small class="tiny" style="display:block">${a.video?a.sonde.length+" sonde · video e 3D":a.modello?a.sonde.length+" sonde · tocca per vederlo in 3D":"Tocca per i dettagli"}${a.perc!=null?" · a percentuale: "+Math.round(a.perc*100)+" % della prestazione":""}</small></span>${a.video?`<span class="r3dbadge" style="position:static">▶</span>`:a.modello?`<span class="r3dbadge" style="position:static">3D</span>`:ic("right","sm")}</button>`).join("")}</section>`:""}
@@ -1523,14 +1544,24 @@ function room3dPage(id){const sp=spazio3d(id);if(sp)return `<div class="screen">
   <div><h2 style="font-size:1.25rem;font-weight:800">${esc(r.name)} · ${r.mq} mq</h2><p class="tiny">${ROOM_TYPES[r.type].label}</p>${r.desc?`<p class="small muted" style="margin-top:6px">${esc(r.desc)}</p>`:""}</div>
   ${r.dot?`<div class="row" style="gap:6px;flex-wrap:wrap">${r.dot.map(x=>`<span class="badge grey">${esc(x)}</span>`).join("")}</div>`:""}
   ${attrCards(r)}<section class="card"><h3 style="margin-bottom:8px">Tariffe mensili</h3>${tariffeMeseHTML(r)}</section></div></div></div>`}
+const iscritto=id=>!!((S.iscritti&&S.iscritti[id])||(S.proProfile[id]&&S.proProfile[id].done));
+function creditiDi(id){return S.crediti.filter(c=>c.docId===id).sort((a,b)=>b.at-a.at)}
+function cliniaDottori(){const l=SPECIALISTI();return `<p class="tiny">Quando un dottore firma il contratto, scrivi qui le ore firmate e allega il contratto: FPM conferma e il dottore le vede subito nella sua app. Le ore scalano a ogni studio prenotato.</p>`+
+  l.map(d=>{const acc=oreAccreditate(d.id),usa=orePrenotate(d.id),att=oreInAttesa(d.id),cr=creditiDi(d.id);return `<div class="card stack" style="gap:12px">
+   <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${esc(d.role)}</p></div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
+   <dl class="ledger small"><dt>Ore confermate</dt><dd>${oreFmt(acc)}</dd><dt>Prenotate</dt><dd>${oreFmt(usa)}</dd><dt><b>Disponibili</b></dt><dd><b>${oreFmt(r2(acc-usa))}</b></dd>${att?`<dt>In attesa di conferma FPM</dt><dd>${oreFmt(att)}</dd>`:""}</dl>
+   <form class="stack" data-form="contratto" data-id="${d.id}" style="gap:8px" novalidate><div class="fgrid"><label class="field"><span>Ore firmate</span><input name="ore" inputmode="decimal" placeholder="50"></label><label class="field"><span>Data contratto</span><input name="data" type="date" value="${today()}" max="${today()}"></label></div>
+    <label class="field"><span>Contratto firmato (PDF o foto)</span><input name="file" type="file" accept="application/pdf,image/*"></label>
+    <p class="err" id="ct-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra e invia a FPM</button></form>
+   ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"?"red":"warn"}">${c.stato==="confermata"?"Confermate":c.stato==="rifiutata"?"Non confermate":"In attesa"}</span></div>`).join("")}</div>`:""}
+  </div>`}).join("")}
 function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7);
   const head=`<div class="pad stack" style="gap:16px"><div class="row between"><h1 class="ptitle">Clinia</h1><span class="badge">${ic("lock","sm")} Direzione</span></div>
-  <div class="seg seg4">${[["rend","Rendiconto"],["spec","Specialisti"],["stanze","Stanze"],["spese","Spese"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="cliSeg" data-v="${k}">${l}</button>`).join("")}</div>`;
+  <div class="seg seg4">${[["rend","Rendiconto"],["spec","Dottori e ore"],["stanze","Stanze"],["spese","Spese"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="cliSeg" data-v="${k}">${l}</button>`).join("")}</div>`;
   if(seg==="stanze")return head+cliniaStanze()+`</div>`;
   if(seg==="spese")return head+meseNav("cliMese",m)+cliniaSpese(m)+`</div>`;
   const c=cliniaMese(m);
-  if(seg==="spec")return head+meseNav("cliMese",m)+`<p class="tiny">Le visite pagate con carta vanno in automatico, subito, sul conto di ogni specialista. Gli abbonamenti vanno a FPM; la royalty d’autore (4,99 € per ora di studio) la versa Clinia.</p>`+c.rows.map(r=>`<div class="card stack" style="gap:10px"><div class="row">${docAv(r.d,"sm")}<div style="flex:1;min-width:0"><b>${esc(r.d.name)}</b><p class="tiny">${r.own?"Direttore · le sue visite sono incassi di Clinia":esc(r.d.role)}</p></div>${r.own?"":r.iban?`<span class="badge">${ic("check","sm")} IBAN ••••${esc(r.iban.last4)}</span>`:`<span class="badge warn">IBAN mancante</span>`}</div>
-   <dl class="ledger small"><dt>Visite del mese</dt><dd>${r.visite}</dd><dt>${r.own?"Incassate con carta":"Accreditate subito con carta"}</dt><dd>${eur(r.carta)}</dd><dt>Pagate in struttura</dt><dd>${eur(r.strutt)}</dd>${r.own?"":`<dt>Affitti stanze pagati a Clinia</dt><dd>${eur(r.affitti)}</dd><dt>Abbonamento</dt><dd>${eur(r.abb)}</dd>`}</dl></div>`).join("")+`</div>`;
+  if(seg==="spec")return head+cliniaDottori()+`</div>`;
   return head+meseNav("cliMese",m)+`
   <div class="card" style="text-align:center"><span class="label">Saldo di Clinia nel mese</span><div class="big ${c.saldo<0?"neg":""}">${eur(c.saldo)}</div><p class="tiny">Entrate ${eur(c.entrate)} − uscite ${eur(c.uscite)}</p></div>
   <dl class="card ledger"><dt style="grid-column:1/-1"><span class="label">Entrate</span></dt>
@@ -1538,10 +1569,10 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <dt>Affitti degli studi<small>prenotazioni a ore, IVA esclusa</small></dt><dd>+ ${eur(r2(c.affitti))}</dd>
    <dt>Pacchetti ore prepagati<small>IVA esclusa</small></dt><dd>+ ${eur(c.pacch)}</dd>
    <dt>Utilizzo studi a percentuale<small>stima su visite pagate: Studio 1 con ecografo 50 %, Studio 3 con Tecar 30 %</small></dt><dd>+ ${eur(c.perc)}</dd>
-   <dt>Abbonamenti specialisti<small>${c.rows.filter(r=>!r.own).length} × ${eur(SUB.price)}${DB.on?"":" (esempio)"}, girati a FPM</small></dt><dd>+ ${eur(r2(c.abb))}</dd>
+   ${c.abb?`<dt>Abbonamenti specialisti<small>girati a FPM</small></dt><dd>+ ${eur(r2(c.abb))}</dd>`:""}
    <dt style="grid-column:1/-1;margin-top:8px"><span class="label">Uscite</span></dt>
    <dt>Abbonamenti girati a FPM<small>netti per FPM</small></dt><dd class="neg">− ${eur(r2(c.girato-c.canone))}</dd>
-   <dt>Royalty d’autore a FPM<small>${String(c.ore).replace(".",",")} ore di studio × ${eur(CANONE_ORA)} · parte variabile del prezzo del software</small></dt><dd class="neg">− ${eur(c.canone)}</dd>
+   <dt>Compenso FPM sulle ore dei dottori<small>${String(c.ore).replace(".",",")} ore accreditate × ${eur(CANONE_ORA)} · royalty d’autore</small></dt><dd class="neg">− ${eur(c.canone)}</dd>
    <dt>Ritenute sui compensi FPM<small>a carico di Clinia, da versare con F24</small></dt><dd class="neg">− ${eur(c.ritPass)}</dd>
    <dt>Acquisto del software<small>${c.lic?`${eur(c.lic)} netti a FPM + ${eur(c.licRit)} di ritenuta · ${rataTxt(pagStato(m))}`:proprietaClinia()?"software già di proprietà di Clinia":c.k<1?"prima dell’avvio":"nessuna rata questo mese"}</small></dt><dd class="neg">− ${eur(c.licLordo)}</dd>
    <dt>Commissioni di pagamento<small>stima 1,5 % + 0,25 € a operazione</small></dt><dd class="neg">− ${eur(c.commissioni)}</dd>
@@ -1552,9 +1583,9 @@ function cliniaTab(){const seg=UI.cliSeg||"rend",m=UI.cliMese||today().slice(0,7
    <button class="row between small" style="width:100%;text-align:left" data-act="openPage" data-v="arca"><span>${ic("heartplus","sm")} Progetto Arca: ${eur(c.arca)} dal servizio di questo mese, donati da FPM</span>${ic("right","sm")}</button></div>
   ${(()=>{const p=pagStato(m),met=p.pagato?p.metodo:metodoLic(),ex=extraFPM(m),tot=r2((p.dovuto||0)+ex.tot),A=S.fpm.anag||{};return `<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Pagamento del software a FPM":"Pagamento mensile a FPM"}</h3>${pagBadge(p)}</div>
    ${(()=>{const own=proprietaClinia();return own?`<div class="card row small" style="gap:10px;background:var(--accent-soft);border-color:var(--accent)">${ic("check","sm")}<span>Il software Clinia App è di proprietà di <b>Clinia Srl</b> dal ${esc(new Date(own).toLocaleDateString("it-IT"))}. Le royalty d’autore (abbonamenti e 4,99 € per ora di studio) restano a FPM.</span></div>`:`<div class="seg"><button class="${S.licModo!=="unica"?"on":""}" data-act="licModo" data-v="rate">12 rate da ${eur(LICENZA.netto)}</button><button class="${S.licModo==="unica"?"on":""}" data-act="licModo" data-v="unica">${eurM(LICENZA.unica)} in un’unica soluzione</button></div><p class="tiny">Il software diventa di Clinia al pagamento completo.</p>`})()}
-   ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Acquisto del software<small>${p.dovuto?rataTxt(p):"nessuna rata"}</small></dt><dd>${eur(p.dovuto||0)}</dd><dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd><dt>Royalty ore di studio<small>${String(fpmMese(m).ore).replace(".",",")} ore × ${eur(CANONE_ORA)}</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
+   ${!stripeAttivo()&&(p.dovuto||ex.tot)?`<dl class="ledger" style="margin:0"><dt>Acquisto del software<small>${p.dovuto?rataTxt(p):"nessuna rata"}</small></dt><dd>${eur(p.dovuto||0)}</dd>${ex.abb?`<dt>Abbonamenti specialisti<small>incassati da Clinia</small></dt><dd>${eur(ex.abb)}</dd>`:""}<dt>Ore accreditate ai dottori<small>${String(fpmMese(m).ore).replace(".",",")} ore × ${eur(CANONE_ORA)}</small></dt><dd>${eur(ex.serv)}</dd><dt class="tot">Da versare a FPM, netti</dt><dd class="tot">${eur(tot)}</dd></dl>
    <p class="tiny">Finché i pagamenti in app (Stripe) non sono attivi, Clinia versa tutto con un unico bonifico a inizio mese${fpmIban()?`: <b>${esc((S.payAcc.fpm||{}).holder||LEGAL.autore)}</b> · IBAN <span class="num" style="user-select:all">${esc(fpmIban())}</span>`:S.payAcc.fpm&&S.payAcc.fpm.tipo==="paypal"?`, oppure con PayPal a <b>${esc(S.payAcc.fpm.email)}</b>`:"."} Causale: “Clinia App – software e royalty ${esc(meseNome(m))}”.</p>`:""}
-   ${!p.dovuto?`<p class="small muted">${proprietaClinia()?"Software già pagato: questo mese restano solo abbonamenti e royalty.":p.k<1?"L’acquisto parte a "+esc(meseNome(LICENZA.inizio))+".":"Nessuna rata del software questo mese."}</p>`
+   ${!p.dovuto?`<p class="small muted">${proprietaClinia()?"Software già pagato: questo mese resta solo il compenso sulle ore accreditate.":p.k<1?"L’acquisto parte a "+esc(meseNome(LICENZA.inizio))+".":"Nessuna rata del software questo mese."}</p>`
    :p.pagato?`<p class="small">${ic("check","sm")} ${cap(rataTxt(p))}: ${pagDesc(p)}.</p><p class="tiny">${p.conf?"FPM ha confermato di averlo ricevuto.":"In attesa della conferma di FPM."} La ritenuta (${eur(r2(lordoDaNetto(p.dovuto)-p.dovuto))}) va comunque versata con F24 entro il 16 del mese dopo.</p>
      <div class="row" style="gap:8px;flex-wrap:wrap">${p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta del mese</button>`:""}${!p.auto&&!p.conf?`<button class="btn ghost sm" data-act="pagAnnulla" data-v="${m}">Annulla</button>`:""}</div>`
    :`<p class="small">${cap(rataTxt(p))}: <b>${eur(p.dovuto)}</b> netti a FPM.</p>
@@ -1596,19 +1627,19 @@ function fpmMese(m){const mov=fpmMovimenti(m),sum=(f,k)=>r2(mov.filter(f).reduce
   const lordo=sum(all,"lordo"),rit=sum(all,"rit"),arca=sum(all,"arca"),netto=sum(all,"netto"),imp=r2(rit/0.2);
   return{mov,k:monthIndex(m),lordo,rit,arca,netto,imp,quota:quotaImp(),bollo:lordo>77.47?2:0,
     licN:sum(x=>x.da==="clinia","netto"),abbNet:sum(x=>x.tipo==="Abbonamento","netto"),prenNet:sum(x=>x.pren,"netto"),abbN:abb.length,abbL:sum(x=>x.tipo==="Abbonamento","lordo"),prenN:pren.length,prenL:sum(x=>x.pren,"lordo"),ore:r2(pren.reduce((t,x)=>t+(x.ore||0),0)),
-    nSpec:otherDocs().length}}
+    nSpec:otherDocs().filter(d=>oreAccreditate(d.id)>0).length}}
 function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.ric[m]||{},acc=S.payAcc.fpm,lim=UI.movAll?f.mov.length:15;
   return `<div class="pad stack" style="gap:16px"><div class="row between"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">FPM Tech</h1></div><span class="live"><i></i>Tempo reale</span></div>${meseNav("fpmMese",m)}
   <div class="card" style="text-align:center"><span class="label">Incassato netto nel mese</span><div class="big">${eur(f.netto)}</div>
    <p class="tiny">${!stripeAttivo()?`Versato da Clinia con bonifico mensile${S.payAcc.fpm?" · "+esc(accDesc(S.payAcc.fpm)):""}`:acc?`Accreditato in automatico su IBAN ••••${esc(acc.last4)}`:`<button class="link" data-act="openPage" data-v="ibanpage">Inserisci il tuo IBAN per ricevere gli accrediti</button>`}</p></div>
-  <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Specialisti abbonati${DB.on?"":" (esempio)"}</span></div><div class="stat"><b>${String(f.ore).replace(".",",")} h</b><span>Ore di studio (royalty)</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
+  <div class="stats"><div class="stat"><b>${f.nSpec}</b><span>Dottori con ore</span></div><div class="stat"><b>${String(f.ore).replace(".",",")} h</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(f.arca)}</b><span>A Progetto Arca</span></div></div>
   <dl class="card ledger"><dt>Acquisto del software<small>${pagStato(m).dovuto?`${rataTxt(pagStato(m))}, ${eur(pagStato(m).dovuto)} netti · ${pagStato(m).pagato?"pagata":"da pagare"}`:proprietaClinia()?"software di Clinia: restano abbonamenti e royalty":"nessuna rata questo mese"}</small></dt><dd>${eur(f.licN)}</dd>
-   <dt>Abbonamenti specialisti<small>${f.abbN} × ${eur(SUB.price)} netti</small></dt><dd>${eur(f.abbNet)}</dd>
-   <dt>Royalty ore di studio<small>${String(f.ore).replace(".",",")} ore × ${eur(CANONE_ORA)} netti, versati da Clinia</small></dt><dd>${eur(f.prenNet)}</dd>
+   ${f.abbN?`<dt>Abbonamenti specialisti<small>${f.abbN} netti</small></dt><dd>${eur(f.abbNet)}</dd>`:""}
+   <dt>Ore accreditate ai dottori<small>${String(f.ore).replace(".",",")} ore × ${eur(CANONE_ORA)} netti, versati da Clinia</small></dt><dd>${eur(f.prenNet)}</dd>
    <dt class="tot">Netto accreditato</dt><dd class="tot">${eur(f.netto)}</dd></dl>
   <p class="tiny">Importi netti garantiti: la ritenuta d’acconto (${eur(f.rit)} nel mese, su un lordo fiscale di ${eur(f.lordo)}) la aggiunge e la versa Clinia con F24.</p>
   ${(()=>{const p=pagStato(m),ex=extraFPM(m);return p.dovuto||ex.tot?`<div class="card stack" style="gap:10px"><div class="row between"><h3>${stripeAttivo()?"Software da Clinia":"Bonifico mensile da Clinia"}</h3>${pagBadge(p)}</div>
-   ${stripeAttivo()?"":`<p class="small">Da ricevere: <b>${eur(r2((p.dovuto||0)+ex.tot))}</b> netti (software ${eur(p.dovuto||0)} + abbonamenti ${eur(ex.abb)} + royalty ore ${eur(ex.serv)}).${fpmIban()||S.payAcc.fpm?"":` <button class="link" data-act="openPage" data-v="ibanpage">Indica come ricevere i pagamenti</button> perché Clinia lo veda.`}</p>`}
+   ${stripeAttivo()?"":`<p class="small">Da ricevere: <b>${eur(r2((p.dovuto||0)+ex.tot))}</b> netti (software ${eur(p.dovuto||0)} + ore accreditate ${eur(ex.serv)}${ex.abb?" + abbonamenti "+eur(ex.abb):""}).${fpmIban()||S.payAcc.fpm?"":` <button class="link" data-act="openPage" data-v="ibanpage">Indica come ricevere i pagamenti</button> perché Clinia lo veda.`}</p>`}
    <p class="small">${p.pagato?`${cap(rataTxt(p))}: ${pagDesc(p)}.`:`${cap(rataTxt(p))}: ${eur(p.dovuto)} netti, non ancora segnati da Clinia${S.licMetodo!=="automatico"?" (paga "+(S.licMetodo==="contanti"?"in contanti":"con bonifico")+")":""}.`}</p>
    ${p.pagato&&!p.auto?`<label class="chk"><input type="checkbox" data-change="pagConf" data-m="${m}" ${p.conf?"checked":""}> Confermo di aver ricevuto ${eur(p.importo)}${p.metodo==="contanti"?" e firmato la ricevuta":""}</label>`:""}
    ${p.pagato&&p.metodo==="contanti"?`<button class="btn ghost sm" data-act="fpmRicevuta" data-v="${m}">${ic("file","sm")} Ricevuta da firmare</button>`:""}</div>`:""})()}
@@ -1628,8 +1659,32 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
    <button class="btn ghost block" data-act="fpmRicevuta" data-v="${m}" ${f.lordo?"":"disabled"}>${ic("file","sm")} Prepara la ricevuta del mese</button></div>
   <p class="tiny">${DB.on?"":"Nella versione di prova i movimenti sono di esempio. "}Stime da far confermare dal commercialista o dal CAF.</p></div>`}
 const DOC_CAT=["Ricevuta compenso","Bonifico","Contratto FPM–Clinia","Certificazione Unica (CU)","Dichiarazione dei redditi","Donazione Progetto Arca","Altro"];
+/* ---------- FPM: dottori, ore e ricavi ---------- */
+const PUB_CANALI=[["monitor","Monitor in sala"],["sito","Sito clinia.it"],["instagram","Instagram"],["facebook","Facebook"]];
+const PUBBLICAZIONE_ATTIVA=false; // si accende quando colleghiamo monitor, sito e social
+function fpmDottoriTab(){const l=SPECIALISTI(),att=S.crediti.filter(c=>c.stato==="richiesta").sort((a,b)=>a.at-b.at);
+  const totOre=r2(l.reduce((t,d)=>t+oreAccreditate(d.id),0));
+  return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Dottori</h1></div>
+  <div class="stats"><div class="stat"><b>${oreFmt(totOre)}</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(r2(totOre*CANONE_ORA))}</b><span>Tuo compenso (${eur(CANONE_ORA)}/h)</span></div><div class="stat"><b>${att.length}</b><span>Da confermare</span></div></div>
+  ${att.length?`<section class="card stack" style="gap:10px;border-color:var(--warn);background:var(--warn-soft)"><h3>Ore da confermare</h3><p class="tiny">Inviate da Clinia dopo la firma del contratto. Confermando, il dottore le vede subito.</p>
+   ${att.map(c=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docAv(doc(c.docId),"sm")}<span style="flex:1;min-width:170px"><b class="small" style="display:block">${esc(doc(c.docId).name)}</b><span class="tiny">${oreFmt(c.ore)} · contratto del ${new Date(c.data||c.at).toLocaleDateString("it-IT")} · ${eur(r2(c.ore*CANONE_ORA))} per te${c.file?` · <button class="link tiny" data-act="apriContratto" data-id="${c.id}">vedi contratto</button>`:""}</span></span><button class="btn primary sm" data-act="creditoEsito" data-id="${c.id}" data-v="ok">Conferma</button><button class="iconbtn" data-act="creditoEsito" data-id="${c.id}" data-v="no" aria-label="Non confermare">${ic("x","sm")}</button></div>`).join("")}</section>`:""}
+  ${l.map(d=>{const acc=oreAccreditate(d.id),usa=orePrenotate(d.id),pp=S.proProfile[d.id]||{},pub=S.pubblica[d.id]||{},foto=docPhoto(d.id),nuova=S.fotoNuove&&S.fotoNuove[d.id];return `<div class="card stack" style="gap:12px">
+   <div class="row" style="gap:14px;align-items:flex-start">${foto?`<img src="${foto}" alt="Foto di ${esc(d.name)}" style="width:72px;height:128px;object-fit:cover;border-radius:12px;flex:none">`:docAv(d)}
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><b>${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span>
+     <span class="row" style="gap:6px;flex-wrap:wrap">${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}${pp.pubblica?`<span class="badge">Consenso pubblicazione</span>`:""}${nuova?`<span class="badge warn">Foto nuova</span>`:""}</span></div></div>
+   <dl class="ledger small"><dt>Ore accreditate</dt><dd>${oreFmt(acc)}</dd><dt>Prenotate</dt><dd>${oreFmt(usa)}</dd><dt>Disponibili</dt><dd>${oreFmt(r2(acc-usa))}</dd><dt><b>Tuo compenso</b><small>${oreFmt(acc)} × ${eur(CANONE_ORA)}</small></dt><dd><b>${eur(r2(acc*CANONE_ORA))}</b></dd></dl>
+   <form class="row" data-form="creditoFpm" data-id="${d.id}" style="gap:8px" novalidate><input name="ore" inputmode="decimal" placeholder="Ore, es. 50" aria-label="Ore da accreditare a ${esc(d.name)}" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)"><button class="btn primary sm" type="submit">${ic("plus","sm")} Accredita ore</button></form>
+   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="fotoScarica" data-id="${d.id}" ${foto?"":"disabled"}>${ic("upload","sm")} Scarica foto</button><label class="btn ghost sm" for="fpf-${d.id}">${ic("upload","sm")} Carica foto 9:16</label><input id="fpf-${d.id}" type="file" accept="image/*" class="hidden" data-change="fotoFpm" data-id="${d.id}"></div>
+   <div class="stack" style="gap:6px"><span class="label">Pubblicazione${PUBBLICAZIONE_ATTIVA?"":" · in arrivo"}</span><div class="row" style="gap:8px;flex-wrap:wrap">${PUB_CANALI.map(([k,t])=>`<button class="chip ${pub[k]?"on":""}" data-act="pubblica" data-id="${d.id}" data-v="${k}" ${PUBBLICAZIONE_ATTIVA&&pp.pubblica?"":"disabled"} aria-pressed="${!!pub[k]}">${t}</button>`).join("")}</div>
+    <p class="tiny">${PUBBLICAZIONE_ATTIVA?(pp.pubblica?"Scegli dove compare.":"Serve il consenso del dottore, dal suo profilo."):"Si attiva quando colleghiamo monitor, sito clinia.it e social. Nome, foto, specialità e orari si aggiorneranno da soli."}</p></div>
+  </div>`}).join("")}
+  </div>`}
+async function fotoRidotta(file){const url=await new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=ko;r.readAsDataURL(file)});
+  const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});const W=540,H=960,c=document.createElement("canvas");c.width=W;c.height=H;
+  const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext("2d").drawImage(im,(W-w)/2,0,w,h);return c.toDataURL("image/jpeg",0.86)}
+
 /* ---------- FPM: registro incassi e rendicontazione ---------- */
-const INC_VOCI=["Rata acquisto software Clinia App","Royalty ore di studio (4,99 €/ora)","Royalty abbonamenti specialisti","Pagamento fattura / richiesta","Sito web","Nuovo progetto / collaborazione","Altro"];
+const INC_VOCI=["Rata acquisto software Clinia App","Compenso ore accreditate ai dottori (1,50 €/ora)","Pagamento fattura / richiesta","Sito web","Nuovo progetto / collaborazione","Altro"];
 const INC_METODI=["Bonifico","Bonifico istantaneo","Addebito automatico","Carta","PayPal","Contanti","Altro"];
 function incassiRighe(y,m){const man=S.incassi.filter(x=>x.data.startsWith(m||y)).map(x=>({...x,auto:false}));
   let aut=[];if(UI.incAuto!==false){const ms=m?[m]:[...Array(12)].map((_,i)=>y+"-"+pad2(i+1)).filter(k=>k<=today().slice(0,7));
@@ -1672,7 +1727,8 @@ async function incassiPDF(){await loadPdf();const{jsPDF}=window.jspdf,doc=new js
   doc.setFont("helvetica","bold");doc.text("Totale del periodo",L+2,yy);doc.text(eu(r2(tm+ta)),R-2,yy,{align:"right"});doc.setFont("helvetica","normal");yy+=10;
   doc.setFontSize(8);doc.setTextColor(93,107,119);doc.text(doc.splitTextToSize("Documento di riepilogo per uso personale e per il commercialista. Gli importi dei compensi da diritti d’autore sono netti; la ritenuta d’acconto è versata da Clinia Srl come sostituto d’imposta.",R-L),L,yy);
   const nome=`Incassi_FPM_${m||y}.pdf`;return{blob:doc.output("blob"),nome}}
-async function salvaPdf(blob,nome){const file=new File([blob],nome,{type:"application/pdf"});
+const salvaFile=(blob,nome,tipo)=>salvaPdf(blob,nome,tipo);
+async function salvaPdf(blob,nome,tipo){const file=new File([blob],nome,{type:tipo||"application/pdf"});
   const dl=window.claude&&window.claude.use?await window.claude.use("downloads").catch(()=>null):null;
   if(dl){try{await dl.save({filename:nome,data:blob});toast("PDF salvato")}catch(e){if(e&&e.code!=="declined")toast("Download non disponibile qui: usa “Salva in Documenti”")}}
   else if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome})}else{const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}}
@@ -1692,7 +1748,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
   <div class="card stack" style="gap:10px"><h3>Impostazioni</h3>
    <label class="chk"><input type="checkbox" data-change="fpmSet" data-k="under35" ${S.fpm.under35?"checked":""}> Ho meno di 35 anni (deduzione forfettaria del 40 %)</label>
    <label class="field"><span>Aliquota IRPEF marginale (dal tuo stipendio)</span><select data-change="fpmSet" data-k="aliquota" id="fs-al">${[[0.23,"23 % (reddito fino a 28.000 €)"],[0.33,"33 % (da 28.000 a 50.000 €)"],[0.43,"43 % (oltre 50.000 €)"]].map(([v,l])=>`<option value="${v}" ${S.fpm.aliquota===v?"selected":""}>${l}</option>`).join("")}</select></label>
-   <p class="small">Importi netti per te: <b>${eur(CANONE_ORA)}</b> per ogni ora di studio prenotata (da Clinia), <b>${eur(SUB.price)}</b> ad abbonamento, per sempre; acquisto del software <b>${eur(LICENZA.netto)}</b> × ${LICENZA.mesi} oppure <b>${eurM(LICENZA.unica)}</b> in unica soluzione.</p></div>
+   <p class="small">Importi netti per te: <b>${eur(CANONE_ORA)}</b> per ogni ora accreditata ai dottori (da Clinia), per sempre; acquisto del software <b>${eur(LICENZA.netto)}</b> × ${LICENZA.mesi} oppure <b>${eurM(LICENZA.unica)}</b> in unica soluzione.</p></div>
   ${(()=>{const MAX=5164.57,v=Math.min(S.fpm.fondo||0,MAX),al=S.fpm.aliquota,ris=r2(v*(al+0.02));return `<div class="card stack" style="gap:10px"><h3>Fondo pensione: quanto risparmi</h3>
    <p class="small muted">Quello che versi in un fondo pensione si scala dal reddito, fino a ${eur(MAX)} l’anno: paghi meno IRPEF e i soldi restano tuoi per la pensione.</p>
    <label class="field"><span>Versamento all’anno (€)</span><input id="fs-fondo" type="number" min="0" step="50" inputmode="decimal" value="${S.fpm.fondo||""}" placeholder="es. 1200" data-change="fpmSet" data-k="fondo"></label>
@@ -1711,7 +1767,7 @@ function fpmFiscoTab(){const _f=1,y=UI.fpmAnno||today().slice(0,4),ms=[...Array(
 function ricevutaDati(m){const f=fpmMese(m),p=pagStato(m),q=quotaImp(),rr=n=>Math.round(n*100)/100;
   const righe=[];if(p.dovuto)righe.push([S.licModo==="unica"?"Cessione del software “Clinia App” – unica soluzione":`Cessione del software “Clinia App” – rata ${p.k} di ${LICENZA.mesi}`,"1",rr(lordoDaNetto(p.dovuto))]);
   if(f.abbN)righe.push(["Royalty d’autore su abbonamenti degli specialisti",String(f.abbN),rr(f.abbL)]);
-  if(f.prenN)righe.push([`Royalty d’autore: ${String(f.ore).replace(".",",")} ore di studio × ${String(CANONE_ORA).replace(".",",")} €`,String(f.ore).replace(".",","),rr(f.prenL)]);
+  if(f.prenN)righe.push([`Royalty d’autore: ${String(f.ore).replace(".",",")} ore accreditate ai dottori × ${String(CANONE_ORA.toFixed(2)).replace(".",",")} €`,String(f.ore).replace(".",","),rr(f.prenL)]);
   const lordo=rr(righe.reduce((t,x)=>t+x[2],0)),imp=rr(lordo*q),rit=rr(imp*0.2),netto=rr(lordo-rit);
   return{righe,lordo,imp,rit,netto,quota:q,bollo:lordo>77.47,p,num:m.replace("-","/")}}
 let jsPDFp=null;const loadPdf=()=>window.jspdf?Promise.resolve():jsPDFp||(jsPDFp=new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";sc.onload=ok;sc.onerror=()=>{jsPDFp=null;ko(new Error("serve la connessione a internet"))};document.head.appendChild(sc)}));
@@ -1779,7 +1835,7 @@ Compensi di ${meseNome(m)} per la licenza dei diritti di utilizzazione
 economica dell’opera dell’ingegno "Clinia App" (software):
  - software${f.licN?"":" (nessuna rata)"}           ${L(f.licN?lordoDaNetto(LICENZA.netto):0)}
  - quota abbonamenti specialisti (${f.abbN})      ${L(f.abbL)}
- - royalty ore di studio (${f.ore} ore × 4,99 €)   ${L(f.prenL)}
+ - ore accreditate ai dottori (${f.ore} ore × 1,50 €) ${L(f.prenL)}
 
 Compenso lordo                                ${L(f.lordo)}
 Imponibile (${Math.round(f.quota*100)} %)                          ${L(r2(f.rit/0.2))}
@@ -1799,7 +1855,7 @@ function agendaTab(){const d=doc(S.proId);if(!UI.proDay||!OPEN[parseD(UI.proDay)
   const wk=[0,1,2,3,4,5,6].map(k=>addDays(today(),k));const wkMin=allBookings().filter(b=>b.doctorId===S.proId&&wk.includes(b.date)).reduce((s,b)=>s+toMin(b.end)-toMin(b.start),0);
   const m0=today().slice(0,7);const cost=allBookings().filter(b=>b.doctorId===S.proId&&b.date.startsWith(m0)).reduce((s,b)=>s+roomCost(b.roomId,toMin(b.end)-toMin(b.start)),0);
   const todayN=proAppts(today()).length;
-  return `<div class="pad stack" style="gap:20px">${markSvg(40)}<h1 class="hello" style="font-size:1.8rem">Buongiorno, <b>${esc(d.name.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ")[0])}.</b></h1>
+  return `<div class="pad stack" style="gap:20px">${markSvg(40)}${oreCard()}<h1 class="hello" style="font-size:1.8rem">Buongiorno, <b>${esc(d.name.replace(/^(Prof\.|Dott\.ssa|Dott\.)\s*/,"").split(" ")[0])}.</b></h1>
   <div class="stats"><div class="stat"><b>${todayN}</b><span>Visite oggi</span></div><div class="stat"><b>${(wkMin/60).toLocaleString("it-IT")} h</b><span>In studio, 7 giorni</span></div><div class="stat"><b>${eur(Math.round(cost))}</b><span>Studi nel mese</span></div></div>
   <button class="btn primary block" data-act="addAppt">${ic("plus","sm")} Nuovo appuntamento</button>
   ${richiesteHTML()}${chiudereHTML()}
@@ -1821,7 +1877,7 @@ function timeline(ds,r,sel){const[o,c]=OPEN[parseD(ds).getDay()];const span=c-o;
 function freeMinutes(ds,r){const[o,c]=OPEN[parseD(ds).getDay()];return(c-o)-bookingsOn(ds,b=>b.roomId===r.id).reduce((s,b)=>s+toMin(b.end)-toMin(b.start),0)}
 function stanzeTab(){if(!UI.roomDay||!OPEN[parseD(UI.roomDay).getDay()])UI.roomDay=firstOpen();const ds=UI.roomDay;
   const my=S.rooms.filter(b=>b.doctorId===S.proId&&b.date>=today()).concat(allBookings().filter(b=>b.seed&&b.doctorId===S.proId&&b.date>=today()&&b.date<=addDays(today(),6))).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
-  return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1><p class="muted small">${esc(CLINIC.hoursText)}</p>
+  return `<div class="pad stack" style="gap:18px"><h1 class="h-sec" style="font-size:1.6rem">Prenota uno studio</h1>${oreCard()}<p class="muted small">${esc(CLINIC.hoursText)}</p>
   <button class="card row" data-act="openPage" data-v="offerta" style="width:100%;text-align:left;gap:12px;background:var(--gold-soft);border-color:var(--gold)"><span style="flex:1"><b class="small" style="display:block">Contratto mensile</b><span class="tiny">Da ${eurM(TARIFFE_MESE.mq[12].A)} al mese + IVA · a ore ${eurM(TARIFFE_ORE.ora)} + IVA · pacchetti da ${eurM(TARIFFE_ORE.pacchetti[4][1])} l’ora</span></span>${ic("right","sm")}</button>
   ${dayStrip(ds,"roomDay",x=>{const f=ROOMS.filter(r=>freeMinutes(x,r)>=60).length;return f+" liberi"})}
   <div class="legend"><span><i style="background:var(--accent-soft)"></i>Libero</span><span><i style="background:var(--busy)"></i>Occupato</span><span><i style="background:var(--accent)"></i>Tuo</span></div>
@@ -1863,10 +1919,10 @@ function modalitaCard(){if(isOwner())return "";const m=modalita(S.proId);return 
   ${m==="fitto"?`<p class="small muted">Paghi lo studio: affitto mensile, a ore o con un pacchetto prepagato.</p>`:percHTML()}
   <p class="tiny">${FATTURE_TXT}</p></section>`}
 function pacchettoStato(){if(isOwner())return "";const o=oreResidue(S.proId);return o>0?`<div class="card row" style="gap:10px;background:var(--accent-soft);border-color:var(--accent);margin-bottom:10px">${ic("clock","sm")}<span class="small">Ti restano <b>${String(o).replace(".",",")} ore</b> prepagate.</span></div>`:""}
-function tariffeTab(){const svc=services(S.proId);return `<div class="pad stack" style="gap:20px"><h1 class="h-sec" style="font-size:1.6rem">Tariffe</h1>
-  ${modalitaCard()}
+function tariffeTab(){const svc=services(S.proId),pro=!isOwner();return `<div class="pad stack" style="gap:20px"><h1 class="h-sec" style="font-size:1.6rem">${pro?"Ore e visite":"Tariffe"}</h1>
+  ${pro?oreCard():modalitaCard()}${pro?"":`
   <section class="card"><h3 style="margin-bottom:8px">Studi: affitto mensile</h3>${tariffeMeseHTML()}<button class="btn ghost block sm" style="margin-top:10px" data-act="openPage" data-v="offerta">Servizi inclusi e richiesta ${ic("arrow","sm")}</button></section>
-  <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti</h3>${pacchettoStato()}${tariffeOreHTML(!isOwner())}</section>
+  <section class="card"><h3 style="margin-bottom:8px">Uso a ore e pacchetti</h3>${pacchettoStato()}${tariffeOreHTML(!isOwner())}</section>`}
   <form class="card stack" data-form="svcSave" style="gap:12px" novalidate><h3>Le tue visite e prestazioni</h3><p class="tiny">Scegli il tipo di visita, scrivi il nome che vedranno i pazienti, la durata in minuti e il prezzo. Con “Aggiungi” inserisci tutte quelle che fai, anche online in videochiamata. La fattura al paziente la emetti tu.</p>
    <div id="svc-rows" class="stack" style="gap:10px">${svc.map(svcRow).join("")}</div>
    <button type="button" class="btn ghost block" data-act="svcAdd">${ic("plus","sm")} Aggiungi una visita o prestazione</button>
@@ -1971,7 +2027,6 @@ function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossi
   if(!S.health)return go("health");
   if(isPro()&&!S.proId)return go("pro-pick");
   if(isPro()&&!(S.proProfile[S.proId]&&S.proProfile[S.proId].done)&&!UI.skipProf)return go("proprof");
-  if(isPro()&&!isOwner()&&!S.payAcc[S.proId]&&!UI.skipIban)return go("iban");
   if(isOwner()&&!S.payAcc.clinia&&!UI.skipIban)return go("iban");
   if(S.notif==null)return go("notifs");
   UI.screen="main";
@@ -2033,7 +2088,7 @@ const ACT={
   switchOtp:()=>{UI.otpChannel=UI.otpChannel==="whatsapp"?"sms":"whatsapp";UI.buf="";UI.pinErr="";sendOtp();render();toast(UI.otpChannel==="whatsapp"?"Codice inviato su WhatsApp":"Codice inviato via SMS")},
   otpChan:d=>{UI.otpChannel=d.v;app.querySelectorAll(".chan button").forEach(b=>{const on=b.dataset.v===d.v;b.classList.toggle("on",on);b.setAttribute("aria-checked",on)})},
   health:d=>{S.health=d.v;save();afterAuthFlow()},
-  pickPro:(d)=>{S.proId=d.id;save();afterAuthFlow()},
+  pickPro:(d)=>{S.proId=d.id;S.iscritti=S.iscritti||{};S.iscritti[d.id]=Date.now();save();notifFPM("registrazione","Dottore entrato in app",`${doc(d.id).name} si è riconosciuto nella sua scheda`);addNotif("titolare","registrazione","Dottore entrato in app",`${doc(d.id).name} ha attivato il suo profilo.`);afterAuthFlow()},
   notifs:d=>{S.notif=d.v==="yes";save();afterAuthFlow()},
   installApp:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
   setModalita:d=>{S.modalita[S.proId]=d.v;save();toast(d.v==="percentuale"?"Lavori a percentuale: gli studi si prenotano senza pagare":"Lavori ad affitto dello studio");render()},
@@ -2086,6 +2141,14 @@ const ACT={
   delFpmDoc:d=>{S.fpm.docs=S.fpm.docs.filter(x=>x.id!==d.id);save();IDB.set("fpm:"+d.id,null);render()},
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
+  creditoEsito:d=>{const c=S.crediti.find(x=>x.id===d.id);if(!c)return;const nm=doc(c.docId).name;
+    if(d.v==="ok"){c.stato="confermata";c.confAt=Date.now();addNotif("spec:"+c.docId,"ore","Ore accreditate",`Clinia e FPM hanno attivato ${oreFmt(c.ore)}: le trovi nella tua app e scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore confermate da FPM",`${nm}: ${oreFmt(c.ore)} attive.`);toast(`${oreFmt(c.ore)} accreditate a ${nm}`)}
+    else{if(!confirm(`Non confermare le ${oreFmt(c.ore)} di ${nm}?`))return;c.stato="rifiutata";addNotif("titolare","ore","Ore non confermate da FPM",`${nm}: ${oreFmt(c.ore)}. Controlla il contratto.`);toast("Richiesta non confermata")}
+    save();render()},
+  apriContratto:async d=>{const c=S.crediti.find(x=>x.id===d.id);const f=c&&c.file&&await IDB.get("contr:"+c.id);if(!f||!f.blob)return toast("Contratto non disponibile su questo dispositivo.");
+    const u=URL.createObjectURL(f.blob);UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
+  fotoScarica:async d=>{try{const src=docPhoto(d.id);const blob=await (await fetch(src)).blob();await salvaFile(blob,`Foto_${d.id}.jpg`,"image/jpeg")}catch(e){toast("Foto non scaricata: "+(e.message||e))}},
+  pubblica:d=>{if(!PUBBLICAZIONE_ATTIVA)return toast("La pubblicazione su monitor, sito e social si attiva più avanti.");S.pubblica[d.id]=S.pubblica[d.id]||{};S.pubblica[d.id][d.v]=!S.pubblica[d.id][d.v];save();render()},
   fpmContatto:()=>{UI.sheet={type:"fpmContatto"};render()},
   copiaMailFpm:()=>{navigator.clipboard.writeText(FPM_MAIL).then(()=>toast("Indirizzo copiato: "+FPM_MAIL),()=>toast(FPM_MAIL))},
   visitaOnline:()=>{UI.sq.mode="online";UI.sq.spec=null;UI.sq.q="";push({page:"results"})},
@@ -2173,13 +2236,14 @@ const ACT={
       const clash=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
       if(clash||!OPEN[parseD(ds).getDay()])skip.push(fmtD(ds,{day:"numeric",month:"short"}));else plan.push(ds)}
     if(!plan.length){UI.sheet=null;return toast("Nessuna prenotazione: lo studio è occupato")}
-    const perc=!isOwner()&&modalita(S.proId)==="percentuale";
+    const perc=false,oreServono=oreTurno(sh,plan.length);
+    if(!isOwner()){const res=oreResidue(S.proId);if(oreServono>res){UI.sheet=null;render();return toast(res>0?`Ti restano ${oreFmt(res)}: questa prenotazione ne usa ${oreFmt(oreServono)}. Chiedi a Clinia un nuovo pacchetto.`:"Non hai ore disponibili: Clinia le attiva dopo la firma del contratto.")}}
     if(DB.on&&(isOwner()||!STRIPE.publishableKey)){const list=plan.map(ds=>({doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));UI.sheet=null;render();
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
-    if(isOwner()||perc){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
+    if(true){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
       if(!isOwner())addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)}${perc?" · a percentuale":""}`);
-      notifFPM("royalty","Studio prenotato",`${isOwner()?"Clinia":doc(S.proId).name} · ${r.name}${perc?" · a percentuale":""} · ${royTxt(oreTurno(sh,plan.length))}`);
-      return toast(`${r.name} prenotato${perc?" a percentuale":""}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
+      notifFPM("studio_prenotato","Studio prenotato",`${isOwner()?"Clinia":doc(S.proId).name} · ${r.name} · ${oreFmt(oreServono)}${isOwner()?"":" scalate · restano "+oreFmt(oreResidue(S.proId))}`);render();
+      return toast(`${r.name} prenotato${isOwner()?"":" · "+oreFmt(oreServono)+" scalate"}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
     Object.assign(sh,{step:"pay",plan,skip,card:S.cards[0]?S.cards[0].id:"new"});render()},
   rpCard:d=>{UI.sheet.card=d.v;render()},
   rpBack:()=>{UI.sheet.step=null;render()},
@@ -2261,9 +2325,10 @@ const FORMS={
     if(v("sdi")&&!/^[A-Z0-9]{7}$/.test(v("sdi")))return err.textContent="Il codice destinatario ha 7 caratteri.";
     if(v("sito")&&!/^https?:\/\/\S+\.\S+/.test(v("sito")))return err.textContent="Il sito deve iniziare con https://";
     const id=S.proId,bio=v("bio").split("\n").map(x=>x.trim()).filter(Boolean);
-    const data={professione:prof,specs,ruolo:specs.length?(prof==="Altra professione"?specs[0]:specs[0].replace(/\s*\(.*\)$/,"")):prof};["titolo","iscrizione","nome","cognome","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
+    const data={pubblica:!!(f.pubblica&&f.pubblica.checked),professione:prof,specs,ruolo:specs.length?(prof==="Altra professione"?specs[0]:specs[0].replace(/\s*\(.*\)$/,"")):prof};["titolo","iscrizione","nome","cognome","area","email","telefono","pec","piva","cf","sdi","cap","indirizzo","citta","sito","instagram","facebook","linkedin"].forEach(k=>data[k]=v(k));
     const isNew=id.startsWith("sp-")&&!(S.proProfile[id]&&S.proProfile[id].done);S.proProfile[id]={...(S.proProfile[id]||{}),...data,bio,cv:UI.ppCv||(S.proProfile[id]||{}).cv,done:true};DB.saveProfile(id,{...data,bio},isNew);
-    if(UI.ppPhoto)S.docPhotos[id]=UI.ppPhoto;
+    if(UI.ppPhoto){S.docPhotos[id]=UI.ppPhoto;S.fotoNuove=S.fotoNuove||{};S.fotoNuove[id]=Date.now();notifFPM("foto","Nuova foto da sistemare",`${data.nome} ${data.cognome} ha caricato la sua foto: la trovi in Dottori per scaricarla e ricaricarla con la grafica Clinia.`)}
+    if(data.pubblica&&!(S.proProfile[id]&&S.proProfile[id].pubblicaPrima)){S.proProfile[id].pubblicaPrima=true;notifFPM("pubblicazione","Consenso alla pubblicazione",`${data.nome} ${data.cognome} accetta di comparire su monitor, sito e social`)}
     S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio,professione:prof,specs};applyOverrides();
     UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
     if(UI.screen==="proprof")afterAuthFlow();else{UI.stack.pop();render()}},
@@ -2315,6 +2380,17 @@ const FORMS={
       out.push({tipo,name:nome,dur:Math.round(dur/5)*5,price:r2(pr),online:q("online").checked||tipo==="Visita online (videochiamata)"})}
     if(!out.length)return err.textContent="Inserisci almeno una prestazione.";
     S.svcCustom[S.proId]=out;delete S.prices[S.proId];save();DB.saveServices(S.proId,out);notifFPM("prestazioni","Prestazioni aggiornate",`${doc(S.proId).name} · ${out.length} prestazioni${out.some(x=>x.online)?" · anche online":""}`);toast("Visite e prezzi salvati: i pazienti li vedono subito");render()},
+  contratto:async f=>{const id=f.dataset.id,err=$("#ct-err-"+id);err.textContent="";const ore=parseFloat(String(f.ore.value).replace(",","."));
+    if(!(ore>0&&ore<=2000))return err.textContent="Scrivi le ore firmate, per esempio 50.";
+    const file=f.file.files[0];if(file&&file.size>15*1024*1024)return err.textContent="Il file supera 15 MB.";
+    const c={id:uid(),docId:id,ore:r2(ore),data:f.data.value||today(),stato:"richiesta",da:"clinia",at:Date.now(),file:file?file.name:null};
+    if(file&&!(await IDB.set("contr:"+c.id,{name:file.name,blob:file})))return err.textContent="Non riesco a salvare il contratto su questo dispositivo.";
+    S.crediti.push(c);save();notifFPM("ore","Ore da confermare",`${doc(id).name}: ${oreFmt(c.ore)} firmate${file?" · contratto allegato":""}. Confermale in Dottori.`);
+    toast("Inviato a FPM per la conferma");render()},
+  creditoFpm:f=>{const id=f.dataset.id,ore=parseFloat(String(f.ore.value).replace(",","."));if(!(ore>0&&ore<=2000))return toast("Scrivi le ore da accreditare, per esempio 50.");
+    S.crediti.push({id:uid(),docId:id,ore:r2(ore),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});save();
+    addNotif("spec:"+id,"ore","Ore accreditate",`Hai ${oreFmt(ore)} in più: scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore accreditate da FPM",`${doc(id).name}: ${oreFmt(ore)}.`);
+    toast(`${oreFmt(ore)} accreditate a ${doc(id).name}`);render()},
   incasso:f=>{const err=$("#inc-err");err.textContent="";const voce=f.voce.value.trim(),data=f.data.value,imp=parseFloat(String(f.importo.value).replace(/\./g,"").replace(",","."));
     if(!voce)return err.textContent="Scrivi la descrizione, per esempio “Pagamento rata app”.";
     if(!data||data>today())return err.textContent="Indica il giorno dell’incasso (non nel futuro).";
@@ -2346,6 +2422,7 @@ app.addEventListener("input",e=>{const k=e.target.dataset.input;
     const nr=$("#noresults");if(nr)nr.classList.toggle("hidden",n>0)}
   if(k==="fsvc"){const q=e.target.value.trim().toLowerCase();
     app.querySelectorAll("#fsvcs .fopt").forEach(c=>c.classList.toggle("hidden",q?!c.dataset.name.includes(q):(c.classList.contains("more")&&!UI.moreSvcs)))}});
+app.addEventListener("input",e=>{if(e.target.dataset&&e.target.dataset.cerca==="dott"){const t=$("#pp-trovati");if(t)t.innerHTML=trovatiHTML(e.target.value)}});
 app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="upload"){for(const f of e.target.files)S.files.unshift({id:uid(),name:f.name,size:f.size,at:today(),forId:UI.person});save();toast(e.target.files.length>1?"Documenti caricati":"Documento caricato")}
   if(k==="photo"){const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),img=new Image();
@@ -2361,6 +2438,7 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="aaSvc"){const f=$("form[data-form=addAppt]");if(f){UI.sheet.nome=f.nome.value;UI.sheet.tel=f.tel.value}UI.sheet.svc=+e.target.value;UI.sheet.time=null;render();return}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
+  if(k==="fotoFpm"&&e.target.files[0]){const id=e.target.dataset.id;fotoRidotta(e.target.files[0]).then(u=>{S.docPhotos[id]=u;if(S.fotoNuove)delete S.fotoNuove[id];save();toast("Foto aggiornata: la vedono tutti");render()}).catch(()=>toast("Foto non letta: prova con un JPG o PNG."))}
   if(k==="incAnno"){UI.incAnno=e.target.value;UI.incMese="";render()}
   if(k==="incMese"){UI.incMese=e.target.value;render()}
   if(k==="incAuto"){UI.incAuto=e.target.checked;render()}

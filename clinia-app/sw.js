@@ -1,6 +1,6 @@
 // Clinia App · service worker: l'app si apre anche con rete debole.
 // © 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.
-const CACHE = "clinia-v3";
+const CACHE = "clinia-v4";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./img/clinia-logo.svg", "./img/clinia-mark.svg",
   "./img/icone/apple-touch-icon.png", "./img/icone/icon-192.png", "./img/fpm-logo-sm.png", "./img/reception.jpg"];
 

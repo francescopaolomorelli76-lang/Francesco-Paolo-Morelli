@@ -215,7 +215,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         request.usesLanguageCorrection = false
         // sillabe piccole sotto il rigo: si accettano anche scritte basse
         request.minimumTextHeight = 0.02
-        request.recognitionLanguages = ["it-IT", "de-DE", "fr-FR", "en-US", "es-ES"]
+        request.recognitionLanguages = ["it-IT", "de-DE", "fr-FR", "en-US", "es-ES", "ru-RU"]
         DispatchQueue.global(qos: .userInitiated).async {
             do { try VNImageRequestHandler(cgImage: cg, options: [:]).perform([request]) }
             catch { DispatchQueue.main.async { done(nil, error.localizedDescription) } }

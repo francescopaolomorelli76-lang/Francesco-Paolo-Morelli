@@ -9,7 +9,7 @@ const FR_SPECIAL={et:'è',est:'è',es:'è',les:'lè',des:'dè',mes:'mè',tes:'t�
   qui:'ki',un:'ẽ',nous:'nu',vous:'vu',tout:'tu',fils:'fis',dieu:'diö',christ:'krist',sois:'suà',jour:'žur',ciel:'siel',cieux:'siö',yeux:'iö',oui:'uì',
   la:'la',ma:'ma',ta:'ta',sa:'sa',pas:'pa',par:'par',pour:'pur',sur:'sür',sous:'su',dans:'dã',avec:'avèk',mais:'mè',où:'u',ou:'u',à:'a',au:'o',aux:'o',du:'dü',
   son:'sõ',mon:'mõ',ton:'tõ',en:'ã',on:'õ',ai:'è',as:'a',a:'a',il:'il',elle:'èl',ils:'il',tu:'tü',toi:'tua',moi:'mua',lui:'lüi',eux:'ö',coeur:'kör',cœur:'kör',sœur:'sör',
-  oeil:'öj',œil:'öj',oeuvre:'övr',œuvre:'övr',amen:'amèn',alleluia:'alelüia'};
+  oeil:'öj',œil:'öj',oeuvre:'övr',œuvre:'övr',amen:'amèn',alleluia:'alelüia',fille:'fij',filles:'fij',famille:'famij',ville:'vil',mille:'mil',tranquille:'trãkil',chœur:'kör',choeur:'kör',chrétien:'kretiẽ',christ:'krist'};
 // Restituisce un array con una pronuncia per sillaba. syl = sillabe stampate (senza trattini); open = la parola continua oltre (a fine pagina)
 function frPronSyl(syl,open){
   const full=syl.join(''); const w=full.toLowerCase(); const n=w.length; const lowerSyl=syl.map(s=>s.toLowerCase());
@@ -25,6 +25,7 @@ function frPronSyl(syl,open){
   while(i<n){
     const c=w[i], r=w.slice(i), p=w[i-1]||''; let m;
     // vocali doppie (la nota seguente ripete la stessa vocale: "mo-ur" = mu · ur)
+    if((m=/^(ail|eil|euil|ouil)(l?e?s?)$/.exec(r))&&!open){ put(i,({ail:'aj',eil:'èj',euil:'öj',ouil:'uj'})[m[1]]); i=n; continue; }
     if((m=/^(eau|oeu|œu)/.exec(r))){ put(i,m[1]==='eau'?'o':'ö',m[1].length); i+=m[1].length; continue; }
     if((m=/^(oin)/.exec(r))&&nasalOk(i+3)){ put(i,'uẽ'); i+=3; continue; }
     if((m=/^(ain|aim|ein|eim)/.exec(r))&&nasalOk(i+3)){ put(i,'ẽ'); i+=3; continue; }

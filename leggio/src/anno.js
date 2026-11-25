@@ -55,7 +55,7 @@ const Anno = {
     let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('peek','eye','Leggi una parola: pronuncia e traduzione senza scrivere',this.mode==='peek')+t('chords','piano','Accordi e metronomo',this.mode==='chord')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('gif','image','GIF animate')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
     // Annulla / Ripeti sempre in vista nella barra in alto
@@ -68,7 +68,8 @@ const Anno = {
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
       else if(k==='trad') Lyr.open();
-      else if(['lasso','text','eraser','lyric','hand'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
+      else if(k==='chords') Chords.open();
+      else if(['lasso','text','eraser','lyric','hand','peek'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
@@ -104,6 +105,8 @@ const Anno = {
     if((this.mode==='text'||this.mode==='lyric')&&Finger.hitText(p)>=0){ this.live={t:'hand'}; Finger.down(p,this.mode); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
     if(this.mode==='lyric'){ LyricType.start(p); return; }
+    if(this.mode==='peek'){ Lyr.peek(p,e); return; }
+    if(this.mode==='chord'){ Chords.place(p); return; }
     if(this.mode==='hand'){ this.live={t:'hand'}; Finger.down(p); return; }
     if(this.mode==='lasso'){
       if(this.selBox && p[0]>=this.selBox.x0&&p[0]<=this.selBox.x1&&p[1]>=this.selBox.y0&&p[1]<=this.selBox.y1){ this.push(); this.live={t:'drag',from:p}; return; }
@@ -111,7 +114,7 @@ const Anno = {
     }
     const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
     if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
-    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
+    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); { const ni=this.strokes.length-1; setTimeout(()=>{ try{ Finger.openFor([ni]); }catch(e){} },40); } if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';

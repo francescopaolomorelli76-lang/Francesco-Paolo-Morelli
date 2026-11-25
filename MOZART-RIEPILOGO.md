@@ -158,6 +158,11 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - Bordi: il ritaglio è solo manuale (partenza = pagina intera, "Bordi automatici" a richiesta; `fixBox`, flag `cropAuto`). Maniglie con trascinamento relativo, senza saltare né ricrearsi durante il gesto.
 - `Fix.check` analizza una sola volta ogni pagina.
 
+## Lingue, accordi, respiro, tutto schermo (25 novembre 2026)
+- `langs.js`: tedesco rifatto (ee/ie/ei/eu/äu, h muta, z=ts, st/sp = sht/shp), francese unificato con `frPronSyl` (ail/eil/ill, eccezioni), inglese per musical e pop (dizionario ~300 voci + regole), russo (cirillico: я ю е ё = ia iu ie io, ай/ой/ей, ч, ь, desonorizzazione). Riconoscimento del cirillico in `detectLang`; OCR con rus/deu (Tesseract) e ru-RU (Vision, Swift).
+- `more.js`: Accordi e metronomo (tonalità riconosciuta → accordi della tonalità, con settima, sospesi, dominanti secondarie, prestiti; costruttore con basso; tempo "♩ = 90" modificabile), "Leggi una parola" (pronuncia e traduzione senza scrivere), Respiro (7 esercizi animati) in Per Cantanti, timer lavoro/pausa con Pausa/Riprendi e comandi in tutto schermo, tutto schermo istantaneo, alleggerimento dei PDF sopra 18 MB prima dell'import, testo e accordi (pop) → PDF.
+- Parole di tempo ed espressione: si inseriscono come testo e si apre subito la modifica. Dedica anche nella stella del copyright; apertura +2 s; barra strumenti più trasparente.
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

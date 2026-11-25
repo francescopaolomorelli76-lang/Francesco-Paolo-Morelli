@@ -239,7 +239,7 @@ async function readLyrics(st){
   const cx=cut.getContext('2d',{willReadFrequently:true}); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.imageSmoothingQuality='high'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height);
   cleanForOcr(cut,gapPx*k);
   if(st.x0!=null&&(st.x0>0||st.x1<1)){ const cc=cut.getContext('2d'); cc.fillStyle='#fff'; cc.fillRect(0,0,st.x0*cut.width,cut.height); cc.fillRect(st.x1*cut.width,0,cut.width,cut.height); }
-  let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+  let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(w.text));
   // righe di testo: si tiene quella con più lettere (prima: la più alta, e un segno sopra il testo faceva perdere tutta la riga)
   let band=[0,1];
   if(res.length&&res[0].y!=null){
@@ -260,7 +260,7 @@ async function readLyrics(st){
       const pad=Math.round(gapPx*k*.6), ax=Math.max(0,a-pad), bx=Math.min(CW,b+pad), z=1.7;
       const pc=document.createElement('canvas'); pc.width=Math.round((bx-ax)*z)+40; pc.height=Math.round((yb-ya)*z)+40; const px=pc.getContext('2d');
       px.fillStyle='#fff'; px.fillRect(0,0,pc.width,pc.height); px.imageSmoothingQuality='high'; px.drawImage(cut,ax,ya,bx-ax,yb-ya,20,20,pc.width-40,pc.height-40);
-      const got=(await ocrImage(pc)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+      const got=(await ocrImage(pc)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(w.text));
       for(const w of got){ const gx=(ax+(w.x*pc.width-20)/z)/CW, gw=w.w*pc.width/z/CW; extra.push({text:w.text,x:gx,w:gw,y:band[0],h:band[1]-band[0]}); }
     }
     if(extra.length){ res=res.concat(extra).sort((a,b)=>a.x-b.x); }
@@ -280,7 +280,7 @@ function ocrWarmup(){
   if(_ocrWorker) return _ocrWorker;
   _ocrWorker=(async()=>{
     if(!window.Tesseract) await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); });
-    const w=await Tesseract.createWorker('ita+fra+lat');
+    const w=await Tesseract.createWorker('ita+fra+lat+deu+rus');
     await w.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
     return w;
   })();
@@ -292,7 +292,7 @@ async function ocrBrowser(canvas){
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
   const Hh=canvas.height;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh,h:(x.bbox.y1-x.bbox.y0)/Hh}));
+  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh,h:(x.bbox.y1-x.bbox.y0)/Hh}));
 }
 
 // Bianco e nero netto e senza le linee orizzontali lunghe (estensioni delle sillabe "____"), che confondono la lettura.

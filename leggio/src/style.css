@@ -286,7 +286,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .compare{position:absolute;left:12px;top:12px;z-index:3}
 
 /* ---------- Modalità annotazione ---------- */
-#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(22,19,14,.2);-webkit-backdrop-filter:blur(5px) saturate(1.3);backdrop-filter:blur(5px) saturate(1.3);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(14,12,9,var(--annoA,.86));-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 #annobar.open{transform:none}
 .annoTop{display:flex;align-items:center;gap:8px;height:54px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 .annoTop .ttl{text-shadow:0 1px 3px rgba(0,0,0,.8);flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -662,3 +662,12 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .rsStage{display:grid;justify-items:center;position:relative;margin:10px 0}.rsStage svg{width:min(300px,72vw);height:auto}.rsTxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px;pointer-events:none}.rsTxt b{font-family:var(--f-display);font-size:26px;color:#1b1406;text-shadow:0 1px 8px rgba(255,255,255,.35)}.rsTxt span{font-size:22px;font-weight:700;color:#1b1406}.rsTxt small{font-size:12px;color:#1b1406;opacity:.75;margin-top:4px}
 #fsTimer{position:fixed;top:calc(env(safe-area-inset-top,0px) + 44px);left:50%;transform:translateX(-50%);z-index:26;display:flex;gap:6px;padding:4px 6px;background:rgba(18,15,10,.4)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:.75;transition:opacity .2s}#fsTimer:hover,#fsTimer:active{opacity:1}#fsTimer button{height:34px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:var(--gold-hi);font-weight:700;font-size:13px}
 body:not(.immersive) #fsTimer{display:none}
+
+/* barra di Annota: nome sotto le icone e guida */
+#annobar.lbl .atool{display:grid;grid-template-rows:auto auto;align-content:center;justify-items:center;gap:3px}
+#annobar.lbl .atool::after{content:attr(data-lbl);font-size:9.5px;font-weight:600;letter-spacing:.01em;line-height:1;color:var(--text);opacity:.9;white-space:nowrap}
+#annobar.lbl .toolFixed .atool{height:60px!important;width:54px!important}
+#annobar .atool{color:var(--gold-hi)}
+.guideGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}@media(max-width:620px){.guideGrid{grid-template-columns:1fr}}
+.gRow{display:flex;gap:12px;align-items:flex-start}.gRow b{font-size:15px}.gRow p{margin:2px 0 0;color:var(--muted);font-size:13.5px;line-height:1.35}
+.gIc{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(214,168,78,.14);color:var(--gold-hi)}.gIc svg{width:22px;height:22px}

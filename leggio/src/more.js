@@ -273,3 +273,20 @@ const ChordSheet = {
     }catch(e){ busy(); }
     if(!handled) return g0.call(this,raw); };
 })();
+
+// ---------- Barra di Annota: più scura, con il nome sotto ogni icona e una guida ----------
+const ANNO_LBL={hand:'Dito',stamps:'Segni',ruler:'Righello',lasso:'Lazo',text:'Testo',lyric:'Sillabe',trad:'Pronuncia',peek:'Parola',chords:'Accordi',eraser:'Gomma',clear:'Pulisci',gif:'GIF',layers:'Livelli',help:'Aiuto'};
+const ANNO_HELP=[['hand','Dito','Tocca un testo per cambiarlo, spostarlo o ingrandirlo.'],['clef','Segni','Dinamiche, chiavi, abbellimenti e parole di tempo (Allegro, dolce…).'],['ruler','Righello','Linee dritte.'],
+  ['lasso','Lazo','Seleziona e sposta. Sul testo: modifica, traslittera, traduci, evidenzia.'],['text','Testo','Scrivi con la tastiera dove tocchi.'],['voice','Sillabe','Scrivi le sillabe sotto le note o copia il testo stampato.'],
+  ['book','Pronuncia','Legge i versi stampati e scrive pronuncia e traduzione per ogni voce.'],['eye','Parola','Tocca una parola stampata: vedi pronuncia e traduzione, senza scrivere.'],['piano','Accordi','Accordi italiani e inglesi della tonalità e tempo metronomico (semiminima = 90).'],
+  ['eraser','Gomma','Cancella i tuoi segni.'],['trash','Pulisci','Cancella il livello della pagina (si può annullare).'],['image','GIF','Aggiungi GIF animate.'],['layers','Livelli','Un livello per il direttore e uno per te: si nascondono a piacere.']];
+Anno.labelBar=function(){ const bar=$('#annobar'); if(!bar) return; const s=ST.settings; document.documentElement.style.setProperty('--annoA',String(s.annoBarA??.86));
+  bar.classList.toggle('lbl',s.annoLabels!==false); $$('.atool',bar).forEach(b=>{ const l=ANNO_LBL[b.dataset.t]; if(l) b.dataset.lbl=l; }); };
+Anno.guide=function(){ closeLayers();
+  const m=modal('Cosa fa ogni pulsante',`<div class="hint" style="margin-bottom:10px">I <b>pennelli</b> sono a sinistra (penne, evidenziatore giallo fluo, bianchetto): tocca un pennello per sceglierlo, toccalo ancora per cambiare colore e spessore. Gli <b>strumenti</b> sono a destra:</div>
+    <div class="guideGrid">${ANNO_HELP.map(([ic,n,d])=>`<div class="gRow"><span class="gIc">${iconSvg(ic)}</span><div><b>${esc(n)}</b><p>${esc(d)}</p></div></div>`).join('')}</div>
+    <div class="hint" style="margin-top:12px">Annulla e Ripeti sono in alto a sinistra. Puoi scegliere quanto scura è la barra e se mostrare i nomi in <b>Impostazioni → Barra di Annota</b>.</div>`,
+    `<label class="swRow" style="margin-right:auto"><input type="checkbox" id="gNo"> Non mostrare più all'apertura</label><button class="goldBtn" data-ok>${iconSvg('check')}Ho capito</button>`,{eyebrow:'Annota'});
+  m.querySelector('[data-ok]').onclick=()=>{ if($('#gNo').checked){ ST.settings.annoGuide=false; saveSettings(); } closeLayers(); }; };
+(function(){ const b0=Anno.buildBar; Anno.buildBar=function(){ const r=b0.apply(this,arguments); try{ Anno.labelBar(); }catch(e){} return r; };
+  const e0=Anno.enter; Anno.enter=function(){ const r=e0.apply(this,arguments); if(ST.annotate&&ST.settings.annoGuide!==false&&(ST.settings.annoGuideN||0)<3){ ST.settings.annoGuideN=(ST.settings.annoGuideN||0)+1; saveSettings(); setTimeout(()=>{ if(ST.annotate&&!document.querySelector('.modal')) Anno.guide(); },500); } return r; }; })();

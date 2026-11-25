@@ -55,7 +55,7 @@ const Anno = {
     let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('peek','eye','Leggi una parola: pronuncia e traduzione senza scrivere',this.mode==='peek')+t('chords','piano','Accordi e metronomo',this.mode==='chord')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('peek','eye','Leggi una parola: pronuncia e traduzione senza scrivere',this.mode==='peek')+t('chords','piano','Accordi e metronomo',this.mode==='chord')+t('help','info','Cosa fa ogni pulsante')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('gif','image','GIF animate')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
     // Annulla / Ripeti sempre in vista nella barra in alto
@@ -69,6 +69,7 @@ const Anno = {
       else if(k==='stamps') this.openStamps();
       else if(k==='trad') Lyr.open();
       else if(k==='chords') Chords.open();
+      else if(k==='help') Anno.guide();
       else if(['lasso','text','eraser','lyric','hand','peek'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();

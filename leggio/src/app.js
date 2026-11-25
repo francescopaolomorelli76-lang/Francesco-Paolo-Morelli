@@ -567,6 +567,10 @@ function showSettings(){
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
     <div class="field"><label>Dimensione di pannelli e finestre (anche pizzicando con due dita)</label><div class="seg" id="setUiz">${[[.8,'Piccola'],[1,'Normale'],[1.2,'Grande'],[1.45,'Molto grande']].map(([v,l])=>`<button data-z="${v}" class="${Math.abs((s.uiz||1)-v)<.04?'on':''}">${l}</button>`).join('')}</div></div>
+    <div class="eyebrow" style="margin-top:6px">Barra di Annota</div>
+    <div class="sl"><span>Scurezza della barra (più scura = si legge meglio)<em id="abv">${Math.round((s.annoBarA??.86)*100)}%</em></span><input type="range" id="setAb" min="30" max="100" step="2" value="${Math.round((s.annoBarA??.86)*100)}" style="--v:${((s.annoBarA??.86)*100-30)/70*100}%"></div>
+    ${switchRow('setLbl','Nome sotto ogni icona',s.annoLabels!==false,'Così le funzioni si capiscono al volo.')}
+    ${switchRow('setGuide','Spiega i pulsanti quando apri Annota',s.annoGuide!==false,'Compare le prime volte; il punto interrogativo nella barra la richiama sempre.')}
     <div class="sl"><span>Durata della pressione sui bordi<em id="lpv">${s.longPress} ms</em></span><input type="range" id="setLp" min="250" max="1000" step="50" value="${s.longPress}" style="--v:${(s.longPress-250)/7.5}%"></div>
     <div class="hint">Tieni premuto sul <b>bordo alto</b> per la barra superiore, sul <b>bordo basso</b> per le pagine, a <b>sinistra</b> per la libreria e a <b>destra</b> per gli attrezzi.</div>`,
     `<button class="goldBtn" data-ok>${iconSvg('check')}Fatto</button>`);
@@ -575,6 +579,8 @@ function showSettings(){
   $('#setUiz').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;UIZoom.apply(+b.dataset.z);saveSettings();$$('#setUiz button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setTurn').onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;s.turnAnim=k!=='none';if(k!=='none')s.turnStyle=k;saveSettings();$$('#setTurn button').forEach(x=>x.classList.toggle('on',x===b))};
   $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
+  const ab=$('#setAb'); ab.oninput=()=>{ s.annoBarA=+ab.value/100; $('#abv').textContent=ab.value+'%'; ab.style.setProperty('--v',(ab.value-30)/70*100+'%'); saveSettings(); try{ Anno.labelBar(); }catch(e){} };
+  s.annoLabels=s.annoLabels!==false; s.annoGuide=s.annoGuide!==false; tg('setLbl','annoLabels',()=>{ try{ Anno.labelBar(); }catch(e){} }); tg('setGuide','annoGuide');
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
   m2.querySelector('[data-ok]').onclick=closeLayers;
 }

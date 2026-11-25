@@ -306,7 +306,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 .compare{position:absolute;left:12px;top:12px;z-index:3}
 
 /* ---------- Modalità annotazione ---------- */
-#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(22,19,14,.45);-webkit-backdrop-filter:blur(7px) saturate(1.4);backdrop-filter:blur(7px) saturate(1.4);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#annobar{position:absolute;top:0;left:0;right:0;z-index:25;background:rgba(22,19,14,.2);-webkit-backdrop-filter:blur(5px) saturate(1.3);backdrop-filter:blur(5px) saturate(1.3);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px);transform:translateY(-110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 #annobar.open{transform:none}
 .annoTop{display:flex;align-items:center;gap:8px;height:54px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
 .annoTop .ttl{text-shadow:0 1px 3px rgba(0,0,0,.8);flex:1;text-align:center;font-weight:700;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -670,6 +670,18 @@ body.topOn #miniClock{opacity:0;pointer-events:none}
 .clFlash{position:absolute;inset:0;background:#fff;opacity:.85;animation:clf .25s ease-out forwards;pointer-events:none}@keyframes clf{to{opacity:0}}
 #splash .memo{position:relative;max-width:min(84vw,520px);text-align:center;color:var(--gold-hi);opacity:.85;font-family:var(--f-display);font-style:italic;font-size:clamp(12.5px,1.8vw,15px);line-height:1.35;letter-spacing:.02em;animation:splashIn 1.1s .7s both}
 #scOv .handle,#pvOv .handle{touch-action:none}
+
+/* accordi, respiro, timer in tutto schermo, leggi parola */
+.wrapSeg{flex-wrap:wrap}.chKey{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.chKey label{display:flex;gap:8px;align-items:center;font-weight:600}.chKey select{height:40px;border-radius:10px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);padding:0 12px;font:inherit}
+.chGrp{margin-top:14px}.chRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chChip{display:inline-flex;flex-direction:column;align-items:center;min-width:64px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)}.chChip b{font-size:17px}.chChip small{font-size:11px;color:var(--muted)}.chChip:hover,.chChip:active{border-color:var(--gold);background:rgba(214,168,78,.16)}
+.chPrev{margin-top:16px;display:grid;gap:8px;justify-items:center;text-align:center;padding:16px;border:1px solid var(--line);border-radius:16px}.chBig{font-family:var(--f-display);font-size:44px;font-weight:700;color:var(--gold-hi)}
+.tmG{display:block;font-size:26px;line-height:1.1;font-family:"Noto Music",var(--f-display)}#tmNote button{display:grid;gap:2px;padding:6px 12px}#tmNote small{font-size:10px}
+.tmBpm{display:flex;gap:8px;align-items:center;margin:14px 0}.tmBpm input{width:90px;height:44px;text-align:center;font-size:22px;border-radius:10px;background:var(--panel-2);color:var(--text);border:1px solid var(--line)}.swRow{display:flex;gap:10px;align-items:center;margin:8px 0;font-size:15px}
+#chDock{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);z-index:60;display:flex;gap:10px;align-items:center;padding:8px 10px 8px 16px;font-size:14px;max-width:calc(100% - 20px)}
+.rsStage{display:grid;justify-items:center;position:relative;margin:10px 0}.rsStage svg{width:min(300px,72vw);height:auto}.rsTxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px;pointer-events:none}.rsTxt b{font-family:var(--f-display);font-size:26px;color:#1b1406;text-shadow:0 1px 8px rgba(255,255,255,.35)}.rsTxt span{font-size:22px;font-weight:700;color:#1b1406}.rsTxt small{font-size:12px;color:#1b1406;opacity:.75;margin-top:4px}
+#fsTimer{position:fixed;top:calc(env(safe-area-inset-top,0px) + 44px);left:50%;transform:translateX(-50%);z-index:26;display:flex;gap:6px;padding:4px 6px;background:rgba(18,15,10,.4)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:.75;transition:opacity .2s}#fsTimer:hover,#fsTimer:active{opacity:1}#fsTimer button{height:34px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:var(--gold-hi);font-weight:700;font-size:13px}
+body:not(.immersive) #fsTimer{display:none}
 
 </style>
 </head>
@@ -1792,7 +1804,8 @@ function offerDownload(blob,name,where){
 function showAbout(){
   modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><img src="fpm_seal.webp" alt="Sigillo FPM webdesignertech" style="width:140px;flex:none;filter:drop-shadow(0 0 18px rgba(214,168,78,.35))">
     <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM webdesignertech</div><div class="hint">Mozart · Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM webdesignertech · Tutti i diritti riservati.<br>Nome, marchio, icona e codice sono opera protetta: vietata la copia e la distribuzione senza autorizzazione.</div></div></div>
-    <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>`);
+    <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>
+    <div class="hint" style="font-family:var(--f-display);font-style:italic;text-align:center;margin-top:6px;color:var(--gold-hi)">In affettuosa memoria del caro collega e amico Francesco De Candia</div>`);
 }
 
 // ---------- Unisci spartiti ed esporta ----------
@@ -1881,8 +1894,8 @@ async function boot(){
   hydrateIcons();
   const splash=$('#splash'), t0=Date.now(); let gone=false;
   const hide=()=>{ if(gone) return; gone=true; splash.classList.add('out'); setTimeout(()=>{ if(splash.parentNode) splash.parentNode.removeChild(splash); },700); };
-  splash.addEventListener('click',hide); setTimeout(hide,6000);
-  boot.ready=()=>setTimeout(hide,Math.max(0,2300-(Date.now()-t0)));
+  splash.addEventListener('click',hide); setTimeout(hide,7000);
+  boot.ready=()=>setTimeout(hide,Math.max(0,3800-(Date.now()-t0)));
   try{ await document.fonts.load('40px "Noto Music"','\u{1D11E}'); await document.fonts.load('italic 600 20px "Bodoni Moda"','Allegro'); }catch(e){}
   if(!window.pdfjsLib||!window.PDFLib){ boot.ready(); $('#loading').insertAdjacentHTML('beforeend','<div style="margin-top:14px">Non riesco a caricare il lettore PDF. Controlla la connessione e riapri.</div>'); return; }
   try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; }catch(e){}
@@ -1952,7 +1965,7 @@ const Anno = {
     let h='<div class="presetScroll">'+this.presets.map((p,i)=>`<button class="preset${this.mode==='preset'&&this.sel===i?' on':''}" data-p="${i}" aria-label="Strumento ${i+1}"><canvas width="88" height="88"></canvas></button>`).join('');
     const t=(id,icon,label,on,dis)=>`<button class="atool${on?' on':''}${dis?' dis':''}" data-t="${id}" aria-label="${label}" title="${label}">${iconSvg(icon)}</button>`;
     const hs=this.hist[ST.page]||{u:[],r:[]};
-    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('eraser','eraser','Gomma',this.mode==='eraser')
+    h+=`</div><div class="toolFixed">`+t('hand','hand','Dito: tocca o sposta i testi',this.mode==='hand')+t('stamps','clef','Segni musicali',false)+t('ruler','ruler','Righello: linee dritte',this.ruler)+t('lasso','lasso','Lazo: seleziona e sposta',this.mode==='lasso')+t('text','text','Casella di testo',this.mode==='text')+t('lyric','voice','Testo sulle note',this.mode==='lyric')+t('trad','book','Pronuncia e traduzione dei versi stampati')+t('peek','eye','Leggi una parola: pronuncia e traduzione senza scrivere',this.mode==='peek')+t('chords','piano','Accordi e metronomo',this.mode==='chord')+t('eraser','eraser','Gomma',this.mode==='eraser')
       +t('clear','trash','Cancella la pagina')+t('gif','image','GIF animate')+t('layers','layers','Livelli')+'</div>';
     bar.innerHTML=h;
     // Annulla / Ripeti sempre in vista nella barra in alto
@@ -1965,7 +1978,8 @@ const Anno = {
       if(k==='ruler'){this.ruler=!this.ruler;toast(this.ruler?'Righello attivo: le linee vengono dritte':'Righello spento')}
       else if(k==='stamps') this.openStamps();
       else if(k==='trad') Lyr.open();
-      else if(['lasso','text','eraser','lyric','hand'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
+      else if(k==='chords') Chords.open();
+      else if(['lasso','text','eraser','lyric','hand','peek'].includes(k)){this.mode=this.mode===k?'preset':k;this.clearSel(); $('#fgBar')?.remove(); if(this.mode==='hand') toast('Dito: tocca una sillaba per cambiarla, trascina per spostare la riga',2800); if(this.mode==='lyric'){ ocrWarmup().catch(()=>{}); } if(this.mode==='lyric') toast('Tocca sotto un rigo: Mozart trova le note e ti fa scrivere sillaba dopo sillaba',3000); if(this.mode!=='lyric') LyricType.close();}
       else if(k==='clear'){ if(!this.strokes.length) return; this.push(); this.strokes=this.strokes.filter(s=>(s.layer||0)!==this.layer); this.redraw(); saveAnn(); toast('Livello della pagina cancellato · Annulla per ripristinare') }
       else if(k==='undo') this.undo(); else if(k==='redo') this.redo();
       else if(k==='layers') this.openLayers(b);
@@ -2001,6 +2015,8 @@ const Anno = {
     if((this.mode==='text'||this.mode==='lyric')&&Finger.hitText(p)>=0){ this.live={t:'hand'}; Finger.down(p,this.mode); return; }
     if(this.mode==='text'){ this.textAt(p); return; }
     if(this.mode==='lyric'){ LyricType.start(p); return; }
+    if(this.mode==='peek'){ Lyr.peek(p,e); return; }
+    if(this.mode==='chord'){ Chords.place(p); return; }
     if(this.mode==='hand'){ this.live={t:'hand'}; Finger.down(p); return; }
     if(this.mode==='lasso'){
       if(this.selBox && p[0]>=this.selBox.x0&&p[0]<=this.selBox.x1&&p[1]>=this.selBox.y0&&p[1]<=this.selBox.y1){ this.push(); this.live={t:'drag',from:p}; return; }
@@ -2008,7 +2024,7 @@ const Anno = {
     }
     const grab=this.grabEnd(p); if(grab){ this.push(); this.live={t:'reshape',...grab}; this.redraw(); return; }
     if(pr.k==='stamp' && pr.g && STRETCH[pr.g.v]){ this.live={t:'shape',shape:STRETCH[pr.g.v],a:[p[0],p[1]],b:[p[0],p[1]],w:Math.max(.0012,pr.size*.00007),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
-    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
+    if(pr.k==='stamp'&&pr.g&&pr.g.f==='i'&&typeof pr.g.c==='string'&&TEMPO_WORDS.has(pr.g.c)){ this.push(); this.strokes.push({t:'text',text:pr.g.c,x:p[0],y:p[1],size:clamp(pr.size*.00056*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),.008,.06),align:'c',font:'serif',italic:true,bold:false,color:pr.color,alpha:pr.alpha||1,layer:this.layer,expr:1}); this.redraw(); saveAnn(); this.buildBar(); { const ni=this.strokes.length-1; setTimeout(()=>{ try{ Finger.openFor([ni]); }catch(e){} },40); } if(!ST.settings.exprTip){ ST.settings.exprTip=1; saveSettings(); toast('Parola inserita: con il Dito ✋ la modifichi, la ingrandisci o la sposti',3600); } return; }
     if(pr.k==='stamp'){ this.live={t:'stamp',g:pr.g,x:p[0],y:p[1],size:pr.size*.0016*((ST.cur&&ST.cur.style&&ST.cur.style.stampK)||1),color:pr.color,alpha:pr.alpha,layer:this.layer}; this.redraw(); return; }
     if(pr.k==='shape'){ this.live={t:'shape',shape:pr.shape,a:[p[0],p[1]],b:[p[0],p[1]],w:this.W(pr),color:pr.color,alpha:pr.alpha,layer:this.layer}; return; }
     const pen=e.pointerType==='pen'&&pr.k==='pen';
@@ -3918,7 +3934,7 @@ async function readLyrics(st){
   const cx=cut.getContext('2d',{willReadFrequently:true}); cx.fillStyle='#fff'; cx.fillRect(0,0,cut.width,cut.height); cx.imageSmoothingQuality='high'; cx.drawImage(c,0,y0,W,y1-y0,0,0,cut.width,cut.height);
   cleanForOcr(cut,gapPx*k);
   if(st.x0!=null&&(st.x0>0||st.x1<1)){ const cc=cut.getContext('2d'); cc.fillStyle='#fff'; cc.fillRect(0,0,st.x0*cut.width,cut.height); cc.fillRect(st.x1*cut.width,0,cut.width,cut.height); }
-  let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+  let res=(await ocrImage(cut)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(w.text));
   // righe di testo: si tiene quella con più lettere (prima: la più alta, e un segno sopra il testo faceva perdere tutta la riga)
   let band=[0,1];
   if(res.length&&res[0].y!=null){
@@ -3939,7 +3955,7 @@ async function readLyrics(st){
       const pad=Math.round(gapPx*k*.6), ax=Math.max(0,a-pad), bx=Math.min(CW,b+pad), z=1.7;
       const pc=document.createElement('canvas'); pc.width=Math.round((bx-ax)*z)+40; pc.height=Math.round((yb-ya)*z)+40; const px=pc.getContext('2d');
       px.fillStyle='#fff'; px.fillRect(0,0,pc.width,pc.height); px.imageSmoothingQuality='high'; px.drawImage(cut,ax,ya,bx-ax,yb-ya,20,20,pc.width-40,pc.height-40);
-      const got=(await ocrImage(pc)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ]/.test(w.text));
+      const got=(await ocrImage(pc)).filter(w=>w&&w.text&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(w.text));
       for(const w of got){ const gx=(ax+(w.x*pc.width-20)/z)/CW, gw=w.w*pc.width/z/CW; extra.push({text:w.text,x:gx,w:gw,y:band[0],h:band[1]-band[0]}); }
     }
     if(extra.length){ res=res.concat(extra).sort((a,b)=>a.x-b.x); }
@@ -3959,7 +3975,7 @@ function ocrWarmup(){
   if(_ocrWorker) return _ocrWorker;
   _ocrWorker=(async()=>{
     if(!window.Tesseract) await new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Lettura del testo non disponibile senza internet')); document.head.appendChild(sc); });
-    const w=await Tesseract.createWorker('ita+fra+lat');
+    const w=await Tesseract.createWorker('ita+fra+lat+deu+rus');
     await w.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
     return w;
   })();
@@ -3971,7 +3987,7 @@ async function ocrBrowser(canvas){
   const w=await ocrWarmup(); busy('Leggo il testo stampato…');
   const {data}=await w.recognize(canvas); const W=canvas.width;
   const Hh=canvas.height;
-  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh,h:(x.bbox.y1-x.bbox.y0)/Hh}));
+  return (data.words||[]).filter(x=>x.text&&x.confidence>8&&/[A-Za-zÀ-ÿ\u0400-\u04FF]/.test(x.text)).map(x=>({text:x.text,x:x.bbox.x0/W,w:(x.bbox.x1-x.bbox.x0)/W,y:x.bbox.y0/Hh,h:(x.bbox.y1-x.bbox.y0)/Hh}));
 }
 
 // Bianco e nero netto e senza le linee orizzontali lunghe (estensioni delle sillabe "____"), che confondono la lettura.
@@ -6122,7 +6138,7 @@ const FR_SPECIAL={et:'è',est:'è',es:'è',les:'lè',des:'dè',mes:'mè',tes:'t�
   qui:'ki',un:'ẽ',nous:'nu',vous:'vu',tout:'tu',fils:'fis',dieu:'diö',christ:'krist',sois:'suà',jour:'žur',ciel:'siel',cieux:'siö',yeux:'iö',oui:'uì',
   la:'la',ma:'ma',ta:'ta',sa:'sa',pas:'pa',par:'par',pour:'pur',sur:'sür',sous:'su',dans:'dã',avec:'avèk',mais:'mè',où:'u',ou:'u',à:'a',au:'o',aux:'o',du:'dü',
   son:'sõ',mon:'mõ',ton:'tõ',en:'ã',on:'õ',ai:'è',as:'a',a:'a',il:'il',elle:'èl',ils:'il',tu:'tü',toi:'tua',moi:'mua',lui:'lüi',eux:'ö',coeur:'kör',cœur:'kör',sœur:'sör',
-  oeil:'öj',œil:'öj',oeuvre:'övr',œuvre:'övr',amen:'amèn',alleluia:'alelüia'};
+  oeil:'öj',œil:'öj',oeuvre:'övr',œuvre:'övr',amen:'amèn',alleluia:'alelüia',fille:'fij',filles:'fij',famille:'famij',ville:'vil',mille:'mil',tranquille:'trãkil',chœur:'kör',choeur:'kör',chrétien:'kretiẽ',christ:'krist'};
 // Restituisce un array con una pronuncia per sillaba. syl = sillabe stampate (senza trattini); open = la parola continua oltre (a fine pagina)
 function frPronSyl(syl,open){
   const full=syl.join(''); const w=full.toLowerCase(); const n=w.length; const lowerSyl=syl.map(s=>s.toLowerCase());
@@ -6138,6 +6154,7 @@ function frPronSyl(syl,open){
   while(i<n){
     const c=w[i], r=w.slice(i), p=w[i-1]||''; let m;
     // vocali doppie (la nota seguente ripete la stessa vocale: "mo-ur" = mu · ur)
+    if((m=/^(ail|eil|euil|ouil)(l?e?s?)$/.exec(r))&&!open){ put(i,({ail:'aj',eil:'èj',euil:'öj',ouil:'uj'})[m[1]]); i=n; continue; }
     if((m=/^(eau|oeu|œu)/.exec(r))){ put(i,m[1]==='eau'?'o':'ö',m[1].length); i+=m[1].length; continue; }
     if((m=/^(oin)/.exec(r))&&nasalOk(i+3)){ put(i,'uẽ'); i+=3; continue; }
     if((m=/^(ain|aim|ein|eim)/.exec(r))&&nasalOk(i+3)){ put(i,'ẽ'); i+=3; continue; }
@@ -6389,6 +6406,93 @@ const Lyr = {
   },
 };
 
+// ============ Lingue della pronuncia: tedesco, francese, inglese (musical e pop) e russo ============
+// Le regole seguono la dizione lirica standard (IPA per cantanti): dittonghi e vocali lunghe come si cantano.
+// Fonti di riferimento: Wall, "Diction for Singers"; Moriarty, "Diction"; LaBouff, "Singing and Communicating in English";
+// Coffin/Singher per il francese; Cyrillic Diction guides per il russo. Da ricontrollare con un madrelingua prima dell'uso in concerto.
+
+// ---------- Tedesco ----------
+RULES.de=function(w){ let s=String(w).toLowerCase().replace(/ß/g,'ss');
+  s=s.replace(/tsch/g,'C').replace(/sch/g,'S').replace(/^st/,'sht').replace(/^sp/,'shp').replace(/chs/g,'ks');
+  s=s.replace(/ck/g,'K').replace(/qu/g,'Kv').replace(/ph/g,'f').replace(/th/g,'t').replace(/dt/g,'t').replace(/tz/g,'ts').replace(/z/g,'ts');
+  s=s.replace(/(a|o|u)ch/g,'$1kh').replace(/^ch/,'K').replace(/ch/g,'ç');
+  // dittonghi: ei/ai = "ai", eu/äu = "oi", au = "au"
+  s=s.replace(/äu|eu/g,'oi').replace(/ei|ai|ey|ay/g,'ai');
+  // vocali lunghe: ie = i lunga; aa/ee/oo si leggono una sola volta; h dopo vocale non si sente
+  s=s.replace(/ie/g,'i').replace(/aa/g,'a').replace(/ee/g,'e').replace(/oo/g,'o').replace(/([aeiouäöü])h/g,'$1');
+  s=s.replace(/ä/g,'è').replace(/y/g,'ü');
+  s=s.replace(/^v/,'f').replace(/v/g,'f').replace(/w/g,'v').replace(/j/g,'i');
+  s=s.replace(/ig$/,'iç').replace(/b$/,'p').replace(/d$/,'t').replace(/g$/,'K').replace(/d(?=[st])/g,'t');
+  s=s.replace(/ss/g,'s').replace(/([bdfgklmnprt])\1/g,'$1');                 // il tedesco non raddoppia le consonanti
+  s=s.replace(/c/g,'K').replace(/k(?!h)/g,'K').replace(/g/g,'G');
+  return itOrtho(s); };
+
+// ---------- Francese: lo stesso motore che allinea le sillabe stampate ----------
+(function(){ const old=RULES.fr; RULES.fr=function(w){ try{ if(typeof frPronSyl==='function') return frPronSyl([String(w).replace(/’/g,"'")],false)[0]; }catch(e){} return old(w); }; })();
+
+// ---------- Inglese (musical, pop) ----------
+const EN_DICT={the:'de',a:'e',an:'en',and:'end',or:'or',of:'ov',to:'tu',in:'in',on:'on',at:'et',is:'is',it:'it',its:'its',be:'bi',been:'bin',are:'ar',was:'uoz',were:'uer',am:'em',i:'ai',you:'iu',your:'ior',yours:'iors',he:'hi',she:'sci',we:'ui',they:'dei',them:'dem',their:'der',this:'dis',that:'det',these:'diz',those:'doz',there:'der',here:'hier',where:'uer',what:'uot',when:'uen',why:'uai',who:'hu',how:'hau',which:'uic',my:'mai',me:'mi',mine:'main',our:'auar',us:'as',his:'hiz',her:'her',him:'him',
+  love:'lav',heart:'hart',hearts:'harts',life:'laif',night:'nait',light:'lait',day:'dei',days:'deiz',way:'uei',say:'sei',stay:'stei',play:'plei',away:'euei',baby:'beibi',know:'no',show:'sciò',go:'go',going:'going',gonna:'gona',wanna:'uona',gotta:'gota',now:'nau',down:'daun',town:'taun',out:'aut',about:'ebaut',around:'eraund',sound:'saund',found:'faund',ground:'graund',
+  dream:'drim',dreams:'drims',believe:'biliv',forever:'forever',tonight:'tunait',together:'tughedher',again:'eghen',because:'bicoz',people:'pipol',through:'tru',thought:'tot',though:'do',tough:'taf',enough:'inaf',rough:'raf',could:'cud',would:'ud',should:'scud',one:'uan',once:'uans',only:'onli',never:'never',ever:'ever',every:'evri',everything:'evritin',something:'samtin',nothing:'natin',anything:'enitin',
+  world:'uorld',word:'uord',words:'uords',work:'uork',girl:'gherl',boy:'boi',man:'men',woman:'umen',women:'uimen',mother:'madher',father:'fadher',brother:'bradher',sister:'sister',friend:'frend',friends:'frends',home:'hom',house:'haus',door:'dor',floor:'flor',more:'mor',before:'bifor',
+  sing:'sing',song:'song',songs:'songs',music:'miuzic',voice:'vois',sky:'scai',sun:'san',moon:'mun',star:'star',stars:'stars',rain:'rein',sea:'si',ocean:'oscen',river:'river',mountain:'mauntin',fire:'faier',water:'uoter',wind:'uind',
+  hold:'hold',keep:'kip',take:'teik',make:'meik',give:'ghiv',live:'liv',lives:'livz',leave:'liv',feel:'fil',feeling:'filing',tell:'tel',call:'col',fall:'fol',all:'ol',tall:'tol',small:'smol',walk:'uok',talk:'tok',
+  yes:'ies',no:'no',not:'not',don:'don',dont:'dont',cant:'cant',wont:'uont',will:'uil',can:'chen',may:'mei',must:'mast',shall:'scel',do:'du',does:'daz',did:'did',done:'dan',have:'hev',has:'hez',had:'hed',get:'ghet',got:'ghot',come:'cam',came:'keim',see:'si',saw:'so',seen:'sin',look:'luk',want:'uont',need:'nid',let:'let',put:'put',
+  good:'gud',bad:'bed',new:'niu',old:'old',young:'iang',high:'hai',low:'lo',long:'long',free:'fri',true:'tru',real:'ril',sweet:'suit',beautiful:'biutiful',wonderful:'uanderful',amazing:'emeizing',
+  christmas:'crismas',jesus:'gisas',lord:'lord',god:'god',heaven:'heven',angel:'einghel',angels:'einghels',holy:'holi',pray:'prei',peace:'pis',joy:'gioi',
+  oh:'o',ooh:'u',yeah:'ie',hey:'hei',la:'la',na:'na',mm:'mm',ah:'a',uh:'a',whoa:'uo',
+  one:'uan',two:'tu',three:'tri',four:'for',five:'faiv',ten:'ten',first:'ferst',last:'last',time:'taim',times:'taimz',year:'ier',years:'iers',
+  rock:'roc',roll:'rol',dance:'dens',dancing:'densing',party:'parti',money:'mani',city:'siti',street:'strit',road:'rod',car:'car',blue:'blu',red:'red',black:'blec',white:'uait',green:'grin',gold:'gold',
+  mercy:'mersi',grace:'greis',soul:'sol',spirit:'spirit',save:'seiv',saved:'seivd',lost:'lost',found:'faund',alive:'elaiv',die:'dai',death:'det',cry:'crai',tears:'tiers',smile:'smail',laugh:'laf',kiss:'chis',touch:'tac',eyes:'aiz',eye:'ai',hand:'hend',hands:'hends',face:'feis',mind:'maind',body:'bodi',
+  somebody:'sambodi',someone:'samuan',everyone:'evriuan',nobody:'nobodi',without:'uidaut',within:'uidin',into:'intu',onto:'ontu',over:'over',under:'ander',up:'ap',off:'of',if:'if',so:'so',but:'bat',just:'giast',like:'laik',than:'den',then:'den',too:'tu',very:'veri',much:'mac',many:'meni',some:'sam',any:'eni',other:'adher',another:'enadher',own:'on',
+  from:'from',with:'uid',for:'for',by:'bai',as:'ez',off:'of','ill':'il',im:'aim',ive:'aiv',youre:'iur',youve:'iuv',youll:'iul',hes:'hiz',shes:'scis',theyre:'der',weve:'uiv',thats:'dets',whats:'uots',lets:'lets'};
+RULES.en=function(w){ let s=String(w).toLowerCase().replace(/’/g,"'").replace(/'/g,'');
+  if(EN_DICT[s]) return EN_DICT[s];
+  // suffissi frequenti
+  if(/ation$/.test(s)) s=s.replace(/ation$/,'eiSn'); else if(/tion$/.test(s)) s=s.replace(/tion$/,'Sn'); if(/sion$/.test(s)) s=s.replace(/sion$/,'Jn'); if(/ture$/.test(s)) s=s.replace(/ture$/,'Cer');
+  s=s.replace(/ing$/,'ing').replace(/ed$/,m=>'d');
+  s=s.replace(/igh/g,'ai').replace(/eigh/g,'ei').replace(/ough$/,'o').replace(/augh/g,'af').replace(/ought/g,'ot');
+  s=s.replace(/ai|ay/g,'ei').replace(/oa/g,'o').replace(/ow$/,'au').replace(/ou/g,'au').replace(/ew/g,'iu').replace(/oy|oi/g,'oi').replace(/ee|ea/g,'i').replace(/oo/g,'u').replace(/ie$/,'ai').replace(/ey$/,'i');
+  s=s.replace(/wh/g,'u').replace(/kn/g,'n').replace(/wr/g,'r').replace(/gn$/,'n').replace(/mb$/,'m').replace(/ph/g,'f').replace(/gh/g,'').replace(/th/g,'d');
+  s=s.replace(/sh/g,'S').replace(/tch|ch/g,'C').replace(/ck/g,'K').replace(/qu/g,'Kv').replace(/dge/g,'J');
+  s=s.replace(/([^aeiou])y$/,'$1i').replace(/^y(?=[aeiou])/,'i').replace(/w/g,'u').replace(/j/g,'J');
+  s=s.replace(/([aeiou])([^aeiou])e$/,(m,v,c)=>({a:'ei',e:'i',i:'ai',o:'o',u:'iu'})[v]+c);       // vocale lunga con "e" muta: make, time
+  s=s.replace(/([^aeiou])e$/,'$1').replace(/er$/,'er').replace(/ar(?![aeiou])/g,'ar').replace(/(ir|ur)(?![aeiou])/g,'er');
+  s=s.replace(/g(?=[ei])/g,'J').replace(/c(?=[eiy])/g,'s').replace(/c/g,'K').replace(/k/g,'K').replace(/g/g,'G').replace(/x/g,'ks').replace(/z/g,'z');
+  s=s.replace(/Sn$/,'scon').replace(/Jn$/,'gion').replace(/Cer$/,'cer');
+  s=s.replace(/([bdfgklmnprstvz])\1/g,'$1');
+  return itOrtho(s); };
+
+// ---------- Russo (cirillico) ----------
+const RU_C={'б':'b','в':'v','г':'g','д':'d','ж':'ž','з':'z','к':'k','л':'l','м':'m','н':'n','п':'p','р':'r','с':'s','т':'t','ф':'f','х':'h','ц':'ts','ч':'c','ш':'sh','щ':'shch'};
+const RU_PLAIN={'а':'a','о':'o','у':'u','э':'e','ы':'ï','и':'i'}, RU_IOT={'я':'ia','ю':'iu','е':'ie','ё':'io'}, RU_DEV={b:'p',v:'f',g:'k',d:'t','ž':'sh',z:'s'};
+const RU_VOICELESS='кпстфхцчшщ', RU_VOICED='бвгджз', RU_HARD='жшц';
+const RU_EX={'здравствуйте':'zdrastvuiti','здравствуй':'zdrastvui','солнце':'sontse','сердце':'sertse','что':'scto','чтобы':'sctobi','сегодня':'sievodnia','господи':'gospodi','боже':'bozhe'};
+// Dittonghi e iotizzate: я ю е ё = ia iu ie io (la consonante davanti si ammorbidisce); ай ой ей уй = ai oi iei ui; ч = "ci" davanti a a/o/u
+RULES.ru=function(w){ const ch=[...String(w).toLowerCase()]; let out='';
+  const isV=c=>c in RU_PLAIN||c in RU_IOT||c==='й';
+  for(let i=0;i<ch.length;i++){ const c=ch[i], p=ch[i-1]||'', n=ch[i+1]||'';
+    if(c==='ъ') continue;
+    if(c==='ь'){ if(!n||(n in RU_C)) out+="'"; continue; }
+    if(c==='й'){ out+=(p in RU_PLAIN||p in RU_IOT)?'i':'j'; continue; }
+    if(c in RU_PLAIN){ out+=(c==='и'&&p&&RU_HARD.includes(p))?'ï':RU_PLAIN[c]; continue; }
+    if(c in RU_IOT){ if(p&&RU_HARD.includes(p)) out+=({'е':'e','ё':'o','я':'a','ю':'u'})[c]; else out+=RU_IOT[c]; continue; }
+    if(c in RU_C){ let o=RU_C[c];
+      if(c==='г'&&n==='о'&&/[ео]го$/.test(ch.slice(Math.max(0,i-1)).join(''))) o='v';           // -ого, -его: "g" si dice "v"
+      if(c==='ч'&&(n==='а'||n==='о'||n==='у')) o='ci';
+      const devoice=!n||(RU_VOICED.includes(c)&&RU_VOICELESS.includes(n)); if(devoice&&RU_DEV[o]) o=RU_DEV[o];  // consonanti sonore: a fine parola o davanti a sorda diventano sorde
+      out+=o; continue; }
+    out+=c; }
+  out=out.replace(/tts/g,'ts').replace(/dts/g,'ts'); if(RU_EX[String(w).toLowerCase()]) return RU_EX[String(w).toLowerCase()];
+  return out; };
+
+// ---------- collegamento alle lingue e al riconoscimento ----------
+PRON.ru=w=>RULES.ru(w); PRON.names.ru='Russo (cirillico)';
+if(typeof TR_NAMES!=='undefined') TR_NAMES.ru='Russo';
+PRON.conv=function(text,lang){ return String(text).replace(/[A-Za-zÀ-ÿßæœА-Яа-яЁё]+/g,w=>{ const r=this[lang](w); return w[0]===w[0].toUpperCase()&&w[0]!==w[0].toLowerCase()?r.charAt(0).toUpperCase()+r.slice(1):r; }); };
+(function(){ const d0=detectLang; detectLang=function(text){ const t=String(text); const cy=(t.match(/[А-Яа-яЁё]/g)||[]).length, la=(t.match(/[A-Za-zÀ-ÿ]/g)||[]).length; if(cy>=2&&cy>la) return 'ru'; return d0(text); }; })();
+const LETTER_RE=/[A-Za-zÀ-ÿЀ-ӿ]/;
+
 // ============ Tavolozza completa: ogni tonalità e sfumatura, ovunque ci siano i colori rapidi ============
 // Si aggiunge da sola ai pannelli colore (pennello, evidenziatore, forme, segni, testo): le caselle hanno data-c come i colori rapidi.
 const PAL_IDS=['bSw','hlNeon','shSw','spSw','tbCol'];
@@ -6581,6 +6685,282 @@ const WebImport = {
     }catch(e){ busy(); toast((window.MozartNative&&MozartNative.download)?'Download non riuscito: controlla l\'indirizzo e la connessione':'Il sito non permette il download dal browser: scaricalo e usa Importa → PDF dai File',5200); }
   },
 };
+
+// ============ Accordi e metronomo · Leggi una parola · Respiro · Timer in tutto schermo · Alleggerisci PDF · Testo e accordi dal web ============
+
+// ---------- Accordi italiani/inglesi: tonalità riconosciuta → tutti gli accordi da inserire ----------
+const CHORD_IT=['Do','Re','Mi','Fa','Sol','La','Si'], CHORD_EN=['C','D','E','F','G','A','B'], NAT=[0,2,4,5,7,9,11];
+const PC_SH=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'], PC_FL=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const IT_FROM_EN={C:'Do',D:'Re',E:'Mi',F:'Fa',G:'Sol',A:'La',B:'Si'};
+const CH_Q=[ // [suffisso, intervalli, nome]
+  ['',[0,4,7],'maggiore'],['m',[0,3,7],'minore'],['7',[0,4,7,10],'settima di dominante'],['maj7',[0,4,7,11],'settima maggiore'],['m7',[0,3,7,10],'minore settima'],
+  ['dim',[0,3,6],'diminuito'],['m7♭5',[0,3,6,10],'semidiminuito'],['dim7',[0,3,6,9],'settima diminuita'],['aug',[0,4,8],'aumentato'],
+  ['sus4',[0,5,7],'sospeso 4'],['sus2',[0,2,7],'sospeso 2'],['7sus4',[0,5,7,10],'7 sospeso'],['6',[0,4,7,9],'sesta'],['m6',[0,3,7,9],'minore sesta'],
+  ['add9',[0,4,7,14],'con nona aggiunta'],['9',[0,4,7,10,14],'nona'],['maj9',[0,4,7,11,14],'nona maggiore'],['m9',[0,3,7,10,14],'minore nona'],['m(maj7)',[0,3,7,11],'minore con settima maggiore']];
+const MAJ_SCALE=[0,2,4,5,7,9,11], MIN_SCALE=[0,2,3,5,7,8,10];
+const ROMAN_MAJ=['I','ii','iii','IV','V','vi','vii°'], ROMAN_MIN=['i','ii°','III','iv','v','VI','VII'];
+const Chords = {
+  tonic:0, minor:false, lang:'it', tab:'key', pending:null, root:0, qual:0, bass:-1, note:'q', bpm:90, tname:false,
+  flats(){ const fl=this.minor?[2,7,0,5,10,3,8]:[5,10,3,8,1,6]; return fl.includes(this.tonic)&&!(this.minor?false:false); },
+  nm(pc,useFlat){ const base=(useFlat?PC_FL:PC_SH)[((pc%12)+12)%12]; return this.lang==='it'?base.replace(/^[A-G]/,m=>IT_FROM_EN[m]):base; },
+  // tonalità scritta nello spartito: "Do maggiore", "Mi bemolle minore", "C major", "Am"
+  parseKey(str){ if(!str) return null; const t=String(str).trim(); let m=t.match(/^(do|re|mi|fa|sol|la|si)\s*(diesis|bemolle|#|♯|b|♭)?\s*(maggiore|minore|magg|min|m)?/i);
+    let name,acc,mode; if(m){ name=IT_FROM_EN&&Object.keys(IT_FROM_EN).find(k=>IT_FROM_EN[k].toLowerCase()===m[1].toLowerCase()); acc=m[2]; mode=m[3]; }
+    else{ m=t.match(/^([A-Ga-g])\s*(#|♯|b|♭|sharp|flat)?\s*(major|minor|maj|min|m|M)?/); if(!m) return null; name=m[1].toUpperCase(); acc=m[2]; mode=m[3]; if(mode==='m'||/^min/i.test(mode||'')) mode='minore'; else if(!mode&&m[1]===m[1].toLowerCase()) mode='minore'; }
+    if(!name) return null; let pc=NAT['CDEFGAB'.indexOf(name)]; if(acc&&/diesis|#|♯|sharp/i.test(acc)) pc++; if(acc&&/bemolle|♭|flat|^b$/i.test(acc)) pc--; return {tonic:((pc%12)+12)%12,minor:/^(minore|min|m)$/i.test(mode||'')||/^min/i.test(mode||'')}; },
+  useFlats(){ const t=this.tonic; return this.minor?[2,7,0,5,10,3,8].includes(t):[5,10,3,8,1,6].includes(t); },
+  chordName(root,suf,bass,fl){ return this.nm(root,fl)+suf+(bass!=null&&bass>=0&&bass%12!==root%12?'/'+this.nm(bass,fl):''); },
+  notes(root,iv,fl){ return iv.map(i=>this.nm(root+i,fl)).join(' · '); },
+  // tutti gli accordi utili della tonalità
+  groups(){ const fl=this.useFlats(), sc=(this.minor?MIN_SCALE:MAJ_SCALE).map(i=>(this.tonic+i)%12), rom=this.minor?ROMAN_MIN:ROMAN_MAJ;
+    const tri=this.minor?['m','dim','','m','m','','']:['','m','m','','','m','dim'], sev=this.minor?['m7','m7♭5','maj7','m7','m7','maj7','7']:['maj7','m7','m7','maj7','7','m7','m7♭5'];
+    const mk=(root,suf,label)=>({n:this.chordName(root,suf,-1,fl),r:label||'',notes:this.notes(root,CH_Q.find(q=>q[0]===suf)[1],fl)});
+    const G=[]; G.push({t:'Accordi della tonalità',l:sc.map((r,i)=>mk(r,tri[i],rom[i]))});
+    G.push({t:'Con la settima',l:sc.map((r,i)=>mk(r,sev[i],rom[i]+'7'))});
+    if(this.minor) G.push({t:'Minore armonico',l:[mk(sc[4],'','V'),mk(sc[4],'7','V7'),mk(sc[6]+1,'dim','vii°'),mk(sc[6]+1,'dim7','vii°7')]});
+    else G.push({t:'Sospesi, sesta e nona',l:[mk(sc[0],'sus2','Isus2'),mk(sc[0],'sus4','Isus4'),mk(sc[0],'6','I6'),mk(sc[0],'add9','Iadd9'),mk(sc[3],'add9','IVadd9'),mk(sc[4],'sus4','Vsus4'),mk(sc[4],'7sus4','V7sus4'),mk(sc[4],'9','V9'),mk(sc[0],'maj9','Imaj9'),mk(sc[1],'m9','iim9')]});
+    G.push({t:'Dominanti secondarie',l:[1,2,3,4,5].filter(d=>!(this.minor&&d===1)).map(d=>{ const target=sc[d]; return mk((target+7)%12,'7','V7/'+rom[d].replace('°','')); })});
+    G.push({t:this.minor?'Prestiti e colore':'Prestiti dal modo minore',l:this.minor?[mk(sc[3],'','IV'),mk(sc[0],'','I (Picardia)'),mk((this.tonic+1)%12,'','♭II napoletano')]:[mk((this.tonic+10)%12,'','♭VII'),mk((this.tonic+8)%12,'','♭VI'),mk((this.tonic+3)%12,'','♭III'),mk(sc[3],'m','iv'),mk(sc[3],'m6','iv6'),mk((this.tonic+1)%12,'','♭II napoletano')]});
+    return G; },
+  open(tab){
+    if(!ST.cur) return toast('Apri prima uno spartito');
+    if(tab) this.tab=tab; const pk=this.parseKey(ST.cur.key); if(pk&&!this._set){ this.tonic=pk.tonic; this.minor=pk.minor; }
+    const fl=this.useFlats();
+    const keyNames=Array.from({length:12},(_,i)=>`<option value="${i}"${i===this.tonic?' selected':''}>${this.nm(i,[1,3,6,8,10].includes(i)?!this.minor?true:[0,5,10,3,8,1].includes(i)&&false:false)}</option>`).join('');
+    const m=modal('Accordi e metronomo',`<div class="seg" id="chTab"><button data-t="key" class="${this.tab==='key'?'on':''}">Nella tonalità</button><button data-t="build" class="${this.tab==='build'?'on':''}">Costruisci</button><button data-t="tempo" class="${this.tab==='tempo'?'on':''}">Tempo metronomico</button></div>
+      <div id="chBody"></div>`,null,{eyebrow:'Annota',id:'chordM'});
+    m.querySelector('#chTab').onclick=e=>{ const b=e.target.closest('[data-t]'); if(b){ this.tab=b.dataset.t; this.draw(m); } };
+    this.draw(m);
+  },
+  draw(m){
+    $$('#chTab button',m).forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab)); const B=$('#chBody',m), fl=this.useFlats();
+    const langSeg=`<div class="seg" id="chLang"><button data-l="it" class="${this.lang==='it'?'on':''}">Italiano · Do Re Mi</button><button data-l="en" class="${this.lang==='en'?'on':''}">Inglese · C D E</button></div>`;
+    const hook=()=>{ const L=$('#chLang',m); if(L) L.onclick=e=>{ const b=e.target.closest('[data-l]'); if(b){ this.lang=b.dataset.l; this.draw(m); } }; };
+    const chips=l=>l.map(c=>`<button class="chChip" data-n="${esc(c.n)}" title="${esc(c.notes)}"><b>${esc(c.n)}</b>${c.r?`<small>${esc(c.r)}</small>`:''}</button>`).join('');
+    if(this.tab==='key'){
+      const found=this.parseKey(ST.cur.key);
+      const tonics=Array.from({length:12},(_,i)=>`<option value="${i}"${i===this.tonic?' selected':''}>${this.nm(i,this.useFlats())}</option>`).join('');
+      B.innerHTML=`<div class="hint" style="margin:8px 0">${found?`Tonalità dello spartito riconosciuta: <b>${esc(ST.cur.key)}</b>. Puoi cambiarla qui sotto.`:`Nessuna tonalità scritta nello spartito: scegli quella giusta.`}</div>
+        ${langSeg}<div class="chKey"><label>Tonalità<select id="chTon">${tonics}</select></label><div class="seg" id="chMode"><button data-m="0" class="${!this.minor?'on':''}">maggiore</button><button data-m="1" class="${this.minor?'on':''}">minore</button></div></div>
+        ${this.groups().map(g=>`<div class="chGrp"><div class="eyebrow">${esc(g.t)}</div><div class="chRow">${chips(g.l)}</div></div>`).join('')}
+        <div class="hint">Tocca un accordo, poi tocca la pagina dove metterlo. Con il Dito ✋ lo sposti, lo cambi e lo ingrandisci.</div>`;
+      B.onclick=e=>{ const c=e.target.closest('.chChip'); if(c) this.pick(c.dataset.n); };
+      hook(); $('#chTon',B).onchange=e=>{ this.tonic=+e.target.value; this._set=1; this.draw(m); }; $('#chMode',B).onclick=e=>{ const b=e.target.closest('[data-m]'); if(b){ this.minor=b.dataset.m==='1'; this._set=1; this.draw(m); } };
+    } else if(this.tab==='build'){
+      const roots=Array.from({length:12},(_,i)=>`<button data-r="${i}" class="${this.root===i?'on':''}">${this.nm(i,fl)}</button>`).join('');
+      const q=CH_Q[this.qual]; const name=this.chordName(this.root,q[0],this.bass,fl);
+      B.innerHTML=`${langSeg}<div class="eyebrow" style="margin-top:12px">Nota di base</div><div class="seg wrapSeg" id="chRoot">${roots}</div>
+        <div class="eyebrow" style="margin-top:12px">Specie</div><div class="seg wrapSeg" id="chQual">${CH_Q.map((x,i)=>`<button data-q="${i}" class="${this.qual===i?'on':''}">${x[0]||'maggiore'}</button>`).join('')}</div>
+        <div class="eyebrow" style="margin-top:12px">Basso (rivolto, facoltativo)</div><div class="seg wrapSeg" id="chBass"><button data-b="-1" class="${this.bass<0?'on':''}">nessuno</button>${Array.from({length:12},(_,i)=>`<button data-b="${i}" class="${this.bass===i?'on':''}">${this.nm(i,fl)}</button>`).join('')}</div>
+        <div class="chPrev"><div class="chBig">${esc(name)}</div><div class="hint">${esc(q[2])} · ${esc(this.notes(this.root,q[1],fl))}</div><button class="goldBtn" id="chUse">${iconSvg('plus')}Inserisci ${esc(name)}</button></div>`;
+      hook(); $('#chRoot',B).onclick=e=>{ const b=e.target.closest('[data-r]'); if(b){ this.root=+b.dataset.r; this.draw(m); } }; $('#chQual',B).onclick=e=>{ const b=e.target.closest('[data-q]'); if(b){ this.qual=+b.dataset.q; this.draw(m); } }; $('#chBass',B).onclick=e=>{ const b=e.target.closest('[data-b]'); if(b){ this.bass=+b.dataset.b; this.draw(m); } };
+      $('#chUse',B).onclick=()=>this.pick(name);
+    } else {
+      const names=[['Largo',40],['Adagio',66],['Andante',76],['Moderato',108],['Allegro',120],['Vivace',156],['Presto',176],['Prestissimo',200]], tn=()=>{ let r='Largo'; for(const [n,b] of names) if(this.bpm>=b) r=n; return r; };
+      const notes=[['w','𝅝','semibreve',0x1D15D],['h','𝅗𝅥','minima',0x1D15E],['q','𝅘𝅥','semiminima',0x1D15F],['e','𝅘𝅥𝅮','croma',0x1D160],['qd','𝅘𝅥 .','semiminima puntata',0x1D15F]];
+      B.innerHTML=`<div class="hint" style="margin:8px 0">Scrivi l'indicazione del tempo, per esempio <b>semiminima = 90</b>. Poi si modifica sulla pagina come ogni testo.</div>
+        <div class="seg" id="tmNote">${notes.map(([k,g,n])=>`<button data-k="${k}" class="${this.note===k?'on':''}" title="${n}"><span class="tmG">${g}</span><small>${n}</small></button>`).join('')}</div>
+        <div class="tmBpm"><button class="ghostBtn" data-d="-5">−5</button><button class="ghostBtn" data-d="-1">−1</button><input id="tmN" type="number" inputmode="numeric" min="20" max="300" value="${this.bpm}"><button class="ghostBtn" data-d="1">+1</button><button class="ghostBtn" data-d="5">+5</button></div>
+        <label class="swRow"><input type="checkbox" id="tmName" ${this.tname?'checked':''}> Aggiungi il nome del tempo (<b id="tmWord">${tn()}</b>)</label>
+        <div class="chPrev"><div class="chBig" id="tmPrev"></div><button class="goldBtn" id="tmUse">${iconSvg('plus')}Inserisci sulla pagina</button></div>`;
+      const prev=()=>{ const g=notes.find(x=>x[0]===this.note); $('#tmPrev',B).textContent=`${this.tname?tn()+' ':''}${g[1]} = ${this.bpm}`; $('#tmWord',B).textContent=tn(); };
+      prev(); $('#tmNote',B).onclick=e=>{ const b=e.target.closest('[data-k]'); if(b){ this.note=b.dataset.k; $$('#tmNote button',B).forEach(x=>x.classList.toggle('on',x===b)); prev(); } };
+      B.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ this.bpm=clamp(this.bpm+ +b.dataset.d,20,300); $('#tmN',B).value=this.bpm; prev(); });
+      $('#tmN',B).oninput=e=>{ this.bpm=clamp(+e.target.value||90,20,300); prev(); }; $('#tmName',B).onchange=e=>{ this.tname=e.target.checked; prev(); };
+      $('#tmUse',B).onclick=()=>{ const g=notes.find(x=>x[0]===this.note); this.pick({tempo:true,glyph:g[3],dot:this.note==='qd',text:`= ${this.bpm}`,name:this.tname?tn():''}); };
+    }
+  },
+  // sceglie cosa mettere, poi si tocca la pagina (si possono mettere più accordi di seguito)
+  pick(what){ closeLayers(); this.pending=what; if(!ST.annotate) Anno.enter(); Anno.mode='chord'; Anno.clearSel(); Anno.buildBar(); this.dock(); },
+  dock(){ $('#chDock')?.remove(); const w=this.pending; if(!w) return; const label=typeof w==='string'?w:`${w.name?w.name+' ':''}♩ ${w.text}`;
+    const d=document.createElement('div'); d.id='chDock'; d.className='pill'; d.innerHTML=`<span>Tocca la pagina per mettere <b>${esc(label)}</b></span><button class="ghostBtn" data-a="more">Altri…</button><button class="goldBtn sm" data-a="ok">${iconSvg('check')}Fine</button>`; $('#app').appendChild(d);
+    d.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(a==='ok') this.end(); if(a==='more') this.open(); }; },
+  end(){ this.pending=null; $('#chDock')?.remove(); if(Anno.mode==='chord'){ Anno.mode='preset'; Anno.buildBar(); } },
+  place(p){ const w=this.pending; if(!w) return; const A=Anno; A.push(); const lay=A.layer||0;
+    if(typeof w==='string'){ A.strokes.push({t:'text',text:w,x:p[0],y:p[1],size:clamp(TStyle.size('chord')||.018,.012,.04),align:'c',font:'sans',bold:true,color:'#c0392b',alpha:1,layer:lay,chord:1}); }
+    else{ const sz=.034; A.strokes.push({t:'stamp',g:{c:String.fromCodePoint(w.glyph)+(w.dot?String.fromCodePoint(0x1D16D):''),f:'m'},x:p[0]-.012,y:p[1],size:sz,color:'#111111',alpha:1,layer:lay});
+      A.strokes.push({t:'text',text:(w.name?w.name+'  ':'')+w.text,x:p[0]+.008,y:p[1],size:.019,align:'l',font:'serif',bold:true,color:'#111111',alpha:1,layer:lay,tempo:1}); }
+    A.redraw(); saveAnn(); A.buildBar(); },
+};
+
+// ---------- Leggi una parola: pronuncia e traduzione senza scrivere sulla pagina ----------
+Lyr.peek=async function(p,e){
+  if(!ST.cur) return; const st=(detectStaves()||[]).filter(s=>s.printed!==false); let idx=-1;
+  for(let i=0;i<st.length;i++){ const nt=i<st.length-1?st[i+1].top:1, y1=Math.min(nt-st[i].gap*.2,st[i].bottom+st[i].gap*7); if(p[1]>=st[i].bottom&&p[1]<=y1+st[i].gap*.5){ idx=i; break; } }
+  if(idx<0) return toast('Tocca una parola stampata sotto un rigo',2600);
+  busy('Leggo la parola…'); this._pc=this._pc||{};
+  try{ const key=ST.cur.id+'|'+ST.page+'|'+idx; let row=this._pc[key];
+    if(!row){ const s=st[idx], nextTop=idx<st.length-1?st[idx+1].top:1; const tok=await readLyrics({...s,y0:s.bottom+s.gap*.3,y1:Math.min(nextTop-s.gap*.2,s.bottom+s.gap*7),gap:s.gap}); row=this._pc[key]={syl:this.normTokens(tok,tok.meta)}; }
+    busy(); const L=row.syl; if(!L.length) return toast('Non leggo parole qui: prova a toccare più vicino al testo',3000);
+    let k=0,bd=9; L.forEach((t,i)=>{ const d=Math.abs(t.x-p[0]); if(d<bd){ bd=d; k=i; } });
+    let a=k,b=k; while(a>0&&(L[a-1].trail||L[a].lead)) a--; while(b<L.length-1&&L[b].trail) b++;
+    const sy=L.slice(a,b+1), open=L[b].trail&&b===L.length-1, cont=L[a].lead&&a===0;
+    const word=sy.map(t=>t.text).join(''), lang=this.lang&&ST.cur.style&&ST.cur.style.lyrLang||this.guess(L.map(t=>t.text).join(' '));
+    const pr=pronSyl(sy.map(t=>t.text),lang,open), phrase=L.map(t=>t.text+(t.trail?'':' ')).join('').replace(/\s+/g,' ').trim();
+    $('#pkPop')?.remove(); const d=document.createElement('div'); d.id='pkPop'; d.className='pop';
+    d.innerHTML=`<div style="width:300px;display:grid;gap:10px"><div class="eyebrow">${esc((PRON.names[lang]||lang).split(' ')[0])}</div>
+      <div style="font-family:var(--f-display);font-size:30px;line-height:1.1">${sy.map(t=>esc(t.text)).join('<span style="color:var(--gold)">-</span>')}</div>
+      <div style="font-weight:700;color:#5aa0ff;font-size:19px">${pr.map(esc).join(' · ')}</div><div id="pkTr" style="font-family:var(--f-display);font-style:italic;color:#ff6b5e;font-size:19px;min-height:1.3em">…</div>
+      ${open?`<div class="hint">La parola continua dopo: tocca anche la parte seguente.</div>`:''}${cont?`<div class="hint">Continua dal rigo prima: tocca anche la parte precedente.</div>`:''}
+      <div class="hint" style="font-size:12.5px">Frase del rigo: ${esc(phrase)}</div>
+      <div style="display:flex;gap:8px"><button class="ghostBtn" data-a="phr" style="flex:1">Traduci la frase</button><button class="goldBtn sm" data-a="ok">Chiudi</button></div></div>`;
+    $('#app').appendChild(d); const r=inkCanvas.getBoundingClientRect(); d.style.position='fixed'; d.style.zIndex=70; d.style.left=clamp(r.left+p[0]*r.width-150,8,innerWidth-320)+'px'; d.style.top=clamp(r.top+p[1]*r.height+26,8,innerHeight-d.offsetHeight-8)+'px';
+    const tr=async(txt,el)=>{ el.textContent='…'; try{ el.textContent=await Translate.text(txt,lang); }catch(err){ try{ el.textContent=offlineTranslate(txt,lang); }catch(e2){ el.textContent='Serve internet per tradurre'; } } };
+    tr(word,$('#pkTr',d)); d.onclick=ev=>{ const a=ev.target.closest('[data-a]')?.dataset.a; if(a==='ok') d.remove(); if(a==='phr') tr(phrase,$('#pkTr',d)); };
+    setTimeout(()=>document.addEventListener('pointerdown',function f(ev){ if(!ev.target.closest('#pkPop')&&!ev.target.closest('#inkCanvas')){ d.remove(); document.removeEventListener('pointerdown',f,true); } },true),50);
+  }catch(err){ busy(); toast(err&&err.message||'Lettura non riuscita',3000); }
+};
+
+// ---------- Respiro: esercizi con animazione ----------
+const RESP=[
+  {id:'dia',n:'Respiro diaframmatico',d:'Inspira dal naso lasciando uscire la pancia, trattieni poco, espira lenta.',ph:[['Inspira',4],['Trattieni',2],['Espira',6]]},
+  {id:'478',n:'4 · 7 · 8 (rilassante)',d:'Per calmare la tensione prima di cantare.',ph:[['Inspira',4],['Trattieni',7],['Espira',8]]},
+  {id:'box',n:'Respiro a quadrato',d:'Quattro tempi uguali: regolare e stabile.',ph:[['Inspira',4],['Trattieni',4],['Espira',4],['Pausa',4]]},
+  {id:'sss',n:'Sibilo «sss»',d:'Espira sibilando piano e a lungo: allena il sostegno del fiato.',ph:[['Inspira',4],['Sibila  sss',12]]},
+  {id:'brr',n:'Trillo labiale «brrr»',d:'Fai vibrare le labbra con un fiato costante, senza scosse.',ph:[['Inspira',3],['Trillo  brrr',10]]},
+  {id:'can',n:'Candela',d:'Soffia come per piegare una fiamma senza spegnerla.',ph:[['Inspira',4],['Soffia piano',9]]},
+  {id:'cos',n:'Costole laterali',d:'Mani sui fianchi: senti le costole che si allargano.',ph:[['Inspira ai fianchi',5],['Trattieni',2],['Espira',7]]}];
+const Resp = {
+  sel:'dia', cycles:6, speed:1, run:false, t0:0, raf:0, snd:false,
+  render(B){
+    const ex=RESP.find(x=>x.id===this.sel);
+    B.innerHTML=`<div class="hint">Scegli un esercizio e segui la sfera: si allarga quando inspiri, resta quando trattieni, si restringe quando espiri.</div>
+      <div class="seg wrapSeg" id="rsSel">${RESP.map(x=>`<button data-x="${x.id}" class="${x.id===this.sel?'on':''}">${esc(x.n)}</button>`).join('')}</div>
+      <div class="rsStage"><svg id="rsSvg" viewBox="0 0 300 300" aria-hidden="true"><defs><radialGradient id="rsG" cx="45%" cy="40%"><stop offset="0" stop-color="#f2d382"/><stop offset=".7" stop-color="#d6a84e"/><stop offset="1" stop-color="#8f6a22"/></radialGradient></defs>
+        <circle cx="150" cy="150" r="128" fill="none" stroke="var(--line)" stroke-width="2" stroke-dasharray="3 7"/><circle id="rsRing" cx="150" cy="150" r="140" fill="none" stroke="var(--gold)" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 1000" transform="rotate(-90 150 150)" opacity=".7"/>
+        <circle id="rsBall" cx="150" cy="150" r="50" fill="url(#rsG)"/><g id="rsRibs" stroke="#1b1406" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"><path d="M112 140q38 -14 76 0"/><path d="M108 156q42 -14 84 0"/><path d="M112 172q38 -14 76 0"/></g></svg>
+        <div class="rsTxt"><b id="rsPh">Pronti</b><span id="rsCnt">${esc(ex.ph.map(p=>p[0].split('  ')[0]+' '+p[1]).join(' · '))}</span><small id="rsCy"></small></div></div>
+      <div class="hint" id="rsD">${esc(ex.d)}</div>
+      <div class="grid2"><div class="sl"><span>Ripetizioni<em id="rsCV">${this.cycles}</em></span><input type="range" id="rsC" min="2" max="20" value="${this.cycles}" style="--v:${(this.cycles-2)/18*100}%"></div>
+        <div class="field"><label>Ritmo</label><div class="seg" id="rsSp">${[[1.35,'Lento'],[1,'Normale'],[.75,'Svelto']].map(([v,n])=>`<button data-v="${v}" class="${this.speed===v?'on':''}">${n}</button>`).join('')}</div></div></div>
+      <label class="swRow"><input type="checkbox" id="rsSnd" ${this.snd?'checked':''}> Suono guida (un tono dolce a ogni fase)</label>
+      <div style="display:flex;gap:10px"><button class="goldBtn" id="rsGo">${iconSvg(this.run?'stop':'play')}${this.run?'Ferma':'Inizia'}</button></div>`;
+    $('#rsSel',B).onclick=e=>{ const b=e.target.closest('[data-x]'); if(b){ this.stop(); this.sel=b.dataset.x; this.render(B); } };
+    const c=$('#rsC',B); c.oninput=()=>{ this.cycles=+c.value; $('#rsCV',B).textContent=c.value; c.style.setProperty('--v',(c.value-2)/18*100+'%'); };
+    $('#rsSp',B).onclick=e=>{ const b=e.target.closest('[data-v]'); if(b){ this.speed=+b.dataset.v; $$('#rsSp button',B).forEach(x=>x.classList.toggle('on',x===b)); } };
+    $('#rsSnd',B).onchange=e=>{ this.snd=e.target.checked; };
+    $('#rsGo',B).onclick=()=>this.run?this.stop(B):this.start(B);
+  },
+  start(B){ this.run=true; this.t0=performance.now(); this.lastPh=-1; $('#rsGo').innerHTML=iconSvg('stop')+'Ferma'; const ex=RESP.find(x=>x.id===this.sel), seq=ex.ph.map(p=>[p[0],p[1]*this.speed]), total=seq.reduce((a,p)=>a+p[1],0);
+    let lvl=0; const LV=seq.map(([nm])=>{ const st=lvl; if(/^Inspira/.test(nm)) lvl=1; else if(/^(Espira|Sibila|Trillo|Soffia)/.test(nm)) lvl=0; return [st,lvl]; });
+    const step=now=>{ if(!this.run) return; const el=(now-this.t0)/1000, cyc=Math.floor(el/total);
+      if(cyc>=this.cycles){ this.stop(); toast('Bravo: esercizio finito',2200); return; }
+      let t=el%total, i=0; while(i<seq.length-1&&t>=seq[i][1]){ t-=seq[i][1]; i++; } const [nm,du]=seq[i], f=t/du, name=nm.split('  ')[0];
+      const isIn=/^Inspira/.test(nm), isOut=/^(Espira|Sibila|Trillo|Soffia)/.test(nm); const ease=x=>.5-.5*Math.cos(Math.PI*x);
+      const [l0,l1]=LV[i]; const lv=l0+(l1-l0)*ease(f), r=50+(112-50)*lv;     // sfera: piena dopo l'inspirazione, piccola dopo l'espirazione
+      $('#rsBall').setAttribute('r',r.toFixed(1)); $('#rsRibs').style.transform=`scale(${(r/80).toFixed(3)})`; $('#rsRibs').style.transformOrigin='150px 156px';
+      $('#rsPh').textContent=name; $('#rsCnt').textContent=Math.ceil(du-t)+' s'; $('#rsCy').textContent=`Ripetizione ${cyc+1} di ${this.cycles}`;
+      $('#rsRing').setAttribute('stroke-dasharray',`${(f*880).toFixed(0)} 1000`);
+      const key=cyc*10+i; if(key!==this.lastPh){ this.lastPh=key; if(this.snd) this.tone(isIn?392:isOut?262:330); try{ navigator.vibrate&&navigator.vibrate(15); }catch(e){} }
+      this.raf=requestAnimationFrame(step); }; this.raf=requestAnimationFrame(step); },
+  tone(f){ try{ ac(); const o=AC.createOscillator(), g=AC.createGain(), t=AC.currentTime; o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.12,t+.08); g.gain.exponentialRampToValueAtTime(.0001,t+1.2); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+1.3); }catch(e){} },
+  stop(){ this.run=false; cancelAnimationFrame(this.raf); const b=$('#rsGo'); if(b) b.innerHTML=iconSvg('play')+'Inizia'; const ph=$('#rsPh'); if(ph) ph.textContent='Pronti'; const ball=$('#rsBall'); if(ball) ball.setAttribute('r',50); },
+};
+(function(){ // scheda "Respiro" dentro Per Cantanti
+  const r0=Singers.render, s0=Singers.stopAll, o0=Singers.open;
+  Singers.open=async function(){ const r=await o0.apply(this,arguments); const t=$('#sgTabs'); if(t&&!t.querySelector('[data-t="resp"]')){ const b=document.createElement('button'); b.dataset.t='resp'; b.textContent='Respiro'; const p=t.querySelector('[data-t="piano"]'); t.insertBefore(b,p||t.querySelector('[data-t="pron"]')); } return r; };
+  Singers.render=function(){ if(this.tab==='resp'){ $$('#sgTabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tab)); const B=$('#sgBody'); if(B) Resp.render(B); return; } return r0.apply(this,arguments); };
+  Singers.stopAll=function(){ try{ Resp.stop(); }catch(e){} return s0.apply(this,arguments); };
+})();
+
+// ---------- Timer lavoro/pausa: pausa e ripresa, anche in tutto schermo ----------
+Object.assign(Clock,{ paused:false, left:0,
+  pause(){ if(!this.end||this.paused) return; this.left=this.end-Date.now(); this.paused=true; this.end=0; this.render(); toast('Timer in pausa',1400); },
+  resume(){ if(!this.paused) return; this.end=Date.now()+this.left; this.paused=false; this.save(); this.render(); toast('Timer ripreso',1400); },
+});
+(function(){
+  const r0=Clock.render, s0=Clock.start, st0=Clock.stop;
+  Clock.start=function(){ this.paused=false; return s0.apply(this,arguments); };
+  Clock.stop=function(){ this.paused=false; this.left=0; return st0.apply(this,arguments); };
+  Clock.render=function(){ r0.apply(this,arguments);
+    if(this.paused){ const tm=`<span class="ckT ${this.kind}">⏸ ${this.fmt(this.left)}</span>`; $$('.clockPill').forEach(el=>{ const h=el.innerHTML.replace(/<span class="ckT[^>]*>.*?<\/span>/,''); el.innerHTML=h+tm; el._h=null; }); }
+    this.fsTimer(); };
+  Clock.fsTimer=function(){ let d=$('#fsTimer'); if(!document.body.classList.contains('immersive')){ if(d) d.hidden=true; return; }
+    if(!d){ d=document.createElement('div'); d.id='fsTimer'; d.className='pill'; $('#app').appendChild(d); d.onclick=e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return; if(a==='pause') this.pause(); if(a==='resume') this.resume(); if(a==='stop') this.stop(); if(a==='work') this.start(ST.settings.workMin||50,'lavoro'); if(a==='break') this.start(ST.settings.pauseMin||10,'pausa'); this.fsTimer(); }; }
+    d.hidden=false; const run=this.end&&!this.paused;
+    const html=this.paused?`<button data-a="resume" aria-label="Riprendi">▶ ${this.fmt(this.left)}</button><button data-a="stop" aria-label="Ferma">■</button>`:run?`<button data-a="pause" aria-label="Pausa">⏸ ${this.fmt(this.end-Date.now())}</button><button data-a="stop" aria-label="Ferma">■</button>`:`<button data-a="work">⏱ Lavoro ${ST.settings.workMin||50}</button><button data-a="break">☕ Pausa ${ST.settings.pauseMin||10}</button>`;
+    if(d._h!==html){ d._h=html; d.innerHTML=html; } };
+  // il pannello del timer ha anche Pausa/Riprendi
+  const o0=Clock.open; Clock.open=function(el){ const r=o0.apply(this,arguments); const stop=$('#ckStop'); if(stop&&!$('#ckPz')){ const b=document.createElement('button'); b.className='ghostBtn'; b.id='ckPz'; b.textContent=this.paused?'▶ Riprendi':'⏸ Pausa'; b.onclick=()=>{ this.paused?this.resume():this.pause(); closeLayers(); }; stop.parentNode.insertBefore(b,stop); } return r; };
+})();
+
+// ---------- Tutto schermo veloce: si entra subito, la pagina si adatta con la scala e si ridisegna a riposo ----------
+FS.immersive=function(on){
+  document.body.classList.toggle('immersive',on); if(on){ closeSides(); setBars(false,false); } else setBars(true,true); $$('[data-act="fullscreen"]').forEach(b=>b.classList.toggle('on',on));
+  try{ const W=stage.clientWidth, H=stage.clientHeight, w=pageWrap.offsetWidth, h=pageWrap.offsetHeight; if(w&&h&&Zoom.z===1){ const f=Math.min((W-16)/w,(H-16)/h); if(isFinite(f)&&Math.abs(f-1)>.02){ pageWrap.style.transform=`scale(${f.toFixed(4)})`; } } }catch(e){}
+  clearTimeout(this._rd); this._rd=setTimeout(()=>{ pageWrap.style.transform=''; renderPage(0,{noPrefetch:true}); },420);
+  try{ Clock.fsTimer(); }catch(e){}
+};
+FS.toggle=async function(){
+  if(this.isOn()){ this.immersive(false); try{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); else if(document.webkitFullscreenElement) document.webkitExitFullscreen(); }catch(e){} return; }
+  const el=document.documentElement; this.immersive(true); let ok=false;       // prima si nascondono le barre (subito), poi si chiede lo schermo intero
+  try{ if(el.requestFullscreen){ el.requestFullscreen({navigationUI:'hide'}).catch(()=>{}); ok=true; } else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); ok=true; } }catch(e){ ok=false; }
+  if(!ok&&!this.standalone()) this.tip(); else toast('Tutto schermo · tieni premuto un bordo per i comandi',2400);
+};
+
+// ---------- PDF troppo pesante: si alleggerisce prima di importarlo ----------
+const LIGHT_MIN=18*1048576;
+async function lightenPdf(bytes,onProgress){
+  const src=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; const out=await PDFLib.PDFDocument.create(); const n=src.numPages;
+  for(let i=1;i<=n;i++){
+    const pg=await src.getPage(i); const v1=pg.getViewport({scale:1}); const k=Math.min(2.2,1500/Math.max(v1.width,v1.height)); const vp=pg.getViewport({scale:k});
+    const c=document.createElement('canvas'); c.width=Math.round(vp.width); c.height=Math.round(vp.height); const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+    await pg.render({canvasContext:x,viewport:vp}).promise; const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.72)); const img=await out.embedJpg(await blob.arrayBuffer());
+    out.addPage([v1.width,v1.height]).drawImage(img,{x:0,y:0,width:v1.width,height:v1.height}); c.width=c.height=1; try{ pg.cleanup(); }catch(e){} if(onProgress) onProgress(i,n); await new Promise(r=>setTimeout(r,0));
+  }
+  src.destroy(); return (await out.save()).buffer;
+}
+(function(){ const imp0=importPdf;
+  importPdf=async function(bytes,meta){ meta=meta||{};
+    if(bytes.byteLength>LIGHT_MIN&&!meta.light&&!(window.Dups&&Dups.quiet)){
+      const mb=(bytes.byteLength/1048576).toFixed(0);
+      const c=await new Promise(res=>{ busy(); const m=modal('PDF molto pesante',`<div class="hint" style="font-size:16px">“${esc(meta.title||meta.file||'Questo PDF')}” pesa <b>${mb} MB</b>: su iPad rallenta e può far chiudere l'app.<br>Lo <b>alleggerisco</b> prima di importarlo (pagine più leggere, stessa lettura)?</div><div class="hint" style="font-size:13px">Le pagine diventano immagini nitide: il testo non si può più selezionare.</div>`,
+        `<button class="ghostBtn" data-no>Importa com'è</button><button class="goldBtn" data-yes>${iconSvg('wand')}Alleggerisci e importa</button>`,{sticky:true}); m.querySelector('[data-no]').onclick=()=>{ closeLayers(); res('no'); }; m.querySelector('[data-yes]').onclick=()=>{ closeLayers(); res('yes'); }; });
+      if(c==='yes'){ try{ busy('Alleggerisco il PDF…'); const light=await lightenPdf(bytes,(i,n)=>busy(`Alleggerisco il PDF… pagina ${i} di ${n}`)); busy(); if(light.byteLength<bytes.byteLength*.9){ toast(`Alleggerito: da ${mb} MB a ${(light.byteLength/1048576).toFixed(1)} MB`,3200); bytes=light; meta={...meta,light:1}; } else toast('Era già leggero: lo importo com\'è',2400); }catch(e){ busy(); toast('Non sono riuscito ad alleggerirlo: lo importo com\'è',3000); } }
+    }
+    return imp0.call(this,bytes,meta); };
+})();
+
+// ---------- Testo e accordi (musica pop) → spartito PDF ----------
+const CHORD_TOK=/^(?:[A-G]|Do|Re|Mi|Fa|Sol|La|Si)(?:#|b|♯|♭)?(?:maj|min|dim|aug|sus|add|m|M|\+|°|ø|-)?\d*(?:\((?:[#b♯♭+-]?\d+|add\d+|maj\d*)\))?(?:sus\d|add\d+|[#b♯♭+-]\d+|\d+)*(?:\/(?:[A-G]|Do|Re|Mi|Fa|Sol|La|Si)(?:#|b|♯|♭)?)?$/;
+const ChordSheet = {
+  isChordLine(l){ const t=l.trim().split(/\s+/).filter(Boolean); if(!t.length||t.length>24) return false; const n=t.filter(x=>CHORD_TOK.test(x.replace(/[|()]/g,''))||/^[|%x\-–]+$/.test(x)).length; return n>=Math.max(1,Math.ceil(t.length*.7)); },
+  fromHtml(html){ const d=new DOMParser().parseFromString(html,'text/html'); d.querySelectorAll('script,style,noscript,nav,header,footer').forEach(n=>n.parentNode&&n.parentNode.removeChild(n)); const pre=[...d.querySelectorAll('pre')].sort((a,b)=>b.textContent.length-a.textContent.length)[0];
+    let txt=pre?pre.textContent:(()=>{ d.querySelectorAll('br').forEach(b=>b.replaceWith('\n')); return d.body?d.body.innerText||d.body.textContent:''; })(); return {text:txt.replace(/\r/g,''),title:(d.title||'').replace(/\s*[|\-–].*$/,'').trim()}; },
+  stats(text){ const L=text.split('\n'); const ch=L.filter(l=>this.isChordLine(l)).length; return {lines:L.length,chords:ch}; },
+  safe(s){ return String(s).replace(/♯/g,'#').replace(/♭/g,'b').replace(/[^\x20-\x7E -ÿ]/g,'?').replace(/\t/g,'    '); },
+  async toPdf(text,title){
+    const doc=await PDFLib.PDFDocument.create(); const reg=await doc.embedFont(PDFLib.StandardFonts.Courier), bold=await doc.embedFont(PDFLib.StandardFonts.CourierBold), head=await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    const lines=this.safe(text).split('\n').map(l=>l.replace(/\s+$/,'')); const W=595, H=842, M=48; const maxLen=Math.max(30,...lines.map(l=>l.length)); const fs=Math.max(7,Math.min(11.5,(W-2*M)/(maxLen*.6))), lh=fs*1.32;
+    let page=doc.addPage([W,H]), y=H-M; const t=this.safe(title||'Testo e accordi'); page.drawText(t,{x:M,y:y-14,size:18,font:head,color:PDFLib.rgb(.1,.09,.07)}); y-=34;
+    const blank=l=>!l.trim();
+    for(let i=0;i<lines.length;i++){ const l=lines[i]; const isCh=this.isChordLine(l); const need=isCh&&i+1<lines.length&&!blank(lines[i+1])?lh*2:lh; if(y-need<M){ page=doc.addPage([W,H]); y=H-M; }
+      if(blank(l)){ y-=lh*.6; continue; }
+      if(isCh){ page.drawText(l,{x:M,y:y-fs,size:fs,font:bold,color:PDFLib.rgb(.72,.2,.12)}); } else if(/^\s*[\[(]?(strofa|ritornello|bridge|intro|outro|verse|chorus|pre-chorus|solo|coda)[\])]?:?/i.test(l)) page.drawText(l,{x:M,y:y-fs,size:fs,font:bold,color:PDFLib.rgb(.1,.09,.07)}); else page.drawText(l,{x:M,y:y-fs,size:fs,font:reg,color:PDFLib.rgb(.1,.09,.07)});
+      y-=lh; }
+    return (await doc.save()).buffer; },
+  async import(text,title){ const t=(title||'Brano pop').trim(); busy('Creo lo spartito…'); try{ const bytes=await this.toPdf(text,t); const sc=await addScore(bytes,{title:t,file:t+'.pdf',genre:'Pop',tags:['accordi']}); busy(); renderLibrary(); await openScore(sc.id); toast('Testo e accordi importati: puoi annotarli come ogni spartito',3200); }catch(e){ busy(); toast('Non riesco a creare lo spartito: '+(e.message||e),3600); } },
+  ask(text,title){ closeLayers(); const st=text?this.stats(text):{lines:0,chords:0};
+    const m=modal('Testo e accordi',`<div class="hint">Incolla qui il brano: i nomi degli accordi sopra le parole (Do, Sol7, Am, F#m7/C#…). Mozart li mette in rosso e allinea tutto, pronto da annotare e da suonare.</div>
+      <div class="field"><label for="csT">Titolo</label><input id="csT" value="${esc(title||'')}" placeholder="Titolo e artista"></div>
+      <div class="field"><label for="csX">Testo con accordi</label><textarea id="csX" rows="12" spellcheck="false" style="font-family:ui-monospace,Menlo,monospace;font-size:14px;white-space:pre">${esc(text||'')}</textarea></div>
+      <div class="hint" id="csI">${st.chords?`Trovate ${st.chords} righe di accordi.`:''}</div>`,
+      `<button class="ghostBtn" data-no>Annulla</button><button class="goldBtn" data-go>${iconSvg('plusDoc')}Crea lo spartito</button>`,{eyebrow:'Importa'});
+    const up=()=>{ const s=this.stats($('#csX').value); $('#csI').textContent=s.chords?`Trovate ${s.chords} righe di accordi su ${s.lines}.`:'Non vedo righe di accordi: va bene lo stesso, si importa come testo.'; }; $('#csX').oninput=up; up();
+    m.querySelector('[data-no]').onclick=closeLayers; m.querySelector('[data-go]').onclick=()=>{ const x=$('#csX').value; if(!x.trim()) return toast('Incolla prima il testo'); closeLayers(); this.import(x,$('#csT').value); }; },
+};
+(function(){ // WebImport: pagine con testo e accordi
+  const g0=WebImport.go, o0=WebImport.open;
+  WebImport.open=function(){ const r=o0.apply(this,arguments); const f=$('.modal .mFoot'); if(f&&!$('#wiChord')){ const b=document.createElement('button'); b.className='ghostBtn'; b.id='wiChord'; b.textContent='🎸 Testo e accordi'; b.onclick=()=>ChordSheet.ask(''); f.insertBefore(b,f.firstChild); } return r; };
+  const get0=WebImport.get; WebImport.go=async function(raw){
+    const url=this.fixUrl(raw); if(!url) return toast('Incolla un indirizzo');
+    // prova prima: PDF/foto come sempre; se è una pagina con testo e accordi, la propone
+    const orig=window.toast; let handled=false;
+    try{ busy('Scarico…'); const r=await this.get(url); busy(); const head=new Uint8Array(r.bytes.slice(0,8)); const pdf=String.fromCharCode(...head.slice(0,5))==='%PDF-', img=/^image\//.test(r.type)||(head[0]===0xFF&&head[1]===0xD8)||(head[0]===0x89&&head[1]===0x50);
+      if(!pdf&&!img){ const {text,title}=ChordSheet.fromHtml(new TextDecoder().decode(r.bytes)); const s=ChordSheet.stats(text); if(s.chords>=3){ handled=true; ChordSheet.ask(text,title||this.nameFrom(url,r.name)); return; } }
+    }catch(e){ busy(); }
+    if(!handled) return g0.call(this,raw); };
+})();
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

@@ -170,6 +170,11 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 
 - Songbook (`songbook.js`): "Cerca e importa nel Songbook" cerca su Accordi e Spartiti, sceglie il brano migliore per somiglianza, lo importa e lo aggiunge alla setlist "Il mio Songbook" (nome modificabile); ricerca con selezione multipla; "Crea Songbook unico" = PDF con copertina, indice con numeri di pagina, segnalibri e annotazioni già fatte.
 
+## Canzonieri (26 novembre 2026, `canzoniere.js`, `canz_data.js`)
+- Il "Primo Canzoniere di Mbutozone" (264 pagine) ha l'indice già pronto: 257 canzoni (168 italiani, 16 italiani vari, 45 internazionali, 28 internazionali vari). Altri canzonieri con indice: lettura del solo testo delle ultime pagine (nessun OCR), risultato salvato nello spartito (`sc.songs`).
+- Lente in alto: cerca anche le canzoni nei canzonieri (titolo/artista → pagina). Attrezzi → Canzoni dello spartito: elenco filtrabile, estrazione di una canzone in uno spartito a parte (solo le sue pagine) e aggiunta al Songbook.
+- Indice in `canzoniere/mbutozone-indice.csv` e `.json`.
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

@@ -673,3 +673,4 @@ body:not(.immersive) #fsTimer{display:none}
 .gIc{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(214,168,78,.14);color:var(--gold-hi)}.gIc svg{width:22px;height:22px}
 .ppPre{white-space:pre;overflow:auto;max-height:46vh;background:#0e0c08;border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.35;color:var(--text)}.ppC{color:#ff8a6b;font-weight:700}
 .ppRow input{width:22px;height:22px;flex:none;accent-color:var(--gold)}.ppBL{display:grid;gap:6px;margin:8px 0}
+.czL{max-height:56vh;overflow:auto;display:grid;gap:2px}.czRow{display:flex;align-items:center;gap:8px;cursor:pointer}.czX{flex:none;width:40px;height:40px;padding:0;display:grid;place-items:center}

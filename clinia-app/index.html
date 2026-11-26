@@ -666,12 +666,12 @@ const KEY="clinia-app-v3"; // v3: dati azzerati il 24/11/2026 per l’uscita su 
 const DEMO=false;          // niente turni, appuntamenti e incassi di esempio
 try{localStorage.removeItem("clinia-app-v1");localStorage.removeItem("clinia-app-v2")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},pagDott:[],fattNum:{},entrate:[],chiusure:{},cred:{},photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},pagDott:[],fattNum:{},entrate:[],chiusure:{},cred:{},log:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.pagDott=S.pagDott||[];S.fattNum=S.fattNum||{};S.entrate=S.entrate||[];S.chiusure=S.chiusure||{};S.cred=S.cred||{};S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.pagDott=S.pagDott||[];S.fattNum=S.fattNum||{};S.entrate=S.entrate||[];S.chiusure=S.chiusure||{};S.cred=S.cred||{};S.log=S.log||[];S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -863,6 +863,9 @@ function authIllo(){return `<svg viewBox="0 0 260 220" style="width:240px;max-wi
   <circle cx="60" cy="40" r="6" fill="#f2c94c"/><circle cx="214" cy="190" r="5" fill="#f2c94c"/><circle cx="42" cy="170" r="4" fill="var(--accent)"/></svg>`}
 const addMonth=(ds,n=1)=>{const d=parseD(ds);d.setMonth(d.getMonth()+n);return dstr(d)};
 // Email e password degli accessi riservati: modificabili dall'app (sul server, con il database attivo, le gestisce l'accesso protetto)
+// Registro attività: chi ha fatto cosa e quando (lo vede FPM, serve a trovare e correggere gli errori)
+function logA(azione,dett){const chi=isFpm()?"FPM":isOwner()?"Clinia":S.proId&&doc(S.proId)?doc(S.proId).name:S.auth?"Paziente":"—";
+  S.log.unshift({at:Date.now(),chi,azione,dett:dett||""});S.log=S.log.slice(0,800)}
 const credOwner=()=>({email:(S.cred.titolare&&S.cred.titolare.email)||OWNER.email,hash:(S.cred.titolare&&S.cred.titolare.hash)||OWNER.hash});
 const credFpm=()=>({email:(S.cred.fpm&&S.cred.fpm.email)||FPM.email,hash:(S.cred.fpm&&S.cred.fpm.hash)||FPM.hash});
 const isOwner=()=>!!(S.auth&&S.auth.owner);
@@ -1147,7 +1150,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "credenziali":return credenzialiPage();case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "credenziali":return credenzialiPage();case "elimina":return eliminaPage();case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1317,7 +1320,7 @@ const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" al
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
   const items0=isFpm()?[["credenziali","lock","Email e password · accesso di Clinia"],["tab:fpmfisco","list","Fisco"],["tab:fpmdoc","file","Documenti e ricevute"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"]]:isSoc()?[["tariffe","clock","Le ore del pacchetto"],["tab:persone","users","Persone da visitare"],["tab:stanze","door","Prenota le stanze"],["settings","gear","Impostazioni e privacy"]]:isFpm()?[["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["credenziali","lock","Email e password di accesso"],["tab:clinia","list","Clinia: pacchetti, fatture, conti e stanze"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["settings","gear","Impostazioni e privacy"],["tariffe","clock","Le mie ore · visite, durata e prezzi"],["tab:stanze","door","I miei turni negli studi"]]
-    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
+    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0,...(isFpm()||isOwner()?[]:[["elimina","x","Elimina il mio account"]])];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
    <h2 style="font-size:1.35rem;font-weight:800;text-align:center">${esc(u.nome+" "+u.cognome)}</h2>${pro?`<span class="badge az">${esc(doc(S.proId).name)}</span>`:""}${isOwner()?`<span class="badge">Direttore di Clinia · accesso gratuito</span>`:""}${isFpm()?`<span class="badge az">FPM WebDesignTech · area riservata</span>`:""}</div>
@@ -1644,7 +1647,7 @@ function cliniaDottori(){const l=TUTTI_DOTTORI().filter(d=>BASE_DOC_IDS.includes
     ${(UI.scan&&UI.scan[d.id]||[]).length?`<div class="thumbs">${UI.scan[d.id].map((u,i)=>`<div><img src="${u}" alt="Pagina ${i+1}"></div>`).join("")}</div><p class="tiny">Aggiungi altre pagine con “Scansiona”. Il PDF viene salvato con il pacchetto.</p>`:""}
     <label class="field"><span>Oppure allega un file (PDF o foto)</span><input name="file" type="file" accept="application/pdf,image/*"></label>
     <p class="err" id="ct-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra</button></form>
-   ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"?"red":"warn"}">${c.stato==="confermata"?"Attivo":c.stato==="rifiutata"?"Non attivato":"In verifica"}</span></div>`).join("")}</div>`:""}
+   ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"||c.stato==="annullato"?"red":"warn"}">${c.stato==="confermata"?"Attivo":c.stato==="annullato"?"Annullato":c.stato==="rifiutata"?"Non attivato":"In verifica"}</span>${c.stato==="confermata"&&!isFpm()?`<button class="link small" data-act="annullaPacchetto" data-id="${c.id}">Annulla</button>`:""}</div>`).join("")}</div>`:""}
   </div>`}).join("")}
 function cliniaTab(){const seg=UI.cliSeg||"spec",m=UI.cliMese||today().slice(0,7);
   const head=`<div class="pad stack" style="gap:16px"><div class="row between"><h1 class="ptitle">Clinia</h1><span class="badge">${ic("lock","sm")} Direzione</span></div>
@@ -1819,6 +1822,10 @@ function prospettoStanze(){const days=[];let ds=UI.prospDa||today();while(days.l
    <p class="tiny">Percentuale = ore occupate sulle ore di apertura del giorno. Tocca una casella per vedere chi c’è, annullare un turno o chiudere lo studio per quel giorno.</p></section>`}
 
 /* ---------- Società: persone da visitare ---------- */
+function eliminaPage(){const pro=isPro();return `<div class="screen">${bar("Elimina il mio account")}<div class="content"><div class="pad stack" style="gap:16px">
+  <p>Eliminando l’account cancelli dall’app ${pro?"il collegamento al tuo profilo in Clinia, le tue notifiche e i tuoi messaggi":"i tuoi dati, le visite, i familiari, i file caricati, le carte e i messaggi"}. Non si può annullare.</p>
+  ${pro?`<p class="small muted">Il contratto e le ore firmate con Clinia restano a Clinia, che li gestisce per legge. Per lavorare di nuovo in Clinia potrai registrarti ancora.</p>`:`<p class="small muted">Le fatture e i dati che la legge impone di conservare restano agli specialisti e a Clinia per il tempo previsto.</p>`}
+  <button class="btn danger block" data-act="eliminaAccount">${ic("x","sm")} Elimina il mio account</button></div></div></div>`}
 function credenzialiPage(){const fpm=isFpm(),me=fpm?credFpm():credOwner();
   return `<div class="screen">${bar("Email e password")}<div class="content"><div class="pad stack" style="gap:16px">
   <form class="card stack" data-form="credMie" style="gap:10px" novalidate><h3>${fpm?"Il tuo accesso FPM":"Accesso della Direzione Clinia"}</h3><p class="tiny">E-mail attuale: <b>${esc(me.email)}</b></p>
@@ -1861,12 +1868,18 @@ function fpmDottoriTab(){const l=TUTTI_DOTTORI(),att=S.crediti.filter(c=>c.stato
    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="fotoScarica" data-id="${d.id}" ${foto?"":"disabled"}>${ic("upload","sm")} Scarica foto</button><label class="btn ghost sm" for="fpf-${d.id}">${ic("upload","sm")} Carica foto 9:16</label><input id="fpf-${d.id}" type="file" accept="image/*" class="hidden" data-change="fotoFpm" data-id="${d.id}"></div>
    <div class="stack" style="gap:6px"><span class="label">Pubblicazione${PUBBLICAZIONE_ATTIVA?"":" · in arrivo"}</span><div class="row" style="gap:8px;flex-wrap:wrap">${PUB_CANALI.map(([k,t])=>`<button class="chip ${pub[k]?"on":""}" data-act="pubblica" data-id="${d.id}" data-v="${k}" ${PUBBLICAZIONE_ATTIVA&&pp.pubblica?"":"disabled"} aria-pressed="${!!pub[k]}">${t}</button>`).join("")}</div>
     <p class="tiny">${PUBBLICAZIONE_ATTIVA?(pp.pubblica?"Scegli dove compare.":"Serve il consenso del dottore, dal suo profilo."):"Si attiva quando colleghiamo monitor, sito clinia.it e social. Nome, foto, specialità e orari si aggiorneranno da soli."}</p></div>
+   ${creditiDi(d.id).filter(c=>c.stato==="confermata").slice(0,3).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.confAt||c.at).toLocaleDateString("it-IT")} · ${eur(r2(c.ore*CANONE_ORA))}</span><button class="link small" data-act="annullaPacchetto" data-id="${c.id}">Annulla questo pacchetto</button></div>`).join("")}
    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="azzera" data-v="dott:${d.id}">Azzera pacchetti e turni</button><button class="btn danger sm" data-act="rimuoviDottore" data-id="${d.id}">${ic("x","sm")} Rimuovi da Clinia App</button></div>
    ${UI.azzera==="dott:"+d.id?confermaAzzera(`pacchetti, ore e turni di ${d.name}`):""}
   </div>`}).join("")}
+  ${registroHTML()}
   ${azzeraHTML()}
   ${Object.keys(S.rimossi).length?`<section class="card stack" style="gap:8px"><h3>Dottori rimossi</h3>${Object.keys(S.rimossi).filter(id=>doc(id)).map(id=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(doc(id).name)} · dal ${new Date(S.rimossi[id]).toLocaleDateString("it-IT")}</span><button class="btn ghost sm" data-act="ripristinaDottore" data-id="${id}">Ripristina</button></div>`).join("")}</section>`:""}
   </div>`}
+function registroHTML(){const l=S.log.slice(0,UI.logAll?S.log.length:25);return `<section class="card stack" style="gap:8px"><div class="row between"><h3>Registro attività</h3><span class="tiny">${S.log.length} voci</span></div>
+  <p class="tiny">Ogni operazione di Clinia, dei dottori e tua, con data e ora: ti serve per trovare un errore e annullare solo quello.</p>
+  ${l.length?l.map(x=>`<div class="small" style="border-top:1px solid var(--line);padding-top:6px"><b>${esc(x.chi)}</b> · ${esc(x.azione)}${x.dett?` · <span class="muted">${esc(x.dett)}</span>`:""}<span class="tiny" style="display:block">${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>`).join(""):`<p class="small muted">Ancora nessuna operazione.</p>`}
+  ${S.log.length>25&&!UI.logAll?`<button class="link small" data-act="logAll">Mostra tutto</button>`:""}</section>`}
 const AZZERA={ore:"Pacchetti e ore",turni:"Turni nelle stanze",visite:"Visite e appuntamenti",notifiche:"Notifiche",incassi:"Incassi registrati",pagamenti:"Pagamenti di Clinia a FPM",tutto:"Tutto (azzeramento generale)"};
 const confermaAzzera=t=>`<div class="card row" style="gap:8px;flex-wrap:wrap;border-color:var(--danger,#c0392b)"><span class="small" style="flex:1;min-width:180px">Azzerare <b>${esc(t)}</b>? Non si può annullare.</span><button class="btn danger sm" data-act="azzeraOk">Sì, azzera</button><button class="btn ghost sm" data-act="azzera" data-v="">Annulla</button></div>`;
 function azzeraHTML(){return `<section class="card stack" style="gap:10px"><h3>Azzeramenti</h3><p class="tiny">Solo nella tua area. Il rinnovo di un pacchetto fa già ripartire da solo il contatore del dottore: azzera solo quando serve davvero. Profili, foto e prestazioni dei dottori restano.</p>
@@ -2361,13 +2374,25 @@ const ACT={
   delFpmDoc:d=>{S.fpm.docs=S.fpm.docs.filter(x=>x.id!==d.id);save();IDB.set("fpm:"+d.id,null);render()},
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
+  logAll:()=>{UI.logAll=true;render()},
+  annullaPacchetto:d=>{const c=S.crediti.find(x=>x.id===d.id);if(!c)return;const nm=(doc(c.docId)||{}).name||"";
+    UI.doppia={titolo:"Annullare il pacchetto?",testo:`<b>${esc(nm)}</b>: ${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)}. Le ore spariscono dal suo contatore e il compenso di ${eur(r2(c.ore*CANONE_ORA))} non è più dovuto.`,testo2:"Il pacchetto viene annullato subito. Confermi definitivamente?",
+      fn:()=>{c.stato="annullato";c.annullatoAt=Date.now();logA("Pacchetto annullato",`${nm} · ${oreFmt(c.ore)}`);addNotif("spec:"+c.docId,"ore","Pacchetto annullato",`Il pacchetto di ${oreFmt(c.ore)} è stato annullato. Per informazioni contatta Clinia.`);
+        if(isFpm())addNotif("titolare","ore","Pacchetto annullato da FPM",`${nm}: ${oreFmt(c.ore)}.`);else notifFPM("ore","Pacchetto annullato da Clinia",`${nm}: ${oreFmt(c.ore)} · compenso ${eur(r2(c.ore*CANONE_ORA))} tolto.`);save();toast("Pacchetto annullato");render()}};
+    UI.sheet={type:"doppia",step:1};render()},
+  eliminaAccount:()=>{UI.doppia={titolo:"Eliminare il tuo account?",testo:"Cancelli i tuoi dati dall’app su questo telefono e sul server. Non si può annullare.",testo2:"Ultima conferma: l’account viene eliminato adesso.",
+      fn:async()=>{const em=S.auth&&S.auth.email,id=S.proId,pro=isPro();await DB.eliminaAccount();
+        if(pro&&id){if(S.accessi[id]&&S.accessi[id].email===em)S.accessi[id].stato="eliminato";notifFPM("accesso","Account eliminato",`${(doc(id)||{}).name||em} ha eliminato il suo account.`);addNotif("titolare","accesso","Account eliminato",`${(doc(id)||{}).name||""} ha eliminato il suo account.`)}
+        else{S.appts=S.appts.filter(a=>a.ownerEmail!==em);S.family=[];S.files.forEach(f=>IDB.set(f.id,null));S.files=[];S.cards=[];S.msgs={};S.photo=null;S.hinfo={}}
+        S.notifs=S.notifs.filter(n=>!(n.to==="user:"+em||(id&&n.to==="spec:"+id)));logA("Account eliminato",pro&&id?(doc(id)||{}).name:"paziente");ACT.logout();toast("Account eliminato")}};
+    UI.sheet={type:"doppia",step:1};render()},
   doppiaSi:()=>{const s=UI.sheet;if(s.step===1){s.step=2;return render()}const fn=UI.doppia&&UI.doppia.fn;UI.sheet=null;UI.doppia=null;render();if(fn)fn()},
   doppiaNo:()=>{const back=UI.doppia&&UI.doppia.indietro;UI.sheet=back||null;UI.doppia=null;toast("Annullato");render()},
   prosp:d=>{UI.prospDa=addDays(UI.prospDa||today(),+d.v);render()},
   cellaStanza:d=>{UI.sheet={type:"stanzaGiorno",id:d.id,ds:d.v};render()},
   annullaTurno:d=>{if(isFpm())return;const b=S.rooms.find(x=>x.id===d.id);if(!b)return;if(!confirm("Annullare questo turno? Il dottore riceve un avviso."))return;
-    S.rooms=S.rooms.filter(x=>x.id!==d.id);addNotif("spec:"+b.doctorId,"studio_annullato","Turno annullato da Clinia",`${room(b.roomId).name} · ${fmtD(b.date,{day:"numeric",month:"short"})} ${b.start}–${b.end}. Le ore tornano disponibili.`);save();toast("Turno annullato");render()},
-  chiudiStanza:d=>{if(isFpm())return;const l=S.chiusure[d.id]=S.chiusure[d.id]||[];const i=l.indexOf(d.v);if(i>=0)l.splice(i,1);else l.push(d.v);save();toast(i>=0?"Studio riaperto":"Studio chiuso in questa data");render()},
+    S.rooms=S.rooms.filter(x=>x.id!==d.id);logA("Turno annullato",`${(doc(b.doctorId)||{}).name} · ${room(b.roomId).name} ${b.date} ${b.start}–${b.end}`);addNotif("spec:"+b.doctorId,"studio_annullato","Turno annullato da Clinia",`${room(b.roomId).name} · ${fmtD(b.date,{day:"numeric",month:"short"})} ${b.start}–${b.end}. Le ore tornano disponibili.`);save();toast("Turno annullato");render()},
+  chiudiStanza:d=>{if(isFpm())return;const l=S.chiusure[d.id]=S.chiusure[d.id]||[];const i=l.indexOf(d.v);if(i>=0)l.splice(i,1);else l.push(d.v);logA(i>=0?"Studio riaperto":"Studio chiuso",`${room(d.id).name} · ${d.v}`);save();toast(i>=0?"Studio riaperto":"Studio chiuso in questa data");render()},
   delEntrata:d=>{if(isFpm())return;S.entrate=S.entrate.filter(x=>x.id!==d.id);save();render()},
   contCsv:async()=>{const y=UI.contAnno||today().slice(0,4),A=movimentiClinia(y),q=v=>`"${String(v).replace(/"/g,'""')}"`;
     const righe=[["Tipo","Data","Descrizione","Categoria","Imponibile","IVA","Totale"].join(";"),...A.ent.map(x=>["Entrata",x.data,q(x.descr),q(x.cat),String(x.imp).replace(".",","),String(x.iva).replace(".",","),String(x.tot).replace(".",",")].join(";")),...A.usc.map(x=>["Uscita",x.data,q(x.descr),q(x.cat),"","",String(x.tot).replace(".",",")].join(";"))];
@@ -2379,15 +2404,15 @@ const ACT={
   fatturaPdf:async d=>{const x=S.pagDott.find(p=>p.id===d.id);if(!x)return;try{const{blob,nome}=await fatturaPDF(x);await salvaFile(blob,nome,"application/pdf")}catch(e){toast("Fattura non creata: "+(e.message||e))}},
   delPersona:d=>{S.persone[S.proId]=(S.persone[S.proId]||[]).filter(x=>x.id!==d.id);save();render()},
   azzera:d=>{UI.azzera=d.v||null;render()},
-  azzeraOk:()=>{const k=UI.azzera;UI.azzera=null;if(!k)return;const t=eseguiAzzera(k);save();notifFPM("azzera","Azzeramento",t);toast(t);render()},
+  azzeraOk:()=>{const k=UI.azzera;UI.azzera=null;if(!k)return;const t=eseguiAzzera(k);logA("Azzeramento",t);save();notifFPM("azzera","Azzeramento",t);toast(t);render()},
   ricontrolla:()=>{if(!inAttesa()){toast("Accesso confermato: benvenuto in Clinia App");return afterAuthFlow()}toast("Ancora in attesa di conferma");render()},
   nuovoTipo:d=>{UI.nuovoTipo=d.v;render()},
   accesso:d=>{const a=S.accessi[d.id];if(!a)return;const nm=doc(d.id).name;if(isOwner())notifFPM("accesso",d.v==="ok"?"Clinia ha attivato un accesso":"Clinia ha rifiutato un accesso",`${nm} (${a.email})`);
-    if(d.v==="ok"){a.stato="approvato";a.confAt=Date.now();addNotif("spec:"+d.id,"accesso","Accesso confermato","Benvenuto in Clinia App: ora puoi prenotare gli studi e ricevere i pazienti.");addNotif("titolare","accesso","Nuovo dottore attivo",`${nm} è operativo in Clinia App.`);toast(`${nm} è operativo`)}
+    logA(d.v==="ok"?"Accesso attivato":"Accesso rifiutato",`${nm} · ${a.email}`);if(d.v==="ok"){a.stato="approvato";a.confAt=Date.now();addNotif("spec:"+d.id,"accesso","Accesso confermato","Benvenuto in Clinia App: ora puoi prenotare gli studi e ricevere i pazienti.");addNotif("titolare","accesso","Nuovo dottore attivo",`${nm} è operativo in Clinia App.`);toast(`${nm} è operativo`)}
     else{if(!confirm(`Rifiutare l’accesso di ${nm} (${a.email})?`))return;a.stato="rifiutato";toast("Accesso rifiutato")}
     save();render()},
   rimuoviDottore:d=>{const nm=doc(d.id).name;if(!confirm(`Rimuovere ${nm} da Clinia App?\nSparisce dall’app, dal monitor e dal sito; le sue visite future vengono annullate e i pazienti avvisati.`))return;
-    S.rimossi[d.id]=Date.now();S.pubblica[d.id]={};if(S.accessi[d.id])S.accessi[d.id].stato="rimosso";
+    S.rimossi[d.id]=Date.now();logA("Dottore rimosso",nm);S.pubblica[d.id]={};if(S.accessi[d.id])S.accessi[d.id].stato="rimosso";
     let n=0;S.appts.filter(a=>a.doctorId===d.id&&(a.status==="richiesta"||a.status==="confermata"||!a.status)&&a.date>=today()).forEach(a=>{a.status="annullata";n++;DB.update("appointments",a.id,{stato:"annullata"});if(a.ownerEmail)addNotif("user:"+a.ownerEmail,"visita_annullata","Visita annullata",`${nm} non riceve più in Clinia: la visita del ${fmtD(a.date,{day:"numeric",month:"short"})} è annullata. Scegli un altro specialista.`,a.id)});
     S.rooms=S.rooms.filter(b=>!(b.doctorId===d.id&&b.date>=today()));
     addNotif("titolare","accesso","Dottore rimosso",`${nm} non è più in Clinia App${n?` · ${n} visite future annullate`:""}.`);save();toast(`${nm} rimosso da app, monitor e sito`);render()},
@@ -2497,7 +2522,7 @@ const ACT={
         testo2:`Le ${oreFmt(oreServono)} vengono scalate subito dal tuo contatore. Confermi definitivamente?`,fn:()=>{sh.doppioOk=true;UI.sheet=sh;ACT.confirmRoom()}};UI.sheet={type:"doppia",step:1};return render()}}
     if(DB.on&&(isOwner()||!STRIPE.publishableKey)){const list=plan.map(ds=>({doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id}));UI.sheet=null;render();
       await DB.saveRooms(list,isOwner());return toast(isOwner()?`${r.name} prenotato`:`${r.name} riservato: il pagamento con carta si attiva quando colleghiamo Stripe`)}
-    if(true){plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
+    if(true){if(!isOwner())logA("Stanza prenotata",`${r.name} · ${plan.join(", ")} ${toT(sh.start)}–${toT(sh.end)} · ${oreFmt(oreServono)}`);plan.forEach(ds=>S.rooms.push({id:uid(),doctorId:S.proId,date:ds,start:toT(sh.start),end:toT(sh.end),roomId:r.id,perc:perc?percStudio(r.id):undefined}));save();UI.sheet=null;
       if(!isOwner())addNotif("titolare","studio_prenotato","Studio prenotato",`${doc(S.proId).name} · ${r.name} · ${plan.map(ds=>fmtD(ds,{day:"numeric",month:"short"})).join(", ")} ${toT(sh.start)}–${toT(sh.end)}${perc?" · a percentuale":""}`);
       notifFPM("studio_prenotato","Studio prenotato",`${isOwner()?"Clinia":doc(S.proId).name} · ${r.name} · ${oreFmt(oreServono)}${isOwner()?"":" scalate · restano "+oreFmt(oreUso(S.proId).residue)}`);render();
       return toast(`${r.name} prenotato${isOwner()?"":" · "+oreFmt(oreServono)+" scalate"}${plan.length>1?" per "+plan.length+" settimane":""}${skip.length?" (occupato il "+skip.join(", ")+")":""}`)}
@@ -2643,14 +2668,14 @@ const FORMS={
     const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
     if(pw||f.pw2.value){if(pw!==f.pw2.value)return err.textContent="Le due password non coincidono.";if(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri."}
     if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
-    S.cred[fpm?"fpm":"titolare"]={email:em||cur.email,hash:pw?await sha256(salt+pw):cur.hash};S.auth.email=em||cur.email;save();if(!fpm)notifFPM("accesso","Clinia ha cambiato le credenziali","La Direzione Clinia ha aggiornato e-mail o password.");toast("Accesso aggiornato");f.reset();render()},
+    logA("Credenziali cambiate",fpm?"FPM":"Clinia");S.cred[fpm?"fpm":"titolare"]={email:em||cur.email,hash:pw?await sha256(salt+pw):cur.hash};S.auth.email=em||cur.email;save();if(!fpm)notifFPM("accesso","Clinia ha cambiato le credenziali","La Direzione Clinia ha aggiornato e-mail o password.");toast("Accesso aggiornato");f.reset();render()},
   credReset:async f=>{const err=$("#crr-err");err.textContent="";const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
     if(pw&&(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri.";if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
-    const cur=credOwner();S.cred.titolare={email:em||cur.email,hash:pw?await sha256("clinia-titolare:"+pw):cur.hash};save();addNotif("titolare","accesso","Accesso reimpostato da FPM","E-mail o password della Direzione sono state reimpostate.");toast("Accesso di Clinia reimpostato");f.reset();render()},
+    logA("Accesso di Clinia reimpostato","");const cur=credOwner();S.cred.titolare={email:em||cur.email,hash:pw?await sha256("clinia-titolare:"+pw):cur.hash};save();addNotif("titolare","accesso","Accesso reimpostato da FPM","E-mail o password della Direzione sono state reimpostate.");toast("Accesso di Clinia reimpostato");f.reset();render()},
   pagDott:f=>{if(isFpm())return toast("Vista di sola consultazione");const id=f.dataset.id,err=$("#pd-err-"+id);err.textContent="";const imp=parseFloat(String(f.imp.value).replace(/\./g,"").replace(",","."));
     if(!(imp>0))return err.textContent="Scrivi l’imponibile, per esempio 1.000.";const iva=+f.iva.value,anno=(f.data.value||today()).slice(0,4);S.fattNum[anno]=(S.fattNum[anno]||0)+1;
     const x={id:uid(),docId:id,nome:doc(id).name,descr:f.descr.value.trim()||"Utilizzo studi Clinia",imp:r2(imp),iva,totale:r2(imp*(1+iva)),data:f.data.value||today(),metodo:f.metodo.value,numero:S.fattNum[anno],anno,at:Date.now()};
-    S.pagDott.push(x);UI.pagOpen=null;save();notifFPM("pagamento","Pagamento registrato da Clinia",`${x.nome}: ${eur(x.totale)} · fattura ${x.numero}/${anno}`);toast(`Pagamento registrato · fattura ${x.numero}/${anno}`);render();
+    S.pagDott.push(x);UI.pagOpen=null;logA("Pagamento e fattura",`${x.nome} · ${eur(x.totale)} · n. ${x.numero}/${anno}`);save();notifFPM("pagamento","Pagamento registrato da Clinia",`${x.nome}: ${eur(x.totale)} · fattura ${x.numero}/${anno}`);toast(`Pagamento registrato · fattura ${x.numero}/${anno}`);render();
     fatturaPDF(x).then(({blob,nome})=>salvaFile(blob,nome,"application/pdf")).catch(()=>{})},
   nuovoSoggetto:f=>{if(isFpm())return toast("Vista di sola consultazione");const v=k=>(f[k]?f[k].value:"").trim(),err=$("#ns-err");err.textContent="";const ente=UI.nuovoTipo==="ente";
     const em=v("email").toLowerCase();if(!v("nome")||(!ente&&!v("cognome")))return err.textContent=ente?"Scrivi la ragione sociale.":"Scrivi nome e cognome.";
@@ -2661,7 +2686,7 @@ const FORMS={
       :{id,name,role:v("spec")||v("ruolo"),area:"medicina",bio:[],professione:v("ruolo"),specs:v("spec")?[v("spec")]:[]};
     const prof=!ente?{nome:v("nome"),cognome:v("cognome"),titolo:v("titolo"),email:em,telefono:v("tel"),professione:v("ruolo"),specs:d.specs}:null;
     UI.doppia={titolo:`Aggiungere ${ente?"l’ente":"il dottore"}?`,testo:`<b>${esc(name)}</b> · ${esc(d.role)}<br>Accesso con l’e-mail <b>${esc(em)}</b>.`,testo2:`${esc(name)} diventa attivo in Clinia App: entrando con ${esc(em)} vede subito la sua sezione. Confermi definitivamente?`,
-      fn:()=>{S.customDocs.push(d);DOCTORS.push(d);S.accessi[id]={email:em,stato:"approvato",da:"clinia",at:Date.now(),confAt:Date.now()};if(prof)S.proProfile[id]=prof;
+      fn:()=>{logA(ente?"Ente aggiunto":"Dottore aggiunto",`${name} · ${em}`);S.customDocs.push(d);DOCTORS.push(d);S.accessi[id]={email:em,stato:"approvato",da:"clinia",at:Date.now(),confAt:Date.now()};if(prof)S.proProfile[id]=prof;
         save();notifFPM("accesso","Clinia ha aggiunto "+(ente?"un ente":"un dottore"),`${name} · ${em}. Attivo: aspetta il pacchetto di ore.`);
         f.reset();toast(`${name} aggiunto e attivo: ora registra il suo pacchetto`);render()}};
     UI.sheet={type:"doppia",step:1};render()},
@@ -2683,7 +2708,7 @@ const FORMS={
     UI.doppia={titolo:"Confermi il pacchetto?",testo:`<b>${esc(nm)}</b>: pacchetto ${esc(PACCHETTI[tipo].toLowerCase())} di <b>${oreFmt(c.ore)}</b> dal ${new Date(inizio).toLocaleDateString("it-IT")}${c.scadenza?` al ${new Date(addDays(c.scadenza,-1)).toLocaleDateString("it-IT")}`:""}${file?", con il contratto firmato":", senza contratto allegato"}.`,
       testo2:`Le ${oreFmt(c.ore)} diventano attive subito nell’app di ${esc(nm)}. Confermi definitivamente?`,
       fn:async()=>{if(file&&!(await IDB.set("contr:"+c.id,{name:file.name,blob:file})))return toast("Non riesco a salvare il contratto su questo dispositivo.");
-        c.confAt=Date.now();if(UI.scan)delete UI.scan[id];S.crediti.push(c);
+        c.confAt=Date.now();if(UI.scan)delete UI.scan[id];S.crediti.push(c);logA("Pacchetto attivato",`${nm} · ${PACCHETTI[tipo]} ${oreFmt(c.ore)}`);
         const ac=S.accessi[id];if(ac&&ac.stato==="attesa"){ac.stato="approvato";ac.confAt=Date.now()}
         addNotif("spec:"+id,"ore","Ore attive",`Clinia ha attivato il tuo pacchetto ${PACCHETTI[tipo].toLowerCase()} di ${oreFmt(c.ore)}: scalano a ogni stanza che prenoti.`);
         notifFPM("ore","Nuovo pacchetto attivo",`${nm}: ${PACCHETTI[tipo]} ${oreFmt(c.ore)} → compenso ${eur(r2(c.ore*CANONE_ORA))}${file?" · contratto allegato":""}.`);
@@ -2691,7 +2716,7 @@ const FORMS={
     UI.sheet={type:"doppia",step:1};render()},
   fissoAnnuo:f=>{const v=String(f.importo.value).trim(),n=v?parseFloat(v.replace(/\./g,"").replace(",",".")):0;if(v&&!(n>=0))return toast("Scrivi l’importo, per esempio 1.200");S.fpm.fissoAnnuo=r2(n);save();toast(n?`Compenso fisso annuale: ${eur(n)}`:"Compenso fisso annuale: da concordare");render()},
   creditoFpm:f=>{const id=f.dataset.id,ore=parseFloat(String(f.ore.value).replace(",","."));if(!(ore>0&&ore<=2000))return toast("Scrivi le ore da accreditare, per esempio 50.");
-    const tipo=(f.tipo&&f.tipo.value)||"ore";S.crediti.push({id:uid(),docId:id,tipo,ore:r2(ore),inizio:today(),scadenza:scadenzaDi(tipo,today()),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});
+    const tipo=(f.tipo&&f.tipo.value)||"ore";logA("Ore accreditate da FPM",`${doc(id).name} · ${oreFmt(ore)}`);S.crediti.push({id:uid(),docId:id,tipo,ore:r2(ore),inizio:today(),scadenza:scadenzaDi(tipo,today()),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});
     if(S.accessi[id]&&S.accessi[id].stato==="attesa")S.accessi[id].stato="approvato";save();
     addNotif("spec:"+id,"ore","Ore accreditate",`Hai ${oreFmt(ore)} in più: scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore accreditate da FPM",`${doc(id).name}: ${oreFmt(ore)}.`);
     toast(`${oreFmt(ore)} accreditate a ${doc(id).name}`);render()},
@@ -2813,6 +2838,8 @@ const DB={on:false,c:null,
     if(r.error)return toast("Profilo non salvato sul server: "+r.error.message);
     r=await this.c.from("specialist_private").upsert({specialist_id:id,email:d.email,telefono:d.telefono||null,pec:d.pec||null,partita_iva:d.piva||null,codice_fiscale:d.cf||null,codice_sdi:d.sdi||null,iscrizione_albo:d.iscrizione||null,indirizzo_fatturazione:[d.indirizzo,d.cap,d.citta].filter(Boolean).join(", ")||null});
     if(r.error)toast("Dati di fatturazione non salvati sul server: "+r.error.message)},
+  async eliminaAccount(){if(!this.on)return;try{const{data:ss}=await this.c.auth.getSession();const tk=ss&&ss.session&&ss.session.access_token;if(!tk)return;
+    await fetch(SUPABASE.url+"/functions/v1/elimina-account",{method:"POST",headers:{Authorization:"Bearer "+tk,apikey:SUPABASE.anonKey}});await this.c.auth.signOut()}catch(e){toast("Eliminazione sul server non riuscita: riprova o scrivi a Clinia")}},
   async saveServices(id,l){if(!this.on)return;let r=await this.c.from("services").delete().eq("specialist_id",id);
     if(!r.error)r=await this.c.from("services").insert(l.map((x,i)=>({specialist_id:id,nome:x.name,tipo:x.tipo,durata_min:x.dur,prezzo:x.price,online:x.online,ordine:i})));
     if(r.error)toast("Prestazioni non salvate sul server: "+r.error.message)},

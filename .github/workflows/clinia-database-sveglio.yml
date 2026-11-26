@@ -1,0 +1,20 @@
+# Clinia App · tiene sveglio il database Supabase gratuito (che va in pausa dopo una settimana senza uso).
+# Ogni giorno legge l'elenco pubblico dei medici: una lettura basta a contare come "attività".
+# La chiave usata è quella pubblica dell'app (anon), già presente in clinia-app/index.html: non dà accesso ai dati privati.
+name: Clinia · database sveglio
+on:
+  schedule:
+    - cron: "17 5 * * *"     # ogni giorno alle 5:17 UTC
+  workflow_dispatch:
+jobs:
+  sveglia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lettura del database
+        env:
+          URL: https://iuydwatobtrpzhotcfyd.supabase.co
+          ANON: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1eWR3YXRvYnRycHpob3RjZnlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQyODAwNDgsImV4cCI6MjEwOTg1NjA0OH0.T8HNEAJn5h-fEb6ZPEH-Xl838DXZk_j2sTm9B_bCYOA
+        run: |
+          codice=$(curl -s -o risposta.json -w "%{http_code}" "$URL/rest/v1/medici_attivi?select=id&limit=1" -H "apikey: $ANON" -H "Authorization: Bearer $ANON")
+          echo "Risposta: $codice"; head -c 200 risposta.json; echo
+          if [ "$codice" != "200" ]; then echo "::warning::Il database non ha risposto ($codice): potrebbe essere in pausa. Riattivalo da supabase.com."; exit 1; fi

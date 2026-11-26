@@ -1,0 +1,27 @@
+# Clinia App · backup notturno del database Supabase.
+# DA COPIARE nel repository PRIVATO dei backup come .github/workflows/backup.yml (vedi LEGGIMI.md):
+# i dati di Clinia non devono mai finire in un repository pubblico.
+name: Clinia · backup notturno
+on:
+  schedule:
+    - cron: "41 2 * * *"     # ogni notte alle 2:41 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copia di tutte le tabelle
+        env:
+          SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+          SUPABASE_PROGETTO: iuydwatobtrpzhotcfyd
+        run: python3 backup_supabase.py backup
+      - name: Salva nel repository privato
+        run: |
+          git config user.name "Clinia backup"
+          git config user.email "backup@users.noreply.github.com"
+          git add backup
+          git diff --cached --quiet || git commit -m "Backup $(date -u +%Y-%m-%d)"
+          git push

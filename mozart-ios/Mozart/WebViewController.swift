@@ -144,7 +144,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
             }
             var req = URLRequest(url: url)
             req.timeoutInterval = 60
-            req.setValue("Mozart/1.0 (iOS)", forHTTPHeaderField: "User-Agent")
+            req.setValue("Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
             URLSession.shared.dataTask(with: req) { data, resp, err in
                 DispatchQueue.main.async {
                     if let err = err { replyHandler(nil, err.localizedDescription); return }

@@ -532,6 +532,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="cam">${iconSvg('camera')}Scansione (foto → spartito)</button>
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
     <button class="toolRow" data-m="web">${iconSvg('file')}Dal web (link a PDF o foto)</button>
+    <button class="toolRow" data-m="pop">${iconSvg('voice')}Canto pop: testi e accordi</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}<b>Crea</b>&nbsp;· scrivi le note</button>
     <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
@@ -539,7 +540,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),web:()=>WebImport.open('new'),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),web:()=>WebImport.open('new'),pop:()=>PopSong.open(),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------

@@ -691,6 +691,7 @@ body:not(.immersive) #fsTimer{display:none}
 .guideGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}@media(max-width:620px){.guideGrid{grid-template-columns:1fr}}
 .gRow{display:flex;gap:12px;align-items:flex-start}.gRow b{font-size:15px}.gRow p{margin:2px 0 0;color:var(--muted);font-size:13.5px;line-height:1.35}
 .gIc{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(214,168,78,.14);color:var(--gold-hi)}.gIc svg{width:22px;height:22px}
+.ppPre{white-space:pre;overflow:auto;max-height:46vh;background:#0e0c08;border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;font-family:ui-monospace,Menlo,Consolas,monospace;line-height:1.35;color:var(--text)}.ppC{color:#ff8a6b;font-weight:700}
 
 </style>
 </head>
@@ -786,6 +787,7 @@ body:not(.immersive) #fsTimer{display:none}
         <button class="toolRow gold" data-act="insert"><svg class="i" data-i="plusDoc"></svg>Inserisci pagine<small>PDF · foto · righe</small></button>
         <button class="toolRow gold" data-act="singers"><svg class="i" data-i="voice"></svg>Per Cantanti<small>vocalizzi · rec</small></button>
         <button class="toolRow gold" data-act="lyr"><svg class="i" data-i="book"></svg>Pronuncia e traduzione<small>versi sotto ogni voce</small></button>
+        <button class="toolRow gold" data-act="pop"><svg class="i" data-i="voice"></svg>Canto pop<small>testi e accordi dal web</small></button>
         <button class="toolRow" data-act="pron"><svg class="i" data-i="voice"></svg>Pronuncia italianizzata<small>latino · tedesco · francese</small></button>
         <button class="toolRow gold" data-act="scanInsert"><svg class="i" data-i="camera"></svg>Scansiona<small>fotocamera · bordi automatici</small></button>
         <button class="toolRow" data-act="web"><svg class="i" data-i="file"></svg>Importa dal web<small>link a PDF o foto</small></button>
@@ -1732,6 +1734,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="cam">${iconSvg('camera')}Scansione (foto → spartito)</button>
     <button class="toolRow" data-m="img">${iconSvg('image')}Foto dalla libreria</button>
     <button class="toolRow" data-m="web">${iconSvg('file')}Dal web (link a PDF o foto)</button>
+    <button class="toolRow" data-m="pop">${iconSvg('voice')}Canto pop: testi e accordi</button>
     <div class="eyebrow" style="padding:12px 10px 4px">Aggiungi spartiti</div>
     <button class="toolRow" data-m="crea">${iconSvg('pen')}<b>Crea</b>&nbsp;· scrivi le note</button>
     <button class="toolRow" data-m="dups">${iconSvg('copy')}Trova spartiti doppi</button>
@@ -1739,7 +1742,7 @@ function showImportPop(el,above){
     <button class="toolRow" data-m="tpl">${iconSvg('staff')}Modelli: pentagrammata vuota</button>
     <button class="toolRow" data-m="fs">${iconSvg('backup')}Backup o archivio forScore (.4sb)</button>
     <button class="toolRow" data-m="backup">${iconSvg('backup')}Ripristina da backup</button></div>`,{above});
-  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),web:()=>WebImport.open('new'),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
+  p.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;closeLayers();({pdf:()=>Insert.pickPdf('new'),cam:()=>Insert.fromPhoto('new'),img:()=>Insert.fromPhoto('new',true),web:()=>WebImport.open('new'),pop:()=>PopSong.open(),crea:()=>Compose.open('new'),dups:()=>Dups.open(),fsmiss:()=>FS4.report({pdfs:0,dups:0,matched:0,setlists:0,errors:[],resume:true}),tpl:()=>Insert.templatesNew(),fs:()=>FS4.pick(),backup:()=>showBackup()})[b.dataset.m]()};
 }
 
 // ---------- Ritaglia margini ----------
@@ -6944,7 +6947,7 @@ const ChordSheet = {
   fromHtml(html){ const d=new DOMParser().parseFromString(html,'text/html'); d.querySelectorAll('script,style,noscript,nav,header,footer').forEach(n=>n.parentNode&&n.parentNode.removeChild(n)); const pre=[...d.querySelectorAll('pre')].sort((a,b)=>b.textContent.length-a.textContent.length)[0];
     let txt=pre?pre.textContent:(()=>{ d.querySelectorAll('br').forEach(b=>b.replaceWith('\n')); return d.body?d.body.innerText||d.body.textContent:''; })(); return {text:txt.replace(/\r/g,''),title:(d.title||'').replace(/\s*[|\-–].*$/,'').trim()}; },
   stats(text){ const L=text.split('\n'); const ch=L.filter(l=>this.isChordLine(l)).length; return {lines:L.length,chords:ch}; },
-  safe(s){ return String(s).replace(/♯/g,'#').replace(/♭/g,'b').replace(/[^\x20-\x7E -ÿ]/g,'?').replace(/\t/g,'    '); },
+  safe(s){ return String(s).replace(/♯/g,'#').replace(/♭/g,'b').replace(/[–—]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/\t/g,'    ').replace(/[^\n\x20-\x7E\u00A0-\u00FF]/g,'?'); },
   async toPdf(text,title){
     const doc=await PDFLib.PDFDocument.create(); const reg=await doc.embedFont(PDFLib.StandardFonts.Courier), bold=await doc.embedFont(PDFLib.StandardFonts.CourierBold), head=await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
     const lines=this.safe(text).split('\n').map(l=>l.replace(/\s+$/,'')); const W=595, H=842, M=48; const maxLen=Math.max(30,...lines.map(l=>l.length)); const fs=Math.max(7,Math.min(11.5,(W-2*M)/(maxLen*.6))), lh=fs*1.32;
@@ -6994,6 +6997,78 @@ Anno.guide=function(){ closeLayers();
   m.querySelector('[data-ok]').onclick=()=>{ if($('#gNo').checked){ ST.settings.annoGuide=false; saveSettings(); } closeLayers(); }; };
 (function(){ const b0=Anno.buildBar; Anno.buildBar=function(){ const r=b0.apply(this,arguments); try{ Anno.labelBar(); }catch(e){} return r; };
   const e0=Anno.enter; Anno.enter=function(){ const r=e0.apply(this,arguments); if(ST.annotate&&ST.settings.annoGuide!==false&&(ST.settings.annoGuideN||0)<3){ ST.settings.annoGuideN=(ST.settings.annoGuideN||0)+1; saveSettings(); setTimeout(()=>{ if(ST.annotate&&!document.querySelector('.modal')) Anno.guide(); },500); } return r; }; })();
+
+// ============ Canto pop: testi e accordi da accordiespartiti.it (e da testo incollato) ============
+const IT_ROOT=['DO','RE','MI','FA','SOL','LA','SI'], EN_ROOT=['C','D','E','F','G','A','B'], ROOT_PC=[0,2,4,5,7,9,11];
+const CH_RE=/^(DO|RE|MI|FA|SOL|LA|SI|Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|♯|♭)?((?:m(?!aj)|min|maj|M|dim|aug|sus\d*|add\d*|[+\-°ø]|\d+|\/\d+[+\-]?|[#b♯♭]\d+|\([^)]*\))*)(?:\/(DO|RE|MI|FA|SOL|LA|SI|Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|♯|♭)?)?$/;
+ChordSheet.isChordLine=function(l){ const t=l.trim().split(/\s+/).filter(Boolean); if(!t.length||t.length>24) return false;
+  const n=t.filter(x=>CH_RE.test(x.replace(/[|]/g,''))||/^[|%x\-–:]+\d*$/.test(x)||/^x\d+$/i.test(x)).length; const real=t.filter(x=>CH_RE.test(x.replace(/[|]/g,''))).length; return real>=1&&n>=Math.ceil(t.length*.7); };
+const PopSong = {
+  names:'orig', shift:0, mode:'both', size:100, title:'', artist:'', raw:'', results:[],
+  slugArtist(u){ const m=String(u).match(/accordi\/[^/]+\/([^/]+)\//); return m?m[1].split('-').reverse().map(w=>w[0].toUpperCase()+w.slice(1)).join(' '):''; },
+  parse(html,url){ const d=new DOMParser().parseFromString(html,'text/html'); const pre=[...d.querySelectorAll('pre')].sort((a,b)=>b.textContent.length-a.textContent.length)[0]; if(!pre) return null;
+    let text=pre.textContent.replace(/\r/g,'').replace(/ /g,' ').replace(/^\n+/,'').replace(/\s+$/,'');
+    let title=(d.querySelector('h1')?d.querySelector('h1').childNodes[0].textContent:'')||''; title=title.replace(/\s+/g,' ').trim(); if(!title) title=(d.title||'').replace(/\s*Accordi.*$/i,'').trim();
+    const desc=(d.querySelector('meta[name="description"]')||{}).content||''; let artist=''; const k=desc.indexOf(title+' di '); if(title&&k>=0) artist=desc.slice(k+title.length+4).split(/\.\s/)[0]; if(!artist) artist=this.slugArtist(url||''); return {title,artist:artist.trim(),text}; },
+  async get(url){ const r=await WebImport.get(url); return new TextDecoder().decode(r.bytes); },
+  async search(q){ const html=await this.get('https://www.accordiespartiti.it/?s='+encodeURIComponent(q)); const d=new DOMParser().parseFromString(html,'text/html'); const seen=new Set(), out=[];
+    d.querySelectorAll('a[href*="/accordi/"]').forEach(a=>{ const h=a.getAttribute('href'); if(!/accordiespartiti\.it\/accordi\/[^/]+\/[^/]+\/[^/]+\/?$/.test(h)||seen.has(h)) return; const parts=a.textContent.split(/\n/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean); if(!parts.length) return; seen.add(h);
+      out.push({url:h,title:parts[0],artist:parts[1]||this.slugArtist(h)}); });
+    return out.slice(0,25); },
+  // trasposizione e cambio di notazione, mantenendo le colonne degli accordi
+  rootIdx(n){ const u=n.toUpperCase(); let i=IT_ROOT.indexOf(u); if(i<0) i=EN_ROOT.indexOf(n); return i; },
+  fmtChord(tok,names,shift,flats){ const core=tok.replace(/[|]/g,''); const m=CH_RE.exec(core); if(!m) return tok; if(names==='orig'&&!shift) return tok;
+    const itOrig=/^[A-Za-z]{2,3}$/.test(m[1])&&m[1].length>=2&&IT_ROOT.includes(m[1].toUpperCase()); const useIt=names==='it'||(names==='orig'&&itOrig);
+    const nm=(letter,acc,sh)=>{ const idx=this.rootIdx(letter); let pc=(ROOT_PC[idx]+(/[#♯]/.test(acc||'')?1:/[b♭]/.test(acc||'')?-1:0)+sh+240)%12; const SH=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'], FL=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']; let e=(flats?FL:SH)[pc];
+      if(useIt){ const base=IT_ROOT[EN_ROOT.indexOf(e[0])]; e=(itOrig&&names==='orig'?base:base[0]+base.slice(1).toLowerCase())+e.slice(1); } return e; };
+    let suf=m[3]||''; if(!useIt&&/\d|\//.test(suf)&&itOrig||(names==='en')){ suf=suf.replace(/m7\/9/,'m9').replace(/7\+/,'maj7').replace(/\/5-/,'b5').replace(/\/5\+/,'#5').replace(/7\/4/,'7sus4').replace(/\/4/,'sus4').replace(/\/9/,'add9').replace(/\/6/,'6'); }
+    let out=nm(m[1],m[2],shift)+suf; if(m[4]) out+='/'+nm(m[4],m[5],shift); return tok.replace(core,out); },
+  convert(text,names,shift){ const flats=(()=>{ const all=text.match(/\b(?:DO|RE|MI|FA|SOL|LA|SI|[A-G])b/g)||[], sh=text.match(/\b(?:DO|RE|MI|FA|SOL|LA|SI|[A-G])#/g)||[]; return shift<0?true:shift>0?(all.length>sh.length+2):all.length>sh.length; })();
+    return text.split('\n').map(line=>{ if(!ChordSheet.isChordLine(line)) return line; let out='', col=0; line.replace(/\S+/g,(tok,pos)=>{ const t=this.fmtChord(tok,names,shift,flats); const at=Math.max(pos,out.length?out.length+1:pos); out=out.padEnd(at,' ')+t; return tok; }); return out; }).join('\n'); },
+  view(){ let t=this.convert(this.raw,this.names,this.shift); const L=t.split('\n');
+    if(this.mode==='lyrics') t=L.filter(l=>!ChordSheet.isChordLine(l)).join('\n').replace(/\n{3,}/g,'\n\n'); else if(this.mode==='chords') t=L.filter(l=>ChordSheet.isChordLine(l)||(l.trim().length>0&&l.trim().length<=22&&/:\s*$/.test(l))).join('\n').replace(/\n{3,}/g,'\n\n'); return t; },
+  keyHint(){ const c=(this.convert(this.raw,this.names,this.shift).split('\n').find(l=>ChordSheet.isChordLine(l))||'').trim().split(/\s+/)[0]||''; return c; },
+  open(){ closeLayers();
+    const m=modal('Canto pop',`<div class="hint">Cerca un brano su <b>Accordi e Spartiti</b> oppure incolla il link: Mozart ne estrae testo e accordi, li allinea e li importa come spartito da annotare.</div>
+      <div style="display:flex;gap:8px;margin:10px 0"><input id="ppQ" type="search" placeholder="Titolo o artista (es. Mille giorni di te e di me)" style="flex:1" autocapitalize="off" autocorrect="off"><button class="goldBtn" id="ppGo">${iconSvg('search')}Cerca</button></div>
+      <div id="ppRes"></div>
+      <details id="ppMan"><summary class="hint" style="cursor:pointer">Ho già il link o il testo</summary><div class="field"><label for="ppU">Link del brano</label><div style="display:flex;gap:8px"><input id="ppU" type="url" placeholder="https://www.accordiespartiti.it/accordi/…" style="flex:1"><button class="ghostBtn" id="ppUGo">Apri</button></div></div>
+        <div class="field"><label for="ppP">Oppure incolla testo e accordi</label><textarea id="ppP" rows="5" style="font-family:ui-monospace,Menlo,monospace;font-size:13px;white-space:pre"></textarea><button class="ghostBtn" id="ppPGo">Usa questo testo</button></div></details>
+      <div id="ppView"></div>`,null,{eyebrow:'Canto pop',full:true,id:'popM'});
+    const run=async f=>{ busy('Cerco…'); try{ await f(); busy(); }catch(e){ busy(); this.fail(e); } };
+    $('#ppGo',m).onclick=()=>run(async()=>{ const q=$('#ppQ',m).value.trim(); if(!q) return toast('Scrivi un titolo o un artista'); this.results=await this.search(q); this.drawRes(m); });
+    $('#ppQ',m).addEventListener('keydown',e=>{ if(e.key==='Enter') $('#ppGo',m).click(); });
+    $('#ppUGo',m).onclick=()=>run(()=>this.load($('#ppU',m).value.trim(),m)); $('#ppPGo',m).onclick=()=>{ const t=$('#ppP',m).value; if(!t.trim()) return toast('Incolla prima il testo'); this.raw=t.replace(/\r/g,''); this.title=''; this.artist=''; this.drawView(m); };
+    this.m=m; if(this.raw) this.drawView(m); },
+  fail(e){ const msg=(window.MozartNative&&MozartNative.download)?'Non riesco a scaricare la pagina: controlla la connessione.':'Dal browser il sito non si lascia leggere: nell\'app Mozart funziona. Qui apri il brano, copia testo e accordi e incollali.'; toast(msg,5200); const d=$('#ppMan',this.m); if(d) d.open=true; },
+  drawRes(m){ const B=$('#ppRes',m); if(!this.results.length){ B.innerHTML='<div class="hint">Nessun risultato: prova con un altro titolo.</div>'; return; }
+    B.innerHTML=this.results.map((r,i)=>`<button class="toolRow" data-i="${i}" style="width:100%;text-align:left"><span style="flex:1;min-width:0"><b>${esc(r.title)}</b><br><small style="color:var(--muted)">${esc(r.artist)}</small></span>${iconSvg('plusDoc')}</button>`).join('');
+    B.onclick=e=>{ const b=e.target.closest('[data-i]'); if(!b) return; busy('Scarico testo e accordi…'); this.load(this.results[+b.dataset.i].url,m).then(()=>busy()).catch(err=>{ busy(); this.fail(err); }); }; },
+  async load(url,m){ if(!/^https?:\/\//i.test(url)) throw new Error('indirizzo'); const html=await this.get(url); const s=this.parse(html,url); if(!s||s.text.trim().length<20) throw new Error('nessun testo'); this.raw=s.text; this.title=s.title; this.artist=s.artist; this.shift=0; this.drawView(m||this.m); },
+  drawView(m){ const B=$('#ppView',m); const chordsN=this.raw.split('\n').filter(l=>ChordSheet.isChordLine(l)).length;
+    $('#ppRes',m).innerHTML=''; B.innerHTML=`<div class="grid2" style="margin-top:12px"><div class="field"><label for="ppT">Titolo</label><input id="ppT" value="${esc(this.title)}"></div><div class="field"><label for="ppA">Artista</label><input id="ppA" value="${esc(this.artist)}"></div></div>
+      <div class="field"><label>Nomi degli accordi</label><div class="seg" id="ppN">${[['orig','Come sul sito'],['it','Italiano · Do Re Mi'],['en','Inglese · C D E']].map(([k,l])=>`<button data-k="${k}" class="${this.names===k?'on':''}">${l}</button>`).join('')}</div></div>
+      <div class="field"><label>Trasporta</label><div class="tmBpm"><button class="ghostBtn" data-s="-1">−½ tono</button><b id="ppS" style="min-width:90px;text-align:center;font-size:18px"></b><button class="ghostBtn" data-s="1">+½ tono</button><button class="ghostBtn" data-s="0">Originale</button></div></div>
+      <div class="field"><label>Mostra</label><div class="seg" id="ppM">${[['both','Testo e accordi'],['lyrics','Solo testo'],['chords','Solo accordi']].map(([k,l])=>`<button data-k="${k}" class="${this.mode===k?'on':''}">${l}</button>`).join('')}</div></div>
+      <div class="hint" id="ppI">${chordsN?`Trovate ${chordsN} righe di accordi.`:'Non vedo righe di accordi: si importa come testo.'}</div>
+      <pre id="ppPre" class="ppPre" style="font-size:${this.size/100*13}px"></pre>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="goldBtn" id="ppImp">${iconSvg('plusDoc')}Importa come spartito</button><button class="ghostBtn" id="ppCp">Copia il testo</button><button class="ghostBtn" data-z="-1">A−</button><button class="ghostBtn" data-z="1">A+</button></div>
+      <div class="hint" style="font-size:12px;margin-top:8px">Testi e accordi appartengono ai rispettivi autori: usali per studio e uso personale.</div>`;
+    const draw=()=>{ const t=this.view(); const pre=$('#ppPre',m); pre.innerHTML=t.split('\n').map(l=>ChordSheet.isChordLine(l)?`<span class="ppC">${esc(l)}</span>`:esc(l)).join('\n'); $('#ppS',m).textContent=(this.shift>0?'+':'')+this.shift+' · '+(this.keyHint()||'—'); pre.style.fontSize=(this.size/100*13)+'px'; };
+    draw(); $('#ppT',m).oninput=e=>this.title=e.target.value; $('#ppA',m).oninput=e=>this.artist=e.target.value;
+    $('#ppN',m).onclick=e=>{ const b=e.target.closest('[data-k]'); if(b){ this.names=b.dataset.k; $$('#ppN button',m).forEach(x=>x.classList.toggle('on',x===b)); draw(); } };
+    $('#ppM',m).onclick=e=>{ const b=e.target.closest('[data-k]'); if(b){ this.mode=b.dataset.k; $$('#ppM button',m).forEach(x=>x.classList.toggle('on',x===b)); draw(); } };
+    B.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{ this.shift=b.dataset.s==='0'?0:((this.shift+ +b.dataset.s)%12+12)%12; if(this.shift>6) this.shift-=12; draw(); });
+    B.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{ this.size=clamp(this.size+ +b.dataset.z*12,60,200); draw(); });
+    $('#ppCp',m).onclick=async()=>{ try{ await navigator.clipboard.writeText(this.view()); toast('Copiato'); }catch(e){ toast('Seleziona il testo e copialo'); } };
+    $('#ppImp',m).onclick=async()=>{ const t=this.view(), title=(this.title||'Brano pop')+(this.artist?' – '+this.artist:''); closeLayers(); busy('Creo lo spartito…'); try{ const bytes=await ChordSheet.toPdf(t,title); const sc=await addScore(bytes,{title:this.title||'Brano pop',file:title+'.pdf',composer:this.artist||'',genre:'Pop',tags:['accordi','pop']}); busy(); renderLibrary(); await openScore(sc.id); toast('Brano importato: annotalo come ogni spartito',3200); }catch(e){ busy(); toast('Non riesco a creare lo spartito: '+(e.message||e),3600); } };
+  },
+};
+// accessi: Attrezzi, Importa, Per Cantanti
+ACTIONS.pop=()=>{ closeSides(); PopSong.open(); };
+(function(){ const r0=Singers.render, o0=Singers.open;
+  Singers.open=async function(){ const r=await o0.apply(this,arguments); const t=$('#sgTabs'); if(t&&!t.querySelector('[data-t="pop"]')){ const b=document.createElement('button'); b.dataset.t='pop'; b.textContent='Canto pop'; t.appendChild(b); } return r; };
+  Singers.render=function(){ if(this.tab==='pop'){ closeLayers(); this.tab='voc'; PopSong.open(); return; } return r0.apply(this,arguments); }; })();
 
 // ================= Ponte con l'app nativa Mozart per iPad/iPhone =================
 // Nell'app (WKWebView) esiste window.webkit.messageHandlers.mozart: condivisione nativa (AirDrop, WhatsApp, File),

@@ -2,7 +2,7 @@
 // Giorno 1 di ogni mese addebita a Clinia (carta o conto SEPA registrati) e accredita SUBITO a FPM, netti:
 //   1. la parte fissa del prezzo di cessione del software: rata da 300 € (mesi 1–12) oppure 3.000 € (mese 1, unica soluzione);
 //   2. la royalty d'autore del mese precedente: ore di studio prenotate e confermate × 4,99 € (qualsiasi formula),
-//      a tempo indeterminato. Il 3 % della royalty FPM lo dona a Progetto Arca (registrato in "donazioni").
+//      a tempo indeterminato.
 // Le royalty sugli abbonamenti degli specialisti (50 €/mese) arrivano già da sole con Stripe (stripe-webhook, invoice.paid).
 // La ritenuta d'acconto (lordo − netto) la versa Clinia con F24.
 // Pianificazione: Supabase › Cron, "0 6 1 * *", header Authorization: Bearer <CRON_SECRET>.
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   const voci = [
     { voce: "licenza" as const, netto: rata, arca: false,
       desc: unica ? "Cessione software Clinia App – unica soluzione" : `Cessione software Clinia App – rata ${k} di ${s.licenzaMesi}` },
-    { voce: "royalty" as const, netto: royalty, arca: true,
+    { voce: "royalty" as const, netto: royalty, arca: false,
       desc: `Royalty d'autore Clinia App – ${ore} ore di studio × ${s.royaltyOra} € (${prec.slice(0, 7)})` },
   ].filter((v) => v.netto > 0 && !fatte.has(v.voce));
   if (!voci.length) return json({ esito: "nessun addebito questo mese", rata, ore, royalty });

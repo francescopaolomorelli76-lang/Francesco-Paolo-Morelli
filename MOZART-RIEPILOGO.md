@@ -168,6 +168,8 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - Dal browser il sito non si lascia leggere (niente CORS): serve l'app (Swift `download`, User-Agent da Safari) o il testo incollato.
 - Accessi: Attrezzi → Canto pop, Importa → Canto pop, Per Cantanti → Canto pop.
 
+- Songbook (`songbook.js`): "Cerca e importa nel Songbook" cerca su Accordi e Spartiti, sceglie il brano migliore per somiglianza, lo importa e lo aggiunge alla setlist "Il mio Songbook" (nome modificabile); ricerca con selezione multipla; "Crea Songbook unico" = PDF con copertina, indice con numeri di pagina, segnalibri e annotazioni già fatte.
+
 ## Sigillo copyright FPM webdesignertech
 - `leggio/fpm_seal.png` (1000 px) e `leggio/fpm_seal320.webp` (usato nell'app come `__SEAL__` da `build.py`): il volto FPM dell'icona ricolorato in oro su nero, con la scritta "FPM WEBDESIGNERTECH · © 2026 · MOZART".
 - Dove si vede: schermata d'avvio (in basso, con "© 2026 FPM webdesignertech · Tutti i diritti riservati"), finestra Informazioni, piede della libreria (tocco = Informazioni).

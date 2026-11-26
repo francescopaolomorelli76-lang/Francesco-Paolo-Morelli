@@ -318,7 +318,7 @@ const PopSong = {
     let out=nm(m[1],m[2],shift)+suf; if(m[4]) out+='/'+nm(m[4],m[5],shift); return tok.replace(core,out); },
   convert(text,names,shift){ const flats=(()=>{ const all=text.match(/\b(?:DO|RE|MI|FA|SOL|LA|SI|[A-G])b/g)||[], sh=text.match(/\b(?:DO|RE|MI|FA|SOL|LA|SI|[A-G])#/g)||[]; return shift<0?true:shift>0?(all.length>sh.length+2):all.length>sh.length; })();
     return text.split('\n').map(line=>{ if(!ChordSheet.isChordLine(line)) return line; let out='', col=0; line.replace(/\S+/g,(tok,pos)=>{ const t=this.fmtChord(tok,names,shift,flats); const at=Math.max(pos,out.length?out.length+1:pos); out=out.padEnd(at,' ')+t; return tok; }); return out; }).join('\n'); },
-  view(){ let t=this.convert(this.raw,this.names,this.shift); const L=t.split('\n');
+  view(raw){ raw=raw==null?this.raw:raw; let t=this.convert(raw,this.names,this.shift); const L=t.split('\n');
     if(this.mode==='lyrics') t=L.filter(l=>!ChordSheet.isChordLine(l)).join('\n').replace(/\n{3,}/g,'\n\n'); else if(this.mode==='chords') t=L.filter(l=>ChordSheet.isChordLine(l)||(l.trim().length>0&&l.trim().length<=22&&/:\s*$/.test(l))).join('\n').replace(/\n{3,}/g,'\n\n'); return t; },
   keyHint(){ const c=(this.convert(this.raw,this.names,this.shift).split('\n').find(l=>ChordSheet.isChordLine(l))||'').trim().split(/\s+/)[0]||''; return c; },
   open(){ closeLayers();

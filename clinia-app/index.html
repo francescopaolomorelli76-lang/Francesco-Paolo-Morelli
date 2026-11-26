@@ -666,12 +666,12 @@ const KEY="clinia-app-v3"; // v3: dati azzerati il 24/11/2026 per l’uscita su 
 const DEMO=false;          // niente turni, appuntamenti e incassi di esempio
 try{localStorage.removeItem("clinia-app-v1");localStorage.removeItem("clinia-app-v2")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},pagDott:[],fattNum:{},entrate:[],chiusure:{},cred:{},log:[],photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},pagDott:[],fattNum:{},entrate:[],chiusure:{},cred:{},log:[],chat:{},photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.pagDott=S.pagDott||[];S.fattNum=S.fattNum||{};S.entrate=S.entrate||[];S.chiusure=S.chiusure||{};S.cred=S.cred||{};S.log=S.log||[];S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.pagDott=S.pagDott||[];S.fattNum=S.fattNum||{};S.entrate=S.entrate||[];S.chiusure=S.chiusure||{};S.cred=S.cred||{};S.log=S.log||[];S.chat=S.chat||{};S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -834,11 +834,13 @@ async function chiediPermessoNotifiche(){try{const LN=window.Capacitor&&Capacito
   if(LN){const r=await LN.requestPermissions();return r.display==="granted"}
   if("Notification" in window){if(Notification.permission==="default")await Notification.requestPermission();return Notification.permission==="granted"}}catch(e){}return false}
 function notifBanner(){if(!S.auth)return "";const n=nonLette();return n?`<button class="card row notifban" data-act="openPage" data-v="notifiche">${ic("bell","sm")}<span style="flex:1"><b>${n===1?"1 notifica nuova":n+" notifiche nuove"}</b><span class="tiny" style="display:block">${esc((mieNotifiche().find(x=>!x.letta)||{}).titolo||"")}</span></span>${ic("right","sm")}</button>`:""}
-const NOTIF_IC={pagamento:"euro",incasso:"euro",quota_accreditata:"euro",royalty:"euro",pacchetto:"euro",abbonamento:"card",abbonamento_disdetto:"x",registrazione:"user",pagamento_fpm:"euro",ricezione_confermata:"check",richiesta_visita:"cal",richiesta_inviata:"cal",visita_confermata:"check",visita_rifiutata:"x",visita_effettuata:"check",visita_annullata:"x",studio_prenotato:"door",studio_annullato:"door"};
+const NOTIF_IC={messaggio:"chat",promemoria:"clock",pagamento:"euro",incasso:"euro",quota_accreditata:"euro",royalty:"euro",pacchetto:"euro",abbonamento:"card",abbonamento_disdetto:"x",registrazione:"user",pagamento_fpm:"euro",ricezione_confermata:"check",richiesta_visita:"cal",richiesta_inviata:"cal",visita_confermata:"check",visita_rifiutata:"x",visita_effettuata:"check",visita_annullata:"x",studio_prenotato:"door",studio_annullato:"door"};
 function notifichePage(){const l=mieNotifiche();if(l.some(n=>!n.letta))setTimeout(()=>{l.forEach(n=>n.letta=true);save();DB.notifLette(l.map(n=>n.id))},1500);
   return `<div class="screen">${bar("Notifiche")}<div class="content"><div class="pad stack" style="gap:12px">
   ${l.length?l.map(n=>`<div class="card row" style="align-items:flex-start;gap:12px;${n.letta?"":"border-color:var(--accent);background:var(--accent-soft)"}"><span class="ri" style="width:38px;height:38px;border-radius:12px;background:var(--card);display:grid;place-items:center;color:var(--accent)">${ic(NOTIF_IC[n.tipo]||"bell","sm")}</span>
-    <span style="flex:1;min-width:0"><b class="small" style="display:block">${esc(n.titolo)}</b><span class="small muted">${esc(n.testo)}</span><span class="tiny" style="display:block;margin-top:4px">${new Date(n.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></span></div>`).join("")
+    <span style="flex:1;min-width:0"><b class="small" style="display:block">${esc(n.titolo)}</b><span class="small muted">${esc(n.testo)}</span><span class="tiny" style="display:block;margin-top:4px">${new Date(n.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
+    ${n.tipo==="messaggio"&&S.chat[n.ref]?`<button class="btn ghost sm" style="margin-top:6px" data-act="openThread" data-id="${esc(n.ref)}">${ic("chat","sm")} Rispondi</button>`:""}
+    ${isOwner()&&n.ref&&String(n.ref).startsWith("spec:")&&telefonoDi(n.ref)?`<a class="btn ghost sm" style="margin-top:6px" href="${waLink(telefonoDi(n.ref),"Clinia: "+n.titolo+". "+n.testo)}" target="_blank" rel="noopener">${ic("chat","sm")} Avvisa su WhatsApp</a>`:""}</span></div>`).join("")
   :`<div class="card center">${ic("bell")}<h3>Nessuna notifica</h3><p class="muted small">Qui arrivano richieste di visita, conferme e prenotazioni degli studi.</p></div>`}
   <p class="tiny">${isFpm()?"Ricevi una notifica quando una richiesta di visita viene confermata e quando la visita è effettuata (solo iniziali del paziente).":isOwner()?"Ricevi una notifica quando uno specialista prenota uno studio e quando arriva una richiesta per le tue visite.":isPro()?"Ricevi una notifica per ogni nuova richiesta di visita: confermala o rifiutala dall’Agenda.":"Ricevi una notifica quando lo specialista conferma o rifiuta la tua richiesta."}</p></div></div></div>`}
 function notify(title,text,app_){UI.notif={title,text,app:app_};render();clearTimeout(notifT);notifT=setTimeout(()=>{UI.notif=null;render()},7000)}
@@ -1109,8 +1111,8 @@ function notifScreen(){return `<div class="screen"><div class="topbar plain"><sp
 /* ---------- Area principale ---------- */
 const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 const FPM_EXTRA=["fpmdoc","fpmfisco"];
-const FPM_TABS=[["fpm","euro","Entrate"],["fpmdott","users","Dottori"],["clinia","list","Clinia"],["fpminc","plus","Incassi"],["profile","user","Profilo"]];
-const proTabs=()=>isSoc()?[["agenda","cal","Giornate"],["stanze","door","Stanze"],["persone","users","Persone"],["profile","user","Profilo"]]:isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
+const FPM_TABS=[["fpm","euro","Entrate"],["fpmdott","users","Dottori"],["clinia","list","Clinia"],["msg","chat","Messaggi"],["fpminc","plus","Incassi"],["profile","user","Profilo"]];
+const proTabs=()=>isSoc()?[["agenda","cal","Giornate"],["stanze","door","Stanze"],["persone","users","Persone"],["msg","chat","Messaggi"],["profile","user","Profilo"]]:isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["msg","chat","Messaggi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 function mainScreen(){
   const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab)&&!(isFpm()&&FPM_EXTRA.includes(UI.tab)))UI.tab=tabs[0][0];
   const top=UI.stack[UI.stack.length-1];
@@ -1277,25 +1279,48 @@ function filesTab(){if(!logged())return needLogin("I miei file","Referti ed esam
   :`<div class="empty" style="padding-top:50px"><svg viewBox="0 0 200 140" aria-hidden="true"><path d="M40 80c-10-40 30-60 60-50s50-20 60 20-20 80-60 70-50-10-60-40z" fill="var(--warn-soft)"/><path d="M70 34h26l10 16" fill="var(--accent-2)" transform="rotate(14 80 40)"/><rect x="128" y="20" width="26" height="18" rx="2" fill="var(--accent-soft)" transform="rotate(-10 140 30)"/><path d="M58 58h26l5 6h46l-10 50H66z" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><rect x="58" y="54" width="14" height="5" fill="#f2c94c"/><path d="M84 72h22M84 78h28" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M135 64l12 4-12 46" fill="var(--busy)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M146 92h14l-6 10h-12z" fill="var(--accent)"/></svg>
    <h3 style="font-size:1.15rem">Nessun documento aggiunto</h3><p class="muted">Quando aggiungerai referti, esami o prescrizioni${UI.person==="me"?"":" di "+esc(personOf(UI.person).nome)}, saranno conservati qui.</p><label class="btn primary" for="up">Aggiungi documento</label></div>`}</div>`}
 
-/* ---------- Messaggi ---------- */
-function threadKeys(){
-  if(isPro()&&logged()){const ks=Object.keys(S.msgs).filter(k=>k.startsWith(S.proId+"|"));if(!ks.includes(S.proId+"|demo"))ks.push(S.proId+"|demo");if(!ks.includes("reception|pro-"+S.proId))ks.unshift("reception|pro-"+S.proId);return ks}
-  const ks=Object.keys(S.msgs).filter(k=>k.endsWith("|me"));if(!ks.includes("reception|me"))ks.unshift("reception|me");return ks}
-function threadInfo(k){const[a,b]=k.split("|");
-  if(a==="reception")return{name:"Reception Clinia",sub:"Risponde lun–sab",ini:"C"};
-  if(isPro())return b==="demo"?{name:"Anna R. (esempio)",sub:"Paziente",ini:"AR"}:{name:S.msgs[k].pname||"Paziente",sub:"Paziente",ini:initials(S.msgs[k].pname||"P")};
-  return{name:doc(a).name,sub:doc(a).role,ini:initials(doc(a).name)}}
-function threadMsgs(k){const t=S.msgs[k];if(t)return t.list;
-  if(k.endsWith("|demo"))return[{from:"p",text:"Buongiorno, posso portare alla visita anche la risonanza dell’anno scorso?",at:Date.now()-3600e3}];
-  if(k.startsWith("reception"))return[{from:"r",text:"Benvenuto in Clinia! Scrivici per informazioni su visite, orari e documenti.",at:Date.now()-86400e3}];return[]}
-function msgTab(){if(!logged())return needLogin("Messaggi","Scrivi agli specialisti e alla reception");
-  return `<div class="pad stack"><h1 class="h-sec" style="font-size:1.6rem">Messaggi</h1><div class="list">${threadKeys().map(k=>{const i=threadInfo(k),m=threadMsgs(k),l=m[m.length-1];
-   return `<button class="li" data-act="openThread" data-id="${esc(k)}"><span class="av sm round">${esc(i.ini)}</span><span class="t"><b>${esc(i.name)}</b><small>${l?esc((l.from==="me"||(isPro()&&l.from==="d")?"Tu: ":"")+l.text):esc(i.sub)}</small></span>${ic("right","sm")}</button>`}).join("")}</div>
-   ${isPro()?"":`<p class="tiny">Per scrivere a uno specialista apri il suo profilo e tocca “Scrivi allo specialista”.</p>`}</div>`}
-function chatPage(k){const i=threadInfo(k),m=threadMsgs(k);const mine=isPro()?["d","pr"]:["me"];
-  return `<div class="screen">${bar(esc(i.name))}<div class="content"><div class="pad bubbles">${m.length?"":`<p class="muted small" style="text-align:center">Scrivi il primo messaggio. ${isPro()?"":"Lo specialista ti risponderà appena possibile."}</p>`}
-  ${m.map(x=>`<div class="bub ${mine.includes(x.from)?"me":""}">${esc(x.text)}<small>${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</small></div>`).join("")}</div></div>
+/* ---------- Messaggi: una chat per ogni coppia di persone ----------
+   Chi scrive con chi: pazienti ↔ dottori e segreteria Clinia; dottori ↔ Clinia e FPM (assistenza tecnica) e i loro pazienti;
+   enti e società ↔ Clinia (e FPM per l’assistenza); Clinia ↔ tutti; FPM vede tutte le conversazioni e può rispondere ovunque. */
+function io(){return !S.auth?null:isFpm()?"admin":isOwner()?"titolare":isPro()?"spec:"+S.proId:"user:"+S.auth.email}
+const chiaveChat=(a,b)=>[a,b].sort().join("~");
+function nomeParte(k,t){if(k==="admin")return "FPM · assistenza tecnica";if(k==="titolare")return "Clinia · segreteria";
+  if(k.startsWith("spec:")){const d=doc(k.slice(5));return d?d.name:"Dottore"}return (t&&t.nomi&&t.nomi[k])||k.slice(5).replace(/@.*/,"")}
+function subParte(k){if(k==="admin")return "Problemi tecnici dell’app";if(k==="titolare")return "Prenotazioni, contratti, informazioni";
+  if(k.startsWith("spec:")){const d=doc(k.slice(5));return d?(d.kind==="societa"?"Ente · ":"")+d.role:""}return "Paziente"}
+function iniParte(k,t){return k==="admin"?"FPM":k==="titolare"?"C":initials(nomeParte(k,t))}
+function contatti(){const me=io();if(!me)return[];const doc_=SPECIALISTI().map(d=>"spec:"+d.id),enti=TUTTI_DOTTORI().filter(d=>d.kind==="societa"&&accessoOk(d.id)).map(d=>"spec:"+d.id);
+  if(me==="admin")return["titolare",...doc_,...enti];
+  if(me==="titolare")return["admin",...doc_,...enti];
+  if(isSoc())return["titolare","admin"];
+  if(isPro()){const paz=[...new Set(S.appts.filter(a=>a.doctorId===S.proId&&a.ownerEmail).map(a=>"user:"+a.ownerEmail))];return["titolare","admin",...paz]}
+  return["titolare",...doc_]}
+function mieChat(){const me=io();return Object.entries(S.chat).filter(([k,t])=>me==="admin"||t.a===me||t.b===me).sort((x,y)=>(y[1].ultimo||0)-(x[1].ultimo||0))}
+const nonLettiChat=(t,me)=>t.msgs.filter(m=>m.from!==me&&m.at>((t.letto||{})[me]||0)).length;
+const totNonLetti=()=>{const me=io();return mieChat().reduce((n,[k,t])=>n+(me==="admin"&&t.a!=="admin"&&t.b!=="admin"?0:nonLettiChat(t,me)),0)};
+function apriChatCon(altro){const me=io();if(!me)return ACT.openAuth();const k=chiaveChat(me,altro);if(!S.chat[k]){S.chat[k]={a:me,b:altro,msgs:[],letto:{},nomi:{},ultimo:0}}
+  const t=S.chat[k];if(me.startsWith("user:")&&S.user)t.nomi[me]=(S.user.nome+" "+S.user.cognome).trim();push({page:"chat",id:k})}
+function msgTab(){if(!logged()&&!isFpm())return needLogin("Messaggi","Scrivi agli specialisti e alla segreteria di Clinia");const me=io(),l=mieChat(),fpm=me==="admin",soloMie=fpm&&UI.chatMie;
+  const vis=l.filter(([k,t])=>!soloMie||t.a==="admin"||t.b==="admin");
+  return `<div class="pad stack" style="gap:14px"><h1 class="h-sec" style="font-size:1.6rem">Messaggi</h1>
+  ${fpm?`<div class="seg"><button class="${soloMie?"":"on"}" data-act="chatMie" data-v="">Tutte le conversazioni</button><button class="${soloMie?"on":""}" data-act="chatMie" data-v="1">Scritte a me</button></div>`:""}
+  <details class="card" ${l.length?"":"open"}><summary><b>${ic("plus","sm")} Nuovo messaggio</b></summary><div class="list" style="margin-top:8px">${contatti().map(k=>`<button class="li" data-act="nuovaChat" data-id="${esc(k)}"><span class="av sm round">${esc(iniParte(k))}</span><span class="t"><b>${esc(nomeParte(k))}</b><small>${esc(subParte(k))}</small></span>${ic("right","sm")}</button>`).join("")||`<p class="small muted">Nessun contatto disponibile.</p>`}</div></details>
+  <div class="list">${vis.map(([k,t])=>{const altro=fpm&&t.a!=="admin"&&t.b!=="admin"?null:(t.a===me?t.b:t.a),ul=t.msgs[t.msgs.length-1],n=nonLettiChat(t,me);
+    const titolo=altro?nomeParte(altro,t):`${nomeParte(t.a,t)} ↔ ${nomeParte(t.b,t)}`;
+    return `<button class="li" data-act="openThread" data-id="${esc(k)}"><span class="av sm round">${esc(altro?iniParte(altro,t):"⇄")}</span><span class="t"><b>${esc(titolo)}</b><small>${ul?esc((ul.from===me?"Tu: ":"")+ul.text).slice(0,80):"Nessun messaggio"}</small></span>${n?`<span class="badge warn">${n}</span>`:""}${ic("right","sm")}</button>`}).join("")||`<p class="small muted">Nessuna conversazione. Tocca “Nuovo messaggio”.</p>`}</div></div>`}
+function chatPage(k){const t=S.chat[k];if(!t)return `<div class="screen">${bar("Messaggi")}<div class="content"><p class="pad muted">Conversazione non trovata.</p></div></div>`;
+  const me=io(),altro=t.a===me?t.b:t.b===me?t.a:null,titolo=altro?nomeParte(altro,t):`${nomeParte(t.a,t)} ↔ ${nomeParte(t.b,t)}`;
+  t.letto=t.letto||{};const prima=t.letto[me]||0;t.letto[me]=Date.now();save();
+  const tel=isOwner()&&altro?telefonoDi(altro):"";
+  return `<div class="screen">${bar(esc(titolo))}<div class="content"><div class="pad bubbles">
+  ${me==="admin"&&!altro?`<p class="tiny" style="text-align:center">Vedi questa conversazione come FPM: se scrivi, il tuo messaggio arriva a entrambi.</p>`:""}
+  ${t.msgs.length?"":`<p class="muted small" style="text-align:center">Scrivi il primo messaggio${altro?" a "+esc(nomeParte(altro,t)):""}.</p>`}
+  ${t.msgs.map(x=>`<div class="bub ${x.from===me?"me":""}">${x.from!==me&&(!altro||x.from!==altro)?`<b class="tiny" style="display:block">${esc(nomeParte(x.from,t))}</b>`:""}${esc(x.text)}<small>${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${x.at>prima&&x.from!==me?" · nuovo":""}</small></div>`).join("")}</div></div>
+  ${tel?`<div class="pad" style="padding-top:0;padding-bottom:6px"><a class="btn ghost sm" href="${waLink(tel,(t.msgs.filter(m=>m.from===me).slice(-1)[0]||{}).text||"")}" target="_blank" rel="noopener">${ic("chat","sm")} Manda anche su WhatsApp</a></div>`:""}
   <form class="composer" data-form="send" data-id="${esc(k)}"><input id="msg-in" name="t" placeholder="Scrivi un messaggio" autocomplete="off" aria-label="Messaggio" data-autofocus><button type="submit" aria-label="Invia">${ic("send","sm")}</button></form></div>`}
+// WhatsApp: apre WhatsApp sul telefono di Clinia con il messaggio già scritto (l’invio lo conferma chi lo manda)
+function telefonoDi(k){if(!k||!k.startsWith("spec:"))return "";const id=k.slice(5),d=doc(id)||{},pp=S.proProfile[id]||{};return (pp.telefono||(d.soc&&d.soc.tel)||"").replace(/[^\d+]/g,"")}
+function waLink(tel,testo){const raw=String(tel||"").trim();let n=raw.replace(/[^\d]/g,"");if(raw.startsWith("00"))n=n.slice(2);else if(!raw.startsWith("+")&&n.length<=10)n="39"+n;return `https://wa.me/${n}${testo?"?text="+encodeURIComponent(testo):""}`}
 
 /* ---------- Profilo ---------- */
 function settingsBody(){if(isFpm())return `<div class="pad stack" style="gap:16px"><div class="list"><button class="li" data-act="changePin">${ic("lock")}<span class="t">Cambia PIN<small>Richiesto a ogni apertura</small></span>${ic("right","sm")}</button><button class="li" data-act="toggleFace" role="switch" aria-checked="${!!S.faceid}">${ic("face")}<span class="t">Face ID / impronta<small>Sblocco rapido (simulato nella versione web)</small></span><span class="sw ${S.faceid?"on":""}"></span></button><button class="li" data-act="openCopyright">${ic("shield")}<span class="t">Copyright e note legali</span>${ic("right","sm")}</button></div><button class="btn danger block" data-act="logout">${ic("out","sm")} Esci</button></div>`;
@@ -1530,8 +1555,14 @@ const oreFmt=n=>String(r2(n)).replace(".",",")+" h";
 const stampDi=ts=>{const d=new Date(ts);return dstr(d)+" "+toT(d.getHours()*60+d.getMinutes())};
 const pacchettoTxt=c=>c?`${PACCHETTI[c.tipo]||"A ore"} · ${oreFmt(c.ore)}${c.inizio?` dal ${new Date(c.inizio).toLocaleDateString("it-IT")}`:""}${c.scadenza?` al ${new Date(addDays(c.scadenza,-1)).toLocaleDateString("it-IT")}`:""}`:"";
 // Avvisi automatici: ore quasi finite (4 h), pacchetto in scadenza (il giorno prima), pacchetto finito
-function controllaOre(){let ch=false;for(const d of DOCTORS.filter(x=>x.id!==OWNER.doctorId&&!S.rimossi[x.id])){const u=oreUso(d.id),c=u.c;if(!c)continue;const nm=d.name;
-  const tutti=(t,x)=>{addNotif("spec:"+d.id,"ore",t,x);addNotif("titolare","ore",t,`${nm}: ${x}`);notifFPM("ore",t,`${nm}: ${x}`)};
+function controllaPromemoria(){let ch=false;const dom=addDays(today(),1);
+  for(const a of S.appts.filter(a=>a.date===dom&&a.status==="confermata"&&!a.promemoria)){a.promemoria=true;ch=true;const q=`${a.time}${a.roomId?" · "+room(a.roomId).name:a.online?" · videochiamata":""}`;
+    if(a.ownerEmail)addNotif("user:"+a.ownerEmail,"promemoria","Domani hai una visita",`${a.service} con ${(doc(a.doctorId)||{}).name} alle ${q}. Clinia, ${CLINIC.address}.`,a.id);
+    addNotif("spec:"+a.doctorId,"promemoria","Visita di domani",`${a.patient} · ${a.service} alle ${q}.`,a.id)}
+  S.promTurni=S.promTurni||{};for(const b of S.rooms.filter(b=>b.date===dom&&!S.promTurni[b.id])){S.promTurni[b.id]=1;ch=true;addNotif("spec:"+b.doctorId,"promemoria","Domani sei in Clinia",`${room(b.roomId).name} · ${b.start}–${b.end}.`)}
+  if(ch)save();return ch}
+function controllaOre(){let ch=controllaPromemoria();for(const d of DOCTORS.filter(x=>x.id!==OWNER.doctorId&&!S.rimossi[x.id])){const u=oreUso(d.id),c=u.c;if(!c)continue;const nm=d.name;
+  const tutti=(t,x)=>{addNotif("spec:"+d.id,"ore",t,x);addNotif("titolare","ore",t,`${nm}: ${x}`,"spec:"+d.id);notifFPM("ore",t,`${nm}: ${x}`)};
   if(!c.avvisoFine&&(u.residue<=0||u.scaduto)){c.avvisoFine=c.avvisoOre=c.avvisoScad=true;ch=true;tutti("Pacchetto terminato","Le ore in Clinia sono finite: rinnova il pacchetto in Clinia per continuare a prenotare le stanze.")}
   else{if(!c.avvisoOre&&u.residue<=4){c.avvisoOre=true;ch=true;tutti("Ore in esaurimento",`Restano ${oreFmt(u.residue)}: rinnova da Clinia, il tuo tempo in Clinia sta terminando.`)}
     if(!c.avvisoScad&&c.scadenza&&addDays(today(),1)>=c.scadenza){c.avvisoScad=true;ch=true;tutti("Pacchetto in scadenza","Il pacchetto scade domani: rinnova da Clinia per non fermarti.")}}}
@@ -2490,7 +2521,9 @@ const ACT={
     notifFPM("visita_annullata","Visita disdetta",`${iniz2(a.patient)} · ${a.service} · ${doc(a.doctorId).name} · ${qq}`,a.id);save();DB.update("appointments",a.id,{stato:"annullata"});UI.sheet=null;toast("Visita disdetta")},
   closeSheet:()=>{UI.sheet=null;render()},
   delFile:d=>{S.files=S.files.filter(f=>f.id!==d.id);save();render()},
-  openChat:d=>{const k=isPro()?d.id:d.id+"|me";if(!logged()){return ACT.openAuth()}push({page:"chat",id:k})},
+  openChat:d=>{if(!logged())return ACT.openAuth();apriChatCon(String(d.id).includes(":")?d.id:"spec:"+d.id)},
+  nuovaChat:d=>apriChatCon(d.id),
+  chatMie:d=>{UI.chatMie=!!d.v;render()},
   openThread:d=>push({page:"chat",id:d.id}),
   dismissNotif:()=>{UI.notif=null;render()},
   changePin:()=>{UI.changingPin=true;go("pin-create")},
@@ -2650,10 +2683,12 @@ const FORMS={
     else{const v=f.iban.value.replace(/\s/g,"").toUpperCase();if(!ibanOk(v))return err.textContent="L’IBAN non è valido.";if(!f.ok.checked)return err.textContent="Autorizza l’addebito SEPA per continuare.";label="conto ••••"+v.slice(-4)+" (SEPA)"}
     S.cliniaPay={label,at:Date.now()};save();UI.sheet=null;toast("Pagamento automatico a FPM attivato");render()},
   search:f=>{UI.sq.q=f.querySelector("#q").value.trim();UI.sq.spec=null;push({page:"results"})},
-  send:f=>{const t=f.t.value.trim();if(!t)return;const k=f.dataset.id;
-    if(!S.msgs[k])S.msgs[k]={list:threadMsgs(k).slice(),pname:isPro()?undefined:S.user.nome+" "+S.user.cognome};
-    f.t.value="";S.msgs[k].list.push({from:isPro()?(k.startsWith("reception")?"pr":"d"):"me",text:t,at:Date.now()});save();render();
-    if(k.startsWith("reception")){setTimeout(()=>{S.msgs[k].list.push({from:"r",text:"Grazie, abbiamo ricevuto il tuo messaggio. La reception ti risponderà al più presto. (risposta automatica)",at:Date.now()});save();render()},1300)}},
+  send:f=>{const tx=f.t.value.trim();if(!tx)return;const k=f.dataset.id,t=S.chat[k],me=io();if(!t)return;
+    if(me.startsWith("user:")&&S.user)t.nomi[me]=(S.user.nome+" "+S.user.cognome).trim();
+    t.msgs.push({from:me,text:tx,at:Date.now()});t.ultimo=Date.now();t.letto[me]=Date.now();f.t.value="";
+    const nm=me==="admin"?"FPM":me==="titolare"?"Clinia":nomeParte(me,t);
+    [t.a,t.b].filter(x=>x!==me).forEach(x=>addNotif(x,"messaggio","Nuovo messaggio da "+nm,tx.slice(0,120),k));
+    if(me!=="admin"&&t.a!=="admin"&&t.b!=="admin")S.chatFpm=(S.chatFpm||0)+1;save();render()},
   svcSave:f=>{const err=$("#svc-err");err.textContent="";const rows=[...f.querySelectorAll(".svcrow")],out=[];
     for(const r of rows){const q=n=>r.querySelector(`[name=${n}]`),tipo=q("tipo").value,nome=q("nome").value.trim()||tipo,dur=parseInt(q("dur").value,10),pr=parseFloat(String(q("prezzo").value).replace(",","."));
       if(!(dur>=5&&dur<=480))return err.textContent=`“${nome}”: indica la durata in minuti (da 5 a 480).`;

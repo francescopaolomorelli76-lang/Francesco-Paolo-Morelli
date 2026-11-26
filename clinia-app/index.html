@@ -496,7 +496,7 @@ a.btn{text-decoration:none;color:inherit}a.btn.primary{color:var(--on-accent)}a.
      con il tariffario ufficiale quando sarà disponibile.
    - Numerazione e tipologia degli studi: da confermare con la clinica.
    ===================================================================== */
-const CLINIC={name:"Clinia",ragione:"Clinia Srl",payoff:"Il centro per professionisti e specialisti",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 392 994 8545",email:"info@cliniamatera.it",pec:"clinia@pec.it",
+const CLINIC={name:"Clinia",ragione:"Clinia Srl",piva:"[P.IVA da inserire]",payoff:"Il centro per professionisti e specialisti",address:"Via La Martella 5/D – 75100 Matera (MT)",phone:"+39 392 994 8545",email:"info@cliniamatera.it",pec:"clinia@pec.it",
   hoursText:"Studi prenotabili: lun–ven 8:00–20:00 · sab 8:00–13:00"};
 const OPEN={1:[480,1200],2:[480,1200],3:[480,1200],4:[480,1200],5:[480,1200],6:[480,780]}; // minuti dalla mezzanotte; domenica chiuso
 const ROOM_TYPES={
@@ -666,12 +666,12 @@ const KEY="clinia-app-v3"; // v3: dati azzerati il 24/11/2026 per l’uscita su 
 const DEMO=false;          // niente turni, appuntamenti e incassi di esempio
 try{localStorage.removeItem("clinia-app-v1");localStorage.removeItem("clinia-app-v2")}catch(e){}
 const FRESH=()=>({cookie:null,auth:null,user:null,pin:null,faceid:false,health:null,notif:null,proId:null,
-  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
+  rooms:[],cancelled:[],appts:[],files:[],favs:[],msgs:{},prices:{},hideBanner:false,stats:null,subs:{},roomEdits:{},expenses:[],payouts:{},fpm:{docs:[],ric:{},under35:false,aliquota:0.23,fee:7,fondo:0,anag:{}},modalita:{},pacchetti:[],oreUsate:[],notifs:[],payAcc:{},cliniaPay:null,pag:{},licMetodo:"automatico",arca:{},customDocs:[],docOverrides:{},docPhotos:{},proProfile:{},demoPaid:[],roomPayments:[],svcCustom:{},incassi:[],crediti:[],pubblica:{},accessi:{},rimossi:{},persone:{},pagDott:[],fattNum:{},entrate:[],chiusure:{},cred:{},photo:null,hinfo:{},family:[],cards:[],requests:[],v:1});
 let S;try{S=Object.assign(FRESH(),JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){S=FRESH()}
 if(S["sub"]&&S.auth&&!S.subs[S.auth.email]){S.subs[S.auth.email]=S["sub"]}delete S["sub"];if(S.fpm&&S.fpm.aliquota===0.35)S.fpm.aliquota=0.23;
 S.rooms=(S.rooms||[]).filter(b=>ROOMS.some(r=>r.id===b.roomId));for(const k of Object.keys(S.roomEdits||{}))if(!ROOMS.some(r=>r.id===k))delete S.roomEdits[k];
 S.customDocs.forEach(d=>{if(!DOCTORS.some(x=>x.id===d.id))DOCTORS.push(d)});
-function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.payAcc=S.payAcc||{};S.arca=S.arca||{};
+function applyOverrides(){for(const[id,o]of Object.entries(S.docOverrides)){const d=DOCTORS.find(x=>x.id===id);if(d)Object.assign(d,o)}}applyOverrides();applyRoomEdits();APP_FEE=0;if(S.fpm)S.fpm.fee=0;S.licModo=S.licModo||"rate";S.svcCustom=S.svcCustom||{};S.incassi=S.incassi||[];S.crediti=S.crediti||[];S.pubblica=S.pubblica||{};S.accessi=S.accessi||{};S.rimossi=S.rimossi||{};S.persone=S.persone||{};S.pagDott=S.pagDott||[];S.fattNum=S.fattNum||{};S.entrate=S.entrate||[];S.chiusure=S.chiusure||{};S.cred=S.cred||{};S.payAcc=S.payAcc||{};S.arca=S.arca||{};
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const defF=()=>({date:"any",area:"all",svcs:[],kids:false,gender:"all"});
 const UI={person:"me",otpChannel:"whatsapp",otpExp:0,otpWait:0,sq:{mode:"studio",q:"",spec:null},f:defF(),fd:null,moreSvcs:false,screen:"splash",tab:null,stack:[],sheet:null,modal:null,buf:"",toast:null,notif:null,area:"all",chip:null,visitSeg:"next",
@@ -862,6 +862,9 @@ function authIllo(){return `<svg viewBox="0 0 260 220" style="width:240px;max-wi
   <g transform="translate(190 132)"><circle cx="20" cy="20" r="20" fill="var(--azure)"/><path d="M12 28V14h8a5 5 0 0 1 0 10h-8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
   <circle cx="60" cy="40" r="6" fill="#f2c94c"/><circle cx="214" cy="190" r="5" fill="#f2c94c"/><circle cx="42" cy="170" r="4" fill="var(--accent)"/></svg>`}
 const addMonth=(ds,n=1)=>{const d=parseD(ds);d.setMonth(d.getMonth()+n);return dstr(d)};
+// Email e password degli accessi riservati: modificabili dall'app (sul server, con il database attivo, le gestisce l'accesso protetto)
+const credOwner=()=>({email:(S.cred.titolare&&S.cred.titolare.email)||OWNER.email,hash:(S.cred.titolare&&S.cred.titolare.hash)||OWNER.hash});
+const credFpm=()=>({email:(S.cred.fpm&&S.cred.fpm.email)||FPM.email,hash:(S.cred.fpm&&S.cred.fpm.hash)||FPM.hash});
 const isOwner=()=>!!(S.auth&&S.auth.owner);
 async function sha256(t){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
 const mySub=()=>S.auth&&S.subs?S.subs[S.auth.email]:null;
@@ -1102,10 +1105,11 @@ function notifScreen(){return `<div class="screen"><div class="topbar plain"><sp
 
 /* ---------- Area principale ---------- */
 const PAT_TABS=[["home","search","Esplora"],["visite","cal","Visite"],["files","file","I miei file"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
-const FPM_TABS=[["fpm","euro","Entrate"],["fpmdott","users","Dottori"],["fpminc","plus","Incassi"],["fpmdoc","file","Documenti"],["fpmfisco","list","Fisco"],["profile","user","Profilo"]];
+const FPM_EXTRA=["fpmdoc","fpmfisco"];
+const FPM_TABS=[["fpm","euro","Entrate"],["fpmdott","users","Dottori"],["clinia","list","Clinia"],["fpminc","plus","Incassi"],["profile","user","Profilo"]];
 const proTabs=()=>isSoc()?[["agenda","cal","Giornate"],["stanze","door","Stanze"],["persone","users","Persone"],["profile","user","Profilo"]]:isOwner()?[["clinia","euro","Clinia"],["stanze","door","Studi"],["profile","user","Profilo"]]:[["agenda","cal","Agenda"],["pazienti","users","Pazienti"],["stanze","door","Stanze"],["msg","chat","Messaggi"],["profile","user","Profilo"]];
 function mainScreen(){
-  const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab))UI.tab=tabs[0][0];
+  const tabs=isFpm()?FPM_TABS:isPro()&&logged()?proTabs():PAT_TABS;if(!tabs.some(t=>t[0]===UI.tab)&&!(isFpm()&&FPM_EXTRA.includes(UI.tab)))UI.tab=tabs[0][0];
   const top=UI.stack[UI.stack.length-1];
   if(top)return pageHTML(top);
   return `<div class="screen"><div class="content">${tabHTML()}</div>
@@ -1144,7 +1148,7 @@ function homeTab(){const nm=logged()?`Ciao, <b>${esc(S.user.nome)}.</b>`:"Ciao."
 
 /* ---------- Pagine impilate ---------- */
 function pageHTML(p){switch(p.page){
-  case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
+  case "credenziali":return credenzialiPage();case "subscription":return subscriptionPage();case "room3d":return room3dPage(p.id);case "notifiche":return notifichePage();case "chisiamo":return chiSiamoPage();case "offerta":return offertaPage();case "attr3d":return attr3dPage(p.id);case "ricavi":return ricaviPage();case "arca":return arcaPage();case "ibanpage":return ibanScreen(false);case "proprof":return proProfScreen(false);case "tariffe":return `<div class="screen">${bar("Tariffe")}<div class="content">${tariffeTab()}</div></div>`;case "msgpage":return `<div class="screen">${bar("Messaggi")}<div class="content">${msgTab()}</div></div>`;case "settings":return `<div class="screen">${bar("Impostazioni")}<div class="content">${settingsBody()}</div></div>`;case "health":return healthPage();case "family":return familyPage();case "payments":return paymentsPage();case "requests":return requestsPage();case "search":return searchPage();case "results":return resultsPage();case "filters":return filtersPage();case "doctor":return doctorPage(p.id);case "book":return bookPage(p.id);
   case "done":return donePage(p.id);case "chat":return chatPage(p.id);}}
 function bar(title,extra=""){return `<div class="topbar"><button class="backbtn" data-act="pop" aria-label="Torna indietro">${ic("back","sm")}<span>Indietro</span></button><h2>${title}</h2>${extra||'<span style="width:44px"></span>'}</div>`}
 const ALL_SVCS=[...new Set(Object.values(SERVICES).flat().map(s=>s[0]))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -1313,7 +1317,7 @@ const personOf=id=>persons().find(p=>p.id===(id||"me"))||persons()[0];
 const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" alt="">`:esc(initials(p.nome+" "+p.cognome))}</span>`;
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
-  const items0=isSoc()?[["tariffe","clock","Le ore del pacchetto"],["tab:persone","users","Persone da visitare"],["tab:stanze","door","Prenota le stanze"],["settings","gear","Impostazioni e privacy"]]:isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["tab:clinia","list","Clinia: rendiconto, studi e spese"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["settings","gear","Impostazioni e privacy"],["tariffe","clock","Le mie ore · visite, durata e prezzi"],["tab:stanze","door","I miei turni negli studi"]]
+  const items0=isFpm()?[["credenziali","lock","Email e password · accesso di Clinia"],["tab:fpmfisco","list","Fisco"],["tab:fpmdoc","file","Documenti e ricevute"],["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"]]:isSoc()?[["tariffe","clock","Le ore del pacchetto"],["tab:persone","users","Persone da visitare"],["tab:stanze","door","Prenota le stanze"],["settings","gear","Impostazioni e privacy"]]:isFpm()?[["arca","heartplus","Progetto Arca: storia e donazioni"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["credenziali","lock","Email e password di accesso"],["tab:clinia","list","Clinia: pacchetti, fatture, conti e stanze"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["arca","heartplus","Progetto Arca"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["arca","heartplus","Progetto Arca"],["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["settings","gear","Impostazioni e privacy"],["tariffe","clock","Le mie ore · visite, durata e prezzi"],["tab:stanze","door","I miei turni negli studi"]]
     :[["arca","heartplus","Progetto Arca: la beneficenza dell’app"],["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
@@ -1615,24 +1619,30 @@ const statoOre=id=>{const u=oreUso(id),att=oreInAttesa(id);if(!u.c)return att?`<
   if(u.residue<=4)return `<span class="badge warn">Ore in esaurimento</span>`;return ""};
 const iscritto=id=>!!((S.iscritti&&S.iscritti[id])||(S.proProfile[id]&&S.proProfile[id].done));
 function creditiDi(id){return S.crediti.filter(c=>c.docId===id).sort((a,b)=>b.at-a.at)}
-function cliniaDottori(){const l=TUTTI_DOTTORI().sort((a,b)=>(a.kind==="societa")-(b.kind==="societa"));return `<p class="tiny">Quando un dottore o una società firma il contratto, scegli il pacchetto, scrivi le ore e allega il contratto: FPM conferma e le ore compaiono nella sua app. Scalano da sole a fine di ogni turno in stanza. Al rinnovo, un nuovo pacchetto fa ripartire il contatore.</p>`+
+function cliniaDottori(){const l=TUTTI_DOTTORI().sort((a,b)=>(a.kind==="societa")-(b.kind==="societa"));return `<p class="tiny">Quando un dottore o una società firma il contratto, scegli il pacchetto, scrivi le ore e scansiona o allega il contratto firmato. Dopo la verifica le ore compaiono nella sua app e scalano da sole a fine di ogni turno. Al rinnovo, un nuovo pacchetto fa ripartire il contatore.</p>`+
   l.map(d=>{const u=oreUso(d.id),att=oreInAttesa(d.id),cr=creditiDi(d.id);return `<div class="card stack" style="gap:12px">
    <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${d.kind==="societa"?"Società · ":""}${esc(d.role)}</p>${statoOre(d.id)}</div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
-   ${u.c?`<dl class="ledger small"><dt>Pacchetto attivo<small>${esc(pacchettoTxt(u.c))}</small></dt><dd></dd><dt>Ore fatte</dt><dd>${oreFmt(u.trascorse)}</dd><dt>In calendario</dt><dd>${oreFmt(u.pianificate)}</dd><dt><b>Rimaste</b></dt><dd><b>${oreFmt(u.residue)}</b></dd>${att?`<dt>In attesa di conferma FPM</dt><dd>${oreFmt(att)}</dd>`:""}</dl>`:att?`<p class="small">${oreFmt(att)} in attesa di conferma FPM.</p>`:""}
+   ${u.c?`<dl class="ledger small"><dt>Pacchetto attivo<small>${esc(pacchettoTxt(u.c))}</small></dt><dd></dd><dt>Ore fatte</dt><dd>${oreFmt(u.trascorse)}</dd><dt>In calendario</dt><dd>${oreFmt(u.pianificate)}</dd><dt><b>Rimaste</b></dt><dd><b>${oreFmt(u.residue)}</b></dd>${att?`<dt>In verifica</dt><dd>${oreFmt(att)}</dd>`:""}</dl>`:att?`<p class="small">${oreFmt(att)} in verifica.</p>`:""}
    <form class="stack" data-form="contratto" data-id="${d.id}" style="gap:8px" novalidate><span class="label">${u.c?"Rinnovo o nuovo pacchetto":"Nuovo pacchetto"}</span>
     <div class="fgrid"><label class="field"><span>Pacchetto</span><select name="tipo">${Object.entries(PACCHETTI).map(([k,t])=>`<option value="${k}" ${k===(d.kind==="societa"?"libere":"mensile")?"selected":""}>${t}</option>`).join("")}</select></label><label class="field"><span>Ore</span><input name="ore" inputmode="decimal" placeholder="50"></label></div>
     <div class="fgrid"><label class="field"><span>Valido dal</span><input name="inizio" type="date" value="${today()}"></label><label class="field"><span>Data contratto</span><input name="data" type="date" value="${today()}" max="${today()}"></label></div>
-    <label class="field"><span>Contratto firmato (PDF o foto)</span><input name="file" type="file" accept="application/pdf,image/*"></label>
-    <p class="err" id="ct-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra e invia a FPM</button></form>
-   ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"?"red":"warn"}">${c.stato==="confermata"?"Confermate":c.stato==="rifiutata"?"Non confermate":"In attesa"}</span></div>`).join("")}</div>`:""}
+    <span class="label">Contratto firmato</span>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn ghost sm" for="scan-${d.id}">${ic("upload","sm")} Scansiona contratto firmato</label><input id="scan-${d.id}" type="file" accept="image/*" capture="environment" multiple class="hidden" data-change="scanPag" data-id="${d.id}">
+     ${(UI.scan&&UI.scan[d.id]||[]).length?`<span class="small">${UI.scan[d.id].length} ${UI.scan[d.id].length===1?"pagina":"pagine"}</span><button type="button" class="btn ghost sm" data-act="scanPdf" data-id="${d.id}">${ic("file","sm")} Crea PDF e condividi</button><button type="button" class="iconbtn" data-act="scanVia" data-id="${d.id}" aria-label="Rifai la scansione">${ic("x","sm")}</button>`:""}</div>
+    ${(UI.scan&&UI.scan[d.id]||[]).length?`<div class="thumbs">${UI.scan[d.id].map((u,i)=>`<div><img src="${u}" alt="Pagina ${i+1}"></div>`).join("")}</div><p class="tiny">Aggiungi altre pagine con “Scansiona”. Il PDF viene salvato con il pacchetto.</p>`:""}
+    <label class="field"><span>Oppure allega un file (PDF o foto)</span><input name="file" type="file" accept="application/pdf,image/*"></label>
+    <p class="err" id="ct-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra</button></form>
+   ${cr.length?`<div class="stack" style="gap:6px">${cr.slice(0,4).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.at).toLocaleDateString("it-IT")}${c.file?` · <button class="link small" data-act="apriContratto" data-id="${c.id}">contratto</button>`:""}</span><span class="badge ${c.stato==="confermata"?"":c.stato==="rifiutata"?"red":"warn"}">${c.stato==="confermata"?"Attivo":c.stato==="rifiutata"?"Non attivato":"In verifica"}</span></div>`).join("")}</div>`:""}
   </div>`}).join("")}
 function cliniaTab(){const seg=UI.cliSeg||"spec",m=UI.cliMese||today().slice(0,7);
   const head=`<div class="pad stack" style="gap:16px"><div class="row between"><h1 class="ptitle">Clinia</h1><span class="badge">${ic("lock","sm")} Direzione</span></div>
-  <div class="seg">${[["spec","Pacchetti ore"],["stanze","Stanze"],["rend","Pagamenti FPM"]].map(([k,l])=>`<button class="${seg===k?"on":""}" data-act="cliSeg" data-v="${k}">${l}</button>`).join("")}</div>`;
-  if(seg==="stanze")return head+cliniaStanze()+`</div>`;
+  ${isFpm()?`<p class="tiny" style="margin-top:-6px">${ic("lock","sm")} Vista completa dell’area Clinia, in sola consultazione.</p>`:""}<div class="chips" role="tablist">${[["spec","Pacchetti ore"],["pagdott","Pagamenti e fatture"],["conti","Contabilità"],["stanze","Stanze"],["rend","Compenso FPM"]].map(([k,l])=>`<button class="chip ${seg===k?"on":""}" data-act="cliSeg" data-v="${k}" role="tab" aria-selected="${seg===k}">${l}</button>`).join("")}</div>`;
+  if(seg==="stanze")return head+prospettoStanze()+cliniaStanze()+`</div>`;
   if(seg==="spese")return head+meseNav("cliMese",m)+cliniaSpese(m)+`</div>`;
   const c=cliniaMese(m);
   if(seg==="spec")return head+cliniaDottori()+`</div>`;
+  if(seg==="pagdott")return head+cliniaPagamenti()+`</div>`;
+  if(seg==="conti")return head+cliniaConti()+`</div>`;
   return head+meseNav("cliMese",m)+`
   <div class="card" style="text-align:center"><span class="label">Compenso a FPM nel mese</span><div class="big">${eur(r2(c.canone+(c.lic||0)))}</div><p class="tiny">${String(c.ore).replace(".",",")} ore firmate e confermate × ${eur(CANONE_ORA)}${c.lic?` + fisso annuale ${eur(c.lic)}`:""}</p></div>
   <div class="card stack" style="gap:10px"><h3>Scadenze del mese</h3>
@@ -1658,16 +1668,15 @@ function cliniaTab(){const seg=UI.cliSeg||"spec",m=UI.cliMese||today().slice(0,7
   <button class="btn ghost block" data-act="cliSeg" data-v="spese">${ic("plus","sm")} Segna una spesa</button>
   <p class="tiny">Rendiconto gestionale indicativo, utile per il controllo del mese. Non sostituisce la contabilità del commercialista.${DB.on?"":" Nella versione di prova visite e pazienti sono di esempio."}</p></div>`}
 function cliniaStanze(){const ph=UI.roomPhotos||{};if(!UI.roomPhotosLoaded)loadRoomPhotos();
-  return `<p class="muted small">I contratti mensili seguono il tariffario ufficiale (per metratura, IVA esclusa). Qui modifichi nomi, tipologia, tariffa oraria (oggi 40 € + IVA) e le foto per la vista 3D. I pacchetti prepagati sono uguali per tutti gli studi.</p>
+  return `<p class="muted small">Qui modifichi nome, tipologia e foto di ogni studio per la vista 3D.</p>
   ${ROOMS.map(r=>{const t=roomTariff(r),f=ph[r.id]||[];return `<form class="card stack" data-form="room" data-id="${r.id}" style="gap:10px" novalidate>
    <div class="fgrid"><label class="field"><span>Nome della stanza</span><input id="rn-${r.id}" name="name" value="${esc(r.name)}" maxlength="40"></label>
     <label class="field"><span>Tipologia</span><select id="rt-${r.id}" name="type">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?"selected":""}>${v.label}</option>`).join("")}</select></label></div>
-   <div class="rfields"><label>Tariffa oraria € + IVA<input id="ro-${r.id}" name="ora" inputmode="decimal" value="${t.ora}"></label></div>
    ${f.length?`<div class="thumbs">${f.map((src,i)=>`<div><img src="${src}" alt="Foto ${i+1} di ${esc(r.name)}"><button type="button" data-act="delRoomPhoto" data-id="${r.id}" data-v="${i}" aria-label="Elimina foto">${ic("x")}</button></div>`).join("")}</div>`:""}
    <div class="drop" data-drop="room:${r.id}" style="padding:12px"><span class="small">Trascina qui una panoramica (consigliata) o le foto delle pareti, fino a 6, oppure</span><div class="btns"><label class="btn ghost sm" for="rp-${r.id}">${ic("upload","sm")} Carica foto</label>${f.length||r.foto?`<button type="button" class="btn ghost sm" data-act="room3d" data-id="${r.id}">${ic("door","sm")} Vedi in 3D</button>`:""}</div><input id="rp-${r.id}" type="file" accept="image/*" multiple class="hidden" data-change="roomPhoto" data-id="${r.id}"></div>
    <p class="err" id="re-${r.id}"></p><button class="btn primary sm" type="submit">Salva ${esc(r.name)}</button></form>`}).join("")}
-  <p class="tiny">Tutti i prezzi sono IVA esclusa.</p>`}
-const EXP_CAT=["Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
+`}
+const EXP_CAT=["Personale (stipendi e contributi)","Affitto e spese della sede","Utenze","Pulizie","Materiali","Manutenzione","Marketing","Consulenze","Tasse e contributi","Altro"];
 function cliniaSpese(m){const list=S.expenses.filter(e=>e.date.startsWith(m)).sort((a,b)=>b.date.localeCompare(a.date)),tot=list.reduce((t,e)=>t+e.amount,0);
   return `<form class="card stack" data-form="expense" novalidate style="gap:10px"><h3>Nuova spesa</h3>
    <div class="fgrid"><label class="field"><span>Data</span><input id="ex-date" name="date" type="date" value="${m===today().slice(0,7)?today():m+"-01"}"></label><label class="field"><span>Importo €</span><input id="ex-amount" name="amount" inputmode="decimal" placeholder="0,00"></label></div>
@@ -1716,7 +1725,103 @@ function fpmTab(){const m=UI.fpmMese||today().slice(0,7),f=fpmMese(m),st=S.fpm.r
    <button class="btn ghost block" data-act="fpmRicevuta" data-v="${m}" ${f.lordo?"":"disabled"}>${ic("file","sm")} Prepara la ricevuta del mese</button></div>
   <p class="tiny">${DB.on?"":"Nella versione di prova i movimenti sono di esempio. "}Stime da far confermare dal commercialista o dal CAF.</p></div>`}
 const DOC_CAT=["Ricevuta compenso","Bonifico","Contratto FPM–Clinia","Certificazione Unica (CU)","Dichiarazione dei redditi","Donazione Progetto Arca","Altro"];
+/* ---------- Clinia: scansione del contratto in PDF ---------- */
+async function scanInPdf(id){await loadPdf();const{jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4"});const pg=UI.scan[id]||[];
+  for(let i=0;i<pg.length;i++){const im=await new Promise(ok=>{const x=new Image();x.onload=()=>ok(x);x.src=pg[i]});if(i)doc.addPage();
+    const W=210,H=297,k=Math.min((W-16)/im.width,(H-16)/im.height),w=im.width*k,h=im.height*k;doc.addImage(pg[i],"JPEG",(W-w)/2,(H-h)/2,w,h)}
+  return doc.output("blob")}
+const ridimensiona=(file,max)=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext("2d").drawImage(i,0,0,c.width,c.height);ok(c.toDataURL("image/jpeg",0.82))};i.onerror=ko;i.src=r.result};r.onerror=ko;r.readAsDataURL(file)});
+
+/* ---------- Clinia: pagamenti dei dottori e fatture ---------- */
+const IVA_ST=0.22;
+const pagDi=id=>S.pagDott.filter(x=>x.docId===id).sort((a,b)=>b.data.localeCompare(a.data));
+function cliniaPagamenti(){const y=UI.pagAnno||today().slice(0,4),l=TUTTI_DOTTORI(),tot=r2(S.pagDott.filter(x=>x.data.startsWith(y)).reduce((t,x)=>t+x.totale,0));
+  return `<div class="stats"><div class="stat"><b>${eur(tot)}</b><span>Incassato ${y}</span></div><div class="stat"><b>${S.pagDott.filter(x=>x.data.startsWith(y)).length}</b><span>Fatture ${y}</span></div><div class="stat"><b>${l.filter(d=>oreUso(d.id).c).length}</b><span>Con pacchetto</span></div></div>
+  <p class="tiny">Registra quello che ogni dottore o società paga a Clinia: l’app crea la fattura in PDF con il logo Clinia. La fattura elettronica ufficiale va comunque trasmessa allo SDI con il programma di fatturazione di Clinia.</p>`+
+  l.map(d=>{const ps=pagDi(d.id),u=oreUso(d.id),tp=r2(ps.filter(x=>x.data.startsWith(y)).reduce((t,x)=>t+x.totale,0)),open=UI.pagOpen===d.id;
+   return `<div class="card stack" style="gap:10px"><div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${d.kind==="societa"?"Società · ":""}${esc(d.role)}</p></div><b class="num">${eur(tp)}</b></div>
+    <dl class="ledger small"><dt>Ore in Clinia<small>${u.c?esc(pacchettoTxt(u.c)):"nessun pacchetto attivo"}</small></dt><dd>${oreFmt(u.trascorse)} fatte</dd><dt>Ore firmate in totale</dt><dd>${oreFmt(oreAccreditate(d.id))}</dd><dt>Pagato nel ${y}</dt><dd>${eur(tp)}</dd></dl>
+    ${ps.slice(0,4).map(x=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:8px"><span style="flex:1;min-width:0">${new Date(x.data).toLocaleDateString("it-IT")} · ${esc(x.descr)} · ${esc(x.metodo)}</span><b class="num">${eur(x.totale)}</b><button class="btn ghost sm" data-act="fatturaPdf" data-id="${x.id}">${ic("file","sm")} Fattura ${x.numero}/${x.anno}</button></div>`).join("")}
+    ${open?`<form class="stack" data-form="pagDott" data-id="${d.id}" style="gap:8px" novalidate><label class="field"><span>Descrizione</span><input name="descr" value="${esc(u.c?`Utilizzo studi – pacchetto ${(PACCHETTI[u.c.tipo]||"a ore").toLowerCase()} ${String(u.c.ore).replace(".",",")} ore`:"Utilizzo studi Clinia")}"></label>
+     <div class="fgrid"><label class="field"><span>Imponibile €</span><input name="imp" inputmode="decimal" placeholder="es. 1.000"></label><label class="field"><span>IVA</span><select name="iva"><option value="0.22">22 %</option><option value="0">Esente / fuori campo</option></select></label></div>
+     <div class="fgrid"><label class="field"><span>Data</span><input name="data" type="date" value="${today()}" max="${today()}"></label><label class="field"><span>Pagato con</span><select name="metodo">${["Bonifico","Carta o POS","Contanti","Assegno"].map(m=>`<option>${m}</option>`).join("")}</select></label></div>
+     <p class="err" id="pd-err-${d.id}"></p><button class="btn primary sm" type="submit">${ic("check","sm")} Registra pagamento e crea fattura</button></form>`:`<button class="btn ghost sm" data-act="pagOpen" data-id="${d.id}" style="align-self:flex-start">${ic("plus","sm")} Registra un pagamento</button>`}
+   </div>`}).join("")}
+async function fatturaPDF(x){await loadPdf();const{jsPDF}=window.jspdf,pdf=new jsPDF({unit:"mm",format:"a4"}),d=doc(x.docId)||{name:x.nome||""},pp=S.proProfile[x.docId]||{},so=d.soc||{};
+  const L=18,R=192,eu=n=>"€ "+Number(n).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2});
+  const logo=await imgData("img/clinia-logo.png");if(logo){const w=48,h=w*logo.h/logo.w;pdf.addImage(logo.d,"PNG",L,14,w,h)}
+  pdf.setFont("helvetica","bold");pdf.setFontSize(16);pdf.text(`Fattura n. ${x.numero}/${x.anno}`,R,20,{align:"right"});
+  pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.text(`Data: ${new Date(x.data).toLocaleDateString("it-IT")}`,R,26,{align:"right"});
+  pdf.setFontSize(9);pdf.text([CLINIC.ragione,CLINIC.address,`P.IVA ${CLINIC.piva}`,`PEC ${CLINIC.pec} · ${CLINIC.phone}`],L,40);
+  pdf.setFont("helvetica","bold");pdf.text("Cliente",120,40);pdf.setFont("helvetica","normal");
+  pdf.text([d.name,pp.piva?`P.IVA ${pp.piva}`:so.piva?`P.IVA/CF ${so.piva}`:pp.cf?`C.F. ${pp.cf}`:"P.IVA / C.F.: ______",[pp.indirizzo,pp.cap,pp.citta].filter(Boolean).join(", ")||"",pp.sdi?`Codice destinatario ${pp.sdi}`:pp.pec?`PEC ${pp.pec}`:""].filter(Boolean),120,45);
+  let y=72;pdf.setFillColor(44,94,102);pdf.rect(L,y-5,R-L,8,"F");pdf.setTextColor(255);pdf.setFont("helvetica","bold");pdf.text("Descrizione",L+2,y);pdf.text("Imponibile",130,y,{align:"right"});pdf.text("IVA",158,y,{align:"right"});pdf.text("Totale",R-2,y,{align:"right"});
+  pdf.setTextColor(0);pdf.setFont("helvetica","normal");y+=9;const ds=pdf.splitTextToSize(x.descr,95);pdf.text(ds,L+2,y);pdf.text(eu(x.imp),130,y,{align:"right"});pdf.text(x.iva?`${Math.round(x.iva*100)} %`:"esente",158,y,{align:"right"});pdf.text(eu(x.totale),R-2,y,{align:"right"});
+  y+=ds.length*5+6;pdf.setDrawColor(217,222,227);pdf.line(L,y,R,y);y+=8;
+  [["Imponibile",x.imp],["IVA",r2(x.totale-x.imp)],["Totale fattura",x.totale]].forEach(([t,v],i)=>{if(i===2)pdf.setFont("helvetica","bold");pdf.text(t,150,y,{align:"right"});pdf.text(eu(v),R-2,y,{align:"right"});y+=6});
+  pdf.setFont("helvetica","normal");y+=6;pdf.text(`Pagamento: ${x.metodo} · saldato il ${new Date(x.data).toLocaleDateString("it-IT")}`,L,y);
+  pdf.setFontSize(8);pdf.setTextColor(93,107,119);pdf.text(pdf.splitTextToSize("Copia di cortesia. L’originale è la fattura elettronica trasmessa tramite il Sistema di Interscambio (SDI).",R-L),L,282);
+  return{blob:pdf.output("blob"),nome:`Fattura_${x.numero}-${x.anno}_${(d.name||"").replace(/[^A-Za-z0-9]+/g,"_")}.pdf`}}
+
+/* ---------- Clinia: contabilità, dichiarazione SRL e stime ---------- */
+const ENT_CAT=["Pacchetti di ore (altre entrate)","Servizi extra","Contributi e rimborsi","Altro"];
+function movimentiClinia(m){// m = "AAAA" o "AAAA-MM"
+  const ent=[...S.pagDott.filter(x=>x.data.startsWith(m)).map(x=>({data:x.data,descr:`Fattura ${x.numero}/${x.anno} · ${x.nome}`,cat:"Pacchetti dottori e società",imp:x.imp,iva:r2(x.totale-x.imp),tot:x.totale,auto:true})),
+    ...S.entrate.filter(x=>x.data.startsWith(m)).map(x=>({data:x.data,descr:x.descr,cat:x.cat,imp:x.importo,iva:0,tot:x.importo,id:x.id}))];
+  const usc=[...S.expenses.filter(x=>x.date.startsWith(m)).map(x=>({data:x.date,descr:x.desc,cat:x.cat,tot:x.amount,id:x.id})),
+    ...S.crediti.filter(c=>c.stato==="confermata"&&c.confAt&&stampDi(c.confAt).startsWith(m)).map(c=>({data:stampDi(c.confAt).slice(0,10),descr:`Compenso FPM · ${(doc(c.docId)||{}).name||""} ${oreFmt(c.ore)} (lordo con ritenuta)`,cat:"Compenso FPM",tot:lordoDaNetto(r2(c.ore*CANONE_ORA)),auto:true}))];
+  const E=r2(ent.reduce((t,x)=>t+x.tot,0)),U=r2(usc.reduce((t,x)=>t+x.tot,0));return{ent,usc,E,U,utile:r2(E-U)}}
+function serieMesi(){const out=[],m0=today().slice(0,7),mm=k=>{const d=parseD(m0+"-01");d.setMonth(d.getMonth()+k);return dstr(d).slice(0,7)};
+  const past=[-5,-4,-3,-2,-1,0].map(k=>({m:mm(k),...movimentiClinia(mm(k))}));const ult=past.slice(-3),avg=r2(ult.reduce((t,x)=>t+x.utile,0)/3);
+  return past.map(x=>({m:x.m,v:x.utile,stima:false})).concat([1,2,3,4,5,6].map(k=>({m:mm(k),v:avg,stima:true})))}
+function graficoUtile(){const sr=serieMesi(),W=600,H=250,P=34,max=Math.max(1,...sr.map(x=>Math.abs(x.v))),neg=sr.some(x=>x.v<0),y0=neg?H/2:H-P,sc=(neg?H/2-P:H-2*P)/max,bw=(W-2*P)/sr.length;
+  const nm=m=>new Date(m+"-01T12:00").toLocaleDateString("it-IT",{month:"short"});
+  return `<figure class="card stack" style="gap:8px;margin:0"><h3>Utile mese per mese e stima dei prossimi 6 mesi</h3>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Utile mensile di Clinia: ultimi 6 mesi e stima dei prossimi 6" style="width:100%;height:auto">
+   <line x1="${P}" x2="${W-P}" y1="${y0}" y2="${y0}" stroke="var(--line)" stroke-width="1"/>
+   ${sr.map((x,i)=>{const h=Math.abs(x.v)*sc,X=P+i*bw+3,Y=x.v>=0?y0-h:y0;return `<rect x="${X}" y="${Y}" width="${bw-6}" height="${Math.max(h,1)}" rx="3" fill="var(--accent)" ${x.stima?'fill-opacity="0.35" stroke="var(--accent)" stroke-dasharray="3 3"':""}><title>${nm(x.m)} ${x.m.slice(0,4)}: ${eur(x.v)}${x.stima?" (stima)":""}</title></rect>`}).join("")}
+   ${sr.map((x,i)=>`<text x="${P+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="19" fill="var(--ink-2)">${nm(x.m)}</text>`).join("")}
+  </svg><figcaption class="tiny">Barre piene: utile reale (entrate − uscite). Barre tratteggiate: stima, pari alla media degli ultimi 3 mesi. Tocca una barra per il valore.</figcaption>
+  <details><summary class="small">Vedi i numeri</summary>${sr.map(x=>`<div class="row between small"><span>${nm(x.m)} ${x.m.slice(0,4)}${x.stima?" · stima":""}</span><b class="num">${eur(x.v)}</b></div>`).join("")}</details></figure>`}
+function cliniaConti(){const y=UI.contAnno||today().slice(0,4),m=UI.contMese||today().slice(0,7),A=movimentiClinia(y),M=movimentiClinia(m);
+  const ricavi=r2(A.ent.reduce((t,x)=>t+(x.imp||0),0)),ivaDeb=r2(A.ent.reduce((t,x)=>t+(x.iva||0),0)),costi=A.U,pers=r2(A.usc.filter(x=>/^Personale/.test(x.cat)).reduce((t,x)=>t+x.tot,0));
+  const utile=r2(ricavi-costi),ires=r2(Math.max(0,utile)*0.24),irap=r2(Math.max(0,ricavi-(costi-pers))*0.039);
+  return `<div class="row" style="gap:8px;flex-wrap:wrap"><label class="field" style="flex:1;min-width:120px"><span>Anno</span><select data-change="contAnno">${[...new Set([today().slice(0,4),"2026","2027","2028"])].sort().map(a=>`<option ${a===y?"selected":""}>${a}</option>`).join("")}</select></label><button class="btn ghost sm" data-act="contCsv" style="align-self:flex-end">${ic("upload","sm")} Esporta per il commercialista</button></div>
+  <div class="stats"><div class="stat"><b>${eur(A.E)}</b><span>Entrate ${y}</span></div><div class="stat"><b>${eur(A.U)}</b><span>Uscite ${y}</span></div><div class="stat"><b>${eur(A.utile)}</b><span>Utile ${y}</span></div></div>
+  ${graficoUtile()}
+  <section class="card stack" style="gap:8px"><h3>Dati per la dichiarazione dei redditi della SRL · ${y}</h3>
+   <dl class="ledger small"><dt>Ricavi (imponibile fatture e altre entrate)</dt><dd>${eur(ricavi)}</dd><dt>IVA a debito sulle fatture</dt><dd>${eur(ivaDeb)}</dd><dt>Costi dell’anno<small>spese, personale, compenso FPM lordo</small></dt><dd>− ${eur(costi)}</dd><dt>di cui personale</dt><dd>${eur(pers)}</dd>
+   <dt><b>Utile prima delle imposte</b></dt><dd><b>${eur(utile)}</b></dd><dt>IRES stimata 24 %</dt><dd>${eur(ires)}</dd><dt>IRAP stimata 3,9 %<small>su ricavi meno costi diversi dal personale</small></dt><dd>${eur(irap)}</dd><dt>Ritenute versate per FPM (F24)</dt><dd>${eur(r2(A.usc.filter(x=>x.cat==="Compenso FPM").reduce((t,x)=>t+x.tot,0)*0.15))}</dd></dl>
+   <p class="tiny">Stime indicative per il commercialista, non un calcolo fiscale definitivo: deducibilità, IVA detraibile sulle spese e acconti vanno verificati da lui.</p></section>
+  <section class="card stack" style="gap:8px"><h3>Movimenti del mese</h3>${meseNav("contMese",m)}
+   <dl class="ledger small"><dt>Entrate</dt><dd>${eur(M.E)}</dd><dt>Uscite</dt><dd>− ${eur(M.U)}</dd><dt><b>Utile del mese</b></dt><dd><b>${eur(M.utile)}</b></dd></dl>
+   ${[...M.ent.map(x=>({...x,s:"+"})),...M.usc.map(x=>({...x,s:"−"}))].sort((a,b)=>b.data.localeCompare(a.data)).map(x=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:8px"><span style="flex:1;min-width:0"><b>${esc(x.descr)}</b><span class="tiny" style="display:block">${new Date(x.data).toLocaleDateString("it-IT")} · ${esc(x.cat)}${x.auto?" · automatico":""}</span></span><b class="num">${x.s} ${eur(x.tot)}</b>${x.id&&x.s==="+"?`<button class="iconbtn" data-act="delEntrata" data-id="${x.id}" aria-label="Elimina">${ic("x","sm")}</button>`:""}</div>`).join("")||`<p class="small muted">Nessun movimento nel mese.</p>`}</section>
+  <form class="card stack" data-form="entrata" style="gap:10px" novalidate><h3>Nuova entrata</h3><div class="fgrid"><label class="field"><span>Data</span><input name="data" type="date" value="${today()}"></label><label class="field"><span>Importo €</span><input name="importo" inputmode="decimal" placeholder="0,00"></label></div>
+   <label class="field"><span>Descrizione</span><input name="descr" maxlength="80"></label><label class="field"><span>Categoria</span><select name="cat">${ENT_CAT.map(c=>`<option>${c}</option>`).join("")}</select></label><p class="err" id="en-err"></p><button class="btn primary block" type="submit">Aggiungi entrata</button></form>
+  ${cliniaSpese(m)}`}
+
+/* ---------- Clinia: prospetto delle stanze libere e occupate ---------- */
+function prospettoStanze(){const days=[];let ds=UI.prospDa||today();while(days.length<6){if(OPEN[parseD(ds).getDay()])days.push(ds);ds=addDays(ds,1)}
+  const cella=(r,ds)=>{const [a,b]=OPEN[parseD(ds).getDay()],tot=b-a,chiusa=(S.chiusure[r.id]||[]).includes(ds),occ=bookingsOn(ds,x=>x.roomId===r.id).reduce((t,x)=>t+toMin(x.end)-toMin(x.start),0),pct=Math.min(1,occ/tot);
+    const st=chiusa?"Chiusa":occ?`${String(r2(occ/60)).replace(".",",")} h occupate`:"Libera";
+    return `<td style="padding:3px"><button data-act="cellaStanza" data-id="${r.id}" data-v="${ds}" aria-label="${esc(r.name)}, ${fmtD(ds,{weekday:"long",day:"numeric",month:"long"})}: ${st}" style="width:100%;min-width:64px;border-radius:10px;padding:8px 4px;font-size:.72rem;font-weight:700;line-height:1.2;border:1px solid var(--line);background:${chiusa?"var(--bg-2)":occ?`color-mix(in srgb, var(--accent) ${20+Math.round(pct*60)}%, var(--card))`:"var(--card)"};color:${chiusa?"var(--ink-3)":pct>0.55?"var(--on-accent)":"var(--ink)"}">${chiusa?"Chiusa":occ?`${Math.round(pct*100)}%`:"Libera"}</button></td>`};
+  return `<section class="card stack" style="gap:10px"><div class="row between"><h3>Stanze libere e occupate</h3><span class="row" style="gap:6px"><button class="iconbtn" data-act="prosp" data-v="-7" aria-label="Settimana prima">${ic("back","sm")}</button><button class="iconbtn" data-act="prosp" data-v="7" aria-label="Settimana dopo">${ic("right","sm")}</button></span></div>
+   <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%"><thead><tr><th></th>${days.map(d=>`<th class="tiny" style="padding:3px;font-weight:700">${fmtD(d,{weekday:"short",day:"numeric"})}</th>`).join("")}</tr></thead>
+   <tbody>${ROOMS.map(r=>`<tr><th class="tiny" style="text-align:left;padding-right:6px;white-space:nowrap">${esc(r.name)}</th>${days.map(d=>cella(r,d)).join("")}</tr>`).join("")}</tbody></table></div>
+   <p class="tiny">Percentuale = ore occupate sulle ore di apertura del giorno. Tocca una casella per vedere chi c’è, annullare un turno o chiudere lo studio per quel giorno.</p></section>`}
+
 /* ---------- Società: persone da visitare ---------- */
+function credenzialiPage(){const fpm=isFpm(),me=fpm?credFpm():credOwner();
+  return `<div class="screen">${bar("Email e password")}<div class="content"><div class="pad stack" style="gap:16px">
+  <form class="card stack" data-form="credMie" style="gap:10px" novalidate><h3>${fpm?"Il tuo accesso FPM":"Accesso della Direzione Clinia"}</h3><p class="tiny">E-mail attuale: <b>${esc(me.email)}</b></p>
+   <label class="field"><span>Password attuale</span><input name="attuale" type="password" autocomplete="current-password"></label>
+   <label class="field"><span>Nuova e-mail (facoltativa)</span><input name="email" type="email" autocomplete="email" placeholder="${esc(me.email)}"></label>
+   <div class="fgrid"><label class="field"><span>Nuova password</span><input name="pw" type="password" autocomplete="new-password"></label><label class="field"><span>Ripeti</span><input name="pw2" type="password" autocomplete="new-password"></label></div>
+   <p class="tiny">Almeno 10 caratteri, con lettere e numeri.</p><p class="err" id="cr-err"></p><button class="btn primary block" type="submit">Salva</button></form>
+  ${fpm?`<form class="card stack" data-form="credReset" style="gap:10px" novalidate><h3>Reimposta l’accesso di Clinia</h3><p class="tiny">Se Marco dimentica la password: scegli tu nuova e-mail e password e comunicagliele a voce. E-mail attuale: <b>${esc(credOwner().email)}</b></p>
+   <label class="field"><span>Nuova e-mail</span><input name="email" type="email" placeholder="${esc(credOwner().email)}"></label><label class="field"><span>Nuova password</span><input name="pw" type="password" autocomplete="new-password"></label>
+   <p class="err" id="crr-err"></p><button class="btn ghost block" type="submit">Reimposta accesso Clinia</button><button type="button" class="link small" data-act="credIniziali">Torna agli accessi iniziali</button></form>`:""}
+  <p class="tiny">Oggi la modifica vale su questo dispositivo. Con il database attivo per gli store gli accessi passano al sistema di login protetto e valgono ovunque.</p></div></div></div>`}
 function personeTab(){const l=(S.persone[S.proId]||[]).slice().sort((a,b)=>(a.cognome+a.nome).localeCompare(b.cognome+b.nome));
   return `<div class="pad stack" style="gap:16px"><h1 class="h-sec" style="font-size:1.6rem">Persone da visitare</h1>
   <p class="small muted">Dipendenti, atleti o pazienti per cui prenotate le visite in Clinia. Servono solo nome, cognome e una nota (es. reparto o squadra): niente dati sanitari.</p>
@@ -2050,6 +2155,12 @@ function sheetHTML(){const s=UI.sheet;
    <button class="btn ghost block" data-act="ricevutaPdf" data-v="${s.m}" data-k="archivia">${ic("upload","sm")} Crea e salva in Documenti</button>
    <p class="tiny">Stampala, applica la marca da bollo da 2 € se il lordo supera 77,47 €, firmala e consegnala a Clinia (o mandala firmata via PEC).</p></div>`}
   if(s.type==="file")return `<div class="stack" style="gap:12px"><h2 style="font-size:1.1rem;font-weight:800;overflow:hidden;text-overflow:ellipsis">${esc(s.name)}</h2>${s.pdf?`<p class="muted small">Anteprima del PDF:</p><a class="btn primary block" href="${s.url}" target="_blank" rel="noopener">Apri il PDF</a>`:`<img src="${s.url}" alt="${esc(s.name)}" style="border-radius:12px">`}<button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`;
+  if(s.type==="stanzaGiorno"){const r=room(s.id),bs=bookingsOn(s.ds,x=>x.roomId===s.id).sort((a,b)=>a.start.localeCompare(b.start)),chiusa=(S.chiusure[s.id]||[]).includes(s.ds),ro=isFpm();
+    return `<div class="stack" style="gap:12px"><h2 style="font-size:1.2rem;font-weight:800">${esc(r.name)} · ${esc(cap(fmtD(s.ds,{weekday:"long",day:"numeric",month:"long"})))}</h2>
+     ${chiusa?`<p class="small"><b>Studio chiuso</b> in questa data: non si può prenotare.</p>`:""}
+     ${bs.length?bs.map(b=>`<div class="card row" style="gap:10px">${docAv(doc(b.doctorId)||{name:"?"},"sm")}<span style="flex:1;min-width:0"><b class="small">${esc((doc(b.doctorId)||{}).name||"")}</b><span class="tiny" style="display:block">${b.start}–${b.end}</span></span>${ro?"":`<button class="btn danger sm" data-act="annullaTurno" data-id="${b.id}">Annulla turno</button>`}</div>`).join(""):`<p class="small muted">Nessun turno: lo studio è libero.</p>`}
+     ${ro?"":`<button class="btn ghost block" data-act="chiudiStanza" data-id="${s.id}" data-v="${s.ds}">${chiusa?"Riapri lo studio in questa data":"Chiudi lo studio in questa data (manutenzione, pulizie…)"}</button>`}
+     <button class="btn ghost block" data-act="closeSheet">Chiudi</button></div>`}
   if(s.type==="fpmContatto")return `<div class="stack" style="gap:14px;text-align:center"><div style="display:grid;place-items:center"><img src="img/fpm-logo.png" alt="Logo FPM WebDesignTech" style="height:110px;width:auto"></div>
    <h2 style="font-size:1.25rem;font-weight:800">FPM WebDesignTech</h2>
    <p class="muted">Francesco Paolo Morelli · autore di Clinia App<br>App, siti web e soluzioni digitali per studi, cliniche e attività.</p>
@@ -2229,6 +2340,7 @@ const ACT={
   cliniaPayEdit:()=>{UI.sheet={type:"cliniaPay",mode:"carta"};render()},
   cpMode:d=>{UI.sheet.mode=d.v;render()},
   cliMese:d=>{UI.cliMese=d.v;render()},
+  contMese:d=>{UI.contMese=d.v;render()},
   fpmMese:d=>{UI.fpmMese=d.v;render()},
   fpmAnno:d=>{UI.fpmAnno=String(d.v);render()},
   payout:d=>{const k=d.id+"|"+d.v;S.payouts[k]=!S.payouts[k];save();toast(S.payouts[k]?"Compenso segnato come versato":"Segnato come da versare")},
@@ -2236,6 +2348,20 @@ const ACT={
   delFpmDoc:d=>{S.fpm.docs=S.fpm.docs.filter(x=>x.id!==d.id);save();IDB.set("fpm:"+d.id,null);render()},
   openFile:async d=>{const f=await IDB.get(d.id);if(!f||!f.blob)return toast("File non disponibile su questo telefono.");const u=URL.createObjectURL(f.blob);
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
+  prosp:d=>{UI.prospDa=addDays(UI.prospDa||today(),+d.v);render()},
+  cellaStanza:d=>{UI.sheet={type:"stanzaGiorno",id:d.id,ds:d.v};render()},
+  annullaTurno:d=>{if(isFpm())return;const b=S.rooms.find(x=>x.id===d.id);if(!b)return;if(!confirm("Annullare questo turno? Il dottore riceve un avviso."))return;
+    S.rooms=S.rooms.filter(x=>x.id!==d.id);addNotif("spec:"+b.doctorId,"studio_annullato","Turno annullato da Clinia",`${room(b.roomId).name} · ${fmtD(b.date,{day:"numeric",month:"short"})} ${b.start}–${b.end}. Le ore tornano disponibili.`);save();toast("Turno annullato");render()},
+  chiudiStanza:d=>{if(isFpm())return;const l=S.chiusure[d.id]=S.chiusure[d.id]||[];const i=l.indexOf(d.v);if(i>=0)l.splice(i,1);else l.push(d.v);save();toast(i>=0?"Studio riaperto":"Studio chiuso in questa data");render()},
+  delEntrata:d=>{if(isFpm())return;S.entrate=S.entrate.filter(x=>x.id!==d.id);save();render()},
+  contCsv:async()=>{const y=UI.contAnno||today().slice(0,4),A=movimentiClinia(y),q=v=>`"${String(v).replace(/"/g,'""')}"`;
+    const righe=[["Tipo","Data","Descrizione","Categoria","Imponibile","IVA","Totale"].join(";"),...A.ent.map(x=>["Entrata",x.data,q(x.descr),q(x.cat),String(x.imp).replace(".",","),String(x.iva).replace(".",","),String(x.tot).replace(".",",")].join(";")),...A.usc.map(x=>["Uscita",x.data,q(x.descr),q(x.cat),"","",String(x.tot).replace(".",",")].join(";"))];
+    await salvaFile(new Blob(["\ufeff"+righe.join("\n")],{type:"text/csv"}),`Clinia_contabilita_${y}.csv`,"text/csv")},
+  credIniziali:()=>{if(!confirm("Tornare agli accessi iniziali per FPM e Clinia?"))return;S.cred={};save();toast("Accessi iniziali ripristinati");render()},
+  scanPdf:async d=>{try{const b=await scanInPdf(d.id);await salvaFile(b,`Contratto_${doc(d.id).name.replace(/[^A-Za-z0-9]+/g,"_")}_${today()}.pdf`,"application/pdf")}catch(e){toast("PDF non creato: "+(e.message||e))}},
+  scanVia:d=>{if(UI.scan)delete UI.scan[d.id];render()},
+  pagOpen:d=>{UI.pagOpen=UI.pagOpen===d.id?null:d.id;render()},
+  fatturaPdf:async d=>{const x=S.pagDott.find(p=>p.id===d.id);if(!x)return;try{const{blob,nome}=await fatturaPDF(x);await salvaFile(blob,nome,"application/pdf")}catch(e){toast("Fattura non creata: "+(e.message||e))}},
   delPersona:d=>{S.persone[S.proId]=(S.persone[S.proId]||[]).filter(x=>x.id!==d.id);save();render()},
   azzera:d=>{UI.azzera=d.v||null;render()},
   azzeraOk:()=>{const k=UI.azzera;UI.azzera=null;if(!k)return;const t=eseguiAzzera(k);save();notifFPM("azzera","Azzeramento",t);toast(t);render()},
@@ -2343,7 +2469,7 @@ const ACT={
     UI.sheet={type:"room",id:r.id,start:Math.min(st,c-30),end:Math.max(en,Math.min(st,c-30)+30),repeat:false};render()},
   confirmRoom:async()=>{const sh=UI.sheet,r=room(sh.id),plan=[],skip=[];
     for(let w=0;w<(sh.repeat?4:1);w++){const ds=addDays(UI.roomDay,7*w);
-      const clash=bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
+      const clash=(S.chiusure[r.id]||[]).includes(ds)||bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
       if(clash||!OPEN[parseD(ds).getDay()])skip.push(fmtD(ds,{day:"numeric",month:"short"}));else plan.push(ds)}
     if(!plan.length){UI.sheet=null;return toast("Nessuna prenotazione: lo studio è occupato")}
     const perc=false,oreServono=oreTurno(sh,plan.length);
@@ -2375,7 +2501,7 @@ function saveNote(){const t=$("#bk-note");if(t&&UI.book)UI.book.note=t.value}
 
 const FORMS={
   social:f=>{const prov=UI.sheet.v,e=f.email.value.trim();
-    if(e.toLowerCase()===OWNER.email){$("#so-err").textContent="Il titolare accede con e-mail e password riservate.";return}
+    if(e.toLowerCase()===credOwner().email){$("#so-err").textContent="Il titolare accede con e-mail e password riservate.";return}
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){$("#so-err").textContent="Inserisci un indirizzo e-mail valido.";return}
     const email=f.hide&&f.hide.checked?uid()+"@privaterelay.appleid.com":e;
     S.auth={email,role:UI.authRole,provider:prov};if(UI.authRole==="paziente")S.proId=null;
@@ -2388,14 +2514,14 @@ const FORMS={
         if(UI.authRole==="fpm"&&!r.admin){err.textContent="Questo account non ha accesso all’area FPM.";return}
         if(r.admin)S.user={nome:"Francesco Paolo",cognome:"Morelli",pref:"",tel:"riservato",nascita:""};
         S.auth={email:e,role:r.admin?"fpm":r.owner?"professionista":UI.authRole,owner:!!r.owner,fpm:!!r.admin};if(r.owner)S.proId=OWNER.doctorId;save();afterAuthFlow()});return}
-    if(UI.authRole==="fpm"){if(e.toLowerCase()!==FPM.email){err.textContent="Questo accesso è riservato a FPM WebDesignTech.";return}
-      err.textContent="";sha256("clinia-fpm:"+p).then(h=>{if(h!==FPM.hash){err.textContent="Password errata per l’area FPM.";return}
-        S.auth={email:FPM.email,role:"fpm",fpm:true};S.proId=null;S.user={nome:"Francesco Paolo",cognome:"Morelli",pref:"",tel:"riservato",nascita:""};S.health="limited";S.notif=false;S.stats=false;
+    if(UI.authRole==="fpm"){if(e.toLowerCase()!==credFpm().email){err.textContent="Questo accesso è riservato a FPM WebDesignTech.";return}
+      err.textContent="";sha256("clinia-fpm:"+p).then(h=>{if(h!==credFpm().hash){err.textContent="Password errata per l’area FPM.";return}
+        S.auth={email:credFpm().email,role:"fpm",fpm:true};S.proId=null;S.user={nome:"Francesco Paolo",cognome:"Morelli",pref:"",tel:"riservato",nascita:""};S.health="limited";S.notif=false;S.stats=false;
         save();toast("Area FPM");afterAuthFlow()});return}
-    if(UI.authRole==="titolare"&&e.toLowerCase()!==OWNER.email){err.textContent="Questo accesso è riservato alla direzione di Clinia.";return}
-    if(e.toLowerCase()===OWNER.email){if(UI.loginMode==="register"){err.textContent="Questo indirizzo è riservato al titolare: usa Login.";return}
-      err.textContent="";sha256("clinia-titolare:"+p).then(h=>{if(h!==OWNER.hash){err.textContent="Password errata per l’accesso riservato del titolare.";return}
-        S.auth={email:OWNER.email,role:"professionista",owner:true};S.proId=OWNER.doctorId;save();toast("Accesso del titolare");afterAuthFlow()});return}
+    if(UI.authRole==="titolare"&&e.toLowerCase()!==credOwner().email){err.textContent="Questo accesso è riservato alla direzione di Clinia.";return}
+    if(e.toLowerCase()===credOwner().email){if(UI.loginMode==="register"){err.textContent="Questo indirizzo è riservato al titolare: usa Login.";return}
+      err.textContent="";sha256("clinia-titolare:"+p).then(h=>{if(h!==credOwner().hash){err.textContent="Password errata per l’accesso riservato del titolare.";return}
+        S.auth={email:credOwner().email,role:"professionista",owner:true};S.proId=OWNER.doctorId;save();toast("Accesso del titolare");afterAuthFlow()});return}
     if(p.length<(UI.loginMode==="register"?8:6)){err.textContent=UI.loginMode==="register"?"La password deve avere almeno 8 caratteri.":"Password troppo corta.";return}
     S.auth={email:e,role:UI.authRole};if(UI.authRole==="paziente")S.proId=null;
     if(UI.loginMode==="register"){const pro=UI.authRole!=="paziente";notifFPM("registrazione",UI.authRole==="societa"?"Nuova società registrata":pro?"Nuovo specialista registrato":"Nuovo paziente registrato",`${e.replace(/@.*/,"@…")} · ${new Date().toLocaleDateString("it-IT")}`);
@@ -2445,9 +2571,8 @@ const FORMS={
     S.docOverrides[id]={name:((data.titolo?data.titolo+" ":"")+data.nome+" "+data.cognome).trim(),role:data.ruolo,area:data.area,bio,professione:prof,specs};applyOverrides();
     UI.ppPhoto=null;UI.ppCv=null;save();toast("Profilo professionale salvato");
     if(UI.screen==="proprof")afterAuthFlow();else{UI.stack.pop();render()}},
-  room:f=>{const id=f.dataset.id,err=$("#re-"+id),ora=parseFloat(String(f.ora.value).replace(",","."));
+  room:f=>{const id=f.dataset.id,err=$("#re-"+id),ora=roomTariff(room(id)).ora;
     const name=f.name.value.trim();if(!name)return err.textContent="Dai un nome allo studio.";
-    if(isNaN(ora)||ora<0)return err.textContent="La tariffa deve essere un numero, per esempio 40 o 40,50.";
     S.roomEdits[id]={name,type:f.type.value,tariff:{ora}};applyRoomEdits();save();DB.saveRoomEdit(id,{name,type:f.type.value,tariff:{ora,mezza:ora*4,giornata:ora*8}});toast(name+" salvato")},
   expense:f=>{const err=$("#ex-err"),a=parseFloat(String(f.amount.value).replace(",","."));
     if(!f.desc.value.trim())return err.textContent="Scrivi una descrizione.";if(isNaN(a)||a<=0)return err.textContent="Inserisci un importo valido.";if(!f.date.value)return err.textContent="Scegli la data.";
@@ -2493,6 +2618,22 @@ const FORMS={
       out.push({tipo,name:nome,dur:Math.round(dur/5)*5,price:r2(pr),online:q("online").checked||tipo==="Visita online (videochiamata)"})}
     if(!out.length)return err.textContent="Inserisci almeno una prestazione.";
     S.svcCustom[S.proId]=out;delete S.prices[S.proId];save();DB.saveServices(S.proId,out);notifFPM("prestazioni","Prestazioni aggiornate",`${doc(S.proId).name} · ${out.length} prestazioni${out.some(x=>x.online)?" · anche online":""}`);toast("Visite e prezzi salvati: i pazienti li vedono subito");render()},
+  entrata:f=>{const err=$("#en-err"),a=parseFloat(String(f.importo.value).replace(/\./g,"").replace(",","."));if(!(a>0))return err.textContent="Scrivi l’importo.";if(!f.descr.value.trim())return err.textContent="Scrivi una descrizione.";
+    S.entrate.push({id:uid(),data:f.data.value||today(),importo:r2(a),descr:f.descr.value.trim(),cat:f.cat.value});save();toast("Entrata aggiunta");render()},
+  credMie:async f=>{const err=$("#cr-err");err.textContent="";const fpm=isFpm(),cur=fpm?credFpm():credOwner(),salt=fpm?"clinia-fpm:":"clinia-titolare:";
+    if(await sha256(salt+f.attuale.value)!==cur.hash)return err.textContent="La password attuale non è corretta.";
+    const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
+    if(pw||f.pw2.value){if(pw!==f.pw2.value)return err.textContent="Le due password non coincidono.";if(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri."}
+    if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
+    S.cred[fpm?"fpm":"titolare"]={email:em||cur.email,hash:pw?await sha256(salt+pw):cur.hash};S.auth.email=em||cur.email;save();if(!fpm)notifFPM("accesso","Clinia ha cambiato le credenziali","La Direzione Clinia ha aggiornato e-mail o password.");toast("Accesso aggiornato");f.reset();render()},
+  credReset:async f=>{const err=$("#crr-err");err.textContent="";const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
+    if(pw&&(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri.";if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
+    const cur=credOwner();S.cred.titolare={email:em||cur.email,hash:pw?await sha256("clinia-titolare:"+pw):cur.hash};save();addNotif("titolare","accesso","Accesso reimpostato da FPM","E-mail o password della Direzione sono state reimpostate.");toast("Accesso di Clinia reimpostato");f.reset();render()},
+  pagDott:f=>{if(isFpm())return toast("Vista di sola consultazione");const id=f.dataset.id,err=$("#pd-err-"+id);err.textContent="";const imp=parseFloat(String(f.imp.value).replace(/\./g,"").replace(",","."));
+    if(!(imp>0))return err.textContent="Scrivi l’imponibile, per esempio 1.000.";const iva=+f.iva.value,anno=(f.data.value||today()).slice(0,4);S.fattNum[anno]=(S.fattNum[anno]||0)+1;
+    const x={id:uid(),docId:id,nome:doc(id).name,descr:f.descr.value.trim()||"Utilizzo studi Clinia",imp:r2(imp),iva,totale:r2(imp*(1+iva)),data:f.data.value||today(),metodo:f.metodo.value,numero:S.fattNum[anno],anno,at:Date.now()};
+    S.pagDott.push(x);UI.pagOpen=null;save();notifFPM("pagamento","Pagamento registrato da Clinia",`${x.nome}: ${eur(x.totale)} · fattura ${x.numero}/${anno}`);toast(`Pagamento registrato · fattura ${x.numero}/${anno}`);render();
+    fatturaPDF(x).then(({blob,nome})=>salvaFile(blob,nome,"application/pdf")).catch(()=>{})},
   socReg:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#sr-err");err.textContent="";
     if(!v("nome"))return err.textContent="Scrivi la ragione sociale o il nome.";if(!v("referente"))return err.textContent="Scrivi il nome del referente.";if(!v("tel"))return err.textContent="Scrivi un telefono.";
     const id="soc-"+uid(),d={id,kind:"societa",name:v("nome"),role:v("tipo"),area:"medicina",bio:[v("medico"),v("note")].filter(Boolean),soc:{piva:v("piva"),referente:v("referente"),tel:v("tel"),email:v("email"),medico:v("medico"),note:v("note")}};
@@ -2503,12 +2644,14 @@ const FORMS={
     if(!n)return toast("Scrivi almeno un nome");setTimeout(()=>f.reset());save();toast(n===1?"Persona aggiunta":`${n} persone aggiunte`);render()},
   contratto:async f=>{const id=f.dataset.id,err=$("#ct-err-"+id);err.textContent="";const ore=parseFloat(String(f.ore.value).replace(",","."));
     if(!(ore>0&&ore<=2000))return err.textContent="Scrivi le ore firmate, per esempio 50.";
-    const file=f.file.files[0];if(file&&file.size>15*1024*1024)return err.textContent="Il file supera 15 MB.";
+    if(isFpm())return toast("Vista di sola consultazione");
+    let file=f.file.files[0];if(!file&&UI.scan&&(UI.scan[id]||[]).length){const b=await scanInPdf(id);file=new File([b],`Contratto_${id}_${today()}.pdf`,{type:"application/pdf"})}
+    if(file&&file.size>15*1024*1024)return err.textContent="Il file supera 15 MB.";
     const tipo=f.tipo.value||"ore",inizio=f.inizio.value||today();
     const c={id:uid(),docId:id,tipo,ore:r2(ore),inizio,scadenza:scadenzaDi(tipo,inizio),data:f.data.value||today(),stato:"richiesta",da:"clinia",at:Date.now(),file:file?file.name:null};
     if(file&&!(await IDB.set("contr:"+c.id,{name:file.name,blob:file})))return err.textContent="Non riesco a salvare il contratto su questo dispositivo.";
-    S.crediti.push(c);setTimeout(()=>f.reset());save();notifFPM("ore","Pacchetto da confermare",`${doc(id).name}: ${PACCHETTI[tipo]} ${oreFmt(c.ore)} → ${eur(r2(c.ore*CANONE_ORA))} per te${file?" · contratto allegato":""}. Confermalo in Dottori.`);
-    toast("Inviato a FPM per la conferma");render()},
+    if(UI.scan)delete UI.scan[id];S.crediti.push(c);setTimeout(()=>f.reset());save();notifFPM("ore","Pacchetto da confermare",`${doc(id).name}: ${PACCHETTI[tipo]} ${oreFmt(c.ore)} → ${eur(r2(c.ore*CANONE_ORA))} per te${file?" · contratto allegato":""}. Confermalo in Dottori.`);
+    toast("Pacchetto registrato");render()},
   fissoAnnuo:f=>{const v=String(f.importo.value).trim(),n=v?parseFloat(v.replace(/\./g,"").replace(",",".")):0;if(v&&!(n>=0))return toast("Scrivi l’importo, per esempio 1.200");S.fpm.fissoAnnuo=r2(n);save();toast(n?`Compenso fisso annuale: ${eur(n)}`:"Compenso fisso annuale: da concordare");render()},
   creditoFpm:f=>{const id=f.dataset.id,ore=parseFloat(String(f.ore.value).replace(",","."));if(!(ore>0&&ore<=2000))return toast("Scrivi le ore da accreditare, per esempio 50.");
     const tipo=(f.tipo&&f.tipo.value)||"ore";S.crediti.push({id:uid(),docId:id,tipo,ore:r2(ore),inizio:today(),scadenza:scadenzaDi(tipo,today()),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});
@@ -2533,7 +2676,8 @@ app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)
   if(el.classList.contains("shade")&&e.target.closest("[data-stop]"))return;
   if(el.dataset.act==="fav")e.stopPropagation();
   e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
-app.addEventListener("submit",e=>{e.preventDefault();const f=FORMS[e.target.dataset.form];if(f)f(e.target)});
+const SOLO_CLINIA=["contratto","pagDott","room","expense","entrata"];
+app.addEventListener("submit",e=>{e.preventDefault();const n=e.target.dataset.form;if(isFpm()&&SOLO_CLINIA.includes(n))return toast("Vista di sola consultazione: le modifiche le fa Clinia");const f=FORMS[n];if(f)f(e.target)});
 app.addEventListener("input",e=>{const k=e.target.dataset.input;
   if(k==="digits")e.target.value=e.target.value.replace(/\D/g,"");
   if(k==="iban")e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,34).replace(/(.{4})(?=.)/g,"$1 ");
@@ -2563,6 +2707,9 @@ app.addEventListener("change",e=>{const k=e.target.dataset.change;
   if(k==="aaSvc"){const f=$("form[data-form=addAppt]");if(f){UI.sheet.nome=f.nome.value;UI.sheet.tel=f.tel.value}UI.sheet.svc=+e.target.value;UI.sheet.time=null;render();return}
   if(k==="arcaDone"){S.arca[e.target.dataset.m]=e.target.checked;save();DB.arcaFatto(e.target.dataset.m,e.target.checked);toast(e.target.checked?"Bonifico a Progetto Arca segnato: lo vedono tutti":"Segnato come da fare")}
   if(k==="ppCv"&&e.target.files[0])ppSetCv(e.target.files[0]);
+  if(k==="contAnno"){UI.contAnno=e.target.value;render()}
+  if(k==="scanPag"&&e.target.files.length){const id=e.target.dataset.id;UI.scan=UI.scan||{};const l=UI.scan[id]=UI.scan[id]||[];
+    Promise.all([...e.target.files].map(f=>ridimensiona(f,1800))).then(us=>{l.push(...us);render();toast(`${us.length===1?"Pagina aggiunta":us.length+" pagine aggiunte"}`)}).catch(()=>toast("Foto non letta"))}
   if(k==="fotoFpm"&&e.target.files[0]){const id=e.target.dataset.id;fotoRidotta(e.target.files[0]).then(u=>{S.docPhotos[id]=u;if(S.fotoNuove)delete S.fotoNuove[id];save();toast("Foto aggiornata: la vedono tutti");render()}).catch(()=>toast("Foto non letta: prova con un JPG o PNG."))}
   if(k==="incAnno"){UI.incAnno=e.target.value;UI.incMese="";render()}
   if(k==="incMese"){UI.incMese=e.target.value;render()}

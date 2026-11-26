@@ -1619,9 +1619,21 @@ const statoOre=id=>{const u=oreUso(id),att=oreInAttesa(id);if(!u.c)return att?`<
   if(u.residue<=4)return `<span class="badge warn">Ore in esaurimento</span>`;return ""};
 const iscritto=id=>!!((S.iscritti&&S.iscritti[id])||(S.proProfile[id]&&S.proProfile[id].done));
 function creditiDi(id){return S.crediti.filter(c=>c.docId===id).sort((a,b)=>b.at-a.at)}
-function cliniaDottori(){const l=TUTTI_DOTTORI().sort((a,b)=>(a.kind==="societa")-(b.kind==="societa"));return `<p class="tiny">Quando un dottore o una società firma il contratto, scegli il pacchetto, scrivi le ore e scansiona o allega il contratto firmato. Dopo la verifica le ore compaiono nella sua app e scalano da sole a fine di ogni turno. Al rinnovo, un nuovo pacchetto fa ripartire il contatore.</p>`+
+function nuovoSoggettoHTML(){const ente=UI.nuovoTipo==="ente";return `<form class="card stack" data-form="nuovoSoggetto" style="gap:10px;border-color:var(--accent)" novalidate><h3>Aggiungi un dottore o un ente</h3>
+  <p class="tiny">Inserisci chi ha firmato con Clinia e la sua e-mail: quando scarica l’app e si registra con quell’e-mail entra subito nella sua sezione, con il suo contatore delle ore.</p>
+  <div class="seg"><button type="button" class="${ente?"":"on"}" data-act="nuovoTipo" data-v="dott">Dottore</button><button type="button" class="${ente?"on":""}" data-act="nuovoTipo" data-v="ente">Ente o società</button></div>
+  ${ente?`<label class="field"><span>Ragione sociale o nome*</span><input name="nome" autocomplete="organization"></label><label class="field"><span>Tipo</span><select name="ruolo">${TIPI_SOCIETA.map(t=>`<option>${t}</option>`).join("")}</select></label><label class="field"><span>Referente</span><input name="referente"></label>`
+   :`<div class="fgrid"><label class="field"><span>Titolo</span><select name="titolo">${["","Dott.","Dott.ssa","Prof.","Prof.ssa"].map(t=>`<option>${t}</option>`).join("")}</select></label><label class="field"><span>Professione</span><select name="ruolo">${Object.keys(PROFESSIONI).map(t=>`<option>${t}</option>`).join("")}</select></label></div>
+   <div class="fgrid"><label class="field"><span>Nome*</span><input name="nome" autocomplete="off"></label><label class="field"><span>Cognome*</span><input name="cognome" autocomplete="off"></label></div>
+   <label class="field"><span>Specializzazione</span><input name="spec" placeholder="es. Dermatologia e venereologia"></label>`}
+  <div class="fgrid"><label class="field"><span>E-mail per l’accesso*</span><input name="email" type="email" autocomplete="off"></label><label class="field"><span>Telefono</span><input name="tel" type="tel"></label></div>
+  <p class="err" id="ns-err"></p><button class="btn primary block" type="submit">${ic("check","sm")} Aggiungi e attiva</button></form>`}
+function approvaHTML(){const ap=Object.entries(S.accessi).filter(([id,a])=>a.stato==="attesa"&&doc(id)&&!rimosso(id));if(!ap.length)return "";
+  return `<section class="card stack" style="gap:10px;border-color:var(--warn);background:var(--warn-soft)"><h3>Richieste di accesso</h3><p class="tiny">Si sono registrati da soli nell’app. Attiva solo chi lavora davvero in Clinia.</p>
+   ${ap.map(([id,a])=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docAv(doc(id),"sm")}<span style="flex:1;min-width:150px"><b class="small" style="display:block">${esc(doc(id).name)}</b><span class="tiny">${esc(a.email)} · ${doc(id).kind==="societa"?"ente":"dottore"}</span></span><button class="btn primary sm" data-act="accesso" data-id="${id}" data-v="ok">Attiva</button><button class="iconbtn" data-act="accesso" data-id="${id}" data-v="no" aria-label="Rifiuta">${ic("x","sm")}</button></div>`).join("")}</section>`}
+function cliniaDottori(){const l=TUTTI_DOTTORI().filter(d=>BASE_DOC_IDS.includes(d.id)||accessoOk(d.id)).sort((a,b)=>(a.kind==="societa")-(b.kind==="societa"));return (isFpm()?"":nuovoSoggettoHTML())+approvaHTML()+`<p class="tiny">Quando un dottore o una società firma il contratto, scegli il pacchetto, scrivi le ore e scansiona o allega il contratto firmato. Dopo la verifica le ore compaiono nella sua app e scalano da sole a fine di ogni turno. Al rinnovo, un nuovo pacchetto fa ripartire il contatore.</p>`+
   l.map(d=>{const u=oreUso(d.id),att=oreInAttesa(d.id),cr=creditiDi(d.id);return `<div class="card stack" style="gap:12px">
-   <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${d.kind==="societa"?"Società · ":""}${esc(d.role)}</p>${statoOre(d.id)}</div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
+   <div class="row">${docAv(d,"sm")}<div style="flex:1;min-width:0"><b>${esc(d.name)}</b><p class="tiny">${d.kind==="societa"?"Ente · ":""}${esc(d.role)}${S.accessi[d.id]&&S.accessi[d.id].email?" · "+esc(S.accessi[d.id].email):""}</p>${statoOre(d.id)}</div>${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}</div>
    ${u.c?`<dl class="ledger small"><dt>Pacchetto attivo<small>${esc(pacchettoTxt(u.c))}</small></dt><dd></dd><dt>Ore fatte</dt><dd>${oreFmt(u.trascorse)}</dd><dt>In calendario</dt><dd>${oreFmt(u.pianificate)}</dd><dt><b>Rimaste</b></dt><dd><b>${oreFmt(u.residue)}</b></dd>${att?`<dt>In verifica</dt><dd>${oreFmt(att)}</dd>`:""}</dl>`:att?`<p class="small">${oreFmt(att)} in verifica.</p>`:""}
    <form class="stack" data-form="contratto" data-id="${d.id}" style="gap:8px" novalidate><span class="label">${u.c?"Rinnovo o nuovo pacchetto":"Nuovo pacchetto"}</span>
     <div class="fgrid"><label class="field"><span>Pacchetto</span><select name="tipo">${Object.entries(PACCHETTI).map(([k,t])=>`<option value="${k}" ${k===(d.kind==="societa"?"libere":"mensile")?"selected":""}>${t}</option>`).join("")}</select></label><label class="field"><span>Ore</span><input name="ore" inputmode="decimal" placeholder="50"></label></div>
@@ -2229,6 +2241,9 @@ function afterAuthFlow(){if(S.notif!==false)chiediPermessoNotifiche(); // prossi
   if(!S.pin)return go("pin-create");
   if(!S.user||!S.user.tel)return go("phone");
   if(!S.health)return go("health");
+  if(isPro()&&!S.proId&&!isOwner()){const m=Object.entries(S.accessi).find(([id,a])=>a.email===S.auth.email&&a.stato==="approvato"&&doc(id)&&!rimosso(id));
+    if(m){S.proId=m[0];S.auth.role=doc(m[0]).kind==="societa"?"societa":"professionista";S.iscritti=S.iscritti||{};S.iscritti[m[0]]=Date.now();UI.skipProf=true;save();
+      notifFPM("registrazione","Entrato in app",`${doc(m[0]).name} si è registrato con l’e-mail indicata da Clinia.`);addNotif("titolare","registrazione","Entrato in app",`${doc(m[0]).name} ha attivato il suo profilo.`)}}
   if(isSoc()&&!S.proId)return go("soc-reg");
   if(isPro()&&!S.proId)return go("pro-pick");
   if(isPro()&&!isSoc()&&!(S.proProfile[S.proId]&&S.proProfile[S.proId].done)&&!UI.skipProf)return go("proprof");
@@ -2366,7 +2381,8 @@ const ACT={
   azzera:d=>{UI.azzera=d.v||null;render()},
   azzeraOk:()=>{const k=UI.azzera;UI.azzera=null;if(!k)return;const t=eseguiAzzera(k);save();notifFPM("azzera","Azzeramento",t);toast(t);render()},
   ricontrolla:()=>{if(!inAttesa()){toast("Accesso confermato: benvenuto in Clinia App");return afterAuthFlow()}toast("Ancora in attesa di conferma");render()},
-  accesso:d=>{const a=S.accessi[d.id];if(!a)return;const nm=doc(d.id).name;
+  nuovoTipo:d=>{UI.nuovoTipo=d.v;render()},
+  accesso:d=>{const a=S.accessi[d.id];if(!a)return;const nm=doc(d.id).name;if(isOwner())notifFPM("accesso",d.v==="ok"?"Clinia ha attivato un accesso":"Clinia ha rifiutato un accesso",`${nm} (${a.email})`);
     if(d.v==="ok"){a.stato="approvato";a.confAt=Date.now();addNotif("spec:"+d.id,"accesso","Accesso confermato","Benvenuto in Clinia App: ora puoi prenotare gli studi e ricevere i pazienti.");addNotif("titolare","accesso","Nuovo dottore attivo",`${nm} è operativo in Clinia App.`);toast(`${nm} è operativo`)}
     else{if(!confirm(`Rifiutare l’accesso di ${nm} (${a.email})?`))return;a.stato="rifiutato";toast("Accesso rifiutato")}
     save();render()},
@@ -2634,6 +2650,17 @@ const FORMS={
     const x={id:uid(),docId:id,nome:doc(id).name,descr:f.descr.value.trim()||"Utilizzo studi Clinia",imp:r2(imp),iva,totale:r2(imp*(1+iva)),data:f.data.value||today(),metodo:f.metodo.value,numero:S.fattNum[anno],anno,at:Date.now()};
     S.pagDott.push(x);UI.pagOpen=null;save();notifFPM("pagamento","Pagamento registrato da Clinia",`${x.nome}: ${eur(x.totale)} · fattura ${x.numero}/${anno}`);toast(`Pagamento registrato · fattura ${x.numero}/${anno}`);render();
     fatturaPDF(x).then(({blob,nome})=>salvaFile(blob,nome,"application/pdf")).catch(()=>{})},
+  nuovoSoggetto:f=>{if(isFpm())return toast("Vista di sola consultazione");const v=k=>(f[k]?f[k].value:"").trim(),err=$("#ns-err");err.textContent="";const ente=UI.nuovoTipo==="ente";
+    const em=v("email").toLowerCase();if(!v("nome")||(!ente&&!v("cognome")))return err.textContent=ente?"Scrivi la ragione sociale.":"Scrivi nome e cognome.";
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="Scrivi un’e-mail valida: servirà per entrare nell’app.";
+    if(Object.values(S.accessi).some(a=>a.email===em&&a.stato!=="rimosso"))return err.textContent="Questa e-mail è già collegata a un profilo.";
+    const id=(ente?"soc-":"sp-")+uid(),name=ente?v("nome"):[v("titolo"),v("nome"),v("cognome")].filter(Boolean).join(" ");
+    const d=ente?{id,kind:"societa",name,role:v("ruolo"),area:"medicina",bio:[],soc:{referente:v("referente"),tel:v("tel"),email:em}}
+      :{id,name,role:v("spec")||v("ruolo"),area:"medicina",bio:[],professione:v("ruolo"),specs:v("spec")?[v("spec")]:[]};
+    S.customDocs.push(d);DOCTORS.push(d);S.accessi[id]={email:em,stato:"approvato",da:"clinia",at:Date.now(),confAt:Date.now()};
+    if(!ente)S.proProfile[id]={nome:v("nome"),cognome:v("cognome"),titolo:v("titolo"),email:em,telefono:v("tel"),professione:v("ruolo"),specs:d.specs};
+    save();notifFPM("accesso","Clinia ha aggiunto "+(ente?"un ente":"un dottore"),`${name} · ${em}. Attivo: aspetta il pacchetto di ore.`);
+    setTimeout(()=>f.reset());toast(`${name} aggiunto e attivo: ora registra il suo pacchetto`);render()},
   socReg:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#sr-err");err.textContent="";
     if(!v("nome"))return err.textContent="Scrivi la ragione sociale o il nome.";if(!v("referente"))return err.textContent="Scrivi il nome del referente.";if(!v("tel"))return err.textContent="Scrivi un telefono.";
     const id="soc-"+uid(),d={id,kind:"societa",name:v("nome"),role:v("tipo"),area:"medicina",bio:[v("medico"),v("note")].filter(Boolean),soc:{piva:v("piva"),referente:v("referente"),tel:v("tel"),email:v("email"),medico:v("medico"),note:v("note")}};
@@ -2676,7 +2703,7 @@ app.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)
   if(el.classList.contains("shade")&&e.target.closest("[data-stop]"))return;
   if(el.dataset.act==="fav")e.stopPropagation();
   e.preventDefault();const f=ACT[el.dataset.act];if(f)f(el.dataset,el,e)});
-const SOLO_CLINIA=["contratto","pagDott","room","expense","entrata"];
+const SOLO_CLINIA=["contratto","pagDott","room","expense","entrata","nuovoSoggetto"];
 app.addEventListener("submit",e=>{e.preventDefault();const n=e.target.dataset.form;if(isFpm()&&SOLO_CLINIA.includes(n))return toast("Vista di sola consultazione: le modifiche le fa Clinia");const f=FORMS[n];if(f)f(e.target)});
 app.addEventListener("input",e=>{const k=e.target.dataset.input;
   if(k==="digits")e.target.value=e.target.value.replace(/\D/g,"");

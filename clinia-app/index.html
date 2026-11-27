@@ -1318,6 +1318,10 @@ function chatPage(k){const t=S.chat[k];if(!t)return `<div class="screen">${bar("
   ${t.msgs.map(x=>`<div class="bub ${x.from===me?"me":""}">${x.from!==me&&(!altro||x.from!==altro)?`<b class="tiny" style="display:block">${esc(nomeParte(x.from,t))}</b>`:""}${esc(x.text)}<small>${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${x.at>prima&&x.from!==me?" · nuovo":""}</small></div>`).join("")}</div></div>
   ${tel?`<div class="pad" style="padding-top:0;padding-bottom:6px"><a class="btn ghost sm" href="${waLink(tel,(t.msgs.filter(m=>m.from===me).slice(-1)[0]||{}).text||"")}" target="_blank" rel="noopener">${ic("chat","sm")} Manda anche su WhatsApp</a></div>`:""}
   <form class="composer" data-form="send" data-id="${esc(k)}"><input id="msg-in" name="t" placeholder="Scrivi un messaggio" autocomplete="off" aria-label="Messaggio" data-autofocus><button type="submit" aria-label="Invia">${ic("send","sm")}</button></form></div>`}
+// Orari della segreteria (gli stessi di apertura degli studi): fuori orario parte una risposta automatica
+const ORARI_SEGRETERIA="lun–ven 8:00–20:00 e sab 8:00–13:00";
+const orePrimaDi=a=>(new Date(a.date+"T"+a.time+":00")-Date.now())/3600e3;
+function segreteriaAperta(){const d=new Date(),o=OPEN[d.getDay()];if(!o)return false;const m=d.getHours()*60+d.getMinutes();return m>=o[0]&&m<o[1]}
 // WhatsApp: apre WhatsApp sul telefono di Clinia con il messaggio già scritto (l’invio lo conferma chi lo manda)
 function telefonoDi(k){if(!k||!k.startsWith("spec:"))return "";const id=k.slice(5),d=doc(id)||{},pp=S.proProfile[id]||{};return (pp.telefono||(d.soc&&d.soc.tel)||"").replace(/[^\d+]/g,"")}
 function waLink(tel,testo){const raw=String(tel||"").trim();let n=raw.replace(/[^\d]/g,"");if(raw.startsWith("00"))n=n.slice(2);else if(!raw.startsWith("+")&&n.length<=10)n="39"+n;return `https://wa.me/${n}${testo?"?text="+encodeURIComponent(testo):""}`}
@@ -2515,8 +2519,10 @@ const ACT={
   confirmBook:()=>{saveNote();if(!logged()){UI.pending={stack:UI.stack.slice(),book:{...UI.book},tab:UI.tab};UI.authRole="paziente";if(S.auth&&S.auth.role==="professionista"){S.auth=null;S.proId=null}return go(S.auth?"phone":"auth")}
     if(isPro()){toast("Per prenotare una visita passa al profilo paziente.");return}doConfirmBook()},
   vseg:d=>{UI.visitSeg=d.v;render()},
-  askCancel:d=>{const a=S.appts.find(x=>x.id===d.id);UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
+  askCancel:d=>{const a=S.appts.find(x=>x.id===d.id),tardi=orePrimaDi(a)<24;UI.sheet={type:"confirm",title:"Disdire la visita?",text:`${esc(a.service)} con ${esc(doc(a.doctorId).name)}, ${esc(fmtD(a.date))} alle ${a.time}. Lo specialista riceverà una notifica.${tardi?" <b>Mancano meno di 24 ore:</b> se puoi, avvisa anche la segreteria.":""}`,ok:"Disdici la visita",act:"cancelAppt",id:a.id,danger:true};render()},
   cancelAppt:d=>{const a=S.appts.find(x=>x.id===d.id);a.status="annullata";const qq=`${fmtD(a.date,{day:"numeric",month:"short"})} alle ${a.time}`;
+    if(!isPro()&&orePrimaDi(a)<24){const dn=(doc(a.doctorId)||{}).name||"";addNotif("spec:"+a.doctorId,"visita_annullata","Disdetta con poco preavviso",`${a.patient} ha disdetto ${a.service} di ${qq}: l’orario è di nuovo libero.`,a.id);
+      addNotif("titolare","visita_annullata","Disdetta con poco preavviso",`${iniz2(a.patient)} · ${dn} · ${qq}${a.roomId?" · "+room(a.roomId).name:""}: lo slot è libero.`);logA("Disdetta con poco preavviso",`${dn} · ${qq}`)}
     if(!isPro())addNotif("spec:"+a.doctorId,"visita_annullata","Visita disdetta dal paziente",`${a.patient} · ${a.service} · ${qq}. L’orario torna libero.`,a.id);
     notifFPM("visita_annullata","Visita disdetta",`${iniz2(a.patient)} · ${a.service} · ${doc(a.doctorId).name} · ${qq}`,a.id);save();DB.update("appointments",a.id,{stato:"annullata"});UI.sheet=null;toast("Visita disdetta")},
   closeSheet:()=>{UI.sheet=null;render()},
@@ -2688,6 +2694,8 @@ const FORMS={
     t.msgs.push({from:me,text:tx,at:Date.now()});t.ultimo=Date.now();t.letto[me]=Date.now();f.t.value="";
     const nm=me==="admin"?"FPM":me==="titolare"?"Clinia":nomeParte(me,t);
     [t.a,t.b].filter(x=>x!==me).forEach(x=>addNotif(x,"messaggio","Nuovo messaggio da "+nm,tx.slice(0,120),k));
+    if((t.a==="titolare"||t.b==="titolare")&&me!=="titolare"&&me!=="admin"&&!segreteriaAperta()&&Date.now()-(t.autoAt||0)>12*3600e3){t.autoAt=Date.now();
+      setTimeout(()=>{t.msgs.push({from:"titolare",text:`Grazie, abbiamo ricevuto il tuo messaggio. La segreteria di Clinia risponde ${ORARI_SEGRETERIA}: ti scriviamo appena riapriamo. (risposta automatica)`,at:Date.now(),auto:true});t.ultimo=Date.now();save();render()},900)}
     if(me!=="admin"&&t.a!=="admin"&&t.b!=="admin")S.chatFpm=(S.chatFpm||0)+1;save();render()},
   svcSave:f=>{const err=$("#svc-err");err.textContent="";const rows=[...f.querySelectorAll(".svcrow")],out=[];
     for(const r of rows){const q=n=>r.querySelector(`[name=${n}]`),tipo=q("tipo").value,nome=q("nome").value.trim()||tipo,dur=parseInt(q("dur").value,10),pr=parseFloat(String(q("prezzo").value).replace(",","."));

@@ -2,6 +2,7 @@ import UIKit
 import WebKit
 import Vision
 import VisionKit
+import MessageUI
 
 /// Mostra Mozart (la web-app nel pacchetto) a tutto schermo e offre all'app le funzioni native.
 final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandlerWithReply {
@@ -11,6 +12,10 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
     private var loaded = false
     private var uploads: [String: (name: String, data: Data)] = [:]
     private var midi: MidiBridge?
+    private var host: SecureHost?
+    private let cover = UIView()
+    static let secureKey = "mozart.secure"
+    private var secureOn: Bool { UserDefaults.standard.object(forKey: Self.secureKey) as? Bool ?? true }
     fileprivate var scanReply: ((Any?, String?) -> Void)?
 
     override var prefersStatusBarHidden: Bool { true }
@@ -39,13 +44,37 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         webView.scrollView.maximumZoomScale = 1
         webView.allowsLinkPreview = false
         if #available(iOS 16.4, *) { webView.isInspectable = true }
-        view = webView
+        let h = SecureHost()
+        h.content.addSubview(webView)
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: h.content.topAnchor), webView.bottomAnchor.constraint(equalTo: h.content.bottomAnchor),
+            webView.leadingAnchor.constraint(equalTo: h.content.leadingAnchor), webView.trailingAnchor.constraint(equalTo: h.content.trailingAnchor)])
+        h.secure = secureOn
+        host = h
+        view = h
     }
+
+    // MARK: protezione schermate (screenshot e registrazione)
+    private func applySecure() {
+        host?.secure = secureOn
+        cover.isHidden = !(secureOn && UIScreen.main.isCaptured)
+    }
+    @objc private func captureChanged() { applySecure() }
+    @objc private func userTookScreenshot() {
+        if secureOn { webView.evaluateJavaScript("window.toast&&toast('Le schermate di Mozart sono protette: lo screenshot risulta nero',3200)", completionHandler: nil) }
+    }
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
         webView.load(URLRequest(url: URL(string: "\(AppSchemeHandler.scheme)://localhost/index.html")!))
         midi = MidiBridge(web: webView)
+        cover.backgroundColor = .black; cover.isHidden = true; cover.frame = view.bounds
+        cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]; view.addSubview(cover)
+        NotificationCenter.default.addObserver(self, selector: #selector(captureChanged), name: UIScreen.capturedDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(userTookScreenshot), name: UIApplication.userDidTakeScreenshotNotification, object: nil)
+        applySecure()
     }
 
     // MARK: file in arrivo (Apri con Mozart, AirDrop, File)
@@ -166,6 +195,27 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         case "keepAwake":
             UIApplication.shared.isIdleTimerDisabled = (body["on"] as? Bool) ?? true
             replyHandler(true, nil)
+        case "setSecure":
+            UserDefaults.standard.set((body["on"] as? Bool) ?? true, forKey: Self.secureKey)
+            applySecure(); replyHandler(secureOn, nil)
+        case "getSecure":
+            replyHandler(secureOn, nil)
+        case "mail":
+            let to = (body["to"] as? String) ?? "fpm@fpmwebdesignertech.it"
+            let subject = (body["subject"] as? String) ?? "Mozart"
+            let text = (body["body"] as? String) ?? ""
+            if MFMailComposeViewController.canSendMail() {
+                let m = MFMailComposeViewController()
+                m.mailComposeDelegate = self
+                m.setToRecipients([to]); m.setSubject(subject); m.setMessageBody(text, isHTML: false)
+                present(m, animated: true); replyHandler("mail", nil)
+            } else {
+                // nessun account Mail configurato: apre l'app di posta predefinita con un messaggio già scritto
+                var c = URLComponents(string: "mailto:\(to)")
+                c?.queryItems = [URLQueryItem(name: "subject", value: subject), URLQueryItem(name: "body", value: text)]
+                if let u = c?.url { UIApplication.shared.open(u) { ok in replyHandler(ok ? "mailto" : nil, ok ? nil : "nessuna app di posta") } }
+                else { replyHandler(nil, "indirizzo non valido") }
+            }
         default:
             replyHandler(nil, "comando sconosciuto")
         }
@@ -245,5 +295,13 @@ extension WebViewController: VNDocumentCameraViewControllerDelegate {
         controller.dismiss(animated: true) { [weak self] in
             self?.scanReply?(nil, error.localizedDescription); self?.scanReply = nil
         }
+    }
+}
+
+
+extension WebViewController: MFMailComposeViewControllerDelegate {
+    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+        controller.dismiss(animated: true)
+        if result == .sent { webView.evaluateJavaScript("window.toast&&toast('Messaggio inviato. Grazie!',3000)", completionHandler: nil) }
     }
 }

@@ -568,6 +568,7 @@ function showSettings(){
     ${switchRow('setNight','Modalità notte',s.night,'Pagina scura e note chiare, per il palco buio.')}
     ${switchRow('setZones','Tocca ai lati per girare pagina',s.tapZones,'Sinistra: indietro · destra: avanti · centro: barre.')}
     <div class="field"><label>Dimensione di pannelli e finestre (anche pizzicando con due dita)</label><div class="seg" id="setUiz">${[[.8,'Piccola'],[1,'Normale'],[1.2,'Grande'],[1.45,'Molto grande']].map(([v,l])=>`<button data-z="${v}" class="${Math.abs((s.uiz||1)-v)<.04?'on':''}">${l}</button>`).join('')}</div></div>
+    ${window.MozartNative&&MozartNative.setSecure?switchRow('setSecure','Proteggi le schermate',true,'Blocca screenshot e registrazione dello schermo: nelle immagini Mozart appare nero.'):''}
     <div class="eyebrow" style="margin-top:6px">Barra di Annota</div>
     <div class="sl"><span>Scurezza della barra (più scura = si legge meglio)<em id="abv">${Math.round((s.annoBarA??.86)*100)}%</em></span><input type="range" id="setAb" min="30" max="100" step="2" value="${Math.round((s.annoBarA??.86)*100)}" style="--v:${((s.annoBarA??.86)*100-30)/70*100}%"></div>
     ${switchRow('setLbl','Nome sotto ogni icona',s.annoLabels!==false,'Così le funzioni si capiscono al volo.')}
@@ -582,6 +583,7 @@ function showSettings(){
   $('#setFs').onclick=()=>{closeLayers();FS.toggle()}; tg('setNight','night',()=>document.body.classList.toggle('night',s.night)); tg('setZones','tapZones');
   const ab=$('#setAb'); ab.oninput=()=>{ s.annoBarA=+ab.value/100; $('#abv').textContent=ab.value+'%'; ab.style.setProperty('--v',(ab.value-30)/70*100+'%'); saveSettings(); try{ Anno.labelBar(); }catch(e){} };
   s.annoLabels=s.annoLabels!==false; s.annoGuide=s.annoGuide!==false; tg('setLbl','annoLabels',()=>{ try{ Anno.labelBar(); }catch(e){} }); tg('setGuide','annoGuide');
+  const sb=$('#setSecure'); if(sb){ MozartNative.getSecure().then(v=>{ sb.classList.toggle('on',!!v); sb.setAttribute('aria-checked',!!v); }).catch(()=>{}); sb.onclick=()=>{ const on=!sb.classList.contains('on'); MozartNative.setSecure(on).then(v=>{ sb.classList.toggle('on',!!v); sb.setAttribute('aria-checked',!!v); toast(v?'Screenshot e registrazione bloccati':'Protezione schermate disattivata',2600); }); }; }
   const lp=$('#setLp'); lp.oninput=()=>{s.longPress=+lp.value;$('#lpv').textContent=lp.value+' ms';lp.style.setProperty('--v',((lp.value-250)/7.5)+'%');saveSettings()};
   m2.querySelector('[data-ok]').onclick=closeLayers;
 }
@@ -621,8 +623,37 @@ function showAbout(){
   modal('Mozart',`<div style="display:flex;gap:16px;align-items:center"><img src="__SEAL__" alt="Sigillo FPM webdesignertech" style="width:140px;flex:none;filter:drop-shadow(0 0 18px rgba(214,168,78,.35))">
     <div><div style="font-family:var(--f-display);font-size:26px;font-weight:700">FPM webdesignertech</div><div class="hint">Mozart · Leggio digitale per cantanti, cori e musicisti.<br>© 2026 FPM webdesignertech · Tutti i diritti riservati.<br>Nome, marchio, icona e codice sono opera protetta: vietata la copia e la distribuzione senza autorizzazione.</div></div></div>
     <div class="hint">Gli spartiti restano sul tuo iPad: nessun account, nessun caricamento online.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px"><button class="goldBtn" id="abWrite">${iconSvg('mail')}Scrivici</button></div>
     <div class="hint" style="font-family:var(--f-display);font-style:italic;text-align:center;margin-top:6px;color:var(--gold-hi)">In affettuosa memoria del caro collega e amico Francesco De Candia</div>`);
+  $('#abWrite').onclick=()=>Contact.open();
 }
+// ---------- Scrivici: messaggio a FPM webdesignertech ----------
+const Contact={
+  to:'fpm@fpmwebdesignertech.it',
+  open(){
+    const m=modal('Scrivici',`<div class="hint">Domande, problemi o idee per migliorare Mozart? Scrivi qui: il messaggio parte dalla tua posta verso FPM webdesignertech.</div>
+      <div class="field"><label for="ctKind">Argomento</label><select id="ctKind"><option>Domanda</option><option>Segnala un problema</option><option>Suggerimento</option><option>Collaborazione</option><option>Altro</option></select></div>
+      <div class="field"><label for="ctName">Il tuo nome</label><input id="ctName" autocomplete="name"></div>
+      <div class="field"><label for="ctMsg">Messaggio</label><textarea id="ctMsg" rows="6" style="width:100%;resize:vertical"></textarea></div>
+      <label class="switchRow" style="gap:10px"><span class="hint" style="font-size:13px">Aggiungi informazioni tecniche (versione, dispositivo) per aiutarci a capire</span><input type="checkbox" id="ctTech" checked style="width:22px;height:22px;accent-color:var(--gold)"></label>
+      <div class="hint" id="ctNote" style="font-size:12.5px">Scrivi a: ${this.to}</div>`,
+      `<button class="ghostBtn" id="ctCopy">${iconSvg('copy')}Copia indirizzo</button><button class="goldBtn" id="ctSend">${iconSvg('mail')}Invia</button>`);
+    $('#ctCopy',m).onclick=async()=>{ try{ await navigator.clipboard.writeText(this.to); toast('Indirizzo copiato: '+this.to,2600); }catch(e){ toast(this.to,3500); } };
+    $('#ctSend',m).onclick=()=>this.send(m);
+  },
+  send(m){
+    const msg=$('#ctMsg',m).value.trim(); if(msg.length<5){ $('#ctMsg',m).focus(); return toast('Scrivi il messaggio',2200); }
+    const kind=$('#ctKind',m).value, name=$('#ctName',m).value.trim();
+    const tech=$('#ctTech',m).checked?`\n\n—\nMozart · ${window.MozartNative&&MozartNative.app?'app iPad/iPhone':'versione web'} · ${navigator.platform||''} · ${navigator.language||''}`:'';
+    const subject='Mozart · '+kind, body=(name?`Da: ${name}\n\n`:'')+msg+tech;
+    if(window.MozartNative&&MozartNative.mail){
+      MozartNative.mail(this.to,subject,body).then(r=>{ if(r==='mailto') toast('Si apre la tua app di posta',2600); closeLayers(); }).catch(()=>{ toast('Nessuna app di posta: indirizzo copiato, scrivici da dove preferisci',4200); try{ navigator.clipboard.writeText(this.to); }catch(e){} });
+    } else {
+      location.href='mailto:'+this.to+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+      $('#ctNote',m).innerHTML='Si è aperta la tua app di posta? Se non succede nulla, copia l\'indirizzo e scrivici da dove preferisci: '+this.to;
+    }
+  },
+};
 
 // ---------- Unisci spartiti ed esporta ----------
 async function mergeSelected(){

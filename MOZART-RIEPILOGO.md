@@ -199,3 +199,9 @@ Rifatto il 22 novembre guardando la guida di Sibelius 5 (nuova partitura in 5 pa
 - Fare commit e push solo su `claude/fervent-sagan-xuja93` e su `gh-pages`.
 - Nessun nome di modello nei commit.
 - Per i test: script Playwright nella scratchpad, che servono le librerie cdnjs dalle copie locali di `node_modules`.
+
+## Scrivici e protezione schermate (ultimo lavoro)
+- **Scrivici**: pulsante nella finestra FPM (`showAbout`, oggetto `Contact` in `leggio/src/app.js`). Nell'app iOS apre l'editor di Mail (`MFMailComposeViewController`), senza account Mail apre `mailto:`; nel web usa `mailto:` e "Copia indirizzo". Indirizzo: fpm@fpmwebdesignertech.it.
+- **Blocco screenshot iOS**: `mozart-ios/Mozart/SecureHost.swift` (contenuto in un campo di testo sicuro → nero negli screenshot e nelle registrazioni), copertura nera se `UIScreen.isCaptured`, avviso quando si fa lo screenshot; interruttore "Proteggi le schermate" in Impostazioni (predefinito attivo, ponte `MozartNative.setSecure/getSecure/mail`).
+- **Android/Google**: non c'è un progetto Android di Mozart; codice pronto (FLAG_SECURE + email) in `mozart-android/BLOCCO-SCREENSHOT-E-MAIL.md`.
+- Il codice Swift/Kotlin NON è stato compilato né provato (nessun Xcode/Android qui): va verificato con una nuova build. Nella versione web gli screenshot non si possono bloccare.

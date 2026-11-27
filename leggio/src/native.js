@@ -21,6 +21,9 @@
     // scarica un file dal web senza i blocchi del browser: {name,mime,data(base64)}
     async download(url){ return call({cmd:'download',url}); },
     keepAwake(on){ return call({cmd:'keepAwake',on:!!on}); },
+    mail(to,subject,body){ return call({cmd:"mail",to,subject,body}); },
+    setSecure(on){ return call({cmd:"setSecure",on:!!on}); },
+    getSecure(){ return call({cmd:"getSecure"}); },
     // file arrivati da fuori: l'app li serve su mozart://localhost/__inbox/...
     async receive(list){
       for(const f of list){

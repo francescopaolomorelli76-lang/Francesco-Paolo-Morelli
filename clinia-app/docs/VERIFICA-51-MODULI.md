@@ -191,8 +191,8 @@ Tutto quello che segue funziona nell'app (modalità prova sul dispositivo) ed è
 
 | # | Cosa | Perché è delicato | Costo |
 |---|---|---|---|
-| A | Rendere **privato** il repository GitHub e **cambiare le password** di FPM e Clinia | Riguarda proprietà e sicurezza; lo fai tu da GitHub | gratis |
-| B | Applicare online la **migrazione 024** (privacy chat, tariffa bloccata, registro compensi nel database) | Cambia il database reale | gratis |
+| A | Rendere **privato** il repository GitHub | Lo fai tu da GitHub (Settings → Danger Zone → Change visibility). *Password già cambiate e protette con PBKDF2 (300.000 passaggi) il 27/11.* | gratis |
+| B | Applicare online la **migrazione 024** (backup fatto il 27/11; l'applicazione automatica è stata fermata dal sistema di permessi: serve il tuo ok esplicito) (privacy chat, tariffa bloccata, registro compensi nel database) | Cambia il database reale | gratis |
 | C | **Collegare l'app al database** con accesso vero, prima su un database di prova separato | Cambia l'architettura | gratis (piano free) |
 | D | **Notifiche push** (Firebase/Apple) ed **e-mail automatiche** (moduli 32, 33, 34, 36) | Servono account e record DNS sul dominio | gratis nei limiti dei piani |
 | E | **Account Apple a nome di Clinia Srl** e account Google Play (moduli 16, 19) | Proprietà e pubblicazione | 99 $/anno + 25 $ una tantum, a carico di Clinia |
@@ -201,3 +201,10 @@ Tutto quello che segue funziona nell'app (modalità prova sul dispositivo) ed è
 | H | **Fattura elettronica SdI** (38), **addebito SEPA** (01), **antivirus su server** (50), **blocco screenshot Android** (51, richiede una nuova build) | Servizi a pagamento o modifica dell'app nativa | da preventivare |
 | I | **Verifica in due passaggi** per FPM e Clinia (17) | Funziona solo con il database collegato (punto C) | gratis |
 | L | **Lettura automatica dei contratti (OCR)** (37) | Servizio esterno | da valutare |
+
+
+### Fatto in autonomia il 27/11 (seconda parte)
+- Password di FPM e Clinia cambiate; impronte più robuste (PBKDF2). Le vecchie password non funzionano più.
+- Backup completo del database online (37 tabelle) prima di qualsiasi modifica.
+- Preventivo `piano-economico.html` riscritto sul modello attuale (1,50 €/ora + fisso annuale, niente abbonamenti, niente Arca).
+- Anteprima dell'app aggiornata (versione 48).

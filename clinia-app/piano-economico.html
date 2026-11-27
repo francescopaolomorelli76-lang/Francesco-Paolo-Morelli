@@ -61,125 +61,77 @@ details.card[open] summary::after{content:" －"}
 <main>
 <header style="display:flex;flex-direction:column;gap:10px">
   <span class="eyebrow">Clinia App · FPM WebDesignTech</span>
-  <h1>Flussi, contratti e compensi</h1>
-  <p class="lead">Ogni pagamento si divide in automatico, nel momento in cui avviene: la visita allo specialista, la tua quota a te, il 3 % a Progetto Arca, l’affitto delle stanze a Clinia. Niente bonifici da aspettare. Tu ricevi i compensi come autore del software, senza partita IVA.</p>
-  <p class="note">Le indicazioni fiscali e la bozza di contratto sono un punto di partenza: vanno confermate da un commercialista (o dal CAF) e da un avvocato prima della firma.</p>
+  <h1>Compensi, contratti e costi</h1>
+  <p class="lead">Un modello semplice: FPM riceve <b>1,50 € per ogni ora</b> firmata nei pacchetti dei dottori e degli enti, più un <b>compenso fisso annuale</b>. Niente abbonamenti per i dottori, niente commissioni per i pazienti.</p>
+  <p class="note">Le indicazioni fiscali sono un punto di partenza: vanno confermate dal commercialista prima di emettere ricevute o versare ritenute.</p>
 </header>
 
 <section>
   <span class="eyebrow">Modello economico</span>
-  <h2>Chi riceve cosa</h2>
+  <h2>Chi paga cosa</h2>
   <div class="tbl"><table>
-    <thead><tr><th>Operazione</th><th>Chi paga</th><th>Dove arriva</th></tr></thead>
+    <thead><tr><th>Voce</th><th>Chi paga</th><th>A chi va</th></tr></thead>
     <tbody>
-      <tr><td>Visita prenotata dal paziente (carta o in sede)</td><td>Paziente</td><td>Tutto allo specialista. <b>Nessun costo di servizio</b> per il paziente</td></tr>
-      <tr><td>Appuntamento scritto dallo specialista in Agenda</td><td>Paziente allo specialista</td><td>Tutto allo specialista, <b>nessun costo</b> per lo specialista</td></tr>
-      <tr><td>Abbonamento 50 € al mese</td><td>Specialista</td><td><b>50 € netti</b> a te, <b>per sempre</b> (anche dopo che il software passa a Clinia)</td></tr>
-      <tr><td>Affitto degli studi (mese, ore, pacchetti, percentuale)</td><td>Specialista</td><td>Clinia</td></tr>
-      <tr><td><b>Canone tecnologico</b>: 9 € per ogni ora di studio prenotata</td><td>Clinia</td><td><b>9 € netti</b> a te, <b>per sempre</b>: manutenzione del software, gestione tecnologica della struttura, beneficenza. Tu bonifichi il 3 % (0,27 € l’ora) a Progetto Arca</td></tr>
-      <tr><td><b>Acquisto del software</b></td><td>Clinia</td><td>12 rate da <b>300 € netti</b> (3.600 €) <i>oppure</i> <b>3.000 € netti</b> in unica soluzione</td></tr>
-      <tr><td>Al pagamento completo</td><td>—</td><td>Il software diventa <b>di Clinia Srl</b>. Ti restano a tempo indeterminato abbonamenti e canone</td></tr>
+      <tr><td>Visita del paziente (in sede o online)</td><td>Paziente</td><td>Tutto allo specialista. <b>Nessuna commissione</b> per il paziente</td></tr>
+      <tr><td>Pacchetto di ore (mensile, settimanale, a ore, ore libere)</td><td>Dottore o ente</td><td>Clinia, secondo il contratto firmato con lei</td></tr>
+      <tr><td><b>Compenso per ora firmata</b></td><td>Clinia</td><td><b>1,50 € netti a FPM</b> per ogni ora del pacchetto, appena Marco lo conferma. La tariffa resta bloccata nel pacchetto</td></tr>
+      <tr><td><b>Compenso fisso annuale</b></td><td>Clinia</td><td>Importo da concordare, a FPM ogni dicembre, <b>dal 2027</b>. Dicembre 2026 è il mese di prova gratuito</td></tr>
+      <tr><td>Sito clinia.it e sua manutenzione</td><td>—</td><td>Gratuiti</td></tr>
+      <tr><td>Account Apple (99 $/anno) e Google Play (25 $ una tantum)</td><td>Clinia</td><td>Apple e Google: le app sanitarie si pubblicano con l’account dell’azienda</td></tr>
+      <tr><td>Abbonamenti dei dottori, acquisto del software a rate</td><td>—</td><td><b>Non previsti</b></td></tr>
     </tbody></table></div>
-  <p class="small muted">Finché Stripe non è attivo, Clinia ti versa ogni mese con un unico bonifico (anche istantaneo) rata del software, abbonamenti incassati e canone delle ore di studio, come indicato nell’app. Esempio di canone: uno studio a mezza giornata (4 ore × 22 giorni = 88 ore) vale 792 € al mese per te. Il 3 % del canone va alla Fondazione Progetto Arca ETS (Milano, C.F. 11183570156): lo bonifichi tu ogni mese e puoi detrarre il 30 % (da confermare con il CAF).</p>
+  <p class="small muted">Esempio: un dottore con un pacchetto mensile di 40 ore vale 60 € netti al mese per FPM. Dieci dottori con 40 ore ciascuno: 600 € al mese, 7.200 € all’anno, più il fisso.</p>
 </section>
 
 <section>
-  <span class="eyebrow">Stato dei lavori</span>
-  <h2>Cosa è già fatto</h2>
+  <span class="eyebrow">Come funziona nell’app</span>
+  <h2>Dal contratto al compenso</h2>
   <div class="grid">
-    <div class="card"><h3>App</h3><ul>
-      <li>Tre ingressi: <b>Paziente</b>, <b>Specialista</b> e, ad accesso riservato, <b>Direzione Clinia</b> e <b>Area FPM</b>.</li>
-      <li>Sezione Clinia: rendiconto del mese (entrate, uscite, saldo), compensi da girare agli specialisti, stanze con nomi, tariffe, foto e vista 3D, spese con ricevuta.</li>
-      <li>Area FPM: compenso del mese con ritenuta, ricevuta precompilata, controlli, documenti in PDF, riepilogo fiscale annuale.</li></ul></div>
-    <div class="card"><h3>Database Supabase (collegato)</h3><ul>
-      <li>Progetto in Europa con tabelle, regole di accesso e tempo reale già installati e provati.</li>
-      <li>FPM vede solo totali, mai nomi o dati sanitari dei pazienti.</li>
-      <li>Nessuna doppia prenotazione possibile di stanze e visite.</li></ul></div>
-    <div class="card"><h3>Pagamenti</h3><ul>
-      <li>Funzioni Stripe pronte per un unico conto intestato a Clinia.</li>
-      <li>Da attivare: account Stripe di Clinia e app pubblicata su un indirizzo web.</li></ul></div>
-  </div>
-</section>
-
-<section>
-  <span class="eyebrow">Sistema di pagamento</span>
-  <h2>Stripe di Clinia con conti collegati</h2>
-  <p>Il conto Stripe principale è intestato a Clinia (P.IVA), che resta il soggetto che incassa. Ogni specialista e tu avete un <b>conto collegato</b> (Stripe Connect): appena un pagamento riesce, l’app divide l’importo e lo accredita a ciascuno. Da lì Stripe versa sull’IBAN in automatico.</p>
-  <div class="grid">
-    <div class="card"><h3>Cosa è già pronto</h3><ul>
-      <li>Divisione automatica di visite, servizio, abbonamenti e affitti nel webhook di Stripe.</li>
-      <li>Addebito notturno del servizio per le visite in struttura.</li>
-      <li>Rate del software (12 × 300 €) o unica soluzione 3.000 €, più abbonamenti e canone tecnologico (9 € per ora di studio) con un unico bonifico mensile, finché Stripe non è attivo.</li>
-      <li>Ogni accredito compare subito nella tua area FPM Tech, con le iniziali del paziente e il servizio.</li></ul></div>
-    <div class="card"><h3>Cosa serve per accenderlo</h3><ul>
-      <li>Account Stripe di Clinia con Connect attivo.</li>
-      <li>Il tuo conto collegato: da privato, con documento e IBAN. Stripe chiede la verifica dell’identità; va confermato con Stripe che un privato senza partita IVA possa riceverli.</li>
-      <li>Ogni specialista inserisce l’IBAN al primo accesso e completa la verifica di Stripe.</li></ul></div>
-    <div class="card"><h3>Costi</h3><ul>
-      <li>Carte europee circa 1,5 % + 0,25 € a pagamento (da verificare sul listino Stripe).</li>
-      <li>Connect: piccolo costo per conto collegato attivo e per accredito.</li>
-      <li>PayPal ha commissioni più alte (3,40 % + quota fissa): meglio come metodo aggiuntivo per i pazienti.</li></ul></div>
+    <div class="card"><h3>1. Clinia registra</h3><ul><li>Marco inserisce il pacchetto con il contratto firmato e conferma due volte.</li><li>Il pacchetto è subito attivo: il dottore vede il suo contatore.</li></ul></div>
+    <div class="card"><h3>2. FPM vede subito</h3><ul><li>Il compenso compare nell’area FPM e nel <b>registro compensi</b>, che si può solo aggiungere.</li><li>Errori: annullamento o rettifica, sempre registrati.</li></ul></div>
+    <div class="card"><h3>3. Il dottore prenota</h3><ul><li>Stanza, giorni e orari, con doppia conferma: le ore scalano subito.</li><li>Avvisi quando restano poche ore, il giorno prima della scadenza e a ore finite.</li></ul></div>
   </div>
 </section>
 
 <section>
   <span class="eyebrow">La tua posizione</span>
-  <h2>Fisco: due parti diverse</h2>
+  <h2>Fisco, in breve</h2>
   <div class="tbl"><table>
-    <thead><tr><th>Voce</th><th>Come funziona</th></tr></thead>
+    <thead><tr><th>Voce</th><th>Come funziona (da confermare)</th></tr></thead>
     <tbody>
-      <tr><td>Prezzo del software</td><td>Cessione dei diritti d’autore sull’opera (art. 53, c. 2, lett. b, TUIR; L. 633/1941, art. 64-bis): niente IVA (art. 3, c. 4, lett. a, DPR 633/72). Si tassa il 75 % del compenso; Clinia trattiene il 20 % su quella parte e lo versa con F24 (a suo carico, per lasciarti netti 300 € o 3.000 €). Va nel 730 (quadro D).</td></tr>
-      <tr><td>Abbonamenti e canone</td><td>Sono servizi continuativi (manutenzione e gestione tecnologica): la strada sicura è la <b>partita IVA forfettaria dal 1° gennaio 2027</b> (stipendio sotto 35.000 €, ricavi sotto 85.000 €): imposta 5 % per 5 anni sul 67 % degli incassi, contributi INPS gestione separata, niente IVA né ritenuta, fattura elettronica mensile a Clinia.</td></tr>
-      <tr><td>2026</td><td>Dicembre conviene come mese di prova senza incassi: per il 2026 dichiari solo lo stipendio del Petruzzelli.</td></tr>
-      <tr><td>Parenti</td><td>Contratto scritto con data certa, prezzi giustificati dal mercato, pagamenti tracciabili (bonifico), delibera dei soci di Clinia se ci sono altri soci.</td></tr>
-      <tr><td>Datore di lavoro</td><td>Verifica il tuo contratto: esclusiva e autorizzazioni per incarichi esterni; l’app deve essere nata fuori dall’orario e senza mezzi del lavoro.</td></tr>
+      <tr><td>Compensi da Clinia</td><td>Se inquadrati come <b>diritti d’autore</b> sul software (art. 53, c. 2, lett. b, TUIR): niente IVA, si tassa il 75 %; Clinia trattiene il 20 % su quella parte (<b>15 % effettivo</b>) e lo versa con F24. In dichiarazione con lo stipendio.</td></tr>
+      <tr><td>Alternativa</td><td>Se il commercialista li considera servizi continuativi: partita IVA forfettaria (imposta 5 % per 5 anni sul 67 % degli incassi, INPS gestione separata).</td></tr>
+      <tr><td>2026</td><td>Dicembre è il mese di prova senza incassi.</td></tr>
+      <tr><td>Datore di lavoro</td><td>Verifica esclusiva e autorizzazioni per incarichi esterni.</td></tr>
     </tbody></table></div>
 </section>
 
 <section>
-  <span class="eyebrow">Contratti</span>
-  <h2>Cosa firmare</h2>
-  <div class="grid">
-    <div class="card"><h3>1. Contratto FPM – Clinia</h3><p class="small muted">Cessione del software con passaggio di proprietà al saldo (12 × 300 € o 3.000 €), servizi tecnologici a tempo indeterminato: abbonamenti 50 € e canone 9 € per ora di studio a te, 3 % a Progetto Arca. Recesso di Clinia con 12 mesi di preavviso e indennità di 24 mensilità. PDF completo con logo FPM nel repository (<code>clinia-app/docs/contratto</code>).</p></div>
-    <div class="card"><h3>2. Specialista e Clinia</h3><p class="small muted">Abbonamento all’app (50 € al mese), affitto degli studi con tariffario (mensile, a ore, pacchetti o percentuale), nessun costo di servizio sulle visite.</p></div>
-    <div class="card"><h3>3. Privacy (GDPR)</h3><p class="small muted">Clinia titolare del trattamento; tu responsabile del trattamento (art. 28, Allegato B del contratto); fornitori di hosting e pagamenti come sub-responsabili; valutazione d’impatto per i dati sanitari.</p></div>
-    <div class="card"><h3>4. Termini per i pazienti</h3><p class="small muted">Prenotazione gratuita con conferma dello specialista, disdetta e rimborsi, informativa privacy e consenso ai dati sanitari.</p></div>
-  </div>
-</section>
-
-<section>
   <span class="eyebrow">Stima dei tuoi compensi</span>
-  <h2>Quanto ti arriva ogni mese</h2>
+  <h2>Quanto ti arriva</h2>
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
     <form class="calc" id="calc" onsubmit="return false">
-      <label for="c-sp">Specialisti abbonati<input id="c-sp" type="number" min="0" value="11"></label>
-      <label for="c-ore">Ore di studio prenotate al mese (tutti gli studi)<input id="c-ore" type="number" min="0" value="300"></label>
-      <label for="c-lic">Software<select id="c-lic"><option value="300">Rata mensile 300 € (primi 12 mesi)</option><option value="250">Unica soluzione 3.000 € (media sul primo anno)</option><option value="0">Software già pagato</option></select></label>
+      <label for="c-ore">Ore firmate nei pacchetti al mese (tutti i dottori)<input id="c-ore" type="number" min="0" value="300"></label>
+      <label for="c-fisso">Compenso fisso annuale (€)<input id="c-fisso" type="number" min="0" step="100" value="0"></label>
       <label for="c-al">Aliquota IRPEF (dallo stipendio)<select id="c-al"><option value="0.23" selected>23 % (fino a 28.000 €)</option><option value="0.33">33 % (28.000–50.000 €)</option><option value="0.43">43 % (oltre 50.000 €)</option></select></label>
     </form>
     <div class="res" id="res"></div>
-    <p class="tiny">Importi netti per te. La stima “dopo le tasse” usa il regime forfettario consigliato dal 2027 (coefficiente 67 %, INPS gestione separata circa 24 %, imposta 5 % per 5 anni) per abbonamenti e canone, e la tua aliquota per il prezzo del software (diritti d’autore). Da far confermare al commercialista.</p>
+    <p class="tiny">Importi netti per te. La stima “dopo le tasse” considera i diritti d’autore: imponibile 75 % del lordo, ritenuta già trattenuta da Clinia e conguaglio con la tua aliquota. Da far confermare al commercialista.</p>
   </div>
   <div class="tbl"><table>
-    <thead><tr><th>Esempio con 11 specialisti</th><th class="n">Ore di studio al mese</th><th class="n">Ti arriva al mese</th><th class="n">In un anno</th></tr></thead>
+    <thead><tr><th>Esempio</th><th class="n">Ore al mese</th><th class="n">Al mese</th><th class="n">In un anno (senza fisso)</th></tr></thead>
     <tbody id="scen"></tbody></table></div>
 </section>
 
 <section>
-  <span class="eyebrow">Prossimi collegamenti</span>
-  <h2>In ordine, prima i gratuiti</h2>
+  <span class="eyebrow">Prossimi passi</span>
+  <h2>Prima i gratuiti</h2>
   <div class="grid">
-    <div class="card"><span class="pill">Fatto</span><h3 style="margin-top:6px">Supabase</h3><p class="small muted">Database collegato, con accrediti e movimenti in tempo reale.</p></div>
-    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Netlify</h3><p class="small muted">Pubblica l’app su un indirizzo web: serve perché database e conferma e-mail funzionino davvero.</p></div>
-    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Accesso con Google</h3><p class="small muted">ID client OAuth su Google Cloud.</p></div>
-    <div class="card"><span class="pill az">Gratis da aprire</span><h3 style="margin-top:6px">Stripe di Clinia + Connect</h3><p class="small muted">Si paga solo la commissione sui pagamenti; si parte in modalità test. Poi colleghi il tuo conto e quelli degli specialisti.</p></div>
-    <div class="card"><span class="pill w">A pagamento</span><h3 style="margin-top:6px">Apple, WhatsApp/SMS, fatture</h3><p class="small muted">Apple Developer 99 $ l’anno, Twilio per i codici, servizio di fatturazione elettronica per Clinia.</p></div>
+    <div class="card"><span class="pill">Pronto</span><h3 style="margin-top:6px">App e database</h3><p class="small muted">App completa in prova; database Supabase in Europa con regole di accesso e controlli contro le doppie prenotazioni.</p></div>
+    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Collegamento al database</h3><p class="small muted">Accesso vero con e-mail, dati condivisi tra tutti i telefoni, prima su un ambiente di prova.</p></div>
+    <div class="card"><span class="pill az">Gratis</span><h3 style="margin-top:6px">Notifiche push ed e-mail</h3><p class="small muted">Firebase, Apple Push e un servizio e-mail con piano gratuito.</p></div>
+    <div class="card"><span class="pill w">A carico di Clinia</span><h3 style="margin-top:6px">Store</h3><p class="small muted">Apple Developer 99 $ l’anno, Google Play 25 $ una tantum.</p></div>
   </div>
-</section>
-
-<section class="sources small">
-  <span class="eyebrow">Fonti</span>
-  <p>Tariffe PayPal per commercianti in Italia: <a href="https://www.paypal.com/it/webapps/mpp/merchant-fees" target="_blank" rel="noopener">paypal.com</a>. Prezzi Stripe nello SEE: <a href="https://support.stripe.com/questions/pricing-updates-for-businesses-based-in-the-european-economic-area-(eea)" target="_blank" rel="noopener">support.stripe.com</a>. Riferimenti normativi citati: TUIR artt. 53-54, DPR 600/1973 art. 25, DPR 633/1972 art. 3, L. 633/1941, D.Lgs. 165/2001 art. 53, Regolamento UE 2016/679.</p>
 </section>
 
 <footer class="foot">© 2026 FPM WebDesignTech – Francesco Paolo Morelli. Tutti i diritti riservati.</footer>
@@ -187,12 +139,11 @@ details.card[open] summary::after{content:" －"}
 
 <script>
 const eur=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
-function stima({sp,ore,lic,al}){const abb=sp*50,can=ore*9,arca=can*0.03,accr=abb+can+lic;
-  const red=(abb+can)*0.67,inps=red*0.24,imp=(red-inps)*0.05,licTax=lic/0.85*0.75*al+lic/0.85*0.75*0.2-lic/0.85*0.15;
-  return{abb,can,arca,accr,dopo:accr-inps-imp-licTax-arca+arca*0.3}}
+// netto mensile = ore × 1,50 + fisso/12; lordo = netto / (1 - 0,15); tasse finali = 75 % del lordo × aliquota
+function stima({ore,fisso,al}){const net=ore*1.5+fisso/12,lordo=net/0.85,rit=lordo-net,tasse=lordo*0.75*al;return{net,lordo,dopo:net-(tasse-rit)}}
 function calc(){const g=id=>+document.getElementById(id).value||0;
-  const r=stima({sp:g("c-sp"),ore:g("c-ore"),lic:g("c-lic"),al:+document.getElementById("c-al").value});
-  document.getElementById("res").innerHTML=`<div><span>Abbonamenti</span><b>${eur(r.abb)}</b></div><div><span>Canone tecnologico</span><b>${eur(r.can)}</b></div><div><span>Bonifico tuo a Progetto Arca</span><b>${eur(r.arca)}</b></div><div><span>Ti arriva al mese</span><b>${eur(r.accr)}</b></div><div class="hl"><span>Netto stimato dopo le tasse, al mese</span><b>${eur(r.dopo)}</b></div><div><span>In un anno</span><b>${eur(r.dopo*12)}</b></div>`}
-document.getElementById("scen").innerHTML=[[150,300],[300,300],[520,300],[520,0]].map(([o,l])=>{const r=stima({sp:11,ore:o,lic:l,al:0.23});return `<tr><td>${l?"Con rata del software":"Software già pagato"}</td><td class="n">${o}</td><td class="n">${eur(r.accr)}</td><td class="n"><b>${eur(r.accr*12)}</b></td></tr>`}).join("");
+  const r=stima({ore:g("c-ore"),fisso:g("c-fisso"),al:+document.getElementById("c-al").value});
+  document.getElementById("res").innerHTML=`<div><span>Ti arriva al mese</span><b>${eur(r.net)}</b></div><div><span>Lordo (con ritenuta)</span><b>${eur(r.lordo)}</b></div><div class="hl"><span>Netto stimato dopo le tasse, al mese</span><b>${eur(r.dopo)}</b></div><div><span>In un anno</span><b>${eur(r.dopo*12)}</b></div>`}
+document.getElementById("scen").innerHTML=[[100,"5 dottori, 20 ore"],[300,"10 dottori, 30 ore"],[500,"10 dottori, 50 ore"],[800,"16 dottori, 50 ore"]].map(([o,t])=>`<tr><td>${t}</td><td class="n">${o}</td><td class="n">${eur(o*1.5)}</td><td class="n"><b>${eur(o*1.5*12)}</b></td></tr>`).join("");
 document.getElementById("calc").addEventListener("input",calc);calc();
 </script>

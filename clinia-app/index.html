@@ -525,7 +525,7 @@ const ROOMS=[
    dot:["Scrivania e sedie","Appendiabiti","Climatizzato"]}];
 // Accesso riservato del titolare, Dott. Marco Morelli: gratuito, senza abbonamento, studi senza pagamento.
 // Nel prototipo la password è verificata sul telefono tramite impronta SHA-256; nell'app pubblicata la verifica sarà sul server.
-const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"2cc96af4eb89484f59cdbb95ad48e80810d53f2863a7440d02e64e2fb1354a75"};
+const OWNER={email:"titolare@cliniamatera.it",doctorId:"marco-morelli",hash:"pbkdf2$481bec105d2b77aafe725c45aef4cb1b5cb6a245dc35511b865a9232e9ff6c7a"};
 // A chi vanno i pagamenti
 const PAYEES={rooms:"Clinia Srl",sub:"Clinia Srl",visite:"Clinia, che gira il compenso allo specialista"};
 // Compenso a FPM WebDesignTech (autore del software), pagato da Clinia:
@@ -570,7 +570,7 @@ const VISIT_TIPI=["Prima visita","Visita di controllo","Visita specialistica","C
 const VIDEO_BASE="https://meet.jit.si/Clinia-";
 const videoUrl=a=>VIDEO_BASE+String(a.vk||a.id).replace(/[^a-zA-Z0-9]/g,"").slice(0,24);
 const videoKey=()=>{const b=new Uint8Array(12);crypto.getRandomValues(b);return[...b].map(x=>x.toString(16).padStart(2,"0")).join("")};
-const FPM={email:FPM_MAIL,hash:"8679758cc6b791d54ae63bb4d80739f69614215dddb93352aaff744760d786c2"};
+const FPM={email:FPM_MAIL,hash:"pbkdf2$66381dafbf78e94b71f00f5f23013e7981140c6236606bd9465da07bc6f61f5c"};
 // Servizio dell'app: 7 € per ogni visita. Con carta lo paga il paziente; in struttura viene addebitato allo specialista.
 let APP_FEE=0; // niente più servizio di prenotazione per pazienti e specialisti (contratto FPM–Clinia, 12/11/2026)
 // Ore dei dottori: Clinia firma con ogni dottore un pacchetto di ore; FPM le conferma (crediti) e il dottore le vede scalare
@@ -871,6 +871,9 @@ function logA(azione,dett){const chi=isFpm()?"FPM":isOwner()?"Clinia":S.proId&&d
 const credOwner=()=>({email:(S.cred.titolare&&S.cred.titolare.email)||OWNER.email,hash:(S.cred.titolare&&S.cred.titolare.hash)||OWNER.hash});
 const credFpm=()=>({email:(S.cred.fpm&&S.cred.fpm.email)||FPM.email,hash:(S.cred.fpm&&S.cred.fpm.hash)||FPM.hash});
 const isOwner=()=>!!(S.auth&&S.auth.owner);
+// Password: PBKDF2-SHA256 con 300.000 passaggi (forzarla per tentativi richiederebbe anni). Le vecchie impronte SHA-256 restano valide finché non si cambiano.
+async function hashPw(salt,p){try{const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(p),"PBKDF2",false,["deriveBits"]);const b=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:new TextEncoder().encode(salt),iterations:300000},k,256);return "pbkdf2$"+[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
+async function pwOk(salt,p,h){if(!h)return false;return String(h).startsWith("pbkdf2$")?(await hashPw(salt,p))===h:(await sha256(salt+p))===h}
 async function sha256(t){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
 const mySub=()=>S.auth&&S.subs?S.subs[S.auth.email]:null;
 const planFor=()=>SUB;
@@ -2602,12 +2605,12 @@ const FORMS={
         if(r.admin)S.user={nome:"Francesco Paolo",cognome:"Morelli",pref:"",tel:"riservato",nascita:""};
         S.auth={email:e,role:r.admin?"fpm":r.owner?"professionista":UI.authRole,owner:!!r.owner,fpm:!!r.admin};if(r.owner)S.proId=OWNER.doctorId;save();afterAuthFlow()});return}
     if(UI.authRole==="fpm"){if(e.toLowerCase()!==credFpm().email){err.textContent="Questo accesso è riservato a FPM WebDesignTech.";return}
-      err.textContent="";sha256("clinia-fpm:"+p).then(h=>{if(h!==credFpm().hash){err.textContent="Password errata per l’area FPM.";return}
+      err.textContent="";pwOk("clinia-fpm:",p,credFpm().hash).then(ok=>{if(!ok){err.textContent="Password errata per l’area FPM.";return}
         S.auth={email:credFpm().email,role:"fpm",fpm:true};S.proId=null;S.user={nome:"Francesco Paolo",cognome:"Morelli",pref:"",tel:"riservato",nascita:""};S.health="limited";S.notif=false;S.stats=false;
         save();toast("Area FPM");afterAuthFlow()});return}
     if(UI.authRole==="titolare"&&e.toLowerCase()!==credOwner().email){err.textContent="Questo accesso è riservato alla direzione di Clinia.";return}
     if(e.toLowerCase()===credOwner().email){if(UI.loginMode==="register"){err.textContent="Questo indirizzo è riservato al titolare: usa Login.";return}
-      err.textContent="";sha256("clinia-titolare:"+p).then(h=>{if(h!==credOwner().hash){err.textContent="Password errata per l’accesso riservato del titolare.";return}
+      err.textContent="";pwOk("clinia-titolare:",p,credOwner().hash).then(ok=>{if(!ok){err.textContent="Password errata per l’accesso riservato del titolare.";return}
         S.auth={email:credOwner().email,role:"professionista",owner:true};S.proId=OWNER.doctorId;save();toast("Accesso del titolare");afterAuthFlow()});return}
     if(p.length<(UI.loginMode==="register"?8:6)){err.textContent=UI.loginMode==="register"?"La password deve avere almeno 8 caratteri.":"Password troppo corta.";return}
     S.auth={email:e,role:UI.authRole};if(UI.authRole==="paziente")S.proId=null;
@@ -2712,14 +2715,14 @@ const FORMS={
   entrata:f=>{const err=$("#en-err"),a=parseFloat(String(f.importo.value).replace(/\./g,"").replace(",","."));if(!(a>0))return err.textContent="Scrivi l’importo.";if(!f.descr.value.trim())return err.textContent="Scrivi una descrizione.";
     S.entrate.push({id:uid(),data:f.data.value||today(),importo:r2(a),descr:f.descr.value.trim(),cat:f.cat.value});save();toast("Entrata aggiunta");render()},
   credMie:async f=>{const err=$("#cr-err");err.textContent="";const fpm=isFpm(),cur=fpm?credFpm():credOwner(),salt=fpm?"clinia-fpm:":"clinia-titolare:";
-    if(await sha256(salt+f.attuale.value)!==cur.hash)return err.textContent="La password attuale non è corretta.";
+    if(!(await pwOk(salt,f.attuale.value,cur.hash)))return err.textContent="La password attuale non è corretta.";
     const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
     if(pw||f.pw2.value){if(pw!==f.pw2.value)return err.textContent="Le due password non coincidono.";if(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri."}
     if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
-    logA("Credenziali cambiate",fpm?"FPM":"Clinia");S.cred[fpm?"fpm":"titolare"]={email:em||cur.email,hash:pw?await sha256(salt+pw):cur.hash};S.auth.email=em||cur.email;save();if(!fpm)notifFPM("accesso","Clinia ha cambiato le credenziali","La Direzione Clinia ha aggiornato e-mail o password.");toast("Accesso aggiornato");f.reset();render()},
+    logA("Credenziali cambiate",fpm?"FPM":"Clinia");S.cred[fpm?"fpm":"titolare"]={email:em||cur.email,hash:pw?await hashPw(salt,pw):cur.hash};S.auth.email=em||cur.email;save();if(!fpm)notifFPM("accesso","Clinia ha cambiato le credenziali","La Direzione Clinia ha aggiornato e-mail o password.");toast("Accesso aggiornato");f.reset();render()},
   credReset:async f=>{const err=$("#crr-err");err.textContent="";const em=f.email.value.trim().toLowerCase(),pw=f.pw.value;if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";
     if(pw&&(pw.length<10||!/[A-Za-z]/.test(pw)||!/\d/.test(pw)))return err.textContent="La password deve avere almeno 10 caratteri, con lettere e numeri.";if(!em&&!pw)return err.textContent="Scrivi una nuova e-mail o una nuova password.";
-    logA("Accesso di Clinia reimpostato","");const cur=credOwner();S.cred.titolare={email:em||cur.email,hash:pw?await sha256("clinia-titolare:"+pw):cur.hash};save();addNotif("titolare","accesso","Accesso reimpostato da FPM","E-mail o password della Direzione sono state reimpostate.");toast("Accesso di Clinia reimpostato");f.reset();render()},
+    logA("Accesso di Clinia reimpostato","");const cur=credOwner();S.cred.titolare={email:em||cur.email,hash:pw?await hashPw("clinia-titolare:",pw):cur.hash};save();addNotif("titolare","accesso","Accesso reimpostato da FPM","E-mail o password della Direzione sono state reimpostate.");toast("Accesso di Clinia reimpostato");f.reset();render()},
   pagDott:f=>{if(isFpm())return toast("Vista di sola consultazione");const id=f.dataset.id,err=$("#pd-err-"+id);err.textContent="";const imp=parseFloat(String(f.imp.value).replace(/\./g,"").replace(",","."));
     if(!(imp>0))return err.textContent="Scrivi l’imponibile, per esempio 1.000.";const iva=+f.iva.value,anno=(f.data.value||today()).slice(0,4);S.fattNum[anno]=(S.fattNum[anno]||0)+1;
     const x={id:uid(),docId:id,nome:doc(id).name,descr:f.descr.value.trim()||"Utilizzo studi Clinia",imp:r2(imp),iva,totale:r2(imp*(1+iva)),data:f.data.value||today(),metodo:f.metodo.value,numero:S.fattNum[anno],anno,at:Date.now()};

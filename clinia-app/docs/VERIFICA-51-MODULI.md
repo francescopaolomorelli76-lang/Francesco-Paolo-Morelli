@@ -143,3 +143,61 @@ Data: 27 novembre 2026 · Preparata per FPM WebDesignTech · Nessuna funzione nu
 | Antivirus file | Richiede un server (costo mensile); in alternativa solo controllo tipo/dimensione. |
 | Soglia avviso ore 4h → 20% | Nessun costo, cambia solo quando arriva l'avviso. |
 | FPM senza accesso alle chat dottore–paziente | Riduce la visibilità FPM, ma è richiesto dalla privacy sanitaria. |
+
+---
+
+## Aggiornamento del 27 novembre 2026: moduli resi operativi
+
+Tutto quello che segue funziona nell'app (modalità prova sul dispositivo) ed è stato collaudato in automatico, senza errori. Non è stato pubblicato nulla e non è stato attivato nessun servizio a pagamento.
+
+| N. | Cosa è stato fatto | Dove si trova |
+|---|---|---|
+| 01 | Tariffa 1,50 € **salvata dentro ogni pacchetto**: se un giorno cambia, i pacchetti passati restano com'erano | automatico |
+| 02 | Nuova area **Strumenti FPM** (diagnostica, backup, cestino, registro compensi, costi, store, assistenza, configurazione, simulatore, testi) | Profilo FPM → Strumenti FPM |
+| 03 | **Annulla entro 5 minuti** (le ore tornano nel contatore); ripetizione per 1, 2, 3 o 6 mesi | Stanze |
+| 04 | Controlli su P.IVA, codice fiscale, PEC, codice SDI, e-mail; massimo di ore possibile per pacchetto settimanale/mensile; data contratto non nel futuro | moduli di inserimento |
+| 05 | Dati fiscali completi delle società (P.IVA, CF, sede, PEC, SDI, referente) | Clinia → Gestione |
+| 06 | Gli azzeramenti **non cancellano più** pacchetti, compensi, pagamenti e incassi (i contatori si chiudono, lo storico resta); **cestino di 30 giorni** con ripristino | Dottori / Strumenti FPM |
+| 07 | **Calendario a colori** (verde libera, giallo in parte, rosso piena, grigio chiusa), vista mese e giorno; **alternative libere** quando una stanza è occupata | Clinia → Stanze; prenotazione stanza |
+| 08 | **Avviso a tutti** i professionisti dall'app + pulsanti WhatsApp | Clinia → Gestione |
+| 09 | **FPM non legge più le chat tra pazienti e struttura**; ricerca nei messaggi, "letto", allegati (foto/PDF), blocco utente, avviso "per emergenze chiama il 112" | Messaggi |
+| 11 | Promemoria **2 ore prima**; **lista d'attesa** con avviso automatico alla disdetta; **paziente non presentato** | Visite, Agenda, Clinia → Gestione |
+| 13/15 | **Informativa privacy** e **termini d'uso** in bozza, visibili da tutti i profili | Profilo |
+| 14 | Diagnostica: stato app, errori raccolti, accessi, **collaudo automatico** (10 controlli) | Strumenti FPM → Diagnostica |
+| 17 | Blocco di 5 minuti dopo **5 password sbagliate**; registro accessi | automatico |
+| 18/19/20 | **Checklist store** (15 punti), stato Apple/Google con versione, **procedura prima di ogni pubblicazione** | Strumenti FPM → Store |
+| 21 | **Assistenza tecnica con ticket numerati** e stato (aperto, in lavorazione, risolto) | Profilo → Assistenza tecnica FPM |
+| 22 | **Costi dei servizi** con scadenze e avviso 30 giorni prima | Strumenti FPM → Costi |
+| 23 | **Registro compensi** che si può solo aggiungere (compensi, storni, rettifiche), grafico per mese, CSV per il commercialista, promemoria del fisso annuale il 1° e il 20 dicembre dal 2027 | Strumenti FPM → Registro compensi |
+| 24 | Statistiche Clinia: occupazione per stanza e per giorno, ore per professionista | Clinia → Gestione |
+| 25 | Compensi FPM per mese e per anno | Strumenti FPM → Registro compensi |
+| 26/42 | **Suggerimenti e scadenze** (rinnovi, stanze poco usate, giorno meno pieno, lista d'attesa, F24, fatture non incassate, manutenzioni) con regole semplici, senza intelligenza artificiale a pagamento | Clinia → Gestione |
+| 27 | Soglia di avviso configurabile: 4 ore **oppure** il 20 % del pacchetto | Strumenti FPM → Configurazione |
+| 28/29 | **Modalità manutenzione** con avviso; **backup completo** scaricabile e ripristino da file | Strumenti FPM |
+| 31 | **Attrezzature** con scadenza della manutenzione e avviso 7 giorni prima | Clinia → Gestione |
+| 35 | **Testi ufficiali delle notifiche** da approvare uno per uno | Strumenti FPM → Testi notifiche |
+| 36 | **Riepilogo giornaliero** per FPM (nell'app; per e-mail quando attiviamo il servizio) | Notifiche FPM |
+| 37/41 | **Archivio contratti** con ricerca; registro compensi per anno | Clinia → Gestione; Strumenti FPM |
+| 44 | **Simulatore fiscale** con i due regimi (diritti d'autore / occasionale), segnato come stima | Strumenti FPM → Simulatore |
+| 45 | **Segreteria**: Clinia prenota la visita per conto del paziente (telefono o reception) | Clinia → Gestione |
+| 46 | **Assenze** degli specialisti: avviso ai pazienti già prenotati e a Clinia | Agenda dottore; Clinia → Gestione |
+| 47 | **Rettifiche ore** (con doppia conferma, finiscono nel registro compensi) e **rimborsi** ai pazienti | Clinia → Gestione |
+| 48 | **Guida all'uso** diversa per paziente, dottore, Clinia e FPM | Profilo → Guida all'uso |
+| 49 | Collaudo automatico nell'app + collaudo con browser di prova | Strumenti FPM → Diagnostica |
+| 50 | Solo foto (JPG, PNG, HEIC) e PDF, massimo 15 MB; file pericolosi rifiutati | automatico |
+| 51 | L'app si **oscura** quando va in secondo piano (anteprima nel multitasking) | automatico |
+
+### Punti delicati lasciati per ultimi: servono la tua approvazione
+
+| # | Cosa | Perché è delicato | Costo |
+|---|---|---|---|
+| A | Rendere **privato** il repository GitHub e **cambiare le password** di FPM e Clinia | Riguarda proprietà e sicurezza; lo fai tu da GitHub | gratis |
+| B | Applicare online la **migrazione 024** (privacy chat, tariffa bloccata, registro compensi nel database) | Cambia il database reale | gratis |
+| C | **Collegare l'app al database** con accesso vero, prima su un database di prova separato | Cambia l'architettura | gratis (piano free) |
+| D | **Notifiche push** (Firebase/Apple) ed **e-mail automatiche** (moduli 32, 33, 34, 36) | Servono account e record DNS sul dominio | gratis nei limiti dei piani |
+| E | **Account Apple a nome di Clinia Srl** e account Google Play (moduli 16, 19) | Proprietà e pubblicazione | 99 $/anno + 25 $ una tantum, a carico di Clinia |
+| F | **Ritenuta d'acconto e soglie** (moduli 40, 43) | Regime fiscale da confermare col commercialista | — |
+| G | Approvare **informativa privacy e termini** (moduli 13, 15) | Testo legale: meglio farlo rivedere | eventuale consulente |
+| H | **Fattura elettronica SdI** (38), **addebito SEPA** (01), **antivirus su server** (50), **blocco screenshot Android** (51, richiede una nuova build) | Servizi a pagamento o modifica dell'app nativa | da preventivare |
+| I | **Verifica in due passaggi** per FPM e Clinia (17) | Funziona solo con il database collegato (punto C) | gratis |
+| L | **Lettura automatica dei contratti (OCR)** (37) | Servizio esterno | da valutare |

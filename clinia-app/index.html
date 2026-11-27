@@ -1295,7 +1295,8 @@ function contatti(){const me=io();if(!me)return[];const doc_=SPECIALISTI().map(d
   if(isSoc())return["titolare","admin"];
   if(isPro()){const paz=[...new Set(S.appts.filter(a=>a.doctorId===S.proId&&a.ownerEmail).map(a=>"user:"+a.ownerEmail))];return["titolare","admin",...paz]}
   return["titolare",...doc_]}
-function mieChat(){const me=io();return Object.entries(S.chat).filter(([k,t])=>me==="admin"||t.a===me||t.b===me).sort((x,y)=>(y[1].ultimo||0)-(x[1].ultimo||0))}
+const chatPaziente=t=>String(t.a).startsWith("user:")||String(t.b).startsWith("user:");
+function mieChat(){const me=io();return Object.entries(S.chat).filter(([k,t])=>t.a===me||t.b===me||(me==="admin"&&!chatPaziente(t))).sort((x,y)=>(y[1].ultimo||0)-(x[1].ultimo||0))}
 const nonLettiChat=(t,me)=>t.msgs.filter(m=>m.from!==me&&m.at>((t.letto||{})[me]||0)).length;
 const totNonLetti=()=>{const me=io();return mieChat().reduce((n,[k,t])=>n+(me==="admin"&&t.a!=="admin"&&t.b!=="admin"?0:nonLettiChat(t,me)),0)};
 function apriChatCon(altro){const me=io();if(!me)return ACT.openAuth();const k=chiaveChat(me,altro);if(!S.chat[k]){S.chat[k]={a:me,b:altro,msgs:[],letto:{},nomi:{},ultimo:0}}
@@ -1303,12 +1304,12 @@ function apriChatCon(altro){const me=io();if(!me)return ACT.openAuth();const k=c
 function msgTab(){if(!logged()&&!isFpm())return needLogin("Messaggi","Scrivi agli specialisti e alla segreteria di Clinia");const me=io(),l=mieChat(),fpm=me==="admin",soloMie=fpm&&UI.chatMie;
   const vis=l.filter(([k,t])=>!soloMie||t.a==="admin"||t.b==="admin");
   return `<div class="pad stack" style="gap:14px"><h1 class="h-sec" style="font-size:1.6rem">Messaggi</h1>
-  ${fpm?`<div class="seg"><button class="${soloMie?"":"on"}" data-act="chatMie" data-v="">Tutte le conversazioni</button><button class="${soloMie?"on":""}" data-act="chatMie" data-v="1">Scritte a me</button></div>`:""}
+  ${fpm?`<div class="seg"><button class="${soloMie?"":"on"}" data-act="chatMie" data-v="">Conversazioni di lavoro</button><button class="${soloMie?"on":""}" data-act="chatMie" data-v="1">Scritte a me</button></div>`:""}
   <details class="card" ${l.length?"":"open"}><summary><b>${ic("plus","sm")} Nuovo messaggio</b></summary><div class="list" style="margin-top:8px">${contatti().map(k=>`<button class="li" data-act="nuovaChat" data-id="${esc(k)}"><span class="av sm round">${esc(iniParte(k))}</span><span class="t"><b>${esc(nomeParte(k))}</b><small>${esc(subParte(k))}</small></span>${ic("right","sm")}</button>`).join("")||`<p class="small muted">Nessun contatto disponibile.</p>`}</div></details>
   <div class="list">${vis.map(([k,t])=>{const altro=fpm&&t.a!=="admin"&&t.b!=="admin"?null:(t.a===me?t.b:t.a),ul=t.msgs[t.msgs.length-1],n=nonLettiChat(t,me);
     const titolo=altro?nomeParte(altro,t):`${nomeParte(t.a,t)} ↔ ${nomeParte(t.b,t)}`;
     return `<button class="li" data-act="openThread" data-id="${esc(k)}"><span class="av sm round">${esc(altro?iniParte(altro,t):"⇄")}</span><span class="t"><b>${esc(titolo)}</b><small>${ul?esc((ul.from===me?"Tu: ":"")+ul.text).slice(0,80):"Nessun messaggio"}</small></span>${n?`<span class="badge warn">${n}</span>`:""}${ic("right","sm")}</button>`}).join("")||`<p class="small muted">Nessuna conversazione. Tocca “Nuovo messaggio”.</p>`}</div></div>`}
-function chatPage(k){const t=S.chat[k];if(!t)return `<div class="screen">${bar("Messaggi")}<div class="content"><p class="pad muted">Conversazione non trovata.</p></div></div>`;
+function chatPage(k){const t=S.chat[k];if(t&&io()==="admin"&&t.a!=="admin"&&t.b!=="admin"&&chatPaziente(t))return `<div class="screen">${bar("Messaggi")}<div class="content"><p class="pad muted">Conversazione riservata tra paziente e struttura: per la privacy sanitaria FPM non può leggerla.</p></div></div>`;if(!t)return `<div class="screen">${bar("Messaggi")}<div class="content"><p class="pad muted">Conversazione non trovata.</p></div></div>`;
   const me=io(),altro=t.a===me?t.b:t.b===me?t.a:null,titolo=altro?nomeParte(altro,t):`${nomeParte(t.a,t)} ↔ ${nomeParte(t.b,t)}`;
   t.letto=t.letto||{};const prima=t.letto[me]||0;t.letto[me]=Date.now();save();
   const tel=isOwner()&&altro?telefonoDi(altro):"";
@@ -1349,7 +1350,7 @@ const pav=p=>`<span class="pav">${p.id==="me"&&S.photo?`<img src="${S.photo}" al
 function personChip(){const p=personOf(UI.person);return `<button class="pchip" data-act="pickPerson" aria-label="Stai vedendo i dati di ${esc(p.nome)}. Cambia persona">${pav(p)}${ic("down","sm")}</button>`}
 function profileTab(){if(!logged())return needLogin("Profilo","Il tuo account Clinia");const u=S.user,pro=isPro();
   const items0=isFpm()?[["credenziali","lock","Email e password · accesso di Clinia"],["tab:fpmfisco","list","Fisco"],["tab:fpmdoc","file","Documenti e ricevute"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"]]:isSoc()?[["tariffe","clock","Le ore del pacchetto"],["tab:persone","users","Persone da visitare"],["tab:stanze","door","Prenota le stanze"],["settings","gear","Impostazioni e privacy"]]:isFpm()?[["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.fpm?" · "+accDesc(S.payAcc.fpm):"")],["settings","gear","Sicurezza e accesso"],["tab:fpm","euro","Entrate del mese"],["tab:fpmdoc","file","Documenti e ricevute"]]:pro&&isOwner()?[["credenziali","lock","Email e password di accesso"],["tab:clinia","list","Clinia: pacchetti, fatture, conti e stanze"],["ibanpage","card","Come ricevi i pagamenti"+(S.payAcc.clinia?" · "+accDesc(S.payAcc.clinia):"")],["offerta","euro","Offerta e tariffe per i professionisti"],["msgpage","chat","Messaggi"],["settings","gear","Impostazioni e privacy"]]:pro?[["ricavi","euro","Ricavi"],["proprof","user","Profilo professionale"],["settings","gear","Impostazioni e privacy"],["tariffe","clock","Le mie ore · visite, durata e prezzi"],["tab:stanze","door","I miei turni negli studi"]]
-    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0,...(isFpm()||isOwner()?[]:[["elimina","x","Elimina il mio account"]])];
+    :[["health","heartplus","Le tue informazioni sanitarie"],["family","users","Familiari"],["payments","card","Pagamenti"],["requests","list","Richieste"]];const items=[["notifiche","bell","Notifiche"+(nonLette()?" · "+nonLette()+" nuove":"")],...items0,...EXTRA_PROFILO(),...(isFpm()||isOwner()?[]:[["elimina","x","Elimina il mio account"]])];
   return `<div class="pad stack" style="gap:22px"><div class="row between"><h1 class="ptitle">Profilo</h1><button class="iconbtn" data-act="openPage" data-v="settings" aria-label="Impostazioni">${ic("gear")}</button></div>
   <div class="stack" style="align-items:center;gap:10px"><label class="avup" for="ph-in" title="Cambia foto">${meAv(104)}<span class="avcam">${ic("plus","sm")}</span></label><input id="ph-in" type="file" accept="image/*" class="hidden" data-change="photo">
    <h2 style="font-size:1.35rem;font-weight:800;text-align:center">${esc(u.nome+" "+u.cognome)}</h2>${pro?`<span class="badge az">${esc(doc(S.proId).name)}</span>`:""}${isOwner()?`<span class="badge">Direttore di Clinia · accesso gratuito</span>`:""}${isFpm()?`<span class="badge az">FPM WebDesignTech · area riservata</span>`:""}</div>
@@ -1475,7 +1476,7 @@ function fpmMovimenti(m){const mov=[],add=x=>{const arca=x.pren?(x.pagato||x.lor
     if(APP_FEE&&a.method==="carta"&&a.paid)add({at:a.date+" "+a.time,tipo:"Prenotazione",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"paziente",demo:a.demo});
     else if(APP_FEE&&a.method==="struttura"&&!own&&(a.paid||a.date<today()))add({at:a.date+" "+a.time,tipo:a.origine==="agenda"?"Appuntamento in Agenda":"Prenotazione in struttura",pren:true,ini:iniz(a.name),svc:a.svc,spec:d.name,lordo:APP_FEE/(1-RIT()),netto:APP_FEE,pagato:APP_FEE,da:"specialista",demo:a.demo})}}
   for(const c of S.crediti.filter(c=>c.stato==="confermata"&&stampDi(c.confAt).startsWith(m))){const ore=c.ore,dd=doc(c.docId);
-    add({at:stampDi(c.confAt),tipo:"Ore accreditate",pren:true,ore,ini:"",svc:`${oreFmt(ore)} × ${eur(CANONE_ORA)}`,spec:dd?dd.name:"",lordo:CANONE_ORA*ore/(1-RIT()),netto:CANONE_ORA*ore,pagato:CANONE_ORA*ore,da:"clinia-canone"})}
+    add({at:stampDi(c.confAt),tipo:"Ore accreditate",pren:true,ore,ini:"",svc:`${oreFmt(ore)} × ${eur(tarC(c))}`,spec:dd?dd.name:"",lordo:compC(c)/(1-RIT()),netto:compC(c),pagato:compC(c),da:"clinia-canone"})}
   if(ABBONAMENTO_ATTIVO)for(const d of otherDocs()){const at=m+"-"+pad2(1+hash(d.id)%5)+" 07:"+pad2(10+hash(d.id)%40);if(at<=nowStamp())add({at,tipo:"Abbonamento",ini:"",svc:SUB.name,spec:d.name,lordo:SUB.price/(1-RIT()),netto:SUB.price,pagato:SUB.price,da:"specialista",demo:!DB.on})}
   const k=monthIndex(m),pl=pagStato(m);if(pl.dovuto&&pl.pagato)add({at:(pl.data||m+"-01")+" 06:00",tipo:"Compenso fisso annuale",ini:"",svc:(p=>`${rataTxt(p)}, ${!p.pagato?"da pagare":p.metodo==="contanti"?"pagata in contanti":p.metodo==="bonifico"?"pagata con bonifico":"addebito automatico"}`)(pagStato(m)),spec:"Clinia",lordo:pl.dovuto/(1-RIT()),netto:pl.dovuto,da:"clinia"});
   return mov.filter(x=>x.at<=nowStamp()||x.tipo==="Prenotazione").sort((a,b)=>b.at.localeCompare(a.at))}
@@ -1538,13 +1539,16 @@ const ATTREZZATURE={ecografo:{nome:"Ecografo Samsung HS40",breve:"Ecografo",stan
   tecar:{nome:"Tecar",breve:"Tecar",stanza:"s3",perc:0.3,desc:"Apparecchio per tecarterapia su carrello, accanto al lettino elettrico dello Studio 3.",sonde:[],foto:["img/attrezzature/tecar-1.jpg"]}};
 const percStudio=id=>{const r=room(id),l=attrDi(r).map(a=>a.perc).filter(x=>x!=null);return l.length?Math.max(...l):PERC_BASE};
 const modalita=id=>(S.modalita&&S.modalita[id])||"fitto";
+const tarC=c=>c&&c.tariffa!=null?c.tariffa:CANONE_ORA; // tariffa salvata nel pacchetto: se cambia, il passato non cambia (modulo 01)
+const compC=c=>r2(c.ore*tarC(c));
+const compensoDi=id=>r2(S.crediti.filter(c=>c.docId===id&&c.stato==="confermata").reduce((t,c)=>t+compC(c),0));
 const oreAccreditate=id=>r2(S.crediti.filter(c=>c.docId===id&&c.stato==="confermata").reduce((t,c)=>t+c.ore,0));
 const oreInAttesa=id=>r2(S.crediti.filter(c=>c.docId===id&&c.stato==="richiesta").reduce((t,c)=>t+c.ore,0));
 // Pacchetti di ore firmati con Clinia: mensile, settimanale, a ore o ore libere (società). Il contatore scala da solo
 // man mano che i turni prenotati nella stanza finiscono; un nuovo pacchetto (rinnovo) fa ripartire il contatore.
 const PACCHETTI={mensile:"Mensile",settimanale:"Settimanale",ore:"A ore",libere:"Ore libere"};
 function scadenzaDi(tipo,inizio){if(tipo==="mensile"){const d=parseD(inizio);d.setMonth(d.getMonth()+1);return dstr(d)}if(tipo==="settimanale")return addDays(inizio,7);return null}
-const pacchetto=id=>S.crediti.filter(c=>c.docId===id&&c.stato==="confermata").sort((a,b)=>(b.confAt||0)-(a.confAt||0))[0]||null;
+const pacchetto=id=>S.crediti.filter(c=>c.docId===id&&c.stato==="confermata"&&!c.chiuso).sort((a,b)=>(b.confAt||0)-(a.confAt||0))[0]||null;
 const inFinestra=(c,ds)=>ds>=(c.inizio||"0000-00-00")&&(!c.scadenza||ds<c.scadenza);
 const oreTurnoB=b=>(toMin(b.end)-toMin(b.start))/60;
 function oreUso(id){const c=pacchetto(id),z={c:null,ore:0,trascorse:0,pianificate:0,residue:0,libere:0,scaduto:false};if(!c)return z;
@@ -1568,7 +1572,7 @@ function controllaPromemoria(){let ch=false;const dom=addDays(today(),1);
 function controllaOre(){let ch=controllaPromemoria();for(const d of DOCTORS.filter(x=>x.id!==OWNER.doctorId&&!S.rimossi[x.id])){const u=oreUso(d.id),c=u.c;if(!c)continue;const nm=d.name;
   const tutti=(t,x)=>{addNotif("spec:"+d.id,"ore",t,x);addNotif("titolare","ore",t,`${nm}: ${x}`,"spec:"+d.id);notifFPM("ore",t,`${nm}: ${x}`)};
   if(!c.avvisoFine&&(u.residue<=0||u.scaduto)){c.avvisoFine=c.avvisoOre=c.avvisoScad=true;ch=true;tutti("Pacchetto terminato","Le ore in Clinia sono finite: rinnova il pacchetto in Clinia per continuare a prenotare le stanze.")}
-  else{if(!c.avvisoOre&&u.residue<=4){c.avvisoOre=true;ch=true;tutti("Ore in esaurimento",`Restano ${oreFmt(u.residue)}: rinnova da Clinia, il tuo tempo in Clinia sta terminando.`)}
+  else{if(!c.avvisoOre&&u.residue<=sogliaOre(u.ore)){c.avvisoOre=true;ch=true;tutti("Ore in esaurimento",`Restano ${oreFmt(u.residue)}: rinnova da Clinia, il tuo tempo in Clinia sta terminando.`)}
     if(!c.avvisoScad&&c.scadenza&&addDays(today(),1)>=c.scadenza){c.avvisoScad=true;ch=true;tutti("Pacchetto in scadenza","Il pacchetto scade domani: rinnova da Clinia per non fermarti.")}}}
   if(ch)save();return ch}
 function oreCard(id){id=id||S.proId;if(isOwner()||!id)return "";const u=oreUso(id),att=oreInAttesa(id);
@@ -1815,7 +1819,7 @@ function movimentiClinia(m){// m = "AAAA" o "AAAA-MM"
   const ent=[...S.pagDott.filter(x=>x.data.startsWith(m)).map(x=>({data:x.data,descr:`Fattura ${x.numero}/${x.anno} · ${x.nome}`,cat:"Pacchetti dottori e società",imp:x.imp,iva:r2(x.totale-x.imp),tot:x.totale,auto:true})),
     ...S.entrate.filter(x=>x.data.startsWith(m)).map(x=>({data:x.data,descr:x.descr,cat:x.cat,imp:x.importo,iva:0,tot:x.importo,id:x.id}))];
   const usc=[...S.expenses.filter(x=>x.date.startsWith(m)).map(x=>({data:x.date,descr:x.desc,cat:x.cat,tot:x.amount,id:x.id})),
-    ...S.crediti.filter(c=>c.stato==="confermata"&&c.confAt&&stampDi(c.confAt).startsWith(m)).map(c=>({data:stampDi(c.confAt).slice(0,10),descr:`Compenso FPM · ${(doc(c.docId)||{}).name||""} ${oreFmt(c.ore)} (lordo con ritenuta)`,cat:"Compenso FPM",tot:lordoDaNetto(r2(c.ore*CANONE_ORA)),auto:true}))];
+    ...S.crediti.filter(c=>c.stato==="confermata"&&c.confAt&&stampDi(c.confAt).startsWith(m)).map(c=>({data:stampDi(c.confAt).slice(0,10),descr:`Compenso FPM · ${(doc(c.docId)||{}).name||""} ${oreFmt(c.ore)} (lordo con ritenuta)`,cat:"Compenso FPM",tot:lordoDaNetto(compC(c)),auto:true}))];
   const E=r2(ent.reduce((t,x)=>t+x.tot,0)),U=r2(usc.reduce((t,x)=>t+x.tot,0));return{ent,usc,E,U,utile:r2(E-U)}}
 function serieMesi(){const out=[],m0=today().slice(0,7),mm=k=>{const d=parseD(m0+"-01");d.setMonth(d.getMonth()+k);return dstr(d).slice(0,7)};
   const past=[-5,-4,-3,-2,-1,0].map(k=>({m:mm(k),...movimentiClinia(mm(k))}));const ult=past.slice(-3),avg=r2(ult.reduce((t,x)=>t+x.utile,0)/3);
@@ -1889,21 +1893,21 @@ function fpmDottoriTab(){const l=TUTTI_DOTTORI(),att=S.crediti.filter(c=>c.stato
   const totOre=r2(l.reduce((t,d)=>t+oreAccreditate(d.id),0));
   return `<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Dottori</h1></div>
   <form class="card row" data-form="fissoAnnuo" style="gap:10px;align-items:flex-end;flex-wrap:wrap" novalidate><label class="field" style="flex:1;min-width:180px"><span>Fisso annuale da Clinia (netto)</span><input name="importo" inputmode="decimal" value="${fissoAnnuo()?String(fissoAnnuo()).replace(".",","):""}" placeholder="da concordare"></label><button class="btn ghost sm" type="submit">Salva</button><p class="tiny" style="flex-basis:100%">Si aggiunge alle ${eur(CANONE_ORA)} per ora firmata. Clinia lo vede nel suo pagamento di dicembre.</p></form>
-  <div class="stats"><div class="stat"><b>${oreFmt(totOre)}</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(r2(totOre*CANONE_ORA))}</b><span>Tuo compenso (${eur(CANONE_ORA)}/h)</span></div><div class="stat"><b>${l.filter(d=>oreUso(d.id).c&&!oreUso(d.id).scaduto).length}</b><span>Pacchetti attivi</span></div></div>
+  <div class="stats"><div class="stat"><b>${oreFmt(totOre)}</b><span>Ore accreditate</span></div><div class="stat"><b>${eur(r2(l.reduce((t,d)=>t+compensoDi(d.id),0)))}</b><span>Tuo compenso (${eur(CANONE_ORA)}/h)</span></div><div class="stat"><b>${l.filter(d=>oreUso(d.id).c&&!oreUso(d.id).scaduto).length}</b><span>Pacchetti attivi</span></div></div>
   ${(()=>{const ap=Object.entries(S.accessi).filter(([id,a])=>a.stato==="attesa"&&doc(id)&&!rimosso(id));return ap.length?`<section class="card stack" style="gap:10px;border-color:var(--accent);background:var(--accent-soft)"><h3>Dottori da approvare</h3><p class="tiny">Approva solo chi lavora davvero in Clinia: da quel momento la sua app diventa operativa.</p>
    ${ap.map(([id,a])=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docPhoto(id)?`<img src="${docPhoto(id)}" alt="" style="width:45px;height:80px;object-fit:cover;border-radius:10px">`:docAv(doc(id),"sm")}<span style="flex:1;min-width:150px"><b class="small" style="display:block">${esc(doc(id).name)}</b><span class="tiny">${esc(a.email)} · ${BASE_DOC_IDS.includes(id)?"dottore già in elenco":"nuova scheda"} · ${new Date(a.at).toLocaleDateString("it-IT")}</span></span><button class="btn primary sm" data-act="accesso" data-id="${id}" data-v="ok">Approva</button><button class="iconbtn" data-act="accesso" data-id="${id}" data-v="no" aria-label="Rifiuta">${ic("x","sm")}</button></div>`).join("")}</section>`:""})()}
   ${att.length?`<section class="card stack" style="gap:10px;border-color:var(--warn);background:var(--warn-soft)"><h3>Pacchetti da confermare</h3><p class="tiny">Inviati da Clinia dopo la firma del contratto. Confermando, il dottore (o la società) diventa operativo e vede subito il suo contatore.</p>
-   ${att.map(c=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docAv(doc(c.docId),"sm")}<span style="flex:1;min-width:170px"><b class="small" style="display:block">${esc(doc(c.docId).name)}</b><span class="tiny">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)}${c.inizio?` dal ${new Date(c.inizio).toLocaleDateString("it-IT")}`:""} · contratto del ${new Date(c.data||c.at).toLocaleDateString("it-IT")} · <b>${eur(r2(c.ore*CANONE_ORA))} per te</b>${c.file?` · <button class="link tiny" data-act="apriContratto" data-id="${c.id}">vedi contratto</button>`:""}</span></span><button class="btn primary sm" data-act="creditoEsito" data-id="${c.id}" data-v="ok">Conferma</button><button class="iconbtn" data-act="creditoEsito" data-id="${c.id}" data-v="no" aria-label="Non confermare">${ic("x","sm")}</button></div>`).join("")}</section>`:""}
+   ${att.map(c=>`<div class="row" style="gap:10px;border-top:1px solid var(--line);padding-top:10px;flex-wrap:wrap">${docAv(doc(c.docId),"sm")}<span style="flex:1;min-width:170px"><b class="small" style="display:block">${esc(doc(c.docId).name)}</b><span class="tiny">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)}${c.inizio?` dal ${new Date(c.inizio).toLocaleDateString("it-IT")}`:""} · contratto del ${new Date(c.data||c.at).toLocaleDateString("it-IT")} · <b>${eur(compC(c))} per te</b>${c.file?` · <button class="link tiny" data-act="apriContratto" data-id="${c.id}">vedi contratto</button>`:""}</span></span><button class="btn primary sm" data-act="creditoEsito" data-id="${c.id}" data-v="ok">Conferma</button><button class="iconbtn" data-act="creditoEsito" data-id="${c.id}" data-v="no" aria-label="Non confermare">${ic("x","sm")}</button></div>`).join("")}</section>`:""}
   ${l.filter(d=>BASE_DOC_IDS.includes(d.id)||accessoOk(d.id)).map(d=>{const acc=oreAccreditate(d.id),usa=orePrenotate(d.id),pp=S.proProfile[d.id]||{},pub=S.pubblica[d.id]||{},foto=docPhoto(d.id),nuova=S.fotoNuove&&S.fotoNuove[d.id];return `<div class="card stack" style="gap:12px">
    <div class="row" style="gap:14px;align-items:flex-start">${foto?`<img src="${foto}" alt="Foto di ${esc(d.name)}" style="width:72px;height:128px;object-fit:cover;border-radius:12px;flex:none">`:docAv(d)}
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><b>${esc(d.name)}</b><span class="tiny">${esc(d.role)}</span>
      <span class="row" style="gap:6px;flex-wrap:wrap">${iscritto(d.id)?`<span class="badge">${ic("check","sm")} In app</span>`:`<span class="badge grey">Non ancora in app</span>`}${statoOre(d.id)}${pp.pubblica?`<span class="badge">Consenso pubblicazione</span>`:""}${nuova?`<span class="badge warn">Foto nuova</span>`:""}</span></div></div>
-   ${(()=>{const u=oreUso(d.id);return `<dl class="ledger small">${u.c?`<dt>Pacchetto attivo<small>${esc(pacchettoTxt(u.c))}</small></dt><dd></dd><dt>Fatte · in calendario</dt><dd>${oreFmt(u.trascorse)} · ${oreFmt(u.pianificate)}</dd><dt>Rimaste</dt><dd>${oreFmt(u.residue)}</dd>`:`<dt>Nessun pacchetto attivo</dt><dd></dd>`}<dt><b>Tuo compenso totale</b><small>${oreFmt(acc)} firmate × ${eur(CANONE_ORA)}</small></dt><dd><b>${eur(r2(acc*CANONE_ORA))}</b></dd></dl>`})()}
+   ${(()=>{const u=oreUso(d.id);return `<dl class="ledger small">${u.c?`<dt>Pacchetto attivo<small>${esc(pacchettoTxt(u.c))}</small></dt><dd></dd><dt>Fatte · in calendario</dt><dd>${oreFmt(u.trascorse)} · ${oreFmt(u.pianificate)}</dd><dt>Rimaste</dt><dd>${oreFmt(u.residue)}</dd>`:`<dt>Nessun pacchetto attivo</dt><dd></dd>`}<dt><b>Tuo compenso totale</b><small>${oreFmt(acc)} firmate × ${eur(CANONE_ORA)}</small></dt><dd><b>${eur(compensoDi(d.id))}</b></dd></dl>`})()}
    <form class="row" data-form="creditoFpm" data-id="${d.id}" style="gap:8px;flex-wrap:wrap" novalidate><select name="tipo" aria-label="Pacchetto" style="border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)">${Object.entries(PACCHETTI).map(([k,t])=>`<option value="${k}">${t}</option>`).join("")}</select><input name="ore" inputmode="decimal" placeholder="Ore, es. 50" aria-label="Ore da accreditare a ${esc(d.name)}" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--card)"><button class="btn primary sm" type="submit">${ic("plus","sm")} Accredita ore</button></form>
    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="fotoScarica" data-id="${d.id}" ${foto?"":"disabled"}>${ic("upload","sm")} Scarica foto</button><label class="btn ghost sm" for="fpf-${d.id}">${ic("upload","sm")} Carica foto 9:16</label><input id="fpf-${d.id}" type="file" accept="image/*" class="hidden" data-change="fotoFpm" data-id="${d.id}"></div>
    <div class="stack" style="gap:6px"><span class="label">Pubblicazione${PUBBLICAZIONE_ATTIVA?"":" · in arrivo"}</span><div class="row" style="gap:8px;flex-wrap:wrap">${PUB_CANALI.map(([k,t])=>`<button class="chip ${pub[k]?"on":""}" data-act="pubblica" data-id="${d.id}" data-v="${k}" ${PUBBLICAZIONE_ATTIVA&&pp.pubblica?"":"disabled"} aria-pressed="${!!pub[k]}">${t}</button>`).join("")}</div>
     <p class="tiny">${PUBBLICAZIONE_ATTIVA?(pp.pubblica?"Scegli dove compare.":"Serve il consenso del dottore, dal suo profilo."):"Si attiva quando colleghiamo monitor, sito clinia.it e social. Nome, foto, specialità e orari si aggiorneranno da soli."}</p></div>
-   ${creditiDi(d.id).filter(c=>c.stato==="confermata").slice(0,3).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.confAt||c.at).toLocaleDateString("it-IT")} · ${eur(r2(c.ore*CANONE_ORA))}</span><button class="link small" data-act="annullaPacchetto" data-id="${c.id}">Annulla questo pacchetto</button></div>`).join("")}
+   ${creditiDi(d.id).filter(c=>c.stato==="confermata").slice(0,3).map(c=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${new Date(c.confAt||c.at).toLocaleDateString("it-IT")} · ${eur(compC(c))}</span><button class="link small" data-act="annullaPacchetto" data-id="${c.id}">Annulla questo pacchetto</button></div>`).join("")}
    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="azzera" data-v="dott:${d.id}">Azzera pacchetti e turni</button><button class="btn danger sm" data-act="rimuoviDottore" data-id="${d.id}">${ic("x","sm")} Rimuovi da Clinia App</button></div>
    ${UI.azzera==="dott:"+d.id?confermaAzzera(`pacchetti, ore e turni di ${d.name}`):""}
   </div>`}).join("")}
@@ -1915,23 +1919,23 @@ function registroHTML(){const l=S.log.slice(0,UI.logAll?S.log.length:25);return 
   <p class="tiny">Ogni operazione di Clinia, dei dottori e tua, con data e ora: ti serve per trovare un errore e annullare solo quello.</p>
   ${l.length?l.map(x=>`<div class="small" style="border-top:1px solid var(--line);padding-top:6px"><b>${esc(x.chi)}</b> · ${esc(x.azione)}${x.dett?` · <span class="muted">${esc(x.dett)}</span>`:""}<span class="tiny" style="display:block">${new Date(x.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>`).join(""):`<p class="small muted">Ancora nessuna operazione.</p>`}
   ${S.log.length>25&&!UI.logAll?`<button class="link small" data-act="logAll">Mostra tutto</button>`:""}</section>`}
-const AZZERA={ore:"Pacchetti e ore",turni:"Turni nelle stanze",visite:"Visite e appuntamenti",notifiche:"Notifiche",incassi:"Incassi registrati",pagamenti:"Pagamenti di Clinia a FPM",tutto:"Tutto (azzeramento generale)"};
-const confermaAzzera=t=>`<div class="card row" style="gap:8px;flex-wrap:wrap;border-color:var(--danger,#c0392b)"><span class="small" style="flex:1;min-width:180px">Azzerare <b>${esc(t)}</b>? Non si può annullare.</span><button class="btn danger sm" data-act="azzeraOk">Sì, azzera</button><button class="btn ghost sm" data-act="azzera" data-v="">Annulla</button></div>`;
-function azzeraHTML(){return `<section class="card stack" style="gap:10px"><h3>Azzeramenti</h3><p class="tiny">Solo nella tua area. Il rinnovo di un pacchetto fa già ripartire da solo il contatore del dottore: azzera solo quando serve davvero. Profili, foto e prestazioni dei dottori restano.</p>
+const AZZERA={ore:"Contatori ore",turni:"Turni nelle stanze",visite:"Visite e appuntamenti",notifiche:"Notifiche",tutto:"Tutto (azzeramento generale)"};
+const confermaAzzera=t=>`<div class="card row" style="gap:8px;flex-wrap:wrap;border-color:var(--danger,#c0392b)"><span class="small" style="flex:1;min-width:180px">Azzerare <b>${esc(t)}</b>? Una copia resta nel cestino di Strumenti FPM per 30 giorni.</span><button class="btn danger sm" data-act="azzeraOk">Sì, azzera</button><button class="btn ghost sm" data-act="azzera" data-v="">Annulla</button></div>`;
+function azzeraHTML(){return `<section class="card stack" style="gap:10px"><h3>Azzeramenti</h3><p class="tiny">Solo nella tua area. Il rinnovo di un pacchetto fa già ripartire da solo il contatore del dottore: azzera solo quando serve davvero. Profili, foto e prestazioni dei dottori restano. <b>Compensi FPM, pagamenti, incassi e storico dei pacchetti non si azzerano mai.</b></p>
   <div class="row" style="gap:8px;flex-wrap:wrap">${Object.entries(AZZERA).map(([k,t])=>`<button class="btn ${k==="tutto"?"danger":"ghost"} sm" data-act="azzera" data-v="${k}">${t}</button>`).join("")}</div>
   ${UI.azzera&&AZZERA[UI.azzera]?confermaAzzera(AZZERA[UI.azzera]):""}</section>`}
-function eseguiAzzera(k){
-  if(k.startsWith("dott:")){const id=k.slice(5);S.crediti=S.crediti.filter(c=>c.docId!==id);S.rooms=S.rooms.filter(b=>b.doctorId!==id);return doc(id).name+": pacchetti e turni azzerati"}
+function eseguiAzzera(k){cestinoMetti(k); // copia di sicurezza nel cestino (modulo 06)
+  // I pacchetti non si cancellano mai: si chiudono. Compensi FPM, pagamenti, incassi e storico restano sempre.
+  const chiudi=f=>S.crediti.filter(c=>c.stato==="confermata"&&!c.chiuso&&f(c)).forEach(c=>{c.chiuso=true;c.chiusoAt=Date.now()});
+  if(k.startsWith("dott:")){const id=k.slice(5);chiudi(c=>c.docId===id);S.rooms=S.rooms.filter(b=>b.doctorId!==id);return doc(id).name+": contatore e turni azzerati (compensi e storico restano)"}
   const tutto=k==="tutto";
-  if(tutto||k==="ore")S.crediti=[];
+  if(tutto||k==="ore")chiudi(()=>true);
   if(tutto||k==="turni"){S.rooms=[];S.cancelled=[]}
   if(tutto||k==="visite"){S.appts=[];S.paidVia={};S.demoPaid=[];S.msgs={}}
   if(tutto||k==="notifiche")S.notifs=[];
-  if(tutto||k==="incassi")S.incassi=[];
-  if(tutto||k==="pagamenti")S.pag={};
   if(tutto){S.accessi={};S.rimossi={};S.pubblica={};S.persone={};S.iscritti={};S.fotoNuove={};
     S.customDocs.forEach(d=>{const i=DOCTORS.findIndex(x=>x.id===d.id);if(i>=0)DOCTORS.splice(i,1)});S.customDocs=[]}
-  return tutto?"Azzeramento generale fatto":AZZERA[k]+" azzerati"}
+  return tutto?"Azzeramento generale fatto (compensi e storico restano)":AZZERA[k]+" azzerati"}
 async function fotoRidotta(file){const url=await new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=ko;r.readAsDataURL(file)});
   const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});const W=540,H=960,c=document.createElement("canvas");c.width=W;c.height=H;
   const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext("2d").drawImage(im,(W-w)/2,0,w,h);return c.toDataURL("image/jpeg",0.86)}
@@ -2146,7 +2150,8 @@ function roomSheet(){if(UI.sheet.step==="pay")return roomPaySheet();const sh=UI.
   return `<div class="stack"><div><h2 style="font-size:1.25rem;font-weight:800">${r.name}</h2><p class="muted small">${ROOM_TYPES[r.type].label} · ${cap(fmtD(ds))}</p></div>
    ${timeline(ds,r,e>s?[s,e]:null)}
    <div class="grid2" style="grid-template-columns:1fr 1fr"><label class="field"><span>Dalle</span><select id="rs-start" data-change="roomTime" data-k="start">${opts(o,c-30,s)}</select></label><label class="field"><span>Alle</span><select id="rs-end" data-change="roomTime" data-k="end">${opts(o+30,c,e)}</select></label></div>
-   <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="rs-rep" type="checkbox" ${sh.repeat?"checked":""} data-change="roomRepeat" style="width:20px;height:20px;accent-color:var(--accent)"><span class="t">Ripeti ogni settimana<small>Per le prossime 4 settimane, dove lo studio è libero</small></span></label>
+   <label class="li" style="border:1px solid var(--line);border-radius:var(--r-sm)"><input id="rs-rep" type="checkbox" ${sh.repeat?"checked":""} data-change="roomRepeat" style="width:20px;height:20px;accent-color:var(--accent)"><span class="t">Ripeti ogni settimana<small>Stesso giorno e orario, dove lo studio è libero</small></span></label>
+   ${sh.repeat?`<label class="field"><span>Per quanto tempo</span><select data-change="roomSett">${[[4,"4 settimane (1 mese)"],[8,"8 settimane (2 mesi)"],[13,"13 settimane (3 mesi)"],[26,"26 settimane (6 mesi)"]].map(([n,t])=>`<option value="${n}" ${(sh.sett||4)===n?"selected":""}>${t}</option>`).join("")}</select></label>`:""}
    ${conflict?`<p class="err">Lo studio è già occupato in parte di questa fascia.</p>`:mine?`<p class="err">Hai già un altro studio prenotato in questa fascia.</p>`:e<=s?`<p class="err">L’orario di fine deve essere dopo l’inizio.</p>`:""}
    <dl class="card sum"><dt>Durata</dt><dd class="num">${e>s?((e-s)/60).toLocaleString("it-IT")+" h":"—"}</dd><dt>${modalita(S.proId)==="percentuale"&&!isOwner()?"A percentuale":"Tariffa"}</dt><dd class="num">${modalita(S.proId)==="percentuale"&&!isOwner()?(percStudio(r.id)!=null?Math.round(percStudio(r.id)*100)+" % della prestazione":"% da concordare"):(e>s?eur(cost)+" + IVA":"—")+(sh.repeat?" × settimana":"")}</dd></dl>
    ${oreResidue(S.proId)>0&&!isOwner()&&modalita(S.proId)!=="percentuale"?`<p class="tiny">Hai ${String(oreResidue(S.proId)).replace(".",",")} ore prepagate: si usano per prime.</p>`:""}
@@ -2411,9 +2416,9 @@ const ACT={
     UI.sheet={type:"file",url:u,name:f.name,pdf:/pdf/i.test(f.blob.type)};render()},
   logAll:()=>{UI.logAll=true;render()},
   annullaPacchetto:d=>{const c=S.crediti.find(x=>x.id===d.id);if(!c)return;const nm=(doc(c.docId)||{}).name||"";
-    UI.doppia={titolo:"Annullare il pacchetto?",testo:`<b>${esc(nm)}</b>: ${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)}. Le ore spariscono dal suo contatore e il compenso di ${eur(r2(c.ore*CANONE_ORA))} non è più dovuto.`,testo2:"Il pacchetto viene annullato subito. Confermi definitivamente?",
+    UI.doppia={titolo:"Annullare il pacchetto?",testo:`<b>${esc(nm)}</b>: ${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)}. Le ore spariscono dal suo contatore e il compenso di ${eur(compC(c))} non è più dovuto.`,testo2:"Il pacchetto viene annullato subito. Confermi definitivamente?",
       fn:()=>{c.stato="annullato";c.annullatoAt=Date.now();logA("Pacchetto annullato",`${nm} · ${oreFmt(c.ore)}`);addNotif("spec:"+c.docId,"ore","Pacchetto annullato",`Il pacchetto di ${oreFmt(c.ore)} è stato annullato. Per informazioni contatta Clinia.`);
-        if(isFpm())addNotif("titolare","ore","Pacchetto annullato da FPM",`${nm}: ${oreFmt(c.ore)}.`);else notifFPM("ore","Pacchetto annullato da Clinia",`${nm}: ${oreFmt(c.ore)} · compenso ${eur(r2(c.ore*CANONE_ORA))} tolto.`);save();toast("Pacchetto annullato");render()}};
+        if(isFpm())addNotif("titolare","ore","Pacchetto annullato da FPM",`${nm}: ${oreFmt(c.ore)}.`);else notifFPM("ore","Pacchetto annullato da Clinia",`${nm}: ${oreFmt(c.ore)} · compenso ${eur(compC(c))} tolto.`);save();toast("Pacchetto annullato");render()}};
     UI.sheet={type:"doppia",step:1};render()},
   eliminaAccount:()=>{UI.doppia={titolo:"Eliminare il tuo account?",testo:"Cancelli i tuoi dati dall’app su questo telefono e sul server. Non si può annullare.",testo2:"Ultima conferma: l’account viene eliminato adesso.",
       fn:async()=>{const em=S.auth&&S.auth.email,id=S.proId,pro=isPro();await DB.eliminaAccount();
@@ -2548,7 +2553,7 @@ const ACT={
     for(const[a,b] of busy){if(st+60<=a)break;if(b>st)st=b}const nb=busy.find(x=>x[0]>=st);const en=Math.min(st+240,nb?nb[0]:c,c);
     UI.sheet={type:"room",id:r.id,start:Math.min(st,c-30),end:Math.max(en,Math.min(st,c-30)+30),repeat:false};render()},
   confirmRoom:async()=>{const sh=UI.sheet,r=room(sh.id),plan=[],skip=[];
-    for(let w=0;w<(sh.repeat?4:1);w++){const ds=addDays(UI.roomDay,7*w);
+    for(let w=0;w<(sh.repeat?(sh.sett||4):1);w++){const ds=addDays(UI.roomDay,7*w);
       const clash=(S.chiusure[r.id]||[]).includes(ds)||bookingsOn(ds,b=>b.roomId===r.id||b.doctorId===S.proId).some(b=>overlap(sh.start,sh.end,toMin(b.start),toMin(b.end)));
       if(clash||!OPEN[parseD(ds).getDay()])skip.push(fmtD(ds,{day:"numeric",month:"short"}));else plan.push(ds)}
     if(!plan.length){UI.sheet=null;return toast("Nessuna prenotazione: lo studio è occupato")}
@@ -2735,6 +2740,8 @@ const FORMS={
     UI.sheet={type:"doppia",step:1};render()},
   socReg:f=>{const v=k=>(f[k]?f[k].value:"").trim(),err=$("#sr-err");err.textContent="";
     if(!v("nome"))return err.textContent="Scrivi la ragione sociale o il nome.";if(!v("referente"))return err.textContent="Scrivi il nome del referente.";if(!v("tel"))return err.textContent="Scrivi un telefono.";
+    {const pv=v("piva").toUpperCase();if(pv&&!(/^\d{11}$/.test(pv)?PIVA_OK(pv):CF_OK(pv)))return err.textContent="Partita IVA o codice fiscale non valido: controlla le cifre.";}
+    if(v("email")&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email")))return err.textContent="L’e-mail non è valida.";
     const id="soc-"+uid(),d={id,kind:"societa",name:v("nome"),role:v("tipo"),area:"medicina",bio:[v("medico"),v("note")].filter(Boolean),soc:{piva:v("piva"),referente:v("referente"),tel:v("tel"),email:v("email"),medico:v("medico"),note:v("note")}};
     S.customDocs.push(d);DOCTORS.push(d);S.proId=id;chiediAccesso(id);addNotif("titolare","registrazione","Nuova società",`${d.name} (${d.role}) chiede un contratto: referente ${d.soc.referente}, ${d.soc.tel}.`);save();afterAuthFlow()},
   persona:f=>{const l=S.persone[S.proId]=S.persone[S.proId]||[];let n=0;const add=(nome,cognome,nota)=>{if(!nome&&!cognome)return;l.push({id:uid(),nome,cognome,nota:nota||""});n++};
@@ -2747,19 +2754,21 @@ const FORMS={
     let file=f.file.files[0];if(!file&&UI.scan&&(UI.scan[id]||[]).length){const b=await scanInPdf(id);file=new File([b],`Contratto_${id}_${today()}.pdf`,{type:"application/pdf"})}
     if(file&&file.size>15*1024*1024)return err.textContent="Il file supera 15 MB.";
     const tipo=f.tipo.value||"ore",inizio=f.inizio.value||today(),nm=doc(id).name;
-    const c={id:uid(),docId:id,tipo,ore:r2(ore),inizio,scadenza:scadenzaDi(tipo,inizio),data:f.data.value||today(),stato:"confermata",da:"clinia",at:Date.now(),file:file?file.name:null};
+    {const mx=tipo==="settimanale"?oreSettimanaMax():tipo==="mensile"?Math.round(oreSettimanaMax()*4.35):0;if(mx&&ore>mx)return err.textContent=`Troppe ore per un pacchetto ${PACCHETTI[tipo].toLowerCase()}: al massimo ${mx} con gli orari di apertura di Clinia.`}
+    if(f.data.value&&f.data.value>today())return err.textContent="La data del contratto non può essere nel futuro.";
+    const c={id:uid(),docId:id,tipo,ore:r2(ore),inizio,scadenza:scadenzaDi(tipo,inizio),data:f.data.value||today(),stato:"confermata",da:"clinia",tariffa:CANONE_ORA,at:Date.now(),file:file?file.name:null};
     UI.doppia={titolo:"Confermi il pacchetto?",testo:`<b>${esc(nm)}</b>: pacchetto ${esc(PACCHETTI[tipo].toLowerCase())} di <b>${oreFmt(c.ore)}</b> dal ${new Date(inizio).toLocaleDateString("it-IT")}${c.scadenza?` al ${new Date(addDays(c.scadenza,-1)).toLocaleDateString("it-IT")}`:""}${file?", con il contratto firmato":", senza contratto allegato"}.`,
       testo2:`Le ${oreFmt(c.ore)} diventano attive subito nell’app di ${esc(nm)}. Confermi definitivamente?`,
       fn:async()=>{if(file&&!(await IDB.set("contr:"+c.id,{name:file.name,blob:file})))return toast("Non riesco a salvare il contratto su questo dispositivo.");
         c.confAt=Date.now();if(UI.scan)delete UI.scan[id];S.crediti.push(c);logA("Pacchetto attivato",`${nm} · ${PACCHETTI[tipo]} ${oreFmt(c.ore)}`);
         const ac=S.accessi[id];if(ac&&ac.stato==="attesa"){ac.stato="approvato";ac.confAt=Date.now()}
         addNotif("spec:"+id,"ore","Ore attive",`Clinia ha attivato il tuo pacchetto ${PACCHETTI[tipo].toLowerCase()} di ${oreFmt(c.ore)}: scalano a ogni stanza che prenoti.`);
-        notifFPM("ore","Nuovo pacchetto attivo",`${nm}: ${PACCHETTI[tipo]} ${oreFmt(c.ore)} → compenso ${eur(r2(c.ore*CANONE_ORA))}${file?" · contratto allegato":""}.`);
+        notifFPM("ore","Nuovo pacchetto attivo",`${nm}: ${PACCHETTI[tipo]} ${oreFmt(c.ore)} → compenso ${eur(compC(c))}${file?" · contratto allegato":""}.`);
         save();f.reset();toast("Pacchetto attivo");render()}};
     UI.sheet={type:"doppia",step:1};render()},
   fissoAnnuo:f=>{const v=String(f.importo.value).trim(),n=v?parseFloat(v.replace(/\./g,"").replace(",",".")):0;if(v&&!(n>=0))return toast("Scrivi l’importo, per esempio 1.200");S.fpm.fissoAnnuo=r2(n);save();toast(n?`Compenso fisso annuale: ${eur(n)}`:"Compenso fisso annuale: da concordare");render()},
   creditoFpm:f=>{const id=f.dataset.id,ore=parseFloat(String(f.ore.value).replace(",","."));if(!(ore>0&&ore<=2000))return toast("Scrivi le ore da accreditare, per esempio 50.");
-    const tipo=(f.tipo&&f.tipo.value)||"ore";logA("Ore accreditate da FPM",`${doc(id).name} · ${oreFmt(ore)}`);S.crediti.push({id:uid(),docId:id,tipo,ore:r2(ore),inizio:today(),scadenza:scadenzaDi(tipo,today()),data:today(),stato:"confermata",da:"fpm",at:Date.now(),confAt:Date.now()});
+    const tipo=(f.tipo&&f.tipo.value)||"ore";logA("Ore accreditate da FPM",`${doc(id).name} · ${oreFmt(ore)}`);S.crediti.push({id:uid(),docId:id,tipo,ore:r2(ore),inizio:today(),scadenza:scadenzaDi(tipo,today()),data:today(),stato:"confermata",da:"fpm",tariffa:CANONE_ORA,at:Date.now(),confAt:Date.now()});
     if(S.accessi[id]&&S.accessi[id].stato==="attesa")S.accessi[id].stato="approvato";save();
     addNotif("spec:"+id,"ore","Ore accreditate",`Hai ${oreFmt(ore)} in più: scalano a ogni studio prenotato.`);addNotif("titolare","ore","Ore accreditate da FPM",`${doc(id).name}: ${oreFmt(ore)}.`);
     toast(`${oreFmt(ore)} accreditate a ${doc(id).name}`);render()},
@@ -3022,6 +3031,462 @@ async function startModel(el){const hint=el.querySelector(".hint");
   el.ontouchend=()=>pinch=0;hint.textContent="Trascina per girare l’ecografo";
   const tick=()=>{if(!el.isConnected){ren.dispose();return}if(idle)yaw+=0.004;
     cam.position.set(tgt.x+dist*Math.cos(pit)*Math.sin(yaw),tgt.y+dist*Math.sin(pit),tgt.z+dist*Math.cos(pit)*Math.cos(yaw));cam.lookAt(tgt);ren.render(scene,cam);requestAnimationFrame(tick)};tick()}
+
+/* =====================================================================
+   MODULI v2 · Specifiche definitive (27/11/2026)
+   Tutto funziona in modalità prova sul dispositivo; con il database si sincronizza.
+   Nessun servizio a pagamento: email, push, SdI, SEPA e antivirus restano da approvare.
+   ===================================================================== */
+const V2_DEF=()=>({cestino:[],ledger:[],ticket:[],costi:null,store:{check:{},apple:{stato:"preparazione",versione:"1.0",note:""},google:{stato:"preparazione",versione:"1.0",note:""}},cfg:{},errori:[],accessLog:[],tentativi:{n:0,blocco:0},attesa:[],assenze:[],rettifiche:[],rimborsi:[],attrezzi:[],testiOk:{},noShow:{},bloccati:{},fissoPagato:{}});
+const COSTI_BASE=[
+  {id:"c-apple",voce:"Apple Developer (account di Clinia Srl)",importo:99,valuta:"USD",freq:"annuale",carico:"Clinia",scadenza:"",note:"Serve per pubblicare su App Store"},
+  {id:"c-google",voce:"Google Play Console",importo:25,valuta:"USD",freq:"una tantum",carico:"Clinia",scadenza:"",note:"Pagamento unico"},
+  {id:"c-supa",voce:"Supabase (database)",importo:0,valuta:"EUR",freq:"mensile",carico:"—",scadenza:"",note:"Piano gratuito: si tiene sveglio con il controllo automatico"},
+  {id:"c-gh",voce:"GitHub (codice e build iPhone)",importo:0,valuta:"EUR",freq:"mensile",carico:"—",scadenza:"",note:"Piano gratuito"},
+  {id:"c-jitsi",voce:"Videochiamate (Jitsi)",importo:0,valuta:"EUR",freq:"mensile",carico:"—",scadenza:"",note:"Gratuito"}];
+let v2Fatto=null;
+function v2Init(){if(v2Fatto===S)return;const d=V2_DEF();for(const k in d)if(S[k]==null)S[k]=d[k];
+  if(!S.costi)S.costi=COSTI_BASE.map(x=>({...x}));
+  for(const c of S.crediti)if(c.tariffa==null)c.tariffa=CANONE_ORA; // i pacchetti già esistenti tengono la tariffa di oggi
+  v2Fatto=S}
+v2Init();
+const cfg=(k,def)=>S.cfg&&S.cfg[k]!=null?S.cfg[k]:def;
+const dataIt=x=>x?new Date(x).toLocaleDateString("it-IT"):"—";
+const oraIt=x=>new Date(x).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const pct=x=>Math.round(x*100)+" %";
+const numIt=v=>{const n=parseFloat(String(v||"").replace(/\./g,"").replace(",","."));return isFinite(n)?n:NaN};
+const CF_OK=v=>/^[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]$/i.test(v||"");
+const docNome=id=>(doc(id)||{}).name||"—";
+const professionisti=()=>DOCTORS.filter(d=>d.id!==OWNER.doctorId&&!rimosso(d.id));
+// soglia avviso ore (modulo 27): la prima tra le ore fisse e la percentuale del pacchetto
+const sogliaOre=ore=>Math.max(cfg("sogliaOre",4),r2((ore||0)*cfg("sogliaPct",20)/100));
+const oreSettimanaMax=()=>Object.values(OPEN).reduce((t,[a,b])=>t+(b-a)/60,0);
+function csvScarica(nome,righe){const t="﻿"+righe.map(r=>r.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");salvaPdf(new Blob([t],{type:"text/csv"}),nome,"text/csv")}
+const barra=(v,max,col)=>`<div style="height:10px;border-radius:10px;background:var(--bg-2);overflow:hidden;flex:1"><div style="height:100%;width:${max?Math.max(2,Math.min(100,v/max*100)):0}%;background:${col||"var(--accent)"}"></div></div>`;
+const sez=(t,body,extra="")=>`<section class="card stack" style="gap:10px" ${extra}><h3>${t}</h3>${body}</section>`;
+const campo=(n,l,v="",o={})=>`<label class="field" style="${o.st||""}"><span>${l}</span><input name="${n}" value="${esc(v??"")}" ${o.type?`type="${o.type}"`:""} ${o.ph?`placeholder="${esc(o.ph)}"`:""} ${o.im?`inputmode="${o.im}"`:""} ${o.req?"required":""}></label>`;
+const selettore=(n,l,opts,v)=>`<label class="field"><span>${l}</span><select name="${n}">${opts.map(o=>{const[k,t]=Array.isArray(o)?o:[o,o];return `<option value="${esc(k)}" ${k===v?"selected":""}>${esc(t)}</option>`}).join("")}</select></label>`;
+
+/* ---------- 06 · Cestino: copia di sicurezza prima di ogni azzeramento ---------- */
+const CEST_KEYS=["crediti","rooms","cancelled","appts","paidVia","demoPaid","msgs","notifs","accessi","rimossi","pubblica","persone","iscritti","fotoNuove","customDocs"];
+function cestinoMetti(k){v2Init();const snap={};for(const x of CEST_KEYS){try{snap[x]=JSON.parse(JSON.stringify(S[x]??null))}catch(e){}}
+  S.cestino.unshift({id:uid(),at:Date.now(),k,cosa:k.startsWith("dott:")?docNome(k.slice(5))+": contatore e turni":(AZZERA[k]||k),snap});
+  const lim=Date.now()-30*864e5;S.cestino=S.cestino.filter(x=>x.at>lim).slice(0,5)}
+function cestinoRipristina(id){const x=S.cestino.find(y=>y.id===id);if(!x)return;
+  S.customDocs.forEach(d=>{const i=DOCTORS.findIndex(z=>z.id===d.id);if(i>=0)DOCTORS.splice(i,1)});
+  for(const k of CEST_KEYS){const v=x.snap[k];if(v==null)continue;
+    if(k==="crediti"){for(const c of v){const cur=S.crediti.find(y=>y.id===c.id);if(cur){cur.chiuso=c.chiuso;cur.chiusoAt=c.chiusoAt}else S.crediti.push(c)}} // i pacchetti nuovi restano
+    else S[k]=v}
+  S.customDocs.forEach(d=>{if(!DOCTORS.some(z=>z.id===d.id))DOCTORS.push(d)});
+  S.cestino=S.cestino.filter(y=>y.id!==id);logA("Ripristino dal cestino",x.cosa);save()}
+
+/* ---------- 23 · Registro compensi FPM: si aggiunge, non si cancella ---------- */
+function sincLedger(){let ch=false;const has=(ref,t)=>S.ledger.some(l=>l.ref===ref&&l.tipo===t);
+  for(const c of S.crediti){
+    if((c.stato==="confermata"||c.stato==="annullato")&&c.confAt&&!has(c.id,"compenso")){S.ledger.push({id:uid(),ref:c.id,tipo:"compenso",docId:c.docId,ore:c.ore0??c.ore,tariffa:tarC(c),importo:r2((c.ore0??c.ore)*tarC(c)),at:c.confAt});ch=true}
+    if(c.stato==="annullato"&&has(c.id,"compenso")&&!has(c.id,"storno")){const o=S.ledger.filter(l=>l.ref===c.id).reduce((t,l)=>t+l.ore,0);S.ledger.push({id:uid(),ref:c.id,tipo:"storno",docId:c.docId,ore:-o,tariffa:tarC(c),importo:r2(-o*tarC(c)),at:c.annullatoAt||Date.now()});ch=true}}
+  return ch}
+const ledgerTot=(f=()=>true)=>r2(S.ledger.filter(f).reduce((t,l)=>t+l.importo,0));
+const compensoAtteso=()=>r2(S.crediti.filter(c=>c.stato==="confermata").reduce((t,c)=>t+compC(c),0));
+
+/* ---------- Controlli automatici (ogni minuto) ---------- */
+function v2Controlli(){v2Init();let ch=sincLedger();const now=Date.now(),oggi=today();
+  // 11 · promemoria 2 ore prima
+  for(const a of S.appts.filter(a=>a.date===oggi&&a.status==="confermata"&&!a.prom2)){const h=orePrimaDi(a);if(h>0&&h<=2){a.prom2=true;ch=true;
+    if(a.ownerEmail)addNotif("user:"+a.ownerEmail,"promemoria","Tra poco hai una visita",`${a.service} con ${docNome(a.doctorId)} alle ${a.time}${a.online?" in videochiamata":" in Clinia"}.`,a.id)}}
+  // 31 · manutenzione attrezzature in scadenza (7 giorni)
+  for(const x of S.attrezzi.filter(x=>x.prossima&&!x.avvisata&&addDays(oggi,7)>=x.prossima)){x.avvisata=true;ch=true;addNotif("titolare","attrezzature","Manutenzione in scadenza",`${x.nome}${x.stanza?" · "+room(x.stanza).name:""}: entro il ${dataIt(x.prossima)}.`)}
+  // 22 · costi in scadenza (30 giorni)
+  for(const c of S.costi.filter(c=>c.scadenza&&!c.avvisata&&addDays(oggi,30)>=c.scadenza)){c.avvisata=true;ch=true;notifFPM("costi","Costo in scadenza",`${c.voce}: ${c.importo} ${c.valuta} entro il ${dataIt(c.scadenza)} (a carico di ${c.carico}).`)}
+  // 23 · fisso annuale: promemoria a dicembre, dal 2027 (dicembre 2026 è di prova)
+  const an=new Date().getFullYear(),gg=new Date().getDate();
+  if(new Date().getMonth()===11&&an>=2027&&fissoAnnuo()>0&&!S.fissoPagato[an])for(const g of [1,20])if(gg>=g&&!S.cfg["fissoAvv"+an+"-"+g]){S.cfg["fissoAvv"+an+"-"+g]=1;ch=true;
+    addNotif("titolare","pagamento_fpm","Compenso fisso annuale FPM",`Entro il 31 dicembre: ${eur(fissoAnnuo())} netti a FPM WebDesignTech per il ${an}.`);notifFPM("pagamento_fpm","Fisso annuale da incassare",`${eur(fissoAnnuo())} da Clinia per il ${an}.`)}
+  // 36 · riepilogo giornaliero per FPM (in app; per e-mail quando attiviamo il servizio)
+  if(cfg("riepData","")!==oggi){S.cfg.riepData=oggi;ch=true;const ieri=addDays(oggi,-1),ts=x=>x&&stampDi(x).startsWith(ieri);
+    const pac=S.crediti.filter(c=>ts(c.confAt)),ore=r2(allBookings().filter(b=>b.date===ieri&&b.doctorId!==OWNER.doctorId).reduce((t,b)=>t+oreTurnoB(b),0));
+    const tk=S.ticket.filter(t=>t.stato!=="chiuso").length,er=S.errori.filter(e=>stampDi(e.at).startsWith(ieri)).length;
+    if(S.log.length||pac.length||ore)notifFPM("riepilogo","Riepilogo di ieri",`${pac.length} pacchetti nuovi (${eur(r2(pac.reduce((t,c)=>t+compC(c),0)))}) · ${oreFmt(ore)} di stanze usate · ${tk} richieste di assistenza aperte · ${er} errori dell’app.`)}
+  if(ch)save();return ch}
+const _controllaOre=controllaOre;controllaOre=function(){const a=_controllaOre(),b=v2Controlli();return a||b};
+
+/* ---------- 14 · Errori dell’app, raccolti per la diagnostica ---------- */
+addEventListener("error",e=>{try{v2Init();S.errori.unshift({at:Date.now(),msg:String(e.message||"errore").slice(0,200),dove:(e.filename||"").split("/").pop()+":"+(e.lineno||"")});S.errori=S.errori.slice(0,50);save()}catch(x){}});
+addEventListener("unhandledrejection",e=>{try{v2Init();S.errori.unshift({at:Date.now(),msg:String((e.reason&&e.reason.message)||e.reason||"promessa").slice(0,200),dove:"async"});S.errori=S.errori.slice(0,50);save()}catch(x){}});
+
+/* ---------- 50 · Controllo dei file caricati (tipo e dimensione) ---------- */
+const FILE_OK=/^(image\/(jpeg|png|heic|heif|webp|gif)|application\/pdf)$/;
+document.addEventListener("change",e=>{const el=e.target;if(!el||el.type!=="file"||!el.files||!el.files.length)return;
+  for(const f of el.files){const tipoOk=FILE_OK.test(f.type)||/\.(jpe?g|png|heic|webp|pdf)$/i.test(f.name),ext=/\.(exe|bat|cmd|js|vbs|scr|apk|ipa|dmg|sh|html?|svg|zip|rar)$/i.test(f.name);
+    if(!tipoOk||ext||f.size>15*1024*1024){e.stopImmediatePropagation();e.preventDefault();el.value="";toast(f.size>15*1024*1024?"File troppo grande: massimo 15 MB.":"Tipo di file non ammesso: solo foto (JPG, PNG, HEIC) e PDF.");return}}},true);
+
+/* ---------- 51 · Anteprima oscurata quando l’app va in secondo piano ---------- */
+(function(){const st=document.createElement("style");st.textContent="body.v2-velo #app{filter:blur(18px)}.chipw{display:flex;flex-wrap:wrap;gap:8px}";document.head.appendChild(st);
+  document.addEventListener("visibilitychange",()=>{document.body.classList.toggle("v2-velo",document.hidden&&logged())});
+  addEventListener("pagehide",()=>{if(logged())document.body.classList.add("v2-velo")});addEventListener("pageshow",()=>document.body.classList.remove("v2-velo"))})();
+
+/* ---------- 17 · Tentativi di accesso e registro accessi ---------- */
+const _login=FORMS.login;FORMS.login=f=>{v2Init();const t=S.tentativi,err=$("#lg-err");
+  if(t.blocco>Date.now()){if(err)err.textContent=`Troppi tentativi sbagliati: riprova tra ${Math.ceil((t.blocco-Date.now())/60000)} minuti.`;return}
+  const prima=S.auth;_login(f);
+  setTimeout(()=>{const e=$("#lg-err"),msg=e?e.textContent:"";
+    if(S.auth&&S.auth!==prima){t.n=0;t.blocco=0;save();return}
+    if(/errat/i.test(msg)){t.n++;S.accessLog.unshift({at:Date.now(),email:String(f.email.value||"").slice(0,60),esito:"password errata"});S.accessLog=S.accessLog.slice(0,100);
+      if(t.n>=5){t.blocco=Date.now()+5*60000;t.n=0;notifFPM("sicurezza","Accesso bloccato 5 minuti","5 password sbagliate di fila su questo dispositivo.");if(e)e.textContent="Troppi tentativi sbagliati: accesso bloccato per 5 minuti."}save()}},700)};
+const _afterAuth=afterAuthFlow;afterAuthFlow=function(){try{v2Init();if(S.auth&&S.auth.email&&S.cfg.ultimoAccesso!==S.auth.email+"|"+today()){S.cfg.ultimoAccesso=S.auth.email+"|"+today();
+  S.accessLog.unshift({at:Date.now(),email:S.auth.email,esito:"accesso",ruolo:S.auth.fpm?"FPM":S.auth.owner?"Clinia":S.auth.role||""});S.accessLog=S.accessLog.slice(0,100);save()}}catch(e){}return _afterAuth.apply(this,arguments)};
+
+/* ---------- 28/29 · Modalità manutenzione ---------- */
+function bannerManut(){return cfg("manutenzione",false)&&!isFpm()?`<div class="card row small" style="gap:10px;border-color:var(--warn);background:var(--warn-soft)">${ic("gear","sm")}<span>${esc(cfg("manutTesto","Stiamo aggiornando Clinia App: alcune funzioni sono momentaneamente sospese. Grazie per la pazienza."))}</span></div>`:""}
+const _tabHTML=tabHTML;tabHTML=function(){const h=_tabHTML(),b=bannerManut();return b?h.replace(/^<div class="pad stack"([^>]*)>/,m=>m+b):h};
+
+/* ---------- 07 · Calendario delle stanze a colori ---------- */
+function occStanza(rid,ds){const o=OPEN[parseD(ds).getDay()];if(!o||(S.chiusure[rid]||[]).includes(ds))return -1;
+  const occ=bookingsOn(ds,b=>b.roomId===rid).reduce((t,b)=>t+Math.max(0,Math.min(o[1],toMin(b.end))-Math.max(o[0],toMin(b.start))),0);return Math.min(1,occ/(o[1]-o[0]))}
+const COL_OCC={green:"#3aa66b",yellow:"#e8b04b",red:"#d0473a",grey:"#a7b0b8"};
+const colOcc=p=>p<0?"grey":p>=0.95?"red":p>0?"yellow":"green";
+const legendaOcc=`<div class="row tiny" style="gap:12px;flex-wrap:wrap">${[["green","Libera"],["yellow","In parte occupata"],["red","Piena"],["grey","Chiusa"]].map(([k,t])=>`<span class="row" style="gap:5px"><i style="width:11px;height:11px;border-radius:3px;background:${COL_OCC[k]};display:inline-block"></i>${t}</span>`).join("")}</div>`;
+function calendarioColori(){const vista=UI.calVista||"mese";
+  const seg=`<div class="seg"><button class="${vista==="mese"?"on":""}" data-act="calVista" data-v="mese">Mese</button><button class="${vista==="giorno"?"on":""}" data-act="calVista" data-v="giorno">Giorno</button></div>`;
+  if(vista==="giorno"){const ds=UI.calDay||today(),o=OPEN[parseD(ds).getDay()];
+    const righe=ROOMS.map(r=>{const p=occStanza(r.id,ds);if(p<0||!o)return `<div class="row small" style="gap:8px"><b style="width:68px">${esc(r.name)}</b><div style="flex:1;height:22px;border-radius:6px;background:${COL_OCC.grey}"></div></div>`;
+      const tot=o[1]-o[0],bs=bookingsOn(ds,b=>b.roomId===r.id);
+      return `<div class="row small" style="gap:8px"><b style="width:68px">${esc(r.name)}</b><div style="flex:1;height:22px;border-radius:6px;background:${COL_OCC.green};position:relative;overflow:hidden">${bs.map(b=>{const a=Math.max(0,toMin(b.start)-o[0]),z=Math.min(tot,toMin(b.end)-o[0]);return `<span title="${esc(docNome(b.doctorId))} ${b.start}–${b.end}" style="position:absolute;top:0;bottom:0;left:${a/tot*100}%;width:${(z-a)/tot*100}%;background:${COL_OCC.red}"></span>`}).join("")}</div></div>`}).join("");
+    return sez("Calendario delle stanze",`${seg}<div class="row between"><button class="iconbtn" data-act="calGiorno" data-v="-1" aria-label="Giorno prima">${ic("back","sm")}</button><b>${cap(fmtD(ds))}</b><button class="iconbtn" data-act="calGiorno" data-v="1" aria-label="Giorno dopo">${ic("right","sm")}</button></div>
+     ${o?`<div class="row tiny" style="gap:8px"><span style="width:68px"></span><span style="flex:1;display:flex;justify-content:space-between"><span>${toT(o[0])}</span><span>${toT(Math.round((o[0]+o[1])/2/30)*30)}</span><span>${toT(o[1])}</span></span></div>`:`<p class="small muted">Domenica: Clinia è chiusa.</p>`}${righe}${legendaOcc}`)}
+  const m=UI.calMese||today().slice(0,7),d0=parseD(m+"-01"),giorni=new Date(d0.getFullYear(),d0.getMonth()+1,0).getDate(),vuoti=(d0.getDay()+6)%7;
+  const celle=[...Array(vuoti)].map(()=>`<span></span>`).concat([...Array(giorni)].map((_,i)=>{const ds=m+"-"+pad2(i+1);
+    return `<button data-act="calApri" data-v="${ds}" style="border:1px solid var(--line);border-radius:8px;background:${ds===today()?"var(--accent-soft)":"var(--card)"};padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:46px"><span class="tiny"><b>${i+1}</b></span><span style="display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-width:38px">${ROOMS.map(r=>`<i style="width:7px;height:7px;border-radius:2px;background:${COL_OCC[colOcc(occStanza(r.id,ds))]}"></i>`).join("")}</span></button>`}));
+  return sez("Calendario delle stanze",`${seg}${meseNav("calMese",m)}<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${["L","M","M","G","V","S","D"].map(x=>`<span class="tiny" style="text-align:center">${x}</span>`).join("")}${celle.join("")}</div>
+   <p class="tiny">Ogni quadratino è una stanza (da ${esc(ROOMS[0].name)} a ${esc(ROOMS[ROOMS.length-1].name)}). Tocca un giorno per vedere le ore.</p>${legendaOcc}`)}
+// alternative quando la fascia scelta è occupata
+function alternativeStanza(rid,ds,s,e){const out=[],dur=e-s,libera=(r,d,a,b)=>!(S.chiusure[r]||[]).includes(d)&&OPEN[parseD(d).getDay()]&&!bookingsOn(d,x=>x.roomId===r||x.doctorId===S.proId).some(x=>overlap(a,b,toMin(x.start),toMin(x.end)));
+  for(const r of ROOMS)if(r.id!==rid&&libera(r.id,ds,s,e))out.push({r:r.id,d:ds,s,e});
+  let d=ds;for(let k=0;k<8&&out.length<6;k++){const o=OPEN[parseD(d).getDay()];if(o)for(let t=o[0];t+dur<=o[1]&&out.length<6;t+=30)if(!(d===ds&&t===s)&&libera(rid,d,t,t+dur)){out.push({r:rid,d,s:t,e:t+dur});break}d=addDays(d,1)}
+  return out.slice(0,6)}
+const _roomSheet=roomSheet;roomSheet=function(){const h=_roomSheet();const sh=UI.sheet;if(!sh||sh.step==="pay")return h;const ds=UI.roomDay,o=OPEN[parseD(ds).getDay()];if(!o)return h;
+  const s=sh.start??o[0],e=sh.end??Math.min(s+240,o[1]);if(e<=s)return h;
+  const occ=bookingsOn(ds,b=>b.roomId===sh.id||b.doctorId===S.proId).some(b=>overlap(s,e,toMin(b.start),toMin(b.end)))||(S.chiusure[sh.id]||[]).includes(ds);if(!occ)return h;
+  const alt=alternativeStanza(sh.id,ds,s,e);
+  const box=`<div class="card stack" style="gap:8px;background:var(--accent-soft);border-color:var(--accent)"><b class="small">Alternative libere</b>${alt.length?`<div class="chipw">${alt.map(a=>`<button class="chip" data-act="altScegli" data-r="${a.r}" data-d="${a.d}" data-s="${a.s}" data-e="${a.e}">${esc(room(a.r).name)} · ${esc(fmtD(a.d,{weekday:"short",day:"numeric"}))} ${toT(a.s)}–${toT(a.e)}</button>`).join("")}</div>`:`<p class="tiny">Nessuna alternativa nei prossimi giorni con la stessa durata: prova un orario più breve.</p>`}</div>`;
+  return h.replace('<dl class="card sum">',box+'<dl class="card sum">')};
+
+/* ---------- 03 · Annulla la prenotazione entro 5 minuti ---------- */
+const _confirmRoom=ACT.confirmRoom;ACT.confirmRoom=async function(){if(cfg("manutenzione",false)&&!isFpm()&&!isOwner()){UI.sheet=null;render();return toast("App in manutenzione: le prenotazioni riprendono a breve.")}
+  const prima=new Set(S.rooms.map(b=>b.id));const r=await _confirmRoom.apply(this,arguments);
+  const nuove=S.rooms.filter(b=>!prima.has(b.id));if(nuove.length&&!isOwner()){nuove.forEach(b=>b.creatoAt=Date.now());UI.ultimaPren={ids:nuove.map(b=>b.id),at:Date.now(),docId:S.proId};save();render()}return r};
+function annullaUltimaHTML(){const u=UI.ultimaPren;if(!u||u.docId!==S.proId)return "";const rest=5*60000-(Date.now()-u.at);if(rest<=0)return "";
+  return `<div class="card row" style="gap:10px;flex-wrap:wrap;border-color:var(--accent);background:var(--accent-soft)"><span class="small" style="flex:1;min-width:180px">Prenotazione fatta. Hai sbagliato? Puoi annullarla gratis ancora per <b>${Math.ceil(rest/60000)} min</b>: le ore tornano nel contatore.</span><button class="btn ghost sm" data-act="annullaUltima">Annulla prenotazione</button></div>`}
+
+/* ---------- 46 · Assenze degli specialisti ---------- */
+const assenzaDi=(id,ds)=>S.assenze.find(a=>a.docId===id&&ds>=a.dal&&ds<=a.al);
+const assenzeFuture=id=>S.assenze.filter(a=>a.docId===id&&a.al>=today()).sort((a,b)=>a.dal.localeCompare(b.dal));
+function salvaAssenza(id,dal,al,motivo){const a={id:uid(),docId:id,dal,al,motivo,at:Date.now(),da:isOwner()?"Clinia":isFpm()?"FPM":"dottore"};S.assenze.push(a);
+  const nm=docNome(id),per=`dal ${dataIt(dal)} al ${dataIt(al)}`,vis=S.appts.filter(x=>x.doctorId===id&&x.status==="confermata"&&x.date>=dal&&x.date<=al);
+  for(const x of vis)if(x.ownerEmail)addNotif("user:"+x.ownerEmail,"assenza","Visita da riprogrammare",`${nm} sarà assente ${per}: la visita del ${dataIt(x.date)} alle ${x.time} va spostata. Clinia ti contatta, oppure scrivi alla segreteria.`,x.id);
+  if(!isOwner())addNotif("titolare","assenza","Assenza di uno specialista",`${nm} ${per}${motivo?" · "+motivo:""}. ${vis.length} visite da riprogrammare.`);
+  if(!S.proId||S.proId!==id)addNotif("spec:"+id,"assenza","Assenza registrata",`Clinia ha registrato la tua assenza ${per}.`);
+  logA("Assenza registrata",`${nm} · ${per} · ${vis.length} visite da spostare`);save();return vis.length}
+const formAssenza=(id)=>`<form class="stack" data-form="assenza" data-id="${id||""}" style="gap:8px" novalidate>${id?"":selettore("doc","Specialista o ente",professionisti().map(d=>[d.id,d.name]),"")}<div class="grid2" style="grid-template-columns:1fr 1fr">${campo("dal","Dal",today(),{type:"date"})}${campo("al","Al",today(),{type:"date"})}</div>${campo("motivo","Motivo (facoltativo)","",{ph:"Ferie, congresso…"})}<button class="btn ghost sm" type="submit">Registra assenza</button></form>`;
+const listaAssenze=(l,del)=>l.length?l.map(a=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1">${del?`<b>${esc(docNome(a.docId))}</b> · `:""}${dataIt(a.dal)} → ${dataIt(a.al)}${a.motivo?" · "+esc(a.motivo):""}</span><button class="link small" data-act="assenzaDel" data-id="${a.id}">Togli</button></div>`).join(""):`<p class="small muted">Nessuna assenza in programma.</p>`;
+const _docCard=docCard;docCard=function(d){const h=_docCard(d),a=assenzeFuture(d.id).find(x=>x.dal<=addDays(today(),30));return a?h.replace(/(<span class="r">[^<]*<\/span>)/,`$1<span class="tiny" style="color:var(--warn)">Assente dal ${dataIt(a.dal)} al ${dataIt(a.al)}</span>`):h};
+
+/* ---------- 11 · Lista d’attesa e pazienti non presentati ---------- */
+const _cancelAppt=ACT.cancelAppt;ACT.cancelAppt=function(d){const a=S.appts.find(x=>x.id===d.id);const r=_cancelAppt.apply(this,arguments);
+  if(a){const l=S.attesa.filter(w=>w.docId===a.doctorId&&w.email!==a.ownerEmail);for(const w of l){w.avvisatoAt=Date.now();addNotif("user:"+w.email,"attesa","Si è liberato un posto",`${docNome(a.doctorId)}: libero ${fmtD(a.date,{weekday:"long",day:"numeric",month:"long"})} alle ${a.time}. Prenota subito dall’app.`)}
+    if(l.length){addNotif("titolare","attesa","Posto liberato",`${docNome(a.doctorId)} · ${dataIt(a.date)} ${a.time}: avvisati ${l.length} pazienti in lista d’attesa.`);save()}}return r};
+function attesaPazienteHTML(){if(!logged()||isPro()||isFpm())return "";const mie=S.attesa.filter(w=>w.email===S.auth.email);
+  return sez("Lista d’attesa",`<p class="tiny">Non trovi posto? Ti avvisiamo appena un paziente disdice.</p>
+   ${mie.map(w=>`<div class="row small" style="gap:8px"><span style="flex:1">${esc(docNome(w.docId))} · dal ${dataIt(w.at)}</span><button class="link small" data-act="attesaDel" data-id="${w.id}">Esci dalla lista</button></div>`).join("")}
+   <form class="row" data-form="attesa" style="gap:8px;flex-wrap:wrap;align-items:flex-end" novalidate>${selettore("doc","Specialista",SPECIALISTI().filter(d=>!mie.some(w=>w.docId===d.id)).map(d=>[d.id,d.name]),"")}<button class="btn ghost sm" type="submit">Avvisami</button></form>`)}
+const _visiteTab=visiteTab;visiteTab=function(){const h=_visiteTab(),x=attesaPazienteHTML();return x?h.replace(/<\/div>\s*$/,x+"</div>"):h};
+function nonPresentatiHTML(filtro){const da=addDays(today(),-7),l=S.appts.filter(a=>a.status==="confermata"&&a.date>=da&&(a.date<today()||(a.date===today()&&toMin(a.time)<nowMin()))&&filtro(a)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).slice(0,15);
+  return l.length?l.map(a=>{const ns=!!S.noShow[a.id];return `<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1">${esc(a.patient)} · ${esc(fmtD(a.date,{day:"numeric",month:"short"}))} ${a.time}${filtro.tutti?" · "+esc(docNome(a.doctorId)):""}</span><button class="chip ${ns?"on":""}" data-act="noShow" data-id="${a.id}" aria-pressed="${ns}">${ns?"Non presentato":"Segna non presentato"}</button></div>`}).join(""):`<p class="small muted">Nessuna visita passata negli ultimi 7 giorni.</p>`}
+
+/* ---------- Agenda del dottore: assenze, non presentati, annulla entro 5 minuti ---------- */
+const _agendaTab=agendaTab;agendaTab=function(){const h=_agendaTab();if(!isPro()||isOwner()||!S.proId)return h;
+  const x=sez("Le tue assenze",`<p class="tiny">Ferie o impegni: i pazienti già prenotati ricevono un avviso e Clinia li ricontatta.</p>${listaAssenze(assenzeFuture(S.proId),false)}${formAssenza(S.proId)}`)+(isSoc()?"":sez("Pazienti non presentati",`<p class="tiny">Segna chi non è venuto: Clinia vede il conteggio e può chiedere una conferma in più la volta dopo.</p>${nonPresentatiHTML(a=>a.doctorId===S.proId)}`));
+  return h.replace(/<\/div>\s*$/,x+"</div>")};
+const _stanzeTab=stanzeTab;stanzeTab=function(){const h=_stanzeTab(),u=annullaUltimaHTML();return u?h.replace(/^<div class="pad stack"([^>]*)>/,m=>m+u):h};
+
+/* ---------- 21 · Assistenza tecnica FPM (ticket numerati) ---------- */
+const TK_STATI={aperto:"Aperto",lavorazione:"In lavorazione",chiuso:"Risolto"};
+function ticketPage(){const mio=S.auth&&S.auth.email,l=S.ticket.filter(t=>t.email===mio).sort((a,b)=>b.at-a.at);
+  return `<div class="screen">${bar("Assistenza tecnica")}<div class="content"><div class="pad stack" style="gap:16px">
+  <p class="small muted">Qualcosa non funziona nell’app? Scrivilo qui: arriva a FPM WebDesignTech con un numero, e vedi a che punto è. Non scrivere dati sanitari dei pazienti.</p>
+  <form class="card stack" data-form="ticket" style="gap:10px" novalidate>${selettore("tipo","Tipo",["Errore nell’app","Richiesta di modifica","Accesso e password","Altro"],"Errore nell’app")}${campo("titolo","Oggetto","",{ph:"Es. non vedo le ore del pacchetto"})}<label class="field"><span>Descrizione</span><textarea name="testo" rows="4" placeholder="Cosa stavi facendo, cosa è successo"></textarea></label><p class="err" id="tk-err"></p><button class="btn primary" type="submit">Invia a FPM</button></form>
+  ${l.map(t=>`<div class="card stack" style="gap:6px"><div class="row between"><b>#${t.n} · ${esc(t.titolo)}</b><span class="badge ${t.stato==="chiuso"?"":"warn"}">${TK_STATI[t.stato]}</span></div><span class="tiny">${esc(t.tipo)} · ${oraIt(t.at)}</span><p class="small">${esc(t.testo)}</p>${(t.risposte||[]).map(r=>`<p class="small" style="border-left:3px solid var(--accent);padding-left:8px"><b>FPM:</b> ${esc(r.testo)} <span class="tiny">${oraIt(r.at)}</span></p>`).join("")}</div>`).join("")}
+  </div></div></div>`}
+
+/* ---------- 13/15 · Informativa privacy e termini d’uso (bozza da approvare) ---------- */
+const bozza=()=>cfg("legaleOk",false)?"":`<div class="card small" style="border-color:var(--warn);background:var(--warn-soft)"><b>Bozza</b> da approvare da FPM e Clinia Srl (e da far rivedere a un consulente privacy) prima della pubblicazione sugli store.</div>`;
+function privacyPage(){return `<div class="screen">${bar("Informativa privacy")}<div class="content"><div class="pad stack legal" style="gap:12px">${bozza()}
+ <h2 class="h-sec">Informativa sul trattamento dei dati personali</h2><p class="small">Ai sensi degli artt. 13 e 14 del Regolamento UE 2016/679 (GDPR).</p>
+ <h3>1. Titolare del trattamento</h3><p class="small">${esc(CLINIC.ragione)}, ${esc(CLINIC.address)}, e-mail ${esc(CLINIC.email||"")}, PEC ${esc(CLINIC.pec||"")}.</p>
+ <h3>2. Responsabile del trattamento</h3><p class="small">${esc(LEGAL.marchio)} di ${esc(LEGAL.autore)}, che sviluppa e mantiene l’app, nominato responsabile ai sensi dell’art. 28 GDPR. Non accede alle conversazioni tra pazienti e struttura né ai dati sanitari, salvo richiesta di assistenza del titolare.</p>
+ <h3>3. Dati trattati</h3><p class="small">Dati di contatto (nome, cognome, e-mail, telefono, data di nascita); dati sulle prenotazioni; per i professionisti, dati di fatturazione e ore dei pacchetti; dati relativi alla salute solo se l’utente li inserisce volontariamente (informazioni sanitarie, documenti, messaggi).</p>
+ <h3>4. Finalità e basi giuridiche</h3><p class="small">Gestione di account, prenotazioni, promemoria e comunicazioni con la struttura (esecuzione del contratto, art. 6.1.b); dati sanitari per finalità di cura e organizzazione delle visite (art. 9.2.h) e, dove richiesto, con il consenso esplicito (art. 9.2.a); obblighi fiscali e contabili (art. 6.1.c).</p>
+ <h3>5. Conservazione</h3><p class="small">Per la durata dell’account e poi per i termini di legge (10 anni per i documenti fiscali). L’utente può eliminare l’account dall’app in qualsiasi momento.</p>
+ <h3>6. Dove sono i dati</h3><p class="small">Su server nell’Unione Europea (Supabase, Parigi). I dati non sono venduti né usati per pubblicità.</p>
+ <h3>7. Diritti</h3><p class="small">Accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso, scrivendo al titolare. Reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).</p>
+ <h3>8. Sicurezza</h3><p class="small">Accesso con password, PIN o Face ID; comunicazioni cifrate; ogni utente vede solo i propri dati; copie di sicurezza periodiche.</p>
+ </div></div></div>`}
+function terminiPage(){return `<div class="screen">${bar("Termini d’uso")}<div class="content"><div class="pad stack legal" style="gap:12px">${bozza()}
+ <h2 class="h-sec">Termini e condizioni d’uso di Clinia App</h2>
+ <h3>1. Il servizio</h3><p class="small">Clinia App permette di prenotare visite con gli specialisti che lavorano presso ${esc(CLINIC.ragione)}, comunicare con la segreteria e, per i professionisti, prenotare le stanze secondo il proprio pacchetto di ore.</p>
+ <h3>2. Non è un servizio di emergenza</h3><p class="small">L’app e la chat non sono controllate in tempo reale. In caso di emergenza chiama il <b>112</b> (o il 118).</p>
+ <h3>3. Prenotazioni e disdette</h3><p class="small">Le visite si possono disdire dall’app; la disdetta con meno di 24 ore di preavviso viene segnalata allo specialista. Le prestazioni sono erogate e fatturate dagli specialisti.</p>
+ <h3>4. Professionisti</h3><p class="small">Le ore delle stanze sono quelle del pacchetto firmato con Clinia: scalano alla conferma della prenotazione, che si può annullare gratis entro 5 minuti.</p>
+ <h3>5. Account</h3><p class="small">L’utente custodisce le proprie credenziali e può eliminare l’account in ogni momento dal profilo.</p>
+ <h3>6. Proprietà</h3><p class="small">Il software è opera di ${esc(LEGAL.autore)} – ${esc(LEGAL.marchio)}, concesso in uso a ${esc(CLINIC.ragione)}. Sono vietate copia e decompilazione.</p>
+ <h3>7. Legge applicabile</h3><p class="small">Legge italiana. Foro competente quello del consumatore, se applicabile, altrimenti Matera.</p>
+ </div></div></div>`}
+
+/* ---------- 48 · Guida all’uso ---------- */
+const GUIDA={
+  paziente:[["Prenotare una visita","Esplora → scegli lo specialista → scegli giorno e orario → conferma. Ricevi un promemoria il giorno prima e 2 ore prima."],["Disdire","Visite → tocca la visita → Disdici. Se lo fai con meno di 24 ore, lo specialista viene avvisato."],["Lista d’attesa","Visite → Lista d’attesa: ti avvisiamo quando si libera un posto."],["Visita online","Esplora → Visita online: paghi con la carta e vi collegate in videochiamata."],["Scrivere a Clinia","Messaggi → Nuovo messaggio. Per le emergenze chiama il 112."]],
+  dottore:[["Le tue ore","In Agenda vedi il contatore: ore fatte, prenotate e rimaste. Ricevi un avviso quando stanno finendo."],["Prenotare una stanza","Stanze → scegli giorno e stanza → orario → doppia conferma. Le ore scalano subito. Hai 5 minuti per annullare gratis."],["Stanza occupata?","L’app ti propone stanze e orari alternativi liberi."],["Assenze","Agenda → Le tue assenze: i pazienti già prenotati vengono avvisati."],["Assistenza","Profilo → Assistenza tecnica: scrivi a FPM se qualcosa non funziona."]],
+  clinia:[["Nuovo pacchetto","Clinia → Pacchetti ore → scegli dottore, tipo e ore, allega il contratto → doppia conferma. È attivo subito."],["Nuovo dottore o ente","Clinia → Pacchetti ore → Aggiungi: entra con l’e-mail che inserisci."],["Stanze","Clinia → Stanze: calendario a colori, chiusure e turni."],["Gestione","Clinia → Gestione: suggerimenti, statistiche, assenze, rettifiche, attrezzature, avvisi a tutti, prenotazioni per conto dei pazienti."],["Contabilità","Clinia → Contabilità: entrate, uscite, grafici ed export per il commercialista."]],
+  fpm:[["Compensi","Entrate e Dottori: compenso di 1,50 € per ogni ora firmata, con la tariffa bloccata nel pacchetto."],["Strumenti FPM","Profilo → Strumenti FPM: diagnostica, cestino e backup, registro compensi, costi, store, assistenza, configurazione."],["Errori","Registro attività in Dottori: trovi chi ha fatto cosa e annulli solo quello. Gli azzeramenti finiscono nel cestino per 30 giorni."],["Privacy","Non vedi le chat tra pazienti e struttura: è un obbligo per i dati sanitari."]]};
+function guidaPage(){const r=isFpm()?"fpm":isOwner()?"clinia":isPro()?"dottore":"paziente";
+  return `<div class="screen">${bar("Guida all’uso")}<div class="content"><div class="pad stack" style="gap:10px"><p class="small muted">Le cose principali, in poche righe.</p>
+  ${GUIDA[r].map(([t,x],i)=>`<details class="card" ${i?"":"open"}><summary><b>${esc(t)}</b></summary><p class="small" style="margin-top:8px">${esc(x)}</p></details>`).join("")}
+  <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="openPage" data-v="privacy">Informativa privacy</button><button class="btn ghost sm" data-act="openPage" data-v="termini">Termini d’uso</button></div></div></div></div>`}
+function EXTRA_PROFILO(){const l=[["guida","list","Guida all’uso"]];if(isFpm())l.unshift(["tab:fpmtools","gear","Strumenti FPM · diagnostica, backup, store, costi"]);
+  else if(isPro()||isOwner())l.push(["ticket","chat","Assistenza tecnica FPM"+((n=>n?" · "+n+" aperte":"")(S.ticket.filter(t=>t.email===(S.auth||{}).email&&t.stato!=="chiuso").length))]);
+  l.push(["privacy","shield","Informativa privacy"],["termini","file","Termini d’uso"]);return l}
+
+/* ---------- Clinia · sezione Gestione ---------- */
+function suggerimentiClinia(){const out=[],m=today().slice(0,7),oggi=today();
+  const ap=Object.values(S.accessi).filter(a=>a.stato==="attesa").length;if(ap)out.push(["warn",`${ap} richieste di accesso da approvare.`]);
+  for(const d of professionisti()){const u=oreUso(d.id);if(!u.c)continue;
+    if(u.c.scadenza&&!u.scaduto&&addDays(oggi,7)>=u.c.scadenza)out.push(["warn",`${d.name}: il pacchetto scade il ${dataIt(addDays(u.c.scadenza,-1))}. Proponi il rinnovo.`]);
+    else if(!u.scaduto&&u.residue>0&&u.residue<=sogliaOre(u.ore))out.push(["warn",`${d.name}: restano ${oreFmt(u.residue)}. Proponi il rinnovo.`]);
+    else if(u.scaduto||u.residue<=0)out.push(["warn",`${d.name}: pacchetto finito. Senza rinnovo non può prenotare stanze.`])}
+  const occ=ROOMS.map(r=>({r,p:occMese(r.id,m)})).sort((a,b)=>a.p-b.p);if(occ[0]&&occ[0].p<0.3)out.push(["idea",`${occ[0].r.name} è occupata solo al ${pct(occ[0].p)} questo mese: proponila ai dottori con pacchetto a ore o a un nuovo ente.`]);
+  const gs=[1,2,3,4,5,6].map(g=>({g,p:occGiorno(g,m)})).sort((a,b)=>a.p-b.p);if(gs[0])out.push(["idea",`Il giorno meno pieno è il ${["","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"][gs[0].g]} (${pct(gs[0].p)}): buono per nuove giornate a pacchetto.`]);
+  const wa=S.attesa.length;if(wa)out.push(["idea",`${wa} pazienti in lista d’attesa: valuta più ore per ${[...new Set(S.attesa.map(w=>docNome(w.docId)))].slice(0,3).join(", ")}.`]);
+  const ns=Object.keys(S.noShow).length;if(ns)out.push(["idea",`${ns} visite con paziente non presentato: per loro chiama il giorno prima.`]);
+  // 42 · assistente contabile
+  const g=new Date().getDate();if(g<=16&&S.crediti.some(c=>c.stato==="confermata"&&c.confAt&&stampDi(c.confAt).startsWith(addDays(m+"-01",-1).slice(0,7))))out.push(["conti","Entro il 16: F24 con le ritenute sui compensi FPM del mese scorso."]);
+  const nonPag=(S.pagDott||[]).filter(p=>!p.pagato&&p.data&&addDays(p.data,30)<oggi).length;if(nonPag)out.push(["conti",`${nonPag} fatture ai dottori non incassate da più di 30 giorni.`]);
+  if(new Date().getMonth()===11&&fissoAnnuo())out.push(["conti",`Dicembre: compenso fisso annuale FPM di ${eur(fissoAnnuo())}.`]);
+  for(const x of S.attrezzi.filter(x=>x.prossima&&x.prossima<=addDays(oggi,30)))out.push(["warn",`Manutenzione ${x.nome} entro il ${dataIt(x.prossima)}.`]);
+  return out}
+function occMese(rid,m){let o=0,t=0;const d0=parseD(m+"-01"),n=new Date(d0.getFullYear(),d0.getMonth()+1,0).getDate();for(let i=1;i<=n;i++){const ds=m+"-"+pad2(i),p=occStanza(rid,ds);if(p>=0){o+=p;t++}}return t?o/t:0}
+function occGiorno(g,m){let o=0,t=0;const d0=parseD(m+"-01"),n=new Date(d0.getFullYear(),d0.getMonth()+1,0).getDate();for(let i=1;i<=n;i++){const ds=m+"-"+pad2(i);if(parseD(ds).getDay()!==g)continue;for(const r of ROOMS){const p=occStanza(r.id,ds);if(p>=0){o+=p;t++}}}return t?o/t:0}
+function analyticsClinia(){const m=UI.anMese||today().slice(0,7),rs=ROOMS.map(r=>({r,p:occMese(r.id,m)}));
+  const ore={};for(const b of allBookings().filter(b=>b.date.startsWith(m)&&b.doctorId!==OWNER.doctorId))ore[b.doctorId]=(ore[b.doctorId]||0)+oreTurnoB(b);
+  const top=Object.entries(ore).sort((a,b)=>b[1]-a[1]).slice(0,8),mx=top.length?top[0][1]:0,media=rs.reduce((t,x)=>t+x.p,0)/(rs.length||1);
+  return sez("Statistiche",`${meseNav("anMese",m)}<div class="stats"><div class="stat"><b>${pct(media)}</b><span>Occupazione media</span></div><div class="stat"><b>${oreFmt(r2(Object.values(ore).reduce((t,x)=>t+x,0)))}</b><span>Ore di stanze usate</span></div><div class="stat"><b>${S.appts.filter(a=>a.date.startsWith(m)&&a.status==="confermata").length}</b><span>Visite in app</span></div></div>
+   <span class="label">Occupazione per stanza</span>${rs.map(x=>`<div class="row small" style="gap:8px"><span style="width:70px">${esc(x.r.name)}</span>${barra(x.p,1,COL_OCC[colOcc(x.p)])}<span class="num" style="width:44px;text-align:right">${pct(x.p)}</span></div>`).join("")}
+   <span class="label">Occupazione per giorno</span>${[1,2,3,4,5,6].map(g=>{const p=occGiorno(g,m);return `<div class="row small" style="gap:8px"><span style="width:70px">${["","Lun","Mar","Mer","Gio","Ven","Sab"][g]}</span>${barra(p,1)}<span class="num" style="width:44px;text-align:right">${pct(p)}</span></div>`}).join("")}
+   <span class="label">Ore per professionista</span>${top.length?top.map(([id,h])=>`<div class="row small" style="gap:8px"><span style="width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(docNome(id))}</span>${barra(h,mx)}<span class="num" style="width:50px;text-align:right">${oreFmt(h)}</span></div>`).join(""):`<p class="small muted">Nessuna stanza prenotata in questo mese.</p>`}`)}
+function cliniaGestione(){const sg=suggerimentiClinia(),ic2={warn:"⚠️",idea:"💡",conti:"🧾"},ro=isFpm()?"disabled":"";
+  const soc=DOCTORS.filter(d=>d.kind==="societa"&&!rimosso(d.id)),sel=UI.socSel&&doc(UI.socSel)?UI.socSel:(soc[0]||{}).id,so=sel?(doc(sel).soc||{}):{};
+  const contr=S.crediti.filter(c=>c.file).sort((a,b)=>(b.confAt||b.at)-(a.confAt||a.at)),q=(UI.contrQ||"").toLowerCase();
+  return sez("Suggerimenti e scadenze",sg.length?sg.map(([k,t])=>`<p class="small">${ic2[k]} ${esc(t)}</p>`).join(""):`<p class="small muted">Tutto in ordine: nessun suggerimento oggi.</p>`)
+  +analyticsClinia()
+  +sez("Avviso a tutti",`<p class="tiny">Messaggio nell’app a tutti i professionisti scelti (per WhatsApp usa i pulsanti qui sotto).</p><form class="stack" data-form="avvisoTutti" style="gap:8px" novalidate>${selettore("a","A chi",[["tutti","Dottori ed enti"],["dottori","Solo dottori"],["enti","Solo enti e società"]],"tutti")}<label class="field"><span>Messaggio</span><textarea name="testo" rows="3" placeholder="Es. sabato 8 lo studio 4 è chiuso per manutenzione"></textarea></label><button class="btn primary sm" type="submit" ${ro}>Invia nell’app</button></form>
+   <details><summary class="small"><b>Manda anche su WhatsApp</b></summary><div class="stack" style="gap:6px;margin-top:8px">${professionisti().filter(d=>telefonoDi("spec:"+d.id)).map(d=>`<a class="btn ghost sm" target="_blank" rel="noopener" href="${waLink(telefonoDi("spec:"+d.id),UI.ultimoAvviso||"")}">${esc(d.name)}</a>`).join("")||`<p class="tiny">Nessun professionista con telefono nel profilo.</p>`}</div></details>`)
+  +sez("Prenota per un paziente (segreteria)",`<p class="tiny">Per chi telefona o passa in reception. Lo specialista riceve la notifica.</p><form class="stack" data-form="segreteria" style="gap:8px" novalidate>${selettore("doc","Specialista",SPECIALISTI().map(d=>[d.id,d.name]),UI.segDoc||"")}<div class="grid2" style="grid-template-columns:1fr 1fr">${campo("data","Giorno",today(),{type:"date"})}${campo("ora","Ora","",{type:"time"})}</div>${campo("nome","Nome e cognome del paziente")}${campo("tel","Telefono","",{im:"tel"})}${campo("email","E-mail (facoltativa: la vede in app)","",{type:"email"})}${campo("svc","Prestazione","",{ph:"Es. Prima visita"})}<p class="err" id="sg-err"></p><button class="btn primary sm" type="submit" ${ro}>Prenota</button></form>`)
+  +sez("Assenze degli specialisti",`${listaAssenze(S.assenze.filter(a=>a.al>=today()).sort((a,b)=>a.dal.localeCompare(b.dal)),true)}${formAssenza("")}`)
+  +sez("Rettifiche ore e rimborsi",`<p class="tiny">Correggi le ore di un pacchetto (in più o in meno) o registra un rimborso a un paziente. Tutto finisce nel registro e FPM lo vede.</p>
+   <form class="stack" data-form="rettifica" style="gap:8px" novalidate>${selettore("c","Pacchetto",S.crediti.filter(c=>c.stato==="confermata"&&!c.chiuso).map(c=>[c.id,`${docNome(c.docId)} · ${PACCHETTI[c.tipo]||"A ore"} ${oreFmt(c.ore)}`]),"")}<div class="grid2" style="grid-template-columns:1fr 2fr">${campo("ore","Ore (+/−)","",{ph:"-2 oppure 3",im:"decimal"})}${campo("motivo","Motivo","",{ph:"Es. stanza chiusa per guasto"})}</div><button class="btn ghost sm" type="submit" ${ro}>Registra rettifica</button></form>
+   <form class="stack" data-form="rimborso" style="gap:8px;border-top:1px solid var(--line);padding-top:10px" novalidate><div class="grid2" style="grid-template-columns:2fr 1fr">${campo("nome","Paziente")}${campo("importo","Importo €","",{im:"decimal"})}</div><div class="grid2" style="grid-template-columns:1fr 1fr">${selettore("metodo","Come",["Contanti","POS (storno)","Bonifico"],"Bonifico")}${campo("motivo","Motivo")}</div><button class="btn ghost sm" type="submit" ${ro}>Registra rimborso</button></form>
+   ${[...S.rettifiche.map(r=>({at:r.at,t:`Rettifica ${r.ore>0?"+":""}${String(r.ore).replace(".",",")} h · ${docNome(r.docId)} · ${r.motivo}`})),...S.rimborsi.map(r=>({at:r.at,t:`Rimborso ${eur(r.importo)} · ${r.nome} · ${r.metodo}${r.motivo?" · "+r.motivo:""}`}))].sort((a,b)=>b.at-a.at).slice(0,10).map(x=>`<p class="small" style="border-top:1px solid var(--line);padding-top:6px">${esc(x.t)} <span class="tiny">${oraIt(x.at)}</span></p>`).join("")}`)
+  +sez("Attrezzature e manutenzione",`${S.attrezzi.length?S.attrezzi.map(x=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1"><b>${esc(x.nome)}</b>${x.stanza?" · "+esc(room(x.stanza).name):""}<span class="tiny" style="display:block">Ultima ${dataIt(x.ultima)} · prossima <b style="color:${x.prossima&&x.prossima<=addDays(today(),7)?"var(--warn)":"inherit"}">${dataIt(x.prossima)}</b>${x.note?" · "+esc(x.note):""}</span></span><button class="link small" data-act="attrFatto" data-id="${x.id}" ${ro}>Fatta oggi</button><button class="link small" data-act="attrDel" data-id="${x.id}" ${ro}>Togli</button></div>`).join(""):`<p class="small muted">Aggiungi ecografo, tecar, climatizzatori…: ti avvisiamo 7 giorni prima della manutenzione.</p>`}
+   <form class="stack" data-form="attrezzo" style="gap:8px" novalidate><div class="grid2" style="grid-template-columns:2fr 1fr">${campo("nome","Attrezzatura","",{ph:"Ecografo Samsung HS40"})}${selettore("stanza","Stanza",[["","—"],...ROOMS.map(r=>[r.id,r.name])],"")}</div><div class="grid2" style="grid-template-columns:1fr 1fr 1fr">${campo("ultima","Ultima",today(),{type:"date"})}${selettore("mesi","Ogni",[["3","3 mesi"],["6","6 mesi"],["12","12 mesi"],["24","24 mesi"]],"12")}${campo("note","Note")}</div><button class="btn ghost sm" type="submit" ${ro}>Aggiungi</button></form>`)
+  +sez("Lista d’attesa e non presentati",`${S.attesa.length?S.attesa.map(w=>`<p class="small">${esc(w.nome||w.email)} → ${esc(docNome(w.docId))} · dal ${dataIt(w.at)}${w.avvisatoAt?" · avvisato "+dataIt(w.avvisatoAt):""}</p>`).join(""):`<p class="small muted">Nessun paziente in lista d’attesa.</p>`}<span class="label">Ultimi 7 giorni</span>${nonPresentatiHTML(Object.assign(()=>true,{tutti:true}))}`)
+  +sez("Dati fiscali delle società",soc.length?`<div class="chipw">${soc.map(d=>`<button class="chip ${d.id===sel?"on":""}" data-act="socSel" data-v="${d.id}">${esc(d.name)}</button>`).join("")}</div>
+   <form class="stack" data-form="datiSoc" data-id="${sel}" style="gap:8px" novalidate><div class="grid2" style="grid-template-columns:1fr 1fr">${campo("piva","Partita IVA",so.piva,{im:"numeric"})}${campo("cf","Codice fiscale",so.cf)}</div>${campo("sede","Sede legale",so.sede)}<div class="grid2" style="grid-template-columns:1fr 1fr">${campo("pec","PEC",so.pec)}${campo("sdi","Codice destinatario SDI",so.sdi)}</div><div class="grid2" style="grid-template-columns:1fr 1fr">${campo("referente","Referente",so.referente)}${campo("tel","Telefono",so.tel)}</div><p class="err" id="ds-err"></p><button class="btn ghost sm" type="submit" ${ro}>Salva dati</button></form>`:`<p class="small muted">Nessuna società registrata.</p>`)
+  +sez("Archivio contratti",`<label class="field"><span>Cerca per nome</span><input data-change="contrQ" value="${esc(UI.contrQ||"")}" placeholder="Nome del dottore o dell’ente"></label>${contr.filter(c=>!q||docNome(c.docId).toLowerCase().includes(q)).slice(0,30).map(c=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1">${esc(docNome(c.docId))} · ${esc(PACCHETTI[c.tipo]||"A ore")} ${oreFmt(c.ore)} · ${dataIt(c.data||c.at)}${c.stato==="annullato"?" · annullato":""}</span><button class="link small" data-act="apriContratto" data-id="${c.id}">Apri</button></div>`).join("")||`<p class="small muted">Nessun contratto allegato.</p>`}`)}
+const _cliniaTab=cliniaTab;cliniaTab=function(){const h=_cliniaTab();
+  const chip=`<button class="chip ${UI.cliSeg==="gest"?"on":""}" data-act="cliSeg" data-v="gest" role="tab" aria-selected="${UI.cliSeg==="gest"}">Gestione</button>`;
+  let out=h.replace(/(<div class="chips" role="tablist">[\s\S]*?)(<\/div>)/,(m,a,b)=>a+chip+b);
+  const i=out.indexOf("</div>",out.indexOf('role="tablist"'))+6;
+  if(UI.cliSeg==="stanze")out=out.slice(0,i)+calendarioColori()+out.slice(i);
+  if(UI.cliSeg==="gest")out=out.slice(0,i)+cliniaGestione()+"</div>";
+  return out};
+
+/* ---------- FPM · Strumenti ---------- */
+const STORE_CHECK=[
+  ["Account","Account Apple Developer intestato a Clinia Srl (app sanitaria = organizzazione)"],["Account","Account Google Play Console e verifica identità"],
+  ["Privacy","Informativa privacy approvata e pubblicata su clinia.it"],["Privacy","Termini d’uso approvati"],["Privacy","Scheda “Privacy” di App Store e “Sicurezza dei dati” di Google compilate"],
+  ["Privacy","Nomina di FPM come responsabile del trattamento firmata da Clinia"],["App","Eliminazione dell’account dall’app (presente)"],["App","Login di prova per i revisori Apple/Google (senza dati reali)"],
+  ["App","Avviso “non è un servizio di emergenza” nelle chat dei pazienti (presente)"],["App","Notifiche push attive (funzione nativa richiesta da Apple)"],["App","Icone, schermata di avvio e screenshot per iPhone, iPad e Android"],
+  ["Tecnica","Repository GitHub privato e password cambiate"],["Tecnica","Database collegato e testato su ambiente di prova separato"],["Tecnica","Backup automatico attivo"],["Tecnica","Collaudo finale superato (Diagnostica → Collaudo)"]];
+const PRE_PUB=["Backup completo (Strumenti → Backup)","Collaudo automatico senza errori","Prova manuale con account finti: paziente, dottore, ente, Clinia, FPM","Numero di versione aggiornato","Note di versione scritte in italiano","Autorizzazione di FPM alla pubblicazione","Invio a TestFlight / test chiuso Google","Invio in revisione"];
+const STORE_STATI={preparazione:"In preparazione",test:"In test",revisione:"In revisione",pubblicata:"Pubblicata",rifiutata:"Rifiutata"};
+const NOTIF_TESTI=[["Pacchetto attivo","Clinia attiva il pacchetto","Clinia ha attivato il tuo pacchetto di N ore: scalano a ogni stanza che prenoti."],["Ore in esaurimento","Restano poche ore","Restano N h: rinnova da Clinia, il tuo tempo in Clinia sta terminando."],["Pacchetto in scadenza","Il giorno prima della scadenza","Il pacchetto scade domani: rinnova da Clinia per non fermarti."],["Pacchetto terminato","Ore finite o pacchetto scaduto","Le ore in Clinia sono finite: rinnova il pacchetto in Clinia per continuare a prenotare le stanze."],["Studio prenotato","Il dottore prenota una stanza","Nome · Stanza · giorni e orari."],["Promemoria visita","Il giorno prima","Domani hai una visita: prestazione con specialista alle ore."],["Promemoria 2 ore","2 ore prima","Tra poco hai una visita: prestazione con specialista alle ore."],["Disdetta tardiva","Disdetta con meno di 24 ore","Paziente ha disdetto: l’orario è di nuovo libero."],["Posto liberato","Disdetta con lista d’attesa","Si è liberato un posto: prenota subito dall’app."],["Assenza","Lo specialista è assente","La visita va spostata: Clinia ti contatta."],["Nuovo messaggio","Arriva un messaggio","Nuovo messaggio da Nome."],["Risposta fuori orario","Messaggio a Clinia fuori orario","Grazie, abbiamo ricevuto il tuo messaggio. La segreteria risponde negli orari di apertura."],["Fisso annuale","1 e 20 dicembre, dal 2027","Entro il 31 dicembre: compenso fisso annuale a FPM WebDesignTech."],["Manutenzione","7 giorni prima","Manutenzione in scadenza: attrezzatura entro la data."]];
+function autotest(){const r=[],ok=(t,c,x="")=>r.push({t,ok:!!c,x});
+  try{ok("Salvataggio dati sul dispositivo",(()=>{localStorage.setItem("clinia-test","1");const v=localStorage.getItem("clinia-test")==="1";localStorage.removeItem("clinia-test");return v})())}catch(e){ok("Salvataggio dati sul dispositivo",false,e.message)}
+  ok("Compenso = registro compensi",Math.abs(ledgerTot()-compensoAtteso())<0.01,`${eur(ledgerTot())} nel registro, ${eur(compensoAtteso())} dai pacchetti`);
+  const neg=professionisti().filter(d=>{const u=oreUso(d.id);return u.c&&u.residue<0});ok("Nessun contatore ore in negativo",!neg.length,neg.map(d=>d.name).join(", "));
+  let sov=[];for(const r0 of ROOMS){const bs=S.rooms.filter(b=>b.roomId===r0.id);for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++)if(bs[i].date===bs[j].date&&overlap(toMin(bs[i].start),toMin(bs[i].end),toMin(bs[j].start),toMin(bs[j].end)))sov.push(r0.name+" "+bs[i].date)}
+  ok("Nessuna stanza prenotata due volte",!sov.length,sov.slice(0,3).join(", "));
+  const orf=S.rooms.filter(b=>!doc(b.doctorId)).length;ok("Nessun turno senza dottore",!orf,orf?orf+" turni":"");
+  const senza=professionisti().filter(d=>!pacchetto(d.id)&&S.rooms.some(b=>b.doctorId===d.id&&b.date>=today())).map(d=>d.name);ok("Turni futuri solo con pacchetto attivo",!senza.length,senza.join(", "));
+  ok("Tariffa salvata in ogni pacchetto",S.crediti.every(c=>c.tariffa!=null));
+  {const vis=Object.values(S.chat).filter(t=>t.a==="admin"||t.b==="admin"||!chatPaziente(t));ok("FPM non vede chat tra pazienti e struttura",!vis.some(t=>chatPaziente(t)&&t.a!=="admin"&&t.b!=="admin"))}
+  ok("Nessun errore dell’app nelle ultime 24 ore",!S.errori.some(e=>Date.now()-e.at<864e5),S.errori[0]?S.errori[0].msg:"");
+  ok("Backup fatto negli ultimi 7 giorni",cfg("ultimoBackup",0)>Date.now()-7*864e5,cfg("ultimoBackup",0)?"ultimo "+dataIt(cfg("ultimoBackup",0)):"mai");
+  return r}
+function fpmToolsTab(){v2Init();const seg=UI.toolSeg||"diag",segs=[["diag","Diagnostica"],["backup","Backup e cestino"],["comp","Registro compensi"],["costi","Costi"],["store","Store"],["tk","Assistenza"],["cfg","Configurazione"],["fisco","Simulatore"],["testi","Testi notifiche"]];
+  const head=`<div class="pad stack" style="gap:16px"><div class="fpmhead"><img src="img/fpm-logo-sm.png" alt="Logo FPM"><h1 class="ptitle" style="font-size:1.7rem">Strumenti FPM</h1></div><div class="chips" role="tablist">${segs.map(([k,l])=>`<button class="chip ${seg===k?"on":""}" data-act="toolSeg" data-v="${k}" role="tab" aria-selected="${seg===k}">${l}${k==="tk"&&S.ticket.some(t=>t.stato==="aperto")?` · ${S.ticket.filter(t=>t.stato==="aperto").length}`:""}</button>`).join("")}</div>`;
+  let body="";
+  if(seg==="diag"){let kb=0;try{kb=Math.round((localStorage.getItem(KEY)||"").length/1024)}catch(e){}const t=UI.autotest;
+    body=sez("Stato dell’app",`<dl class="ledger small"><dt>Modalità</dt><dd>${typeof MODALITA_PROVA!=="undefined"&&MODALITA_PROVA?"Prova sul dispositivo":"Database"}</dd><dt>Database online</dt><dd>${DB.on?"collegato":"non collegato (da attivare)"}</dd><dt>Dati su questo dispositivo</dt><dd>${kb} KB di ~5.000</dd><dt>Professionisti attivi</dt><dd>${professionisti().length}</dd><dt>Pacchetti attivi</dt><dd>${professionisti().filter(d=>pacchetto(d.id)&&!oreUso(d.id).scaduto).length}</dd><dt>Turni stanze</dt><dd>${S.rooms.length}</dd><dt>Visite</dt><dd>${S.appts.length}</dd><dt>Conversazioni</dt><dd>${Object.keys(S.chat).length}</dd><dt>Ultimo backup</dt><dd>${cfg("ultimoBackup",0)?oraIt(cfg("ultimoBackup",0)):"mai"}</dd><dt>Manutenzione</dt><dd>${cfg("manutenzione",false)?"attiva":"no"}</dd></dl>`)
+     +sez("Collaudo automatico",`<p class="tiny">Controlla in un attimo che conti, ore, stanze e privacy siano coerenti.</p><button class="btn primary sm" data-act="autotest">Avvia il collaudo</button>${t?t.map(x=>`<p class="small">${x.ok?"✅":"❌"} ${esc(x.t)}${x.x?` <span class="tiny">· ${esc(x.x)}</span>`:""}</p>`).join(""):""}`)
+     +sez("Errori dell’app",S.errori.length?S.errori.slice(0,15).map(e=>`<p class="small" style="border-top:1px solid var(--line);padding-top:6px">${esc(e.msg)} <span class="tiny">${esc(e.dove)} · ${oraIt(e.at)}</span></p>`).join("")+`<button class="link small" data-act="erroriVia">Svuota elenco</button>`:`<p class="small muted">Nessun errore registrato.</p>`)
+     +sez("Accessi",`<p class="tiny">Accessi riusciti e password sbagliate su questo dispositivo. Dopo 5 errori l’accesso si blocca per 5 minuti.</p>${S.accessLog.slice(0,15).map(a=>`<p class="small">${a.esito==="accesso"?"🔓":"⛔"} ${esc(a.email)} ${a.ruolo?"· "+esc(a.ruolo):""} <span class="tiny">${oraIt(a.at)}</span></p>`).join("")||`<p class="small muted">Nessun accesso registrato.</p>`}`)}
+  if(seg==="backup")body=sez("Copia di sicurezza completa",`<p class="tiny">Scarica tutti i dati dell’app in un file. Tienilo in un posto sicuro: contiene dati personali. Con “Ripristina” torni esattamente a quel momento.</p><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn primary sm" data-act="backupScarica">${ic("upload","sm")} Scarica backup</button><label class="btn ghost sm" for="bk-file">Ripristina da file</label><input id="bk-file" type="file" accept="application/json,.json" class="hidden" data-change="backupCarica"></div><p class="tiny">Ultimo backup: ${cfg("ultimoBackup",0)?oraIt(cfg("ultimoBackup",0)):"mai"}. Quando colleghiamo il database, il backup diventa automatico ogni giorno.</p>`)
+    +sez("Cestino (30 giorni)",S.cestino.length?S.cestino.map(x=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1"><b>${esc(x.cosa)}</b><span class="tiny" style="display:block">azzerato il ${oraIt(x.at)}</span></span><button class="btn ghost sm" data-act="cestinoRipr" data-id="${x.id}">Ripristina</button></div>`).join(""):`<p class="small muted">Il cestino è vuoto. Ogni azzeramento lascia qui una copia.</p>`);
+  if(seg==="comp"){const an=+(UI.compAnno||new Date().getFullYear()),l=S.ledger.filter(x=>new Date(x.at).getFullYear()===an).sort((a,b)=>b.at-a.at),mesi=[...Array(12)].map((_,i)=>ledgerTot(x=>new Date(x.at).getFullYear()===an&&new Date(x.at).getMonth()===i)),mx=Math.max(...mesi,0);
+    body=sez("Registro compensi FPM",`<p class="tiny">Ogni pacchetto confermato aggiunge una riga con la tariffa del momento; un annullamento aggiunge uno storno. Le righe non si cancellano e gli azzeramenti non le toccano.</p>
+     <div class="row between"><button class="iconbtn" data-act="compAnno" data-v="${an-1}" aria-label="Anno prima">${ic("back","sm")}</button><b>${an}</b><button class="iconbtn" data-act="compAnno" data-v="${an+1}" aria-label="Anno dopo">${ic("right","sm")}</button></div>
+     <div class="stats"><div class="stat"><b>${eur(ledgerTot(x=>new Date(x.at).getFullYear()===an))}</b><span>Compensi ${an} (netti)</span></div><div class="stat"><b>${oreFmt(r2(l.reduce((t,x)=>t+x.ore,0)))}</b><span>Ore firmate</span></div><div class="stat"><b>${fissoAnnuo()?eur(fissoAnnuo()):"—"}</b><span>Fisso annuale ${S.fissoPagato[an]?"✅ incassato":""}</span></div></div>
+     <span class="label">Per mese</span><div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:90px">${mesi.map((v,i)=>`<div title="${eur(v)}" style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:2px"><div style="background:var(--accent);border-radius:4px 4px 0 0;height:${mx?Math.max(2,v/mx*70):2}px"></div><span class="tiny" style="text-align:center">${"GFMAMGLASOND"[i]}</span></div>`).join("")}</div>
+     ${an>=2027&&fissoAnnuo()?`<button class="btn ghost sm" data-act="fissoPagato" data-v="${an}">${S.fissoPagato[an]?"Segna fisso "+an+" come da incassare":"Segna fisso "+an+" come incassato"}</button>`:""}
+     <button class="btn ghost sm" data-act="ledgerCsv" data-v="${an}">Scarica il registro ${an} (CSV per il commercialista)</button>
+     ${l.slice(0,40).map(x=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1">${esc({compenso:"Compenso",storno:"Storno",rettifica:"Rettifica"}[x.tipo]||x.tipo)} · ${esc(docNome(x.docId))} · ${String(x.ore).replace(".",",")} h × ${eur(x.tariffa)}<span class="tiny" style="display:block">${oraIt(x.at)}${x.motivo?" · "+esc(x.motivo):""}</span></span><b class="num" style="color:${x.importo<0?"var(--danger,#c0392b)":"inherit"}">${eur(x.importo)}</b></div>`).join("")||`<p class="small muted">Nessun compenso in questo anno.</p>`}`)}
+  if(seg==="costi"){const an=c=>c.freq==="mensile"?c.importo*12:c.freq==="annuale"?c.importo:0,tot=v=>r2(S.costi.filter(c=>c.carico===v).reduce((t,c)=>t+an(c),0));
+    body=sez("Costi dei servizi",`<p class="tiny">Tutti i costi per far funzionare Clinia App. Ti avviso 30 giorni prima di ogni scadenza. Nessun servizio a pagamento si attiva senza la tua autorizzazione.</p>
+     <div class="stats"><div class="stat"><b>${tot("FPM")}</b><span>All’anno a carico FPM</span></div><div class="stat"><b>${tot("Clinia")}</b><span>All’anno a carico Clinia</span></div></div>
+     ${S.costi.map(c=>`<div class="row small" style="gap:8px;border-top:1px solid var(--line);padding-top:6px"><span style="flex:1"><b>${esc(c.voce)}</b><span class="tiny" style="display:block">${c.importo?`${String(c.importo).replace(".",",")} ${esc(c.valuta)} · ${esc(c.freq)}`:"gratuito"} · a carico di ${esc(c.carico)}${c.scadenza?" · scade il "+dataIt(c.scadenza):""}${c.note?" · "+esc(c.note):""}</span></span><button class="link small" data-act="costoDel" data-id="${c.id}">Togli</button></div>`).join("")}
+     <form class="stack" data-form="costo" style="gap:8px;border-top:1px solid var(--line);padding-top:10px" novalidate>${campo("voce","Servizio","",{ph:"Es. Servizio e-mail"})}<div class="grid2" style="grid-template-columns:1fr 1fr 1fr">${campo("importo","Importo","",{im:"decimal"})}${selettore("valuta","Valuta",["EUR","USD"],"EUR")}${selettore("freq","Ogni",["mensile","annuale","una tantum"],"annuale")}</div><div class="grid2" style="grid-template-columns:1fr 1fr">${selettore("carico","A carico di",["FPM","Clinia","—"],"Clinia")}${campo("scadenza","Prossima scadenza","",{type:"date"})}</div><button class="btn ghost sm" type="submit">Aggiungi costo</button></form>`)}
+  if(seg==="store"){const fatti=STORE_CHECK.filter((_,i)=>S.store.check["c"+i]).length,pp=PRE_PUB.filter((_,i)=>S.store.check["p"+i]).length;
+    const st=k=>{const x=S.store[k];return `<form class="stack" data-form="storeStato" data-id="${k}" style="gap:8px;border-top:1px solid var(--line);padding-top:10px" novalidate><b>${k==="apple"?"App Store (Apple)":"Google Play"}</b><div class="grid2" style="grid-template-columns:1fr 1fr">${selettore("stato","Stato",Object.entries(STORE_STATI),x.stato)}${campo("versione","Versione",x.versione)}</div>${campo("note","Note (es. motivo del rifiuto)",x.note)}<button class="btn ghost sm" type="submit">Aggiorna</button></form>`};
+    body=sez("Stato pubblicazione",`${st("apple")}${st("google")}<p class="tiny">La pubblicazione parte solo con la tua autorizzazione.</p>`)
+     +sez(`Checklist conformità store · ${fatti}/${STORE_CHECK.length}`,`${barra(fatti,STORE_CHECK.length)}${STORE_CHECK.map(([g,t],i)=>`<label class="row small" style="gap:8px;align-items:flex-start"><input type="checkbox" data-change="storeCheck" data-k="c${i}" ${S.store.check["c"+i]?"checked":""} style="width:20px;height:20px;accent-color:var(--accent);flex:none"><span><span class="tiny">${g}</span> · ${esc(t)}</span></label>`).join("")}`)
+     +sez(`Procedura prima di ogni pubblicazione · ${pp}/${PRE_PUB.length}`,`${PRE_PUB.map((t,i)=>`<label class="row small" style="gap:8px"><input type="checkbox" data-change="storeCheck" data-k="p${i}" ${S.store.check["p"+i]?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span>${i+1}. ${esc(t)}</span></label>`).join("")}<button class="link small" data-act="prePubReset">Ricomincia per la prossima versione</button>`)}
+  if(seg==="tk"){const l=S.ticket.slice().sort((a,b)=>(a.stato==="chiuso")-(b.stato==="chiuso")||b.at-a.at);
+    body=sez("Richieste di assistenza",l.length?l.map(t=>`<div class="stack" style="gap:6px;border-top:1px solid var(--line);padding-top:8px"><div class="row between"><b class="small">#${t.n} · ${esc(t.titolo)}</b><span class="badge ${t.stato==="chiuso"?"":"warn"}">${TK_STATI[t.stato]}</span></div><span class="tiny">${esc(t.chi)} · ${esc(t.tipo)} · ${oraIt(t.at)}</span><p class="small">${esc(t.testo)}</p>${(t.risposte||[]).map(r=>`<p class="small" style="border-left:3px solid var(--accent);padding-left:8px">${esc(r.testo)}</p>`).join("")}
+      <form class="row" data-form="ticketRisp" data-id="${t.id}" style="gap:8px;flex-wrap:wrap" novalidate><input name="testo" placeholder="Rispondi" style="flex:1;min-width:140px;border:1.5px solid var(--line);border-radius:10px;padding:9px;background:var(--card)"><select name="stato" style="border:1.5px solid var(--line);border-radius:10px;padding:9px;background:var(--card)">${Object.entries(TK_STATI).map(([k,v])=>`<option value="${k}" ${k===t.stato?"selected":""}>${v}</option>`).join("")}</select><button class="btn ghost sm" type="submit">Invia</button></form></div>`).join(""):`<p class="small muted">Nessuna richiesta. Dottori, enti e Clinia scrivono da Profilo → Assistenza tecnica FPM.</p>`)}
+  if(seg==="cfg")body=sez("Configurazione",`<form class="stack" data-form="cfgSalva" style="gap:10px" novalidate><div class="grid2" style="grid-template-columns:1fr 1fr">${campo("sogliaOre","Avviso ore: quando restano (h)",cfg("sogliaOre",4),{im:"decimal"})}${campo("sogliaPct","…oppure il (%) del pacchetto",cfg("sogliaPct",20),{im:"numeric"})}</div><p class="tiny">Vale la soglia che arriva prima. Oggi: 4 ore oppure il 20 %.</p>
+     <label class="row small" style="gap:8px"><input type="checkbox" name="manutenzione" ${cfg("manutenzione",false)?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span><b>Modalità manutenzione</b>: avviso a tutti e prenotazioni stanze sospese (tu e Clinia continuate a lavorare)</span></label>
+     ${campo("manutTesto","Testo dell’avviso",cfg("manutTesto","Stiamo aggiornando Clinia App: alcune funzioni sono momentaneamente sospese. Grazie per la pazienza."))}
+     <label class="row small" style="gap:8px"><input type="checkbox" name="legaleOk" ${cfg("legaleOk",false)?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span>Informativa privacy e termini <b>approvati</b> (toglie la scritta “bozza”)</span></label>
+     <button class="btn primary sm" type="submit">Salva</button></form>`);
+  if(seg==="fisco"){const an=new Date().getFullYear(),lordoNet=ledgerTot(x=>new Date(x.at).getFullYear()===an)+(an>=2027?fissoAnnuo():0),reg=UI.regime||"autore",base=reg==="autore"?0.75:1,rit=r2(lordoNet/(1-0.2*base)*0.2*base),lordo=r2(lordoNet+rit);
+    body=sez("Simulatore fiscale (stima)",`<div class="card small" style="border-color:var(--warn);background:var(--warn-soft)">Solo una stima: il regime giusto va confermato con il commercialista prima di usarlo per pagamenti o dichiarazioni.</div>
+     <div class="seg"><button class="${reg==="autore"?"on":""}" data-act="regime" data-v="autore">Diritti d’autore</button><button class="${reg==="occ"?"on":""}" data-act="regime" data-v="occ">Prestazione occasionale</button></div>
+     <dl class="ledger small"><dt>Netto incassato nel ${an}<small>compensi del registro${an>=2027&&fissoAnnuo()?" + fisso annuale":""}</small></dt><dd>${eur(r2(lordoNet))}</dd><dt>Ritenuta d’acconto stimata<small>${reg==="autore"?"20 % sul 75 % del lordo (15 % effettivo)":"20 % del lordo"}</small></dt><dd>${eur(rit)}</dd><dt><b>Lordo stimato</b></dt><dd><b>${eur(lordo)}</b></dd></dl>
+     <p class="tiny">${reg==="occ"?`Prestazioni occasionali: oltre 5.000 € lordi annui scattano i contributi INPS gestione separata. Oggi sei a ${pct(Math.min(1,lordo/5000))} della soglia.`:"Diritti d’autore: niente contributi INPS sui compensi da opera dell’ingegno; va dichiarato in Redditi PF, quadro RL."}</p>`)}
+  if(seg==="testi")body=sez("Testi ufficiali delle notifiche",`<p class="tiny">Spunta i testi che approvi. Quando attiviamo le notifiche push ed e-mail useranno gli stessi testi.</p>${NOTIF_TESTI.map(([t,q,x],i)=>`<label class="row small" style="gap:8px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px"><input type="checkbox" data-change="testoOk" data-k="${i}" ${S.testiOk[i]?"checked":""} style="width:20px;height:20px;accent-color:var(--accent);flex:none"><span><b>${esc(t)}</b> <span class="tiny">· ${esc(q)}</span><span style="display:block">${esc(x)}</span></span></label>`).join("")}`);
+  return head+body+`</div>`}
+FPM_EXTRA.push("fpmtools");
+const _tabHTML0=tabHTML0;tabHTML0=function(){if(UI.tab==="fpmtools")return isFpm()?fpmToolsTab():"";return _tabHTML0()};
+const PAGINE_V2={ticket:ticketPage,privacy:privacyPage,termini:terminiPage,guida:guidaPage};
+const _pageHTML=pageHTML;pageHTML=function(p){return PAGINE_V2[p.page]?PAGINE_V2[p.page](p):_pageHTML(p)};
+
+/* ---------- 09 · Chat: ricerca, conferma di lettura, allegati, blocco, avviso emergenze ---------- */
+const _msgTab=msgTab;msgTab=function(){if(!logged()&&!isFpm())return _msgTab();const q=(UI.chatQ||"").trim().toLowerCase(),orig=mieChat;let h;
+  if(q)mieChat=()=>orig().filter(([k,t])=>[nomeParte(t.a,t),nomeParte(t.b,t),...t.msgs.map(m=>m.text)].join(" ").toLowerCase().includes(q));
+  try{h=_msgTab()}finally{mieChat=orig}
+  return h.replace('<div class="list">',`<label class="field"><span>Cerca</span><input data-change="chatQ" value="${esc(UI.chatQ||"")}" placeholder="Nome o parola" aria-label="Cerca nei messaggi"></label><div class="list">`)};
+const _chatPage=chatPage;chatPage=function(k){let h=_chatPage(k);const t=S.chat[k];if(!t)return h;const me=io(),altro=t.a===me?t.b:t.b===me?t.a:null,blocc=!!S.bloccati[k];
+  // conferma di lettura sull’ultimo messaggio mio
+  const ultMio=[...t.msgs].reverse().find(m=>m.from===me);if(ultMio&&altro&&t.msgs[t.msgs.length-1]===ultMio&&((t.letto||{})[altro]||0)>=ultMio.at){const stamp=new Date(ultMio.at).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});const i=h.lastIndexOf(stamp);if(i>=0)h=h.slice(0,i+stamp.length)+" · letto"+h.slice(i+stamp.length)}
+  // allegati
+  for(const x of t.msgs.filter(m=>m.file)){const lab=esc(x.text);h=h.replace(lab+"<small>",`<button class="link small" data-act="chatApri" data-id="${x.file}">${lab}</button><small>`)}
+  const avvisi=(me.startsWith("user:")?`<p class="tiny" style="text-align:center">La chat non è controllata in tempo reale. Per le emergenze chiama il <b>112</b>.</p>`:"")+(blocc?`<p class="tiny" style="text-align:center;color:var(--warn)">Conversazione bloccata da ${me.startsWith("user:")?"Clinia":"te"}: ${me.startsWith("user:")?"non puoi più scrivere qui. Per informazioni chiama la segreteria.":"il paziente non può scriverti."}</p>`:"");
+  h=h.replace('<div class="pad bubbles">','<div class="pad bubbles">'+avvisi);
+  const puoBloccare=altro&&altro.startsWith("user:")&&!me.startsWith("user:")&&me!=="admin";
+  const extra=`<div class="pad row" style="padding-top:0;padding-bottom:6px;gap:8px;flex-wrap:wrap">${me==="admin"?"":`<label class="btn ghost sm" for="chat-file">📎 Allega foto o PDF</label><input id="chat-file" type="file" accept="image/*,application/pdf" class="hidden" data-change="chatFile" data-id="${esc(k)}">`}${puoBloccare?`<button class="btn ghost sm" data-act="chatBlocca" data-id="${esc(k)}">${blocc?"Sblocca":"Blocca"} questo utente</button>`:""}</div>`;
+  if(blocc&&me.startsWith("user:"))h=h.replace(/<form class="composer"[\s\S]*?<\/form>/,"");
+  return h.replace('<form class="composer"',extra+'<form class="composer"')};
+const _send=FORMS.send;FORMS.send=f=>{if(S.bloccati[f.dataset.id]&&io().startsWith("user:"))return toast("Non puoi scrivere in questa conversazione");return _send(f)};
+
+/* ---------- Azioni ---------- */
+Object.assign(ACT,{
+  calVista:d=>{UI.calVista=d.v;render()},
+  calApri:d=>{UI.calDay=d.v;UI.calVista="giorno";render()},
+  calGiorno:d=>{UI.calDay=addDays(UI.calDay||today(),+d.v);render()},
+  calMese:d=>{UI.calMese=d.v;render()},anMese:d=>{UI.anMese=d.v;render()},
+  altScegli:d=>{const sh=UI.sheet;if(!sh)return;sh.id=d.r;UI.roomDay=d.d;sh.start=+d.s;sh.end=+d.e;sh.doppioOk=false;render()},
+  annullaUltima:()=>{const u=UI.ultimaPren;if(!u||Date.now()-u.at>5*60000)return toast("Sono passati più di 5 minuti: chiedi a Clinia di annullare.");
+    const ore=r2(S.rooms.filter(b=>u.ids.includes(b.id)).reduce((t,b)=>t+oreTurnoB(b),0));S.rooms=S.rooms.filter(b=>!u.ids.includes(b.id));UI.ultimaPren=null;
+    logA("Prenotazione annullata entro 5 minuti",`${docNome(u.docId)} · ${oreFmt(ore)} restituite`);addNotif("titolare","studio_prenotato","Prenotazione annullata",`${docNome(u.docId)} ha annullato subito la prenotazione (${oreFmt(ore)}).`);notifFPM("studio_prenotato","Prenotazione annullata entro 5 minuti",`${docNome(u.docId)} · ${oreFmt(ore)} tornate nel contatore.`);save();toast(`Annullata: ${oreFmt(ore)} tornate nel contatore`)},
+  assenzaDel:d=>{const a=S.assenze.find(x=>x.id===d.id);if(!a)return;if(isFpm())return toast("Vista di sola consultazione");S.assenze=S.assenze.filter(x=>x.id!==d.id);logA("Assenza tolta",`${docNome(a.docId)} · ${dataIt(a.dal)}–${dataIt(a.al)}`);save();render()},
+  attesaDel:d=>{S.attesa=S.attesa.filter(w=>w.id!==d.id);save();toast("Sei uscito dalla lista d’attesa");render()},
+  noShow:d=>{if(isFpm())return toast("Vista di sola consultazione");if(S.noShow[d.id])delete S.noShow[d.id];else{S.noShow[d.id]=Date.now();const a=S.appts.find(x=>x.id===d.id);if(a)logA("Paziente non presentato",`${iniz2(a.patient)} · ${docNome(a.doctorId)} · ${dataIt(a.date)}`)}save();render()},
+  attrFatto:d=>{const x=S.attrezzi.find(y=>y.id===d.id);if(!x)return;x.ultima=today();const p=parseD(today());p.setMonth(p.getMonth()+(x.mesi||12));x.prossima=dstr(p);x.avvisata=false;logA("Manutenzione fatta",x.nome);save();toast("Manutenzione segnata: prossima il "+dataIt(x.prossima));render()},
+  attrDel:d=>{S.attrezzi=S.attrezzi.filter(x=>x.id!==d.id);save();render()},
+  socSel:d=>{UI.socSel=d.v;render()},
+  toolSeg:d=>{UI.toolSeg=d.v;render()},
+  autotest:()=>{UI.autotest=autotest();logA("Collaudo automatico",`${UI.autotest.filter(x=>x.ok).length}/${UI.autotest.length} controlli superati`);render()},
+  erroriVia:()=>{S.errori=[];save();render()},
+  backupScarica:()=>{S.cfg.ultimoBackup=Date.now();save();const b=new Blob([JSON.stringify({app:"clinia",v:KEY,at:new Date().toISOString(),dati:S})],{type:"application/json"});salvaPdf(b,`Clinia_backup_${today()}.json`,"application/json");logA("Backup scaricato","");render()},
+  cestinoRipr:d=>{const x=S.cestino.find(y=>y.id===d.id);if(!x)return;UI.doppia={titolo:"Ripristinare?",testo:`<b>${esc(x.cosa)}</b>, azzerato il ${oraIt(x.at)}.`,testo2:"Turni, visite e notifiche tornano come prima dell’azzeramento (le modifiche fatte dopo su queste voci si perdono). I pacchetti nuovi restano. Confermi?",fn:()=>{cestinoRipristina(d.id);toast("Ripristinato");render()}};UI.sheet={type:"doppia",step:1};render()},
+  compAnno:d=>{UI.compAnno=+d.v;render()},
+  fissoPagato:d=>{const a=+d.v;if(S.fissoPagato[a])delete S.fissoPagato[a];else S.fissoPagato[a]=Date.now();logA(S.fissoPagato[a]?"Fisso annuale incassato":"Fisso annuale da incassare",String(a));save();render()},
+  ledgerCsv:d=>{const a=+d.v;csvScarica(`Registro_compensi_FPM_${a}.csv`,[["Data","Tipo","Dottore/ente","Ore","Tariffa €","Importo netto €","Motivo"],...S.ledger.filter(x=>new Date(x.at).getFullYear()===a).sort((x,y)=>x.at-y.at).map(x=>[new Date(x.at).toLocaleDateString("it-IT"),x.tipo,docNome(x.docId),String(x.ore).replace(".",","),String(x.tariffa).replace(".",","),String(x.importo).replace(".",","),x.motivo||""])])},
+  costoDel:d=>{S.costi=S.costi.filter(c=>c.id!==d.id);save();render()},
+  prePubReset:()=>{PRE_PUB.forEach((_,i)=>delete S.store.check["p"+i]);save();render()},
+  regime:d=>{UI.regime=d.v;render()},
+  chatBlocca:d=>{if(S.bloccati[d.id])delete S.bloccati[d.id];else S.bloccati[d.id]=Date.now();logA(S.bloccati[d.id]?"Utente bloccato in chat":"Utente sbloccato in chat","");save();render()},
+  chatApri:async d=>{const x=await IDB.get("chatf:"+d.id);if(!x)return toast("Allegato non disponibile su questo dispositivo");const u=URL.createObjectURL(x.blob);window.open(u,"_blank");setTimeout(()=>URL.revokeObjectURL(u),60000)}
+});
+
+/* ---------- Moduli ---------- */
+const v2form=(n,fn)=>{FORMS[n]=fn};
+v2form("assenza",f=>{const id=f.dataset.id||(f.doc&&f.doc.value),dal=f.dal.value,al=f.al.value;if(isFpm())return toast("Vista di sola consultazione");if(!id||!dal||!al)return toast("Scegli le date");if(al<dal)return toast("La data di fine è prima dell’inizio");const n=salvaAssenza(id,dal,al,f.motivo.value.trim());toast(n?`Assenza registrata: avvisati ${n} pazienti`:"Assenza registrata");render()});
+v2form("attesa",f=>{const id=f.doc.value;if(!id)return;S.attesa.push({id:uid(),docId:id,email:S.auth.email,nome:S.user?(S.user.nome+" "+S.user.cognome).trim():"",at:Date.now()});addNotif("titolare","attesa","Nuovo paziente in lista d’attesa",`${docNome(id)}.`);save();toast("Ti avvisiamo appena si libera un posto");render()});
+v2form("ticket",f=>{const err=$("#tk-err"),ti=f.titolo.value.trim(),tx=f.testo.value.trim();if(ti.length<3)return err.textContent="Scrivi l’oggetto.";if(tx.length<5)return err.textContent="Descrivi il problema.";
+  const n=(S.ticket.reduce((m,t)=>Math.max(m,t.n),0)||0)+1,chi=isOwner()?"Clinia":S.proId?docNome(S.proId):(S.auth||{}).email;S.ticket.push({id:uid(),n,email:S.auth.email,chi,tipo:f.tipo.value,titolo:ti,testo:tx,stato:"aperto",at:Date.now(),risposte:[]});
+  notifFPM("assistenza",`Assistenza #${n}`,`${chi}: ${ti}`);save();toast(`Richiesta #${n} inviata a FPM`);render()});
+v2form("ticketRisp",f=>{const t=S.ticket.find(x=>x.id===f.dataset.id);if(!t)return;const tx=f.testo.value.trim();if(tx)t.risposte.push({testo:tx,at:Date.now()});t.stato=f.stato.value;
+  const dest=t.chi==="Clinia"?"titolare":(DOCTORS.find(d=>d.name===t.chi)?"spec:"+DOCTORS.find(d=>d.name===t.chi).id:null);if(dest)addNotif(dest,"assistenza",`Assistenza #${t.n}: ${TK_STATI[t.stato]}`,tx||`La tua richiesta è ${TK_STATI[t.stato].toLowerCase()}.`);save();toast("Risposta inviata");render()});
+v2form("avvisoTutti",f=>{const tx=f.testo.value.trim();if(tx.length<3)return toast("Scrivi il messaggio");const a=f.a.value,l=professionisti().filter(d=>a==="tutti"||(a==="enti")===(d.kind==="societa"));
+  l.forEach(d=>addNotif("spec:"+d.id,"avviso","Avviso da Clinia",tx));UI.ultimoAvviso=tx;logA("Avviso a tutti",`${l.length} destinatari · ${tx.slice(0,60)}`);save();toast(`Avviso inviato a ${l.length}`);render()});
+v2form("segreteria",f=>{const err=$("#sg-err"),id=f.doc.value,ds=f.data.value,t=f.ora.value,nome=f.nome.value.trim().replace(/\s+/g," "),em=f.email.value.trim().toLowerCase();UI.segDoc=id;
+  if(!id)return err.textContent="Scegli lo specialista.";if(!ds||ds<today())return err.textContent="Scegli un giorno da oggi in poi.";if(!t)return err.textContent="Scegli l’ora.";if(nome.length<3)return err.textContent="Scrivi nome e cognome.";
+  if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))return err.textContent="L’e-mail non è valida.";if(assenzaDi(id,ds))return err.textContent="Lo specialista è assente quel giorno.";
+  const sv=services(id)[0]||{name:"Visita",dur:30,price:0},dur=sv.dur||30;
+  if(S.appts.some(a=>a.doctorId===id&&a.date===ds&&a.status!=="annullata"&&overlap(toMin(t),toMin(t)+dur,toMin(a.time),toMin(a.time)+(a.dur||30))))return err.textContent="A quell’ora lo specialista ha già una visita.";
+  const turno=bookingsOn(ds,b=>b.doctorId===id&&toMin(b.start)<=toMin(t)&&toMin(b.end)>=toMin(t)+dur)[0];
+  const a={id:uid(),doctorId:id,date:ds,time:t,dur,service:f.svc.value.trim()||sv.name,price:sv.price||0,roomId:turno?turno.roomId:null,online:false,note:"",patient:nome,tel:f.tel.value.trim(),ownerEmail:em||undefined,forId:"segreteria",pay:"clinic",paid:false,status:"confermata",origine:"segreteria",created:Date.now()};
+  S.appts.push(a);addNotif("spec:"+id,"visita","Nuova visita dalla segreteria",`${nome} · ${fmtD(ds,{weekday:"short",day:"numeric",month:"short"})} alle ${t}${turno?" · "+room(turno.roomId).name:" · fuori dai tuoi turni: prenota la stanza"}.`,a.id);
+  if(em)addNotif("user:"+em,"visita","Visita prenotata",`${a.service} con ${docNome(id)}, ${fmtD(ds,{weekday:"long",day:"numeric",month:"long"})} alle ${t}. ${CLINIC.address}.`,a.id);
+  logA("Visita prenotata dalla segreteria",`${docNome(id)} · ${ds} ${t}`);save();f.reset();toast(`Visita fissata per ${nome}`);render()});
+v2form("rettifica",f=>{const c=S.crediti.find(x=>x.id===f.c.value),o=numIt(f.ore.value),mo=f.motivo.value.trim();if(!c)return toast("Scegli il pacchetto");if(!o||!isFinite(o))return toast("Scrivi le ore, per esempio -2 oppure 3");if(mo.length<3)return toast("Scrivi il motivo");if(c.ore+o<0)return toast("Le ore del pacchetto non possono andare sotto zero");
+  const imp=r2(o*tarC(c));UI.doppia={titolo:"Registrare la rettifica?",testo:`<b>${esc(docNome(c.docId))}</b>: ${o>0?"+":""}${String(o).replace(".",",")} h sul pacchetto di ${oreFmt(c.ore)}. Motivo: ${esc(mo)}.`,testo2:`Il compenso FPM cambia di ${eur(imp)} (tariffa del pacchetto ${eur(tarC(c))}/h). Confermi?`,
+    fn:()=>{if(c.ore0==null)c.ore0=c.ore;c.ore=r2(c.ore+o);S.rettifiche.push({id:uid(),cId:c.id,docId:c.docId,ore:o,motivo:mo,at:Date.now(),da:isFpm()?"FPM":"Clinia"});
+      S.ledger.push({id:uid(),ref:c.id,tipo:"rettifica",docId:c.docId,ore:o,tariffa:tarC(c),importo:imp,motivo:mo,at:Date.now()});
+      addNotif("spec:"+c.docId,"ore","Ore del pacchetto corrette",`${o>0?"+":""}${String(o).replace(".",",")} h: ${mo}.`);notifFPM("ore","Rettifica ore",`${docNome(c.docId)}: ${o>0?"+":""}${String(o).replace(".",",")} h (${eur(imp)}) · ${mo}`);logA("Rettifica ore",`${docNome(c.docId)} · ${o} h · ${mo}`);save();toast("Rettifica registrata");render()}};UI.sheet={type:"doppia",step:1};render()});
+v2form("rimborso",f=>{const nome=f.nome.value.trim(),imp=numIt(f.importo.value);if(nome.length<3)return toast("Scrivi il paziente");if(!(imp>0))return toast("Scrivi l’importo");if(f.metodo.value==="Contanti"&&imp>=5000)return toast("Sopra il limite per i contanti");
+  S.rimborsi.push({id:uid(),nome,importo:r2(imp),metodo:f.metodo.value,motivo:f.motivo.value.trim(),at:Date.now()});S.entrate=S.entrate||[];logA("Rimborso a paziente",`${iniz2(nome)} · ${eur(imp)}`);save();f.reset();toast("Rimborso registrato");render()});
+v2form("attrezzo",f=>{const nome=f.nome.value.trim();if(nome.length<2)return toast("Scrivi l’attrezzatura");const mesi=+f.mesi.value||12,ul=f.ultima.value||today(),p=parseD(ul);p.setMonth(p.getMonth()+mesi);
+  S.attrezzi.push({id:uid(),nome,stanza:f.stanza.value,ultima:ul,mesi,prossima:dstr(p),note:f.note.value.trim()});save();f.reset();toast("Attrezzatura aggiunta");render()});
+v2form("datiSoc",f=>{const d=doc(f.dataset.id);if(!d)return;const err=$("#ds-err"),v=k=>f[k].value.trim();err.textContent="";
+  if(v("piva")&&!PIVA_OK(v("piva")))return err.textContent="La partita IVA non è valida (11 cifre).";if(v("cf")&&!CF_OK(v("cf"))&&!PIVA_OK(v("cf")))return err.textContent="Il codice fiscale non è valido.";
+  if(v("pec")&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("pec")))return err.textContent="La PEC non è valida.";if(v("sdi")&&!/^[A-Z0-9]{7}$/i.test(v("sdi")))return err.textContent="Il codice SDI ha 7 caratteri.";
+  d.soc=Object.assign(d.soc||{},{piva:v("piva"),cf:v("cf").toUpperCase(),sede:v("sede"),pec:v("pec"),sdi:v("sdi").toUpperCase(),referente:v("referente"),tel:v("tel")});
+  const cd=S.customDocs.find(x=>x.id===d.id);if(cd&&cd!==d)cd.soc=d.soc;logA("Dati fiscali società",d.name);save();toast("Dati salvati");render()});
+v2form("costo",f=>{const voce=f.voce.value.trim(),imp=numIt(f.importo.value);if(voce.length<2)return toast("Scrivi il servizio");S.costi.push({id:uid(),voce,importo:isFinite(imp)?r2(imp):0,valuta:f.valuta.value,freq:f.freq.value,carico:f.carico.value,scadenza:f.scadenza.value,note:""});save();f.reset();toast("Costo aggiunto");render()});
+v2form("storeStato",f=>{const k=f.dataset.id;Object.assign(S.store[k],{stato:f.stato.value,versione:f.versione.value.trim(),note:f.note.value.trim(),at:Date.now()});logA("Stato store",`${k} · ${STORE_STATI[f.stato.value]} · v${f.versione.value.trim()}`);save();toast("Aggiornato");render()});
+v2form("cfgSalva",f=>{const so=numIt(f.sogliaOre.value),sp=numIt(f.sogliaPct.value);if(!(so>=0&&so<=200))return toast("Ore di avviso non valide");if(!(sp>=0&&sp<=100))return toast("Percentuale non valida");
+  const man=f.manutenzione.checked;if(man!==cfg("manutenzione",false)){addNotif("titolare","manutenzione",man?"App in manutenzione":"Manutenzione finita",man?f.manutTesto.value.trim():"Clinia App è di nuovo pienamente operativa.");logA(man?"Manutenzione attivata":"Manutenzione finita","")}
+  Object.assign(S.cfg,{sogliaOre:so,sogliaPct:sp,manutenzione:man,manutTesto:f.manutTesto.value.trim(),legaleOk:f.legaleOk.checked});save();toast("Configurazione salvata");render()});
+SOLO_CLINIA.push("attrezzo","rettifica","rimborso","segreteria","avvisoTutti","datiSoc");
+
+/* ---------- Cambi nei campi ---------- */
+app.addEventListener("change",async e=>{const el=e.target,k=el.dataset.change;if(!k)return;
+  if(k==="storeCheck"){S.store.check[el.dataset.k]=el.checked;save();render()}
+  if(k==="testoOk"){S.testiOk[el.dataset.k]=el.checked;save();render()}
+  if(k==="chatQ"){UI.chatQ=el.value;render()}
+  if(k==="contrQ"){UI.contrQ=el.value;render()}
+  if(k==="roomSett"&&UI.sheet){UI.sheet.sett=+el.value;render()}
+  if(k==="backupCarica"&&el.files[0]){try{const j=JSON.parse(await el.files[0].text());if(!j||j.app!=="clinia"||!j.dati)throw 0;
+      UI.doppia={titolo:"Ripristinare il backup?",testo:`Backup del ${new Date(j.at).toLocaleString("it-IT")}.`,testo2:"Tutti i dati di questo dispositivo tornano a quel momento. Prima di farlo scarico in automatico un backup di adesso. Confermi?",
+        fn:()=>{ACT.backupScarica();const auth=S.auth;S=Object.assign(FRESH(),j.dati);S.auth=auth;v2Fatto=null;v2Init();save();logA("Backup ripristinato",j.at);toast("Backup ripristinato");setTimeout(()=>location.reload(),900)}};UI.sheet={type:"doppia",step:1};render()}
+    catch(x){toast("Questo file non è un backup di Clinia App")}el.value=""}
+  if(k==="chatFile"&&el.files[0]){const f=el.files[0],key=el.dataset.id,t=S.chat[key];if(!t)return;if(f.size>5*1024*1024){el.value="";return toast("Allegato troppo grande: massimo 5 MB.")}
+    const fid=uid();if(!(await IDB.set("chatf:"+fid,{name:f.name,blob:f})))return toast("Non riesco a salvare l’allegato su questo dispositivo.");
+    const me=io();t.msgs.push({from:me,text:"📎 "+f.name,file:fid,at:Date.now()});t.ultimo=Date.now();t.letto=t.letto||{};t.letto[me]=Date.now();
+    [t.a,t.b].filter(x=>x!==me).forEach(x=>addNotif(x,"messaggio","Nuovo allegato","📎 "+f.name,key));el.value="";save();render()}
+});
 
 /* ---------- App installabile (PWA) ---------- */
 const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
